@@ -1,2 +1,2 @@
-# rupor
-android app
+# loudHailer
+App for android course
