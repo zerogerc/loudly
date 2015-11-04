@@ -2,17 +2,21 @@ package ly.loud.loudly;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 public class AuthActivity extends AppCompatActivity {
     WebView webView;
 
+    private static final String TAG = "AUTH_TAG";
     private static final String ACCESS_TOKEN = "#access_token=";
+    private static final String ERROR_TOKEN = "#error=";
+    private static final String RESULT = "RESULT";
+    private static final String TARGET = "TARGET";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,7 +25,16 @@ public class AuthActivity extends AppCompatActivity {
 
         this.webView = (WebView)this.findViewById(R.id.webView);
         webView.loadUrl("https://oauth.vk.com/authorize?client_id=5133011&redirect_uri=https://oauth.vk.com/blank.html&display_type=mobile&response_type=token");
-        webView.setWebViewClient(new WebViewClient() {
+        String target = getIntent().getStringExtra(TARGET);
+        switch (target) {
+            case "VK":
+                webView.setWebViewClient(getVKClient());
+                break;
+        }
+    }
+
+    private WebViewClient getVKClient() {
+        return new WebViewClient() {
             @Override
             public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
@@ -36,21 +49,37 @@ public class AuthActivity extends AppCompatActivity {
                     while (url.charAt(right) != '&') {
                         right++;
                     }
-                    Log.d("AUTH_TAG", url);
-                    Log.d("AUTH_TAG", url.substring(left + ACCESS_TOKEN.length(), right));
+
+                    Log.d(TAG, url);
+                    Log.d(TAG, url.substring(left + ACCESS_TOKEN.length(), right));
+
                     Intent intent = getIntent();
-                    intent.putExtra("RESULT", "OK_OK");
+                    intent.putExtra(RESULT, url.substring(left + ACCESS_TOKEN.length(), right));
                     setResult(RESULT_OK, intent);
                     finish();
-                } else {
-                    Toast message = Toast.makeText(getApplicationContext(), "Access error", Toast.LENGTH_SHORT);
-                    message.show();
+                } else if (url.contains(ERROR_TOKEN)){
+                    int left = url.indexOf(ERROR_TOKEN);
+                    int right = left;
+                    while (url.charAt(right) != '&') {
+                        right++;
+                    }
+
+                    Log.d(TAG, url);
+                    Log.d(TAG, url.substring(left + ERROR_TOKEN.length(), right));
+
                     Intent intent = getIntent();
-                    intent.putExtra("RESULT", "NOT_OK");
+                    intent.putExtra(RESULT, url.substring(left + ERROR_TOKEN.length(), right));
+                    setResult(RESULT_CANCELED, intent);
+                    finish();
+                } else {
+                    Log.d(TAG, "WTF?");
+
+                    Intent intent = getIntent();
+                    intent.putExtra(RESULT, "Unknown error");
                     setResult(RESULT_CANCELED, intent);
                     finish();
                 }
             }
-        });
+        };
     }
 }

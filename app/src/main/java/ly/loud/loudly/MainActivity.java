@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String TARGET = "TARGET";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -14,8 +15,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
-    public void authCall(View v) {
+    public void authVKCall(View v) {
         Intent temp = new Intent(this, AuthActivity.class);
+        temp.putExtra(TARGET, "VK");
         startActivityForResult(temp, 1);
     }
 
