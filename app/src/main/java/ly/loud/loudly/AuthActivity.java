@@ -24,7 +24,7 @@ public class AuthActivity extends AppCompatActivity {
         setContentView(R.layout.activity_auth);
 
         this.webView = (WebView)this.findViewById(R.id.webView);
-        webView.loadUrl("https://oauth.vk.com/authorize?client_id=5133011&redirect_uri=https://oauth.vk.com/blank.html&display_type=mobile&response_type=token");
+        webView.loadUrl();
         String target = getIntent().getStringExtra(TARGET);
         switch (target) {
             case "VK":
