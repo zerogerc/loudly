@@ -1,14 +1,9 @@
 package ly.loud.loudly;
 
-import android.os.AsyncTask;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-
-import VK.VKAuthorizer;
-import VK.VKWrap;
-import base.ResponseListener;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
@@ -19,18 +14,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void authVKCall(View v) {
-        ResponseListener<MainActivity, VKWrap> listener = new ResponseListener<MainActivity, VKWrap>(this) {
-            @Override
-            public void onSuccess(VKWrap result) {
-                Log.d(TAG, result.getKeys().getAccessToken());
-            }
+    }
 
-            @Override
-            public void onFail(String error) {
-                Log.d(TAG, error);
-            }
-        };
-        AsyncTask authorize = new VKAuthorizer(listener).createAsyncTask();
-        authorize.execute();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
