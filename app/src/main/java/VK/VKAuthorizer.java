@@ -9,6 +9,7 @@ import base.ResponseListener;
 
 
 public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
+    private static final String RESPONSE_URL = "https://oauth.vk.com/blank.html";
     private static final String ACCESS_TOKEN = "#access_token=";
     private static final String ERROR_DESCRIPTION = "#error_description=";
 
@@ -31,7 +32,7 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
     }
 
     @Override
-    public boolean continueAuthorization(String url, VKKeyKeeper keys) {
+    public void continueAuthorization(String url, VKKeyKeeper keys) {
         ResponseListener<VKWrap> listener = ListenerHolder.getListener();
         Log.e(TAG, url);
         if (url.contains(ACCESS_TOKEN)) {
@@ -46,7 +47,6 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
 
             keys.setAccessToken(accessToken);
             listener.onSuccess(new VKWrap(keys));
-            return true;
         } else if (url.contains(ERROR_DESCRIPTION)){
             int left = url.indexOf(ERROR_DESCRIPTION);
             int right = left;
@@ -57,14 +57,17 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
             String errorToken = url.substring(left + ERROR_DESCRIPTION.length(), right);
             Log.d(TAG, errorToken);
             listener.onFail(errorToken);
-            return true;
         }
-        return false;
     }
 
     @Override
     protected String getAuthUrl() {
         return "https://oauth.vk.com/authorize?client_id=" + VKKeyKeeper.CLIENT_ID
                 + "&redirect_uri=https://oauth.vk.com/blank.html&display_type=mobile&response_type=token";
+    }
+
+    @Override
+    public boolean isResponse(String url) {
+        return url.startsWith(RESPONSE_URL);
     }
 }

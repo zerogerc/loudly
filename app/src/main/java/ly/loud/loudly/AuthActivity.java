@@ -11,14 +11,12 @@ import base.Authorizer;
 import base.KeyKeeper;
 
 public class AuthActivity extends AppCompatActivity {
-    WebView webView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth);
+        WebView webView = new WebView(this);
+        setContentView(webView);
 
-        this.webView = (WebView)this.findViewById(R.id.webView);
         Intent parent = getIntent();
 
         String url = parent.getStringExtra("URL");
@@ -35,8 +33,10 @@ public class AuthActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                boolean ok = authorizer.continueAuthorization(url, keys);
-                if (ok) finish();
+                if (authorizer.isResponse(url)) {
+                    authorizer.continueAuthorization(url, keys);
+                    finish();
+                }
             }
         });
     }

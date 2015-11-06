@@ -16,23 +16,16 @@ import ly.loud.loudly.AuthActivity;
  */
 public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> implements Parcelable{
     protected abstract K beginAuthorize();
-    public abstract boolean continueAuthorization(String url, K keys);
+    public abstract void continueAuthorization(String url, K keys);
     protected abstract String getAuthUrl();
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {}
+    public abstract boolean isResponse(String url);
 
     public AsyncTask<Object, Void, K> createAsyncTask() {
-        Log.e("TAG", "here1");
         final Authorizer copy = this;
         return new AsyncTask<Object, Void, K>() {
             @Override
             protected K doInBackground(Object... params) {
+                Log.i("AUTHORIZER", "Async task started");
                 return beginAuthorize();
             }
 
@@ -47,5 +40,13 @@ public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> impleme
                 context.startActivity(openWeb);
             }
         };
-    };
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {}
 }
