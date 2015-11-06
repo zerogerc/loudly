@@ -1,5 +1,7 @@
 package base;
 
-public abstract class KeyKeeper {
+import android.os.Parcelable;
+
+public abstract class KeyKeeper implements Parcelable{
     public KeyKeeper() {}
 }

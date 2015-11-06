@@ -1,9 +1,10 @@
 package VK;
 
-import android.app.Activity;
+import android.os.Parcel;
 import android.util.Log;
 
 import base.Authorizer;
+import base.ListenerHolder;
 import base.ResponseListener;
 
 
@@ -12,10 +13,17 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
     private static final String ERROR_DESCRIPTION = "#error_description=";
 
     private static final String TAG = "VK_AUTH_TAG";
+    public static final Creator<VKAuthorizer> CREATOR = new Creator<VKAuthorizer>() {
+        @Override
+        public VKAuthorizer createFromParcel(Parcel source) {
+            return new VKAuthorizer();
+        }
 
-    public VKAuthorizer(ResponseListener<? extends Activity, VKWrap> listener) {
-        super(listener);
-    }
+        @Override
+        public VKAuthorizer[] newArray(int size) {
+            return new VKAuthorizer[size];
+        }
+    };
 
     @Override
     protected VKKeyKeeper beginAuthorize() {
@@ -23,7 +31,9 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
     }
 
     @Override
-    protected void continueAuthorization(String url, VKKeyKeeper keys) {
+    public void continueAuthorization(String url, VKKeyKeeper keys) {
+        ResponseListener<VKWrap> listener = ListenerHolder.getListener();
+        Log.e(TAG, url);
         if (url.contains(ACCESS_TOKEN)) {
             int left = url.indexOf(ACCESS_TOKEN);
             int right = left;

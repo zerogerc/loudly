@@ -1,34 +1,50 @@
 package base;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
+
+import ly.loud.loudly.AuthActivity;
 
 /*
     W - is Wrap
     K - is KeyKeeper
+    SHOULD MAKE CREATOR IN SUCCESSORS
  */
-public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> {
-    protected ResponseListener<? extends Activity, W> listener = null;
-
+public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> implements Parcelable{
     protected abstract K beginAuthorize();
-    protected abstract void continueAuthorization(String url, K keys);
+    public abstract void continueAuthorization(String url, K keys);
     protected abstract String getAuthUrl();
 
-    public Authorizer() {}
-
-    public Authorizer(ResponseListener<? extends Activity, W> listener) {
-        this.listener = listener;
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
-    public AsyncTask<Object, Void, Void> createAsyncTask() {
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {}
+
+    public AsyncTask<Object, Void, K> createAsyncTask() {
         Log.e("TAG", "here1");
-        return new AsyncTask<Object, Void, Void>() {
+        final Authorizer copy = this;
+        return new AsyncTask<Object, Void, K>() {
             @Override
-            protected Void doInBackground(Object... params) {
-                final K keys = beginAuthorize();
-                Log.e("TAG", "here");
-                return null;
+            protected K doInBackground(Object... params) {
+                return beginAuthorize();
+            }
+
+            @Override
+            protected void onPostExecute(K keys) {
+                super.onPostExecute(keys);
+                Activity context = ContextHolder.getContext();
+                Intent openWeb = new Intent(context, AuthActivity.class);
+                openWeb.putExtra("URL", getAuthUrl());
+                openWeb.putExtra("KEYS", keys);
+                openWeb.putExtra("AUTHORIZER", copy);
+                context.startActivity(openWeb);
             }
         };
     };
