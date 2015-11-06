@@ -1,0 +1,16 @@
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch abstract
+# Your branch is up-to-date with 'origin/abstract'.
+#
+# Changes to be committed:
+#	new file:   .idea/encodings.xml
+#	modified:   .idea/gradle.xml
+#	modified:   .idea/misc.xml
+#	modified:   app/src/main/java/VK/VKAuthorizer.java
+#	modified:   app/src/main/java/VK/VKKeyKeeper.java
+#	modified:   app/src/main/java/base/Authorizer.java
+#	modified:   app/src/main/java/ly/loud/loudly/AuthActivity.java
+#
+

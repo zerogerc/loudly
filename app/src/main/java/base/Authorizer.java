@@ -14,9 +14,10 @@ import ly.loud.loudly.AuthActivity;
     K - is KeyKeeper
     SHOULD MAKE CREATOR IN SUCCESSORS
  */
+
 public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> implements Parcelable{
     protected abstract K beginAuthorize();
-    public abstract void continueAuthorization(String url, K keys);
+    public abstract Action continueAuthorization(String url, final K keys);
     protected abstract String getAuthUrl();
     public abstract boolean isResponse(String url);
 
@@ -32,6 +33,9 @@ public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> impleme
             @Override
             protected void onPostExecute(K keys) {
                 super.onPostExecute(keys);
+                if (keys == null) {
+                    return;
+                }
                 Activity context = ContextHolder.getContext();
                 Intent openWeb = new Intent(context, AuthActivity.class);
                 openWeb.putExtra("URL", getAuthUrl());
