@@ -35,8 +35,8 @@ public class AuthActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                authorizer.continueAuthorization(url, keys);
-                finish();
+                boolean ok = authorizer.continueAuthorization(url, keys);
+                if (ok) finish();
             }
         });
     }

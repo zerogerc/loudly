@@ -31,7 +31,7 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
     }
 
     @Override
-    public void continueAuthorization(String url, VKKeyKeeper keys) {
+    public boolean continueAuthorization(String url, VKKeyKeeper keys) {
         ResponseListener<VKWrap> listener = ListenerHolder.getListener();
         Log.e(TAG, url);
         if (url.contains(ACCESS_TOKEN)) {
@@ -41,11 +41,12 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
                 right++;
             }
 
-            String accessToken = url.substring(left + ACCESS_TOKEN.length());
+            String accessToken = url.substring(left + ACCESS_TOKEN.length(), right);
             Log.d(TAG, accessToken);
 
             keys.setAccessToken(accessToken);
             listener.onSuccess(new VKWrap(keys));
+            return true;
         } else if (url.contains(ERROR_DESCRIPTION)){
             int left = url.indexOf(ERROR_DESCRIPTION);
             int right = left;
@@ -56,10 +57,9 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
             String errorToken = url.substring(left + ERROR_DESCRIPTION.length(), right);
             Log.d(TAG, errorToken);
             listener.onFail(errorToken);
-        } else {
-            Log.d(TAG, "WTF?");
-            listener.onFail("Bad VK response");
+            return true;
         }
+        return false;
     }
 
     @Override
