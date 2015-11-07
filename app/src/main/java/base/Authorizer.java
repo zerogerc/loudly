@@ -8,6 +8,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import ly.loud.loudly.AuthActivity;
+import util.Query;
 
 /*
     W - is Wrap
@@ -18,7 +19,7 @@ import ly.loud.loudly.AuthActivity;
 public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> implements Parcelable{
     protected abstract K beginAuthorize();
     public abstract Action continueAuthorization(final String url, final K keys);
-    protected abstract String getAuthUrl();
+    protected abstract Query getAuthQuery();
     public abstract boolean isResponse(String url);
 
     public AsyncTask<Object, Void, K> createAsyncTask() {
@@ -38,7 +39,7 @@ public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> impleme
                 }
                 Activity context = ContextHolder.getContext();
                 Intent openWeb = new Intent(context, AuthActivity.class);
-                openWeb.putExtra("URL", getAuthUrl());
+                openWeb.putExtra("URL", getAuthQuery().toURL());
                 openWeb.putExtra("KEYS", keys);
                 openWeb.putExtra("AUTHORIZER", copy);
                 context.startActivity(openWeb);

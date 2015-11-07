@@ -53,14 +53,14 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
     }
 
     @Override
-    protected String getAuthUrl() {
+    protected Query getAuthQuery() {
         Query query = new Query(AUTHORIZE_URL);
         query.addParameter("client_id", VKKeyKeeper.CLIENT_ID);
         query.addParameter("redirect_uri", RESPONSE_URL);
         query.addParameter("display_type", "mobile");
         query.addParameter("scope", "wall");
         query.addParameter("response_type", "token");
-        return query.toURL();
+        return query;
     }
 
     @Override

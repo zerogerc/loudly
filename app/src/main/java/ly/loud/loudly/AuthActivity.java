@@ -13,12 +13,19 @@ import android.widget.ProgressBar;
 import base.Action;
 import base.Authorizer;
 import base.KeyKeeper;
+import base.ListenerHolder;
 
 public class AuthActivity extends AppCompatActivity {
     ProgressBar circle;
+    boolean gotResponse;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // ToDo: Extract gotResponse from bundle
+
+        gotResponse = false;
+
         setContentView(R.layout.activity_auth);
         WebView webView = (WebView)findViewById(R.id.webView);
         circle = (ProgressBar)findViewById(R.id.progressBar);
@@ -56,9 +63,19 @@ public class AuthActivity extends AppCompatActivity {
                         }
                     };
                     continueAuth.execute();
+                    gotResponse = true;
                     finish();
                 }
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (!gotResponse) {
+            ListenerHolder.getListener().onFail("User declined authorisation");
+        }
+        super.onDestroy();
+
     }
 }
