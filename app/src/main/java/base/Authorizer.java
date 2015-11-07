@@ -17,7 +17,7 @@ import ly.loud.loudly.AuthActivity;
 
 public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> implements Parcelable{
     protected abstract K beginAuthorize();
-    public abstract Action continueAuthorization(String url, final K keys);
+    public abstract Action continueAuthorization(final String url, final K keys);
     protected abstract String getAuthUrl();
     public abstract boolean isResponse(String url);
 

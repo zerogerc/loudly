@@ -52,7 +52,7 @@ public class AuthActivity extends AppCompatActivity {
                         @Override
                         protected void onPostExecute(Action action) {
                             super.onPostExecute(action);
-                            action.exectute();
+                            action.execute();
                         }
                     };
                     continueAuth.execute();
