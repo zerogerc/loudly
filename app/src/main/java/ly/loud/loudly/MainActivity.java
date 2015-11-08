@@ -7,123 +7,110 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Objects;
+
 import Facebook.FacebookAuthorizer;
-import Facebook.FacebookWrap;
 import MailRu.MailRuAuthoriser;
-import MailRu.MailRuWrap;
 import VK.VKAuthorizer;
 import VK.VKWrap;
+import base.Authorizer;
+import base.Networks;
+import base.Post;
+import base.ResponseListener;
+import base.Wrap;
 import util.ContextHolder;
 import util.ListenerHolder;
-import base.ResponseListener;
+import util.WrapHolder;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
-    private RadioButton VKRadio;
-    private RadioButton MailRadio;
-    private RadioButton FacebookRadio;
-    private CheckBox VKcheck;
-    private CheckBox Mailcheck;
-    private CheckBox FBcheck;
-    private boolean VKReady, MailReady, FBReady;
+
+    private static final int[][] networkMap = new int[][]{
+            {R.id.VKRadio, Networks.VK},
+            {R.id.MailRuRadio, Networks.MAILRU},
+            {R.id.FacebookRadio, Networks.FB}};
+
+    private static final int[][] checkboxMap = new int[][]{
+            {R.id.VKRadio, R.id.VKReady},
+            {R.id.MailRuRadio, R.id.MailRuReady},
+            {R.id.FacebookRadio, R.id.FBReady}};
+
+    private RadioGroup group;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        VKRadio = (RadioButton)findViewById(R.id.VKRadio);
-        MailRadio = (RadioButton)findViewById(R.id.MailRuRadio);
-        FacebookRadio = (RadioButton)findViewById(R.id.FacebookRadio);
-        VKcheck = (CheckBox)findViewById(R.id.VKReady);
-        Mailcheck = (CheckBox)findViewById(R.id.MailRuReady);
-        FBcheck = (CheckBox)findViewById(R.id.FBReady);
 
-        if (savedInstanceState != null) {
-            VKReady = savedInstanceState.getBoolean("vk");
-            MailReady = savedInstanceState.getBoolean("mail");
-            FBReady = savedInstanceState.getBoolean("fb");
-            VKcheck.setChecked(VKReady);
-            Mailcheck.setChecked(MailReady);
-            FBcheck.setChecked(FBReady);
-        }
-
+        group = (RadioGroup) findViewById(R.id.networks);
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean("vk", VKReady);
-        outState.putBoolean("mail", MailReady);
-        outState.putBoolean("fb", FBReady);
+    // ToDo: replace with dictionary
+
+    int find(int[][] map, int val) {
+        for (int[] aMap : map) {
+            if (aMap[0] == val) {
+                return aMap[1];
+            }
+        }
+        return -1;
     }
 
     public void login(View v) {
-        if (!VKReady && VKRadio.isChecked()) {
-            ContextHolder.setContext(this);
-            ListenerHolder.setListener(new ResponseListener() {
-                @Override
-                public void onSuccess(Object result1) {
-                    VKReady = true;
-                    VKWrap wrap = (VKWrap) result1;
-                    ((CheckBox)findViewById(R.id.VKReady)).setChecked(true);
-                    Log.e(TAG, wrap.getKeys().getAccessToken());
-                }
+        final int currentRadio = group.getCheckedRadioButtonId();
 
-                @Override
-                public void onFail(String error) {
-                    VKReady = false;
-                    Log.e(TAG, error);
-                }
-            });
-            AsyncTask VKAuth = new VKAuthorizer().createAsyncTask();
-            VKAuth.execute();
-        }
-        if (!MailReady && MailRadio.isChecked()) {
-            ContextHolder.setContext(this);
-            ListenerHolder.setListener(new ResponseListener() {
-                @Override
-                public void onSuccess(Object result1) {
-                    MailReady = true;
-                    ((CheckBox)findViewById(R.id.MailRuReady)).setChecked(true);
-                    MailRuWrap wrap = (MailRuWrap) result1;
-                    Log.e(TAG, wrap.getKeys().getSessionKey());
-                }
+        final int network = find(networkMap, currentRadio);
 
-                @Override
-                public void onFail(String error) {
-                    MailReady = false;
-                    Log.e(TAG, error);
-                }
-            });
-            AsyncTask MailRuAuth = new MailRuAuthoriser().createAsyncTask();
-            MailRuAuth.execute();
+        if (WrapHolder.getWrap(network) != null) {
+            return;
         }
-        if (!FBReady && FacebookRadio.isChecked()) {
-            ContextHolder.setContext(this);
-            ListenerHolder.setListener(new ResponseListener() {
-                @Override
-                public void onSuccess(Object res) {
-                    FBReady = true;
-                    ((CheckBox)findViewById(R.id.FBReady)).setChecked(true);
-                    FacebookWrap wrap = (FacebookWrap) res;
-                    Log.e(TAG, wrap.getKeys().getAccessToken());
-                }
 
-                @Override
-                public void onFail(String error) {
-                    FBReady = false;
-                    Log.e(TAG, error);
-                }
-            });
-            AsyncTask FacebookAuth = new FacebookAuthorizer().createAsyncTask();
-            FacebookAuth.execute();
+        ContextHolder.setContext(this);
+        ListenerHolder.setListener(new ResponseListener() {
+            @Override
+            public void onSuccess(Object result) {
+                WrapHolder.addWrap(network, (Wrap) result);
+
+                int checkbox = find(checkboxMap, currentRadio);
+                ((CheckBox)findViewById(checkbox)).setChecked(true);
+            }
+
+            @Override
+            public void onFail(String error) {
+                Log.e(TAG, error);
+                int checkbox = find(checkboxMap, currentRadio);
+                ((CheckBox)findViewById(checkbox)).setChecked(false);
+            }
+        });
+
+        Authorizer authorizer;
+        switch (network) {
+            case Networks.VK:
+                authorizer = new VKAuthorizer();
+                break;
+            case Networks.MAILRU:
+                authorizer = new MailRuAuthoriser();
+                break;
+            default:
+                authorizer = new FacebookAuthorizer();
+                break;
         }
+        authorizer.createAsyncTask().execute();
     }
 
     public void post(View v) {
-        TextView postView = (TextView)findViewById(R.id.post);
+        TextView postView = (TextView) findViewById(R.id.post);
         String post = postView.getText().toString();
         postView.setText("ok");
     }
