@@ -1,4 +1,6 @@
-package base;
+package util;
+
+import base.ResponseListener;
 
 public class ListenerHolder {
     private static ResponseListener listener;

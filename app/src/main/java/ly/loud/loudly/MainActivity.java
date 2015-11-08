@@ -14,8 +14,8 @@ import MailRu.MailRuAuthoriser;
 import MailRu.MailRuWrap;
 import VK.VKAuthorizer;
 import VK.VKWrap;
-import base.ContextHolder;
-import base.ListenerHolder;
+import util.ContextHolder;
+import util.ListenerHolder;
 import base.ResponseListener;
 
 public class MainActivity extends AppCompatActivity {
@@ -89,8 +89,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, error);
                 }
             });
-            AsyncTask FacebokkAuth = new FacebookAuthorizer().createAsyncTask();
-            FacebokkAuth.execute();
+            AsyncTask FacebookAuth = new FacebookAuthorizer().createAsyncTask();
+            FacebookAuth.execute();
         }
     }
 

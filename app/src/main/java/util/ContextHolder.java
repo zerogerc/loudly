@@ -1,4 +1,4 @@
-package base;
+package util;
 
 import android.app.Activity;
 

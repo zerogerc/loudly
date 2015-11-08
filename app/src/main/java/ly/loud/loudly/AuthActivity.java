@@ -13,7 +13,7 @@ import android.widget.ProgressBar;
 import base.Action;
 import base.Authorizer;
 import base.KeyKeeper;
-import base.ListenerHolder;
+import util.ListenerHolder;
 
 public class AuthActivity extends AppCompatActivity {
     ProgressBar circle;

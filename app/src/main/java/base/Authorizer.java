@@ -8,6 +8,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import ly.loud.loudly.AuthActivity;
+import util.ContextHolder;
 import util.Query;
 
 /*

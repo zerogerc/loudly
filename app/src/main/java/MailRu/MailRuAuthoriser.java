@@ -4,7 +4,7 @@ import android.os.Parcel;
 
 import base.Action;
 import base.Authorizer;
-import base.ListenerHolder;
+import util.ListenerHolder;
 import base.ResponseListener;
 import util.Query;
 
