@@ -4,6 +4,7 @@ import android.os.Parcel;
 
 import base.Action;
 import base.Authorizer;
+import base.Networks;
 import util.ListenerHolder;
 import base.ResponseListener;
 import util.Query;
@@ -15,13 +16,18 @@ public class FacebookAuthorizer extends Authorizer<FacebookWrap, FacebookKeyKeep
     private static final String ERROR_DESCRIPTION = "error";
 
     @Override
+    public int network() {
+        return Networks.FB;
+    }
+
+    @Override
     protected FacebookKeyKeeper beginAuthorize() {
         return new FacebookKeyKeeper();
     }
 
     @Override
     public Action continueAuthorization(final String url, final FacebookKeyKeeper keys) {
-        final ResponseListener listener = ListenerHolder.getListener();
+        final ResponseListener listener = ListenerHolder.getListener(network());
         Query response = Query.fromURL(url);
         if (response == null) {
             return new Action() {

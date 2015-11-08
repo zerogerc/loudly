@@ -7,6 +7,7 @@ import java.net.URL;
 
 import base.Action;
 import base.Authorizer;
+import base.Networks;
 import util.ListenerHolder;
 import base.ResponseListener;
 import util.Query;
@@ -18,13 +19,18 @@ public class MailRuAuthoriser extends Authorizer<MailRuWrap, MailRuKeyKeeper> {
     private static final String ERROR_TOKEN = "error";
 
     @Override
+    public int network() {
+        return Networks.MAILRU;
+    }
+
+    @Override
     protected MailRuKeyKeeper beginAuthorize() {
         return new MailRuKeyKeeper();
     }
 
     @Override
     public Action continueAuthorization(final String url, final MailRuKeyKeeper keys) {
-        final ResponseListener listener = ListenerHolder.getListener();
+        final ResponseListener listener = ListenerHolder.getListener(network());
         Query response = Query.fromURL(url);
         if (response == null) {
             return new Action() {

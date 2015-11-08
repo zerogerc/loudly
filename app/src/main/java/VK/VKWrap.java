@@ -1,5 +1,6 @@
 package VK;
 
+import base.Networks;
 import base.Post;
 import base.Wrap;
 import util.ListenerHolder;
@@ -17,12 +18,12 @@ public class VKWrap extends Wrap<VKKeyKeeper> {
 
     @Override
     public final String getPostParameters(Post post) {
-        return "message=" + post.getText().getText() + "&access_token=" + this.keys.getAccessToken();
+        return "message=" + post.getText() + "&access_token=" + this.keys.getAccessToken();
     }
 
     @Override
     public void processPostResponse(String response) {
         //TODO
-        ListenerHolder.getListener().onSuccess(response);
+        ListenerHolder.getListener(Networks.VK).onSuccess(response);
     }
 }

@@ -3,6 +3,7 @@ package VK;
 import android.os.Parcel;
 import base.Action;
 import base.Authorizer;
+import base.Networks;
 import util.ListenerHolder;
 import base.ResponseListener;
 import util.Query;
@@ -14,13 +15,18 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
     private static final String ERROR_DESCRIPTION = "error";
 
     @Override
+    public int network() {
+        return Networks.VK;
+    }
+
+    @Override
     protected VKKeyKeeper beginAuthorize() {
         return new VKKeyKeeper();
     }
 
     @Override
     public Action continueAuthorization(final String url, final VKKeyKeeper keys) {
-        final ResponseListener listener = ListenerHolder.getListener();
+        final ResponseListener listener = ListenerHolder.getListener(network());
         Query response = Query.fromURL(url);
 
         if (response == null) {

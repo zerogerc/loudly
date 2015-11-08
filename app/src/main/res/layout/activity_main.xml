@@ -97,7 +97,12 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_above="@+id/postButton"
-        android:editable="true" />
+        android:editable="true"
+        android:enabled="true"
+        android:inputType="text"
+        android:clickable="true"
+        android:focusable="true"
+        android:textIsSelectable="true" />
 
     <Button
         android:layout_width="wrap_content"

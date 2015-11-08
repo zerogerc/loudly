@@ -18,8 +18,8 @@ public class Post {
         attachments = new ArrayList<>();
     }
 
-    public Text getText() {
-        return text;
+    public String getText() {
+        return text.getText();
     }
 
     public void addAttachment(Image im) {

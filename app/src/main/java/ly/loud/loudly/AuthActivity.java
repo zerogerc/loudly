@@ -72,7 +72,8 @@ public class AuthActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         if (!gotResponse) {
-            ListenerHolder.getListener().onFail("User declined authorisation");
+            Authorizer authorizer = getIntent().getParcelableExtra("AUTHORIZER");
+            ListenerHolder.getListener(authorizer.network()).onFail("User declined authorisation");
         }
         super.onDestroy();
 

@@ -18,6 +18,7 @@ import util.Query;
  */
 
 public abstract class Authorizer<W extends Wrap<K>, K extends KeyKeeper> implements Parcelable{
+    public abstract int network();
     protected abstract K beginAuthorize();
     public abstract Action continueAuthorization(final String url, final K keys);
     protected abstract Query getAuthQuery();

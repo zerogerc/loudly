@@ -4,7 +4,7 @@ import base.Networks;
 import base.Wrap;
 
 public class WrapHolder {
-    static Wrap[] wraps = new Wrap[Networks.NETWORKCOUNT];
+    static Wrap[] wraps = new Wrap[Networks.NETWORK_COUNT];
 
     public static void addWrap(int network, Wrap w) {
         wraps[network] = w;

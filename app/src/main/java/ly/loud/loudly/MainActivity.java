@@ -13,6 +13,7 @@ import Facebook.FacebookAuthorizer;
 import MailRu.MailRuAuthoriser;
 import VK.VKAuthorizer;
 import VK.VKWrap;
+import base.Action;
 import base.Authorizer;
 import base.Networks;
 import base.Post;
@@ -67,20 +68,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         ContextHolder.setContext(this);
-        ListenerHolder.setListener(new ResponseListener() {
+        ListenerHolder.setListener(network, new ResponseListener() {
             @Override
             public void onSuccess(Object result) {
                 WrapHolder.addWrap(network, (Wrap) result);
 
                 int checkbox = find(checkboxMap, currentRadio);
-                ((CheckBox)findViewById(checkbox)).setChecked(true);
+                ((CheckBox) findViewById(checkbox)).setChecked(true);
             }
 
             @Override
             public void onFail(String error) {
                 Log.e(TAG, error);
                 int checkbox = find(checkboxMap, currentRadio);
-                ((CheckBox)findViewById(checkbox)).setChecked(false);
+                ((CheckBox) findViewById(checkbox)).setChecked(false);
             }
         });
 
@@ -100,11 +101,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void post(View v) {
-        TextView postView = (TextView) findViewById(R.id.post);
+        final TextView postView = (TextView) findViewById(R.id.post);
         String post = postView.getText().toString();
         VKWrap wrap = (VKWrap) WrapHolder.getWrap(Networks.VK);
         ContextHolder.setContext(this);
-        ListenerHolder.setListener(new ResponseListener() {
+        ListenerHolder.startSession(1, new Action() {
+            @Override
+            public void execute() {
+                postView.setText("Successful posting");
+            }
+        });
+        ListenerHolder.setListener(Networks.VK, new ResponseListener() {
             @Override
             public void onSuccess(Object result) {
                 Log.d(TAG, result.toString());
@@ -113,11 +120,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFail(String error) {
                 Log.e(TAG, error);
-
             }
         });
-        wrap.post(new Post(new Text("well done!"))).execute();
-        postView.setText("ok");
+        wrap.post(new Post(new Text(post))).execute();
     }
 
     @Override
