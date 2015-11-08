@@ -44,6 +44,15 @@
             android:layout_below="@+id/loginButton"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Facebook"
+            android:id="@+id/FacebookRadio"
+            android:layout_below="@+id/loginButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
     </RadioGroup>
 
 </RelativeLayout>

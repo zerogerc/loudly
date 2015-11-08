@@ -5,7 +5,7 @@ import android.os.Parcel;
 import base.KeyKeeper;
 
 public class VKKeyKeeper extends KeyKeeper {
-    public static final String CLIENT_ID = "5133011";;
+    public static final String CLIENT_ID = "5133011";
     private String accessToken = null;
 
     public VKKeyKeeper() {}

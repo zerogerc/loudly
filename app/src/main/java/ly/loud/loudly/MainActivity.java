@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.RadioButton;
 
+import Facebook.FacebookAuthorizer;
+import Facebook.FacebookWrap;
 import MailRu.MailRuAuthoriser;
 import MailRu.MailRuWrap;
 import VK.VKAuthorizer;
@@ -21,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private String result;
     private RadioButton VKRadio;
     private RadioButton MailRadio;
+    private RadioButton FacebookRadio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         VKRadio = (RadioButton)findViewById(R.id.VKRadio);
         MailRadio = (RadioButton)findViewById(R.id.MailRuRadio);
+        FacebookRadio = (RadioButton)findViewById(R.id.FacebookRadio);
     }
 
     public void login(View v) {
@@ -68,6 +72,25 @@ public class MainActivity extends AppCompatActivity {
             });
             AsyncTask MailRuAuth = new MailRuAuthoriser().createAsyncTask();
             MailRuAuth.execute();
+        }
+        if (FacebookRadio.isChecked()) {
+            ContextHolder.setContext(this);
+            ListenerHolder.setListener(new ResponseListener() {
+                @Override
+                public void onSuccess(Object res) {
+                    result = "a";
+                    FacebookWrap wrap = (FacebookWrap) res;
+                    Log.e(TAG, wrap.getKeys().getAccessToken());
+                }
+
+                @Override
+                public void onFail(String error) {
+                    result = "b";
+                    Log.e(TAG, error);
+                }
+            });
+            AsyncTask FacebokkAuth = new FacebookAuthorizer().createAsyncTask();
+            FacebokkAuth.execute();
         }
     }
 
