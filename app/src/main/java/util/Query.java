@@ -34,7 +34,7 @@ public class Query {
     }
 
     public ArrayList<Parameter> getParameters() {
-        return (ArrayList<Parameter>) parameters.clone()git;
+        return (ArrayList<Parameter>) parameters.clone();
     }
 
     public boolean containsParameter(String name) {
