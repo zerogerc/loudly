@@ -18,6 +18,10 @@ public class Post {
         attachments = new ArrayList<>();
     }
 
+    public Text getText() {
+        return text;
+    }
+
     public void addAttachment(Image im) {
         attachments.add(im);
         imageCount++;

@@ -1,7 +1,6 @@
 package ly.loud.loudly;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -9,16 +8,6 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Objects;
 
 import Facebook.FacebookAuthorizer;
 import MailRu.MailRuAuthoriser;
@@ -29,6 +18,7 @@ import base.Networks;
 import base.Post;
 import base.ResponseListener;
 import base.Wrap;
+import base.attachments.Text;
 import util.ContextHolder;
 import util.ListenerHolder;
 import util.WrapHolder;
@@ -112,6 +102,21 @@ public class MainActivity extends AppCompatActivity {
     public void post(View v) {
         TextView postView = (TextView) findViewById(R.id.post);
         String post = postView.getText().toString();
+        VKWrap wrap = (VKWrap) WrapHolder.getWrap(Networks.VK);
+        ContextHolder.setContext(this);
+        ListenerHolder.setListener(new ResponseListener() {
+            @Override
+            public void onSuccess(Object result) {
+                Log.d(TAG, result.toString());
+            }
+
+            @Override
+            public void onFail(String error) {
+                Log.e(TAG, error);
+
+            }
+        });
+        wrap.post(new Post(new Text("well done!"))).execute();
         postView.setText("ok");
     }
 
