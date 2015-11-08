@@ -2,6 +2,9 @@ package MailRu;
 
 import android.os.Parcel;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 import base.Action;
 import base.Authorizer;
 import util.ListenerHolder;
@@ -43,7 +46,7 @@ public class MailRuAuthoriser extends Authorizer<MailRuWrap, MailRuKeyKeeper> {
                 }
             };
         } else {
-            final String error = response.getParameter("error");
+            final String error = response.getParameter(ERROR_TOKEN);
             return new Action() {
                 @Override
                 public void execute() {

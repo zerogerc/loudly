@@ -11,7 +11,7 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
     private static final String AUTHORIZE_URL = "https://oauth.vk.com/authorize";
     private static final String RESPONSE_URL = "https://oauth.vk.com/blank.html";
     private static final String ACCESS_TOKEN = "access_token";
-    private static final String ERROR_DESCRIPTION = "error_description";
+    private static final String ERROR_DESCRIPTION = "error";
 
     @Override
     protected VKKeyKeeper beginAuthorize() {

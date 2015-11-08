@@ -55,4 +55,57 @@
             android:layout_alignParentStart="true" />
     </RadioGroup>
 
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/VKReady"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/loginButton"
+        android:layout_toEndOf="@+id/loginButton"
+        android:checked="false"
+        android:text="VK ready"
+        android:clickable="false" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="MailRu ready"
+        android:id="@+id/MailRuReady"
+        android:layout_below="@+id/VKReady"
+        android:layout_alignLeft="@+id/VKReady"
+        android:layout_alignStart="@+id/VKReady"
+        android:checked="false"
+        android:clickable="false" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Facebook ready"
+        android:id="@+id/FBReady"
+        android:layout_below="@+id/MailRuReady"
+        android:layout_alignLeft="@+id/MailRuReady"
+        android:layout_alignStart="@+id/MailRuReady"
+        android:checked="false"
+        android:clickable="false" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="What do you think?"
+        android:id="@+id/post"
+        android:layout_below="@+id/radioGroup"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_above="@+id/postButton"
+        android:editable="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Post"
+        android:onClick="post"
+        android:id="@+id/postButton"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>

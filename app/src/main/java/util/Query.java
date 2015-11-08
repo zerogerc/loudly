@@ -81,7 +81,7 @@ public class Query {
 
     public String toURL() {
         StringBuilder sb = new StringBuilder(serverURL);
-        if (parameters.size() > 1) {
+        if (parameters.size() >= 1) {
             sb.append('?');
             sb.append(parameters.get(0));
         }

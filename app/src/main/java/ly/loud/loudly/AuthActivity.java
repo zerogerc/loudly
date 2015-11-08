@@ -1,10 +1,10 @@
 package ly.loud.loudly;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -27,23 +27,18 @@ public class AuthActivity extends AppCompatActivity {
         gotResponse = false;
 
         setContentView(R.layout.activity_auth);
-        WebView webView = (WebView)findViewById(R.id.webView);
-        circle = (ProgressBar)findViewById(R.id.progressBar);
-        circle.setVisibility(View.VISIBLE);
+        final WebView webView = (WebView) findViewById(R.id.webView);
+        circle = (ProgressBar) findViewById(R.id.progressBar);
         Intent parent = getIntent();
 
         String url = parent.getStringExtra("URL");
         final Authorizer authorizer = parent.getParcelableExtra("AUTHORIZER");
         final KeyKeeper keys = parent.getParcelableExtra("KEYS");
+        webView.setVisibility(View.INVISIBLE);
+        circle.setVisibility(View.VISIBLE);
 
         webView.loadUrl(url);
         webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                circle.setVisibility(View.INVISIBLE);
-            }
-
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
@@ -65,9 +60,13 @@ public class AuthActivity extends AppCompatActivity {
                     continueAuth.execute();
                     gotResponse = true;
                     finish();
+                } else {
+                    circle.setVisibility(View.INVISIBLE);
+                    webView.setVisibility(View.VISIBLE);
                 }
             }
         });
+
     }
 
     @Override
