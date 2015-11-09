@@ -1,5 +1,5 @@
 package base.attachments;
 
-public interface Uploadable extends Attachable {
-    void upload();
+public abstract class Uploadable extends Attachment {
+    public abstract void upload();
 }

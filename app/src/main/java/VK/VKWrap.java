@@ -1,9 +1,12 @@
 package VK;
 
+import VK.attachments.VKImage;
 import base.Networks;
 import base.Post;
 import base.Wrap;
-import base.attachments.Attachable;
+import base.attachments.Attachment;
+import base.attachments.Image;
+import base.attachments.Video;
 import util.ListenerHolder;
 import util.ParameterBundle;
 
@@ -25,8 +28,13 @@ public class VKWrap extends Wrap<VKKeyKeeper> {
         if (post.getText().length() > 0) {
             parameters.addParameter("message", post.getText());
         }
-        for (Attachable attachment : post.getAttachments()) {
-            parameters.addParameter(attachment.toParameter());
+        for (Attachment attachment : post.getAttachments()) {
+            if (attachment instanceof Image) {
+                VKImage vkImage = (VKImage) attachment;
+                parameters.addParameter(vkImage.toParameter());
+            }
+            if (attachment instanceof Video) {
+            }
         }
         return parameters.toString();
     }

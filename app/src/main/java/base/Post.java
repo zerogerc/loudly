@@ -2,7 +2,7 @@ package base;
 
 import java.util.ArrayList;
 
-import base.attachments.Attachable;
+import base.attachments.Attachment;
 import base.attachments.Image;
 import base.attachments.Link;
 import base.attachments.Video;
@@ -10,7 +10,7 @@ import util.Counter;
 
 public class Post {
     private String text;
-    private ArrayList<Attachable> attachments;
+    private ArrayList<Attachment> attachments;
     private int imageCount, linkCount, videoCount;
 
     public Post(String text) {
@@ -37,8 +37,8 @@ public class Post {
         linkCount++;
     }
 
-    public ArrayList<Attachable> getAttachments() {
-        return (ArrayList<Attachable>)attachments.clone();
+    public ArrayList<Attachment> getAttachments() {
+        return (ArrayList<Attachment>)attachments.clone();
     }
 
     public Counter getCounter() {
