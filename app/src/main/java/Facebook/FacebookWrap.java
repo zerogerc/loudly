@@ -12,7 +12,7 @@ public class FacebookWrap extends Wrap<FacebookKeyKeeper> {
 
     @Override
     public String getInitialPostURL() {
-        return "https://graph.facebook.com/100007415162355/feed";
+        return "https://graph.facebook.com/me/feed";
     }
 
     @Override

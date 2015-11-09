@@ -20,7 +20,6 @@ import base.Networks;
 import base.Post;
 import base.ResponseListener;
 import base.Wrap;
-import base.attachments.Text;
 import util.ContextHolder;
 import util.ListenerHolder;
 import util.WrapHolder;
@@ -139,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 //        VkWrap.post(new Post(new Text("special for Dara!"))).execute();
-        FbWrap.post(new Post(new Text("another try"))).execute();
+        FbWrap.post(new Post(post)).execute();
     }
 
     @Override

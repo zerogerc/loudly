@@ -1,12 +1,13 @@
 package base.attachments;
 
-import base.Attachable;
+import util.Parameter;
 
 public class Link implements Attachable {
     // ToDo: Just do it
 
+
     @Override
-    public String toURI() {
+    public Parameter toParameter() {
         return null;
     }
 }

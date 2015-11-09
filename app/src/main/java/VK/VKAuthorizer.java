@@ -40,7 +40,9 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
 
         if (response.containsParameter(ACCESS_TOKEN)) {
             String accessToken = response.getParameter(ACCESS_TOKEN);
+            int userID = Integer.parseInt(response.getParameter("user_id"));
             keys.setAccessToken(accessToken);
+            keys.setUserID(userID);
             return new Action() {
                 @Override
                 public void execute() {

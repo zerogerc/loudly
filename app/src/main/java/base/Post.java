@@ -2,24 +2,24 @@ package base;
 
 import java.util.ArrayList;
 
+import base.attachments.Attachable;
 import base.attachments.Image;
 import base.attachments.Link;
-import base.attachments.Text;
 import base.attachments.Video;
 import util.Counter;
 
 public class Post {
-    private Text text;
+    private String text;
     private ArrayList<Attachable> attachments;
     private int imageCount, linkCount, videoCount;
 
-    public Post(Text text) {
+    public Post(String text) {
         this.text = text;
         attachments = new ArrayList<>();
     }
 
     public String getText() {
-        return text.getText();
+        return text;
     }
 
     public void addAttachment(Image im) {
@@ -42,6 +42,6 @@ public class Post {
     }
 
     public Counter getCounter() {
-        return new Counter(text.getText().length(), imageCount, linkCount, videoCount);
+        return new Counter(text.length(), imageCount, linkCount, videoCount);
     }
 }

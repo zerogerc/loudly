@@ -1,14 +1,14 @@
 package base.attachments;
 
-import base.Attachable;
+public abstract class Image implements Uploadable {
+    protected static String[] links;
+    protected String initialLink;
 
-/**
- * Created by Данил on 11/8/2015.
- */
-public class Image implements Attachable {
-    // ToDo: Just do it
-    @Override
-    public String toURI() {
-        return null;
+    public Image(String initialLink) {
+        this.initialLink = initialLink;
+    }
+
+    protected static void setLink(int network, String link) {
+        links[network] = link;
     }
 }
