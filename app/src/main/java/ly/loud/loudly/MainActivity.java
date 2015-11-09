@@ -10,6 +10,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import Facebook.FacebookAuthorizer;
+import Facebook.FacebookWrap;
 import MailRu.MailRuAuthoriser;
 import VK.VKAuthorizer;
 import VK.VKWrap;
@@ -103,14 +104,10 @@ public class MainActivity extends AppCompatActivity {
     public void post(View v) {
         final TextView postView = (TextView) findViewById(R.id.post);
         String post = postView.getText().toString();
-        VKWrap wrap = (VKWrap) WrapHolder.getWrap(Networks.VK);
+        VKWrap VkWrap = (VKWrap) WrapHolder.getWrap(Networks.VK);
+        FacebookWrap FbWrap = (FacebookWrap) WrapHolder.getWrap(Networks.FB);
+
         ContextHolder.setContext(this);
-        ListenerHolder.startSession(1, new Action() {
-            @Override
-            public void execute() {
-                postView.setText("Successful posting");
-            }
-        });
         ListenerHolder.setListener(Networks.VK, new ResponseListener() {
             @Override
             public void onSuccess(Object result) {
@@ -122,7 +119,27 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, error);
             }
         });
-        wrap.post(new Post(new Text(post))).execute();
+        ListenerHolder.setListener(Networks.FB, new ResponseListener() {
+            @Override
+            public void onSuccess(Object result) {
+                Log.d(TAG, result.toString());
+            }
+
+            @Override
+            public void onFail(String error) {
+                Log.e(TAG, error);
+            }
+        });
+
+        ListenerHolder.startSession(1, new Action() {
+            @Override
+            public void execute() {
+                postView.setText("Successful posting");
+            }
+        });
+
+//        VkWrap.post(new Post(new Text("special for Dara!"))).execute();
+        FbWrap.post(new Post(new Text("another try"))).execute();
     }
 
     @Override
