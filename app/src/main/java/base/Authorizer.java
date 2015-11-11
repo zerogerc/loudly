@@ -23,7 +23,7 @@ public abstract class Authorizer implements Parcelable {
 
     protected abstract KeyKeeper beginAuthorize();
 
-    public abstract Action continueAuthorization(final String url, final KeyKeeper keys);
+    public abstract Action continueAuthorization(final String url, KeyKeeper inKeys);
 
     protected abstract Query getAuthQuery();
 

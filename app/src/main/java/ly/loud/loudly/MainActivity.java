@@ -1,5 +1,6 @@
 package ly.loud.loudly;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +23,7 @@ import util.ResponseListener;
 import base.Wrap;
 import util.ContextHolder;
 import util.ListenerHolder;
+import util.TaskHolder;
 import util.WrapHolder;
 
 public class MainActivity extends AppCompatActivity {
@@ -69,18 +71,19 @@ public class MainActivity extends AppCompatActivity {
         ContextHolder.setContext(this);
         ListenerHolder.setListener(network, new ResponseListener() {
             @Override
-            public void onSuccess(Object result) {
+            public void onSuccess(Activity activity, Object result) {
                 WrapHolder.addWrap(network, (Wrap) result);
-
-                int checkbox = find(checkboxMap, currentRadio);
-                ((CheckBox) findViewById(checkbox)).setChecked(true);
+                MainActivity mainActivity = (MainActivity) activity;
+                int checkbox = mainActivity.find(checkboxMap, currentRadio);
+                ((CheckBox) mainActivity.findViewById(checkbox)).setChecked(true);
             }
 
             @Override
-            public void onFail(String error) {
+            public void onFail(Activity activity, String error) {
                 Log.e(TAG, error);
-                int checkbox = find(checkboxMap, currentRadio);
-                ((CheckBox) findViewById(checkbox)).setChecked(false);
+                MainActivity mainActivity = (MainActivity) activity;
+                int checkbox = mainActivity.find(checkboxMap, currentRadio);
+                ((CheckBox) mainActivity.findViewById(checkbox)).setChecked(false);
             }
         });
 
@@ -99,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         authorizer.createAsyncTask().execute();
     }
 
+
     public void post(View v) {
         final TextView postView = (TextView) findViewById(R.id.post);
         String post = postView.getText().toString();
@@ -108,40 +112,47 @@ public class MainActivity extends AppCompatActivity {
         ContextHolder.setContext(this);
         ListenerHolder.setListener(Networks.VK, new ResponseListener() {
             @Override
-            public void onSuccess(Object result) {
+            public void onSuccess(Activity activity, Object result) {
                 Log.d(TAG, result.toString());
             }
 
             @Override
-            public void onFail(String error) {
+            public void onFail(Activity activity, String error) {
                 Log.e(TAG, error);
             }
         });
         ListenerHolder.setListener(Networks.FB, new ResponseListener() {
             @Override
-            public void onSuccess(Object result) {
+            public void onSuccess(Activity activity, Object result) {
                 Log.d(TAG, result.toString());
             }
 
             @Override
-            public void onFail(String error) {
+            public void onFail(Activity activity, String error) {
                 Log.e(TAG, error);
             }
         });
 
         ListenerHolder.startSession(1, new Action() {
             @Override
-            public void execute() {
+            public void execute(Activity activity) {
                 postView.setText("Successful posting");
             }
         });
 
-//        VkWrap.post(new Post(new Text("special for Dara!"))).execute();
+        VkWrap.post(new Post(post)).execute();
         FbWrap.post(new Post(post)).execute();
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    protected void onResume() {
+        super.onResume();
+        if (TaskHolder.getAction() != null) {
+            TaskHolder.getAction().execute(this);
+            TaskHolder.setAction(null);
+        }
+        if (TaskHolder.getTask() != null) {
+            TaskHolder.getTask().attach(this);
+        }
     }
 }

@@ -1,7 +1,9 @@
 package MailRu;
 
+import android.app.Activity;
 import android.os.Parcel;
 
+import base.KeyKeeper;
 import util.Action;
 import base.Authorizer;
 import base.Networks;
@@ -9,7 +11,7 @@ import util.ListenerHolder;
 import util.ResponseListener;
 import util.Query;
 
-public class MailRuAuthoriser extends Authorizer<MailRuWrap, MailRuKeyKeeper> {
+public class MailRuAuthoriser extends Authorizer {
     private static final String AUTHORIZE_URL = "https://connect.mail.ru/oauth/authorize";
     private static final String REDIRECT_URL = "http://connect.mail.ru/oauth/success.html";
     private static final String ACCESS_TOKEN = "access_token";
@@ -26,14 +28,15 @@ public class MailRuAuthoriser extends Authorizer<MailRuWrap, MailRuKeyKeeper> {
     }
 
     @Override
-    public Action continueAuthorization(final String url, final MailRuKeyKeeper keys) {
+    public Action continueAuthorization(final String url, KeyKeeper inKeys) {
+        final MailRuKeyKeeper keys = (MailRuKeyKeeper) inKeys;
         final ResponseListener listener = ListenerHolder.getListener(network());
         Query response = Query.fromURL(url);
         if (response == null) {
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onFail("Failed to parse response: " + url);
+                public void execute(Activity activity) {
+                    listener.onFail(activity, "Failed to parse response: " + url);
                 }
             };
         }
@@ -44,16 +47,16 @@ public class MailRuAuthoriser extends Authorizer<MailRuWrap, MailRuKeyKeeper> {
             keys.setRefreshToken(refreshToken);
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onSuccess(new MailRuWrap(keys));
+                public void execute(Activity activity) {
+                    listener.onSuccess(activity, new MailRuWrap(keys));
                 }
             };
         } else {
             final String error = response.getParameter(ERROR_TOKEN);
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onFail(error);
+                public void execute(Activity activity) {
+                    listener.onFail(activity, error);
                 }
             };
         }

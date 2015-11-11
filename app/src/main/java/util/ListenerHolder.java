@@ -1,5 +1,7 @@
 package util;
 
+import android.app.Activity;
+
 import base.Networks;
 
 public class ListenerHolder {
@@ -26,26 +28,26 @@ public class ListenerHolder {
         }
         listeners[network] = new ResponseListener() {
             @Override
-            public void onSuccess(Object result) {
-                listener.onSuccess(result);
+            public void onSuccess(Activity activity, Object result) {
+                listener.onSuccess(activity, result);
                 synchronized (lock) {
                     listenerCount--;
                 }
                 if (listenerCount == 0) {
-                    onFinish.execute();
+                    onFinish.execute(activity);
                     onFinish = null;
                 }
                 setListener(network, null);
             }
 
             @Override
-            public void onFail(String error) {
-                listener.onFail(error);
+            public void onFail(Activity activity, String error) {
+                listener.onFail(activity, error);
                 synchronized (lock) {
                     listenerCount--;
                 }
                 if (listenerCount == 0) {
-                    onFinish.execute();
+                    onFinish.execute(activity);
                     onFinish = null;
                 }
                 setListener(network, null);

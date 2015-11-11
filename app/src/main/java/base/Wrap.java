@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,14 +33,26 @@ public abstract class Wrap<K extends KeyKeeper> {
         this.keys = keys;
     }
 
+    private void closeQuietly(Closeable c) {
+        if (c != null) {
+            try {
+                c.close();
+            } catch (IOException e) {
+                Log.e(TAG, "Exception while closing: " + e.getMessage());
+            }
+        }
+    }
+
     public AsyncTask<Object, Void, String> post(final Post post) {
         return new AsyncTask<Object, Void, String>() {
             @Override
             protected String doInBackground(Object... params) {
-                URL reqUrl;
-                HttpURLConnection con;
-                StringBuilder response = new StringBuilder();
+                URL reqUrl = null;
+                HttpURLConnection con = null;
+                DataOutputStream wr = null;
+                BufferedReader in = null;
 
+                StringBuilder response = new StringBuilder();
                 try {
                     reqUrl = new URL(getInitialPostURL());
 
@@ -49,19 +62,17 @@ public abstract class Wrap<K extends KeyKeeper> {
 
                     String UrlParams = getPostParameters(post);
 
-                    DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                    wr = new DataOutputStream(con.getOutputStream());
                     wr.writeBytes(UrlParams);
                     wr.flush();
-                    wr.close();
 
-                    BufferedReader in = new BufferedReader(
+                    in = new BufferedReader(
                             new InputStreamReader(con.getInputStream()));
                     String inputLine;
 
                     while ((inputLine = in.readLine()) != null) {
                         response.append(inputLine);
                     }
-                    in.close();
 
                     Log.d(TAG, response.toString());
                 } catch (MalformedURLException me) {
@@ -70,6 +81,12 @@ public abstract class Wrap<K extends KeyKeeper> {
                 } catch (IOException ioe) {
                     Log.e(TAG, "IOException");
                     return null;
+                } finally {
+                    if (con != null) {
+                        con.disconnect();
+                    }
+                    closeQuietly(wr);
+                    closeQuietly(in);
                 }
                 return response.toString();
             }
@@ -77,7 +94,8 @@ public abstract class Wrap<K extends KeyKeeper> {
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
-                processPostResponse(s);
+//                processPostResponse(s);
+                Log.i(TAG, "Success: " + s);
             }
         };
     }

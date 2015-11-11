@@ -47,6 +47,7 @@ public class VKAuthorizer extends Authorizer {
             int userID = Integer.parseInt(response.getParameter("user_id"));
             keys.setAccessToken(accessToken);
             keys.setUserID(userID);
+
             // Add to WrapHolder
             return new Action() {
                 @Override

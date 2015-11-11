@@ -15,6 +15,7 @@ import base.Authorizer;
 import base.KeyKeeper;
 import util.AttachableTask;
 import util.ListenerHolder;
+import util.TaskHolder;
 
 public class AuthActivity extends AppCompatActivity {
     ProgressBar circle;
@@ -57,7 +58,7 @@ public class AuthActivity extends AppCompatActivity {
         });
     }
 
-    static class FinishAuthorizationTask extends AttachableTask<Object, Void, Action> {
+    static class FinishAuthorizationTask extends AttachableTask<Object, Void> {
         @Override
         protected Action doInBackground(Object... params) {
             Authorizer authorizer = (Authorizer) params[0];
@@ -65,11 +66,6 @@ public class AuthActivity extends AppCompatActivity {
             KeyKeeper keys = (KeyKeeper) params[2];
 
             return authorizer.continueAuthorization(url, keys);
-        }
-
-        @Override
-        public void onExecuteInUI(Activity activity, Action action) {
-            action.execute(activity);
         }
     }
 
