@@ -1,14 +1,17 @@
 package VK;
 
+import android.app.Activity;
 import android.os.Parcel;
-import base.Action;
+
+import base.KeyKeeper;
+import util.Action;
 import base.Authorizer;
 import base.Networks;
 import util.ListenerHolder;
-import base.ResponseListener;
+import util.ResponseListener;
 import util.Query;
 
-public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
+public class VKAuthorizer extends Authorizer {
     private static final String AUTHORIZE_URL = "https://oauth.vk.com/authorize";
     private static final String RESPONSE_URL = "https://oauth.vk.com/blank.html";
     private static final String ACCESS_TOKEN = "access_token";
@@ -25,15 +28,16 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
     }
 
     @Override
-    public Action continueAuthorization(final String url, final VKKeyKeeper keys) {
+    public Action continueAuthorization(final String url, KeyKeeper inKeys) {
+        final VKKeyKeeper keys = (VKKeyKeeper) inKeys;
         final ResponseListener listener = ListenerHolder.getListener(network());
         Query response = Query.fromURL(url);
 
         if (response == null) {
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onFail("Failed to parse response: " + url);
+                public void execute(Activity action) {
+                    listener.onFail(action, "Failed to parse response: " + url);
                 }
             };
         }
@@ -43,18 +47,19 @@ public class VKAuthorizer extends Authorizer<VKWrap, VKKeyKeeper> {
             int userID = Integer.parseInt(response.getParameter("user_id"));
             keys.setAccessToken(accessToken);
             keys.setUserID(userID);
+            // Add to WrapHolder
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onSuccess(new VKWrap(keys));
+                public void execute(Activity activity) {
+                    listener.onSuccess(activity, new VKWrap(keys));
                 }
             };
         } else {
             final String errorToken = response.getParameter(ERROR_DESCRIPTION);
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onFail(errorToken);
+                public void execute(Activity activity) {
+                    listener.onFail(activity, errorToken);
                 }
             };
         }

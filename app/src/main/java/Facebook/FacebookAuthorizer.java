@@ -2,11 +2,11 @@ package Facebook;
 
 import android.os.Parcel;
 
-import base.Action;
+import util.Action;
 import base.Authorizer;
 import base.Networks;
 import util.ListenerHolder;
-import base.ResponseListener;
+import util.ResponseListener;
 import util.Query;
 
 public class FacebookAuthorizer extends Authorizer<FacebookWrap, FacebookKeyKeeper> {

@@ -1,8 +1,6 @@
 package util;
 
-import base.Action;
 import base.Networks;
-import base.ResponseListener;
 
 public class ListenerHolder {
     private static ResponseListener[] listeners = new ResponseListener[Networks.NETWORK_COUNT];
@@ -21,7 +19,11 @@ public class ListenerHolder {
 
     private static final Object lock = new Object();
 
-    public static void setListener(int network, final ResponseListener listener) {
+    public static void setListener(final int network, final ResponseListener listener) {
+        if (listener == null) {
+            listeners[network] = null;
+            return;
+        }
         listeners[network] = new ResponseListener() {
             @Override
             public void onSuccess(Object result) {
@@ -33,6 +35,7 @@ public class ListenerHolder {
                     onFinish.execute();
                     onFinish = null;
                 }
+                setListener(network, null);
             }
 
             @Override
@@ -45,6 +48,7 @@ public class ListenerHolder {
                     onFinish.execute();
                     onFinish = null;
                 }
+                setListener(network, null);
             }
         };
     }

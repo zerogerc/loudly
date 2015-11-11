@@ -1,7 +1,7 @@
 package ly.loud.loudly;
 
+import android.app.Activity;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -10,9 +10,10 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
-import base.Action;
+import util.Action;
 import base.Authorizer;
 import base.KeyKeeper;
+import util.AttachableTask;
 import util.ListenerHolder;
 
 public class AuthActivity extends AppCompatActivity {
@@ -44,20 +45,8 @@ public class AuthActivity extends AppCompatActivity {
                 super.onPageFinished(view, url);
                 if (authorizer.isResponse(url)) {
                     view.setVisibility(View.INVISIBLE);
-                    final String copy = url;
-                    AsyncTask<Object, Void, Action> continueAuth = new AsyncTask<Object, Void, Action>() {
-                        @Override
-                        protected Action doInBackground(Object... params) {
-                            return authorizer.continueAuthorization(copy, keys);
-                        }
-
-                        @Override
-                        protected void onPostExecute(Action action) {
-                            super.onPostExecute(action);
-                            action.execute();
-                        }
-                    };
-                    continueAuth.execute();
+                    FinishAuthorizationTask continueAuth = new FinishAuthorizationTask();
+                    continueAuth.execute(authorizer, url, keys);
                     gotResponse = true;
                     finish();
                 } else {
@@ -66,14 +55,28 @@ public class AuthActivity extends AppCompatActivity {
                 }
             }
         });
+    }
 
+    static class FinishAuthorizationTask extends AttachableTask<Object, Void, Action> {
+        @Override
+        protected Action doInBackground(Object... params) {
+            Authorizer authorizer = (Authorizer) params[0];
+            String url = (String) params[1];
+            KeyKeeper keys = (KeyKeeper) params[2];
+
+            return authorizer.continueAuthorization(url, keys);
+        }
+
+        @Override
+        public void onExecuteInUI(Activity activity, Action action) {
+            action.execute(activity);
+        }
     }
 
     @Override
     protected void onDestroy() {
         if (!gotResponse) {
-            Authorizer authorizer = getIntent().getParcelableExtra("AUTHORIZER");
-            ListenerHolder.getListener(authorizer.network()).onFail("User declined authorisation");
+            Log.e("TAG", "User declined authorisation");
         }
         super.onDestroy();
 

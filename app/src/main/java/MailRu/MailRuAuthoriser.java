@@ -2,14 +2,11 @@ package MailRu;
 
 import android.os.Parcel;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import base.Action;
+import util.Action;
 import base.Authorizer;
 import base.Networks;
 import util.ListenerHolder;
-import base.ResponseListener;
+import util.ResponseListener;
 import util.Query;
 
 public class MailRuAuthoriser extends Authorizer<MailRuWrap, MailRuKeyKeeper> {

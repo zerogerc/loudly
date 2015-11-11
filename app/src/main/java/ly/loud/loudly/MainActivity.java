@@ -14,11 +14,11 @@ import Facebook.FacebookWrap;
 import MailRu.MailRuAuthoriser;
 import VK.VKAuthorizer;
 import VK.VKWrap;
-import base.Action;
+import util.Action;
 import base.Authorizer;
 import base.Networks;
 import base.Post;
-import base.ResponseListener;
+import util.ResponseListener;
 import base.Wrap;
 import util.ContextHolder;
 import util.ListenerHolder;
@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         group = (RadioGroup) findViewById(R.id.networks);
     }
 

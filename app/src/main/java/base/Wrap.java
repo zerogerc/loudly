@@ -18,7 +18,9 @@ public abstract class Wrap<K extends KeyKeeper> {
 
     public abstract String getInitialPostURL();
     public abstract String getPostParameters(Post post);
-    public abstract void processPostResponse(String response);
+    public void processPostResponse(String response) {
+        // ToDo: make Action
+    }
 
     public K getKeys() {
         return keys;

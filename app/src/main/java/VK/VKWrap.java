@@ -38,10 +38,4 @@ public class VKWrap extends Wrap<VKKeyKeeper> {
         }
         return parameters.toString();
     }
-
-    @Override
-    public void processPostResponse(String response) {
-        //TODO
-        ListenerHolder.getListener(Networks.VK).onSuccess(response);
-    }
 }
