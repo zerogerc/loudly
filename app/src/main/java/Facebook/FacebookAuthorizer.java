@@ -1,15 +1,17 @@
 package Facebook;
 
+import android.app.Activity;
 import android.os.Parcel;
 
-import util.Action;
 import base.Authorizer;
+import base.KeyKeeper;
 import base.Networks;
+import util.Action;
 import util.ListenerHolder;
-import util.ResponseListener;
 import util.Query;
+import util.ResponseListener;
 
-public class FacebookAuthorizer extends Authorizer<FacebookWrap, FacebookKeyKeeper> {
+public class FacebookAuthorizer extends Authorizer {
     private static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
     private static final String RESPONSE_URL = "https://www.facebook.com/connect/login_success.html";
     private static final String ACCESS_TOKEN = "access_token";
@@ -26,14 +28,15 @@ public class FacebookAuthorizer extends Authorizer<FacebookWrap, FacebookKeyKeep
     }
 
     @Override
-    public Action continueAuthorization(final String url, final FacebookKeyKeeper keys) {
+    public Action continueAuthorization(final String url, KeyKeeper inKeys) {
+        final FacebookKeyKeeper keys = (FacebookKeyKeeper) inKeys;
         final ResponseListener listener = ListenerHolder.getListener(network());
         Query response = Query.fromURL(url);
         if (response == null) {
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onFail("Failed to parse response: " + url);
+                public void execute(Activity activity) {
+                    listener.onFail(activity, "Failed to parse response: " + url);
                 }
             };
         }
@@ -42,16 +45,16 @@ public class FacebookAuthorizer extends Authorizer<FacebookWrap, FacebookKeyKeep
             keys.setAccessToken(accessToken);
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onSuccess(new FacebookWrap(keys));
+                public void execute(Activity activity) {
+                    listener.onSuccess(activity, new FacebookWrap(keys));
                 }
             };
         } else {
             final String error = response.getParameter(ERROR_DESCRIPTION);
             return new Action() {
                 @Override
-                public void execute() {
-                    listener.onFail(error);
+                public void execute(Activity activity) {
+                    listener.onFail(activity, error);
                 }
             };
         }
@@ -62,7 +65,7 @@ public class FacebookAuthorizer extends Authorizer<FacebookWrap, FacebookKeyKeep
         Query query = new Query(AUTHORIZE_URL);
         query.addParameter("client_id", FacebookKeyKeeper.CLIENT_ID);
         query.addParameter("redirect_uri", RESPONSE_URL);
-        query.addParameter("scope", "publish_actions");
+        query.addParameter("scope", "publish_actions, manage_pages,publish_pages");
         query.addParameter("response_type", "token");
         return query;
     }
