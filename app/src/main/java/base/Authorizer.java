@@ -9,6 +9,7 @@ import android.util.Log;
 
 import ly.loud.loudly.AuthActivity;
 import util.Action;
+import util.AttachableTask;
 import util.Query;
 
 /**
@@ -53,17 +54,12 @@ public abstract class Authorizer implements Parcelable {
      * Static Authorization class, which holds Authorizer.
      * It performs initial steps of authorisation and opens AuthActivity to get authorisation tokens
      */
-    private static class AuthorizationTask extends AsyncTask<Object, Void, KeyKeeper> {
+    private static class AuthorizationTask extends AttachableTask<Object, Void, KeyKeeper> {
         private Authorizer authorizer;
-        private Activity activity;
 
         public AuthorizationTask(Activity activity, Authorizer authorizer) {
-            this.activity = activity;
+            super(activity);
             this.authorizer = authorizer;
-        }
-
-        public void attach(Activity activity) {
-            this.activity = activity;
         }
 
         @Override
@@ -73,14 +69,13 @@ public abstract class Authorizer implements Parcelable {
         }
 
         @Override
-        protected void onPostExecute(KeyKeeper keys) {
-            super.onPostExecute(keys);
-            if (keys == null) {
+        public void ExecuteInUI(Activity activity, KeyKeeper result) {
+            if (result == null) {
                 return;
             }
             Intent openWeb = new Intent(activity, AuthActivity.class);
             openWeb.putExtra("URL", authorizer.getAuthQuery().toURL());
-            openWeb.putExtra("KEYS", keys);
+            openWeb.putExtra("KEYS", result);
             openWeb.putExtra("AUTHORIZER", authorizer);
             activity.startActivity(openWeb);
         }

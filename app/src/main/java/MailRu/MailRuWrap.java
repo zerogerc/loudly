@@ -1,7 +1,12 @@
 package MailRu;
 
+import java.io.IOException;
+
 import base.Post;
 import base.Wrap;
+import base.attachments.Image;
+import util.Parameter;
+import util.ParameterBundle;
 
 public class MailRuWrap extends Wrap<MailRuKeyKeeper> {
     public MailRuWrap(MailRuKeyKeeper keys) {
@@ -14,12 +19,17 @@ public class MailRuWrap extends Wrap<MailRuKeyKeeper> {
     }
 
     @Override
-    public String getPostParameters(Post post) {
+    protected ParameterBundle getInitialPostParams(Post post) {
         return null;
     }
 
     @Override
-    public void processPostResponse(String response) {
+    protected Parameter uploadImage(Image im) throws IOException {
+        return null;
+    }
+
+    @Override
+    protected void parseResponse(String response) {
 
     }
 }

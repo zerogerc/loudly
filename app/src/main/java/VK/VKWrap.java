@@ -1,17 +1,16 @@
 package VK;
 
-import VK.attachments.VKImage;
-import base.Networks;
+import java.io.IOException;
+
 import base.Post;
 import base.Wrap;
-import base.attachments.Attachment;
 import base.attachments.Image;
-import base.attachments.Video;
-import util.ListenerHolder;
+import util.Parameter;
 import util.ParameterBundle;
 
 public class VKWrap extends Wrap<VKKeyKeeper> {
     private final String TAG = "VK_WRAP_TAG";
+
     public VKWrap(VKKeyKeeper keys) {
         super(keys);
     }
@@ -22,20 +21,22 @@ public class VKWrap extends Wrap<VKKeyKeeper> {
     }
 
     @Override
-    public final String getPostParameters(Post post) {
+    protected ParameterBundle getInitialPostParams(Post post) {
         ParameterBundle parameters = new ParameterBundle();
         parameters.addParameter("access_token", keys.getAccessToken());
         if (post.getText().length() > 0) {
             parameters.addParameter("message", post.getText());
         }
-        for (Attachment attachment : post.getAttachments()) {
-            if (attachment instanceof Image) {
-                VKImage vkImage = (VKImage) attachment;
-                parameters.addParameter(vkImage.toParameter());
-            }
-            if (attachment instanceof Video) {
-            }
-        }
-        return parameters.toString();
+        return parameters;
+    }
+
+    @Override
+    protected Parameter uploadImage(Image im) throws IOException {
+        return null;
+    }
+
+    @Override
+    protected void parseResponse(String response) {
+        // Parse response here
     }
 }

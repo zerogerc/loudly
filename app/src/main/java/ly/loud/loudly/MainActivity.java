@@ -6,12 +6,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import Facebook.FacebookAuthorizer;
 import Facebook.FacebookWrap;
 import MailRu.MailRuAuthoriser;
+import MailRu.MailRuWrap;
 import VK.VKAuthorizer;
 import VK.VKWrap;
 import base.Authorizer;
@@ -20,12 +22,14 @@ import base.Post;
 import base.Wrap;
 import util.Action;
 import util.ListenerHolder;
+import util.LongTask;
 import util.ResponseListener;
 import util.TaskHolder;
 import util.WrapHolder;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
+    private EditText postView;
 
     private static final int[][] networkMap = new int[][]{
             {R.id.VKRadio, Networks.VK},
@@ -44,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         group = (RadioGroup) findViewById(R.id.networks);
+        postView = (EditText) findViewById(R.id.post);
     }
 
     // ToDo: replace with dictionary
@@ -106,38 +111,26 @@ public class MainActivity extends AppCompatActivity {
         VKWrap VkWrap = (VKWrap) WrapHolder.getWrap(Networks.VK);
         FacebookWrap FbWrap = (FacebookWrap) WrapHolder.getWrap(Networks.FB);
 
-        ListenerHolder.setListener(Networks.VK, new ResponseListener() {
+        ListenerHolder.setListener(0, new ResponseListener() {
             @Override
             public void onSuccess(Activity activity, Object result) {
-                Log.d(TAG, result.toString());
+                if (activity instanceof MainActivity) {
+                    MainActivity mainActivity = (MainActivity) activity;
+                    mainActivity.postView.setText("Success!");
+                }
             }
 
             @Override
             public void onFail(Activity activity, String error) {
-                Log.e(TAG, error);
+                if (activity instanceof MainActivity) {
+                    MainActivity mainActivity = (MainActivity) activity;
+                    mainActivity.postView.setText("Fail :(");
+                }
             }
         });
-        ListenerHolder.setListener(Networks.FB, new ResponseListener() {
-            @Override
-            public void onSuccess(Activity activity, Object result) {
-                Log.d(TAG, result.toString());
-            }
-
-            @Override
-            public void onFail(Activity activity, String error) {
-                Log.e(TAG, error);
-            }
-        });
-
-        ListenerHolder.startSession(1, new Action() {
-            @Override
-            public void execute(Activity activity) {
-                postView.setText("Successful posting");
-            }
-        });
-
-        VkWrap.post(new Post(post)).execute();
-        FbWrap.post(new Post(post)).execute();
+        LongTask uploader = Wrap.makePostUploader(new Post(post), VkWrap, FbWrap);
+        uploader.attachActivity(this);
+        uploader.execute();
     }
 
     @Override
@@ -148,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
             TaskHolder.setAction(null);
         }
         if (TaskHolder.getTask() != null) {
-            TaskHolder.getTask().attach(this);
+            TaskHolder.getTask().attachActivity(this);
         }
     }
 }

@@ -1,6 +1,5 @@
 package ly.loud.loudly;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -13,9 +12,7 @@ import android.widget.ProgressBar;
 import util.Action;
 import base.Authorizer;
 import base.KeyKeeper;
-import util.AttachableTask;
-import util.ListenerHolder;
-import util.TaskHolder;
+import util.LongTask;
 
 public class AuthActivity extends AppCompatActivity {
     ProgressBar circle;
@@ -58,7 +55,7 @@ public class AuthActivity extends AppCompatActivity {
         });
     }
 
-    static class FinishAuthorizationTask extends AttachableTask<Object, Void> {
+    static class FinishAuthorizationTask extends LongTask<Object, Void> {
         @Override
         protected Action doInBackground(Object... params) {
             Authorizer authorizer = (Authorizer) params[0];

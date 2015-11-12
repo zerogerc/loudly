@@ -25,4 +25,5 @@ public class Image extends Uploadable {
     protected static void setLink(int network, String link) {
         links[network] = link;
     }
+    protected static String getLink(int network) { return links[network]; }
 }

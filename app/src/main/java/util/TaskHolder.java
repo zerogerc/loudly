@@ -1,14 +1,14 @@
 package util;
 
 public class TaskHolder {
-    static AttachableTask task = null;
+    static LongTask task = null;
     static Action action = null;
 
-    public static AttachableTask getTask() {
+    public static LongTask getTask() {
         return task;
     }
 
-    public static void setTask(AttachableTask task) {
+    public static void setTask(LongTask task) {
         TaskHolder.task = task;
     }
 
