@@ -88,21 +88,21 @@
         android:checked="false"
         android:clickable="false" />
 
-    <TextView
+    <EditText
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="What do you think?"
         android:id="@+id/post"
         android:layout_below="@+id/networks"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
+        android:layout_alignParentStart="false"
         android:layout_above="@+id/postButton"
-        android:editable="true"
         android:enabled="true"
         android:inputType="text"
         android:clickable="true"
         android:focusable="true"
-        android:textIsSelectable="true" />
+        android:textIsSelectable="true"
+        android:gravity="top" />
 
     <Button
         android:layout_width="wrap_content"

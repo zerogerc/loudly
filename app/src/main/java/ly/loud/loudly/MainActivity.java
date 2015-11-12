@@ -1,7 +1,6 @@
 package ly.loud.loudly;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -15,14 +14,13 @@ import Facebook.FacebookWrap;
 import MailRu.MailRuAuthoriser;
 import VK.VKAuthorizer;
 import VK.VKWrap;
-import util.Action;
 import base.Authorizer;
 import base.Networks;
 import base.Post;
-import util.ResponseListener;
 import base.Wrap;
-import util.ContextHolder;
+import util.Action;
 import util.ListenerHolder;
+import util.ResponseListener;
 import util.TaskHolder;
 import util.WrapHolder;
 
@@ -68,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        ContextHolder.setContext(this);
         ListenerHolder.setListener(network, new ResponseListener() {
             @Override
             public void onSuccess(Activity activity, Object result) {
@@ -99,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 authorizer = new FacebookAuthorizer();
                 break;
         }
-        authorizer.createAsyncTask().execute();
+        authorizer.createAsyncTask(this).execute();
     }
 
 
@@ -109,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
         VKWrap VkWrap = (VKWrap) WrapHolder.getWrap(Networks.VK);
         FacebookWrap FbWrap = (FacebookWrap) WrapHolder.getWrap(Networks.FB);
 
-        ContextHolder.setContext(this);
         ListenerHolder.setListener(Networks.VK, new ResponseListener() {
             @Override
             public void onSuccess(Activity activity, Object result) {

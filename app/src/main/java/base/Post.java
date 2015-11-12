@@ -8,9 +8,15 @@ import base.attachments.Link;
 import base.attachments.Video;
 import util.Counter;
 
+/**
+ * Сlass that stores text and attachments to post.
+ */
 public class Post {
     private String text;
     private ArrayList<Attachment> attachments;
+    /**
+     * Amount of images, links, videos attached to post.
+     */
     private int imageCount, linkCount, videoCount;
 
     public Post(String text) {

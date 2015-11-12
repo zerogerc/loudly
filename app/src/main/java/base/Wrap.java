@@ -12,6 +12,12 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+/**
+ *  base class for all interactions with particular social network
+ *  we need to fill field "keys" in authorizer to send requests through this class
+ * @param <K> - is a proper(for particular social network) KeyKeeper
+ */
+
 public abstract class Wrap<K extends KeyKeeper> {
     private final String TAG = "WRAP_TAG";
 
@@ -93,6 +99,7 @@ public abstract class Wrap<K extends KeyKeeper> {
 
             @Override
             protected void onPostExecute(String s) {
+                //TODO
                 super.onPostExecute(s);
 //                processPostResponse(s);
                 Log.i(TAG, "Success: " + s);
