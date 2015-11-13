@@ -2,6 +2,6 @@ package util;
 
 import android.app.Activity;
 
-public interface Action {
+public interface UIAction {
     void execute(Activity activity);
 }
