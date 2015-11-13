@@ -23,6 +23,7 @@ import util.ListenerHolder;
 import util.LongTask;
 import util.ResponseListener;
 import util.TaskHolder;
+import util.UIAction;
 import util.WrapHolder;
 
 public class MainActivity extends AppCompatActivity {
@@ -126,7 +127,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        LongTask uploader = Wrap.makePostUploader(VkWrap, FbWrap);
+        LongTask uploader = Wrap.makePostUploader(new UIAction() {
+            @Override
+            public void execute(Activity activity, Object... params) {
+                Log.e(TAG, params[0].toString());
+            }
+        }, VkWrap, FbWrap);
         uploader.attachActivity(this);
         uploader.execute(new Post(post));
     }

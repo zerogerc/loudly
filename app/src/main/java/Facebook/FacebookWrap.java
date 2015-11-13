@@ -2,30 +2,28 @@ package Facebook;
 
 import base.Post;
 import base.Wrap;
+import base.attachments.Image;
 import util.BackgroundAction;
 import util.Parameter;
 import util.ParameterBundle;
+import util.Query;
 
 public class FacebookWrap extends Wrap<FacebookKeyKeeper> {
+    private static final String POST_SERVER = "https://graph.facebook.com/me/feed";
     public FacebookWrap(FacebookKeyKeeper keys) {
         super(keys);
     }
 
     @Override
-    public String getInitialPostURL() {
-        return "https://graph.facebook.com/me/feed";
+    protected Query makePostQuery(Post post) {
+        Query query = new Query(POST_SERVER);
+        query.addParameter("message", post.getText());
+        query.addParameter("access_token", keys.getAccessToken());
+        return query;
     }
 
     @Override
-    protected ParameterBundle getInitialPostParams(Post post) {
-        ParameterBundle bundle = new ParameterBundle();
-        bundle.addParameter("message", post.getText());
-        bundle.addParameter("access_token", keys.getAccessToken());
-        return bundle;
-    }
-
-    @Override
-    protected BackgroundAction<Parameter> uploadImage(BackgroundAction publish) {
+    protected Parameter uploadImage(Image image, BackgroundAction publish) {
         return null;
     }
 

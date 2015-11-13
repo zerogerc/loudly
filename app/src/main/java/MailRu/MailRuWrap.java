@@ -2,9 +2,11 @@ package MailRu;
 
 import base.Post;
 import base.Wrap;
+import base.attachments.Image;
 import util.BackgroundAction;
 import util.Parameter;
 import util.ParameterBundle;
+import util.Query;
 
 public class MailRuWrap extends Wrap<MailRuKeyKeeper> {
     public MailRuWrap(MailRuKeyKeeper keys) {
@@ -12,17 +14,12 @@ public class MailRuWrap extends Wrap<MailRuKeyKeeper> {
     }
 
     @Override
-    public String getInitialPostURL() {
+    protected Query makePostQuery(Post post) {
         return null;
     }
 
     @Override
-    protected ParameterBundle getInitialPostParams(Post post) {
-        return null;
-    }
-
-    @Override
-    protected BackgroundAction<Parameter> uploadImage(BackgroundAction publish) {
+    protected Parameter uploadImage(Image image, BackgroundAction publish) {
         return null;
     }
 

@@ -2,34 +2,32 @@ package VK;
 
 import base.Post;
 import base.Wrap;
+import base.attachments.Image;
 import util.BackgroundAction;
 import util.Parameter;
 import util.ParameterBundle;
+import util.Query;
 
 public class VKWrap extends Wrap<VKKeyKeeper> {
-    private final String TAG = "VK_WRAP_TAG";
+    private static final String TAG = "VK_WRAP_TAG";
+    private static final String POST_SERVER = "https://api.vk.com/method/wall.post";
 
     public VKWrap(VKKeyKeeper keys) {
         super(keys);
     }
 
     @Override
-    public final String getInitialPostURL() {
-        return "https://api.vk.com/method/wall.post";
-    }
-
-    @Override
-    protected ParameterBundle getInitialPostParams(Post post) {
-        ParameterBundle parameters = new ParameterBundle();
-        parameters.addParameter("access_token", keys.getAccessToken());
+    protected Query makePostQuery(Post post) {
+        Query query = new Query(POST_SERVER);
         if (post.getText().length() > 0) {
-            parameters.addParameter("message", post.getText());
+            query.addParameter("message", post.getText());
         }
-        return parameters;
+        query.addParameter("access_token", keys.getAccessToken());
+        return query;
     }
 
     @Override
-    protected BackgroundAction<Parameter> uploadImage(BackgroundAction publish) {
+    protected Parameter uploadImage(Image image, BackgroundAction publish) {
         return null;
     }
 

@@ -1,11 +1,32 @@
 package util;
 
-public class Query extends ParameterBundle {
+public class Query {
     private String serverURL;
+    private ParameterBundle params;
 
     public Query(String serverURL) {
-        super();
         this.serverURL = serverURL;
+        params = new ParameterBundle();
+    }
+
+    public boolean containsParameter(String name) {
+        return getParameter(name) != null;
+    }
+
+    public void addParameter(Parameter parameter) {
+        params.addParameter(parameter);
+    }
+
+    public void addParameter(String parameter, String value) {
+        params.addParameter(new Parameter(parameter, value));
+    }
+
+    public String getParameter(String name) {
+        return params.getParameter(name);
+    }
+
+    public ParameterBundle getParameters() {
+        return params;
     }
 
     public String getServerURL() {
@@ -38,7 +59,7 @@ public class Query extends ParameterBundle {
     }
 
     public String toURL() {
-        String params = super.toString();
+        String params = this.params.toString();
         StringBuilder sb = new StringBuilder(serverURL);
         sb.append('?');
         sb.append(params);

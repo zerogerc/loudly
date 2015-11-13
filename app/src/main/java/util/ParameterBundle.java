@@ -10,8 +10,8 @@ public class ParameterBundle {
         parameters = new ArrayList<>();
     }
 
-    public ArrayList<Parameter> getParameters() {
-        return (ArrayList<Parameter>) parameters.clone();
+    public ArrayList<Parameter> asList() {
+        return parameters;
     }
 
     public boolean containsParameter(String name) {
