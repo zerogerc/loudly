@@ -9,7 +9,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
-import util.Action;
+import util.UIAction;
 import base.Authorizer;
 import base.KeyKeeper;
 import util.LongTask;
@@ -57,7 +57,7 @@ public class AuthActivity extends AppCompatActivity {
 
     static class FinishAuthorizationTask extends LongTask<Object, Void> {
         @Override
-        protected Action doInBackground(Object... params) {
+        protected UIAction doInBackground(Object... params) {
             Authorizer authorizer = (Authorizer) params[0];
             String url = (String) params[1];
             KeyKeeper keys = (KeyKeeper) params[2];

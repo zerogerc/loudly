@@ -6,7 +6,7 @@ import android.os.Parcel;
 import base.Authorizer;
 import base.KeyKeeper;
 import base.Networks;
-import util.Action;
+import util.UIAction;
 import util.ListenerHolder;
 import util.Query;
 import util.ResponseListener;
@@ -28,14 +28,14 @@ public class FacebookAuthorizer extends Authorizer {
     }
 
     @Override
-    public Action continueAuthorization(final String url, KeyKeeper inKeys) {
+    public UIAction continueAuthorization(final String url, KeyKeeper inKeys) {
         final FacebookKeyKeeper keys = (FacebookKeyKeeper) inKeys;
         final ResponseListener listener = ListenerHolder.getListener(network());
         Query response = Query.fromURL(url);
         if (response == null) {
-            return new Action() {
+            return new UIAction() {
                 @Override
-                public void execute(Activity activity) {
+                public void execute(Activity activity, Object... params) {
                     listener.onFail(activity, "Failed to parse response: " + url);
                 }
             };
@@ -43,17 +43,17 @@ public class FacebookAuthorizer extends Authorizer {
         if (response.containsParameter(ACCESS_TOKEN)) {
             String accessToken = response.getParameter(ACCESS_TOKEN);
             keys.setAccessToken(accessToken);
-            return new Action() {
+            return new UIAction() {
                 @Override
-                public void execute(Activity activity) {
+                public void execute(Activity activity, Object... params) {
                     listener.onSuccess(activity, new FacebookWrap(keys));
                 }
             };
         } else {
             final String error = response.getParameter(ERROR_DESCRIPTION);
-            return new Action() {
+            return new UIAction() {
                 @Override
-                public void execute(Activity activity) {
+                public void execute(Activity activity, Object... params) {
                     listener.onFail(activity, error);
                 }
             };

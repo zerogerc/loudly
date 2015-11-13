@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.os.Parcel;
 
 import base.KeyKeeper;
-import util.Action;
+import util.UIAction;
 import base.Authorizer;
 import base.Networks;
 import util.ListenerHolder;
@@ -28,14 +28,14 @@ public class MailRuAuthoriser extends Authorizer {
     }
 
     @Override
-    public Action continueAuthorization(final String url, KeyKeeper inKeys) {
+    public UIAction continueAuthorization(final String url, KeyKeeper inKeys) {
         final MailRuKeyKeeper keys = (MailRuKeyKeeper) inKeys;
         final ResponseListener listener = ListenerHolder.getListener(network());
         Query response = Query.fromURL(url);
         if (response == null) {
-            return new Action() {
+            return new UIAction() {
                 @Override
-                public void execute(Activity activity) {
+                public void execute(Activity activity, Object... params) {
                     listener.onFail(activity, "Failed to parse response: " + url);
                 }
             };
@@ -45,17 +45,17 @@ public class MailRuAuthoriser extends Authorizer {
             String refreshToken = response.getParameter("refresh_token");
             keys.setSessionKey(accessToken);
             keys.setRefreshToken(refreshToken);
-            return new Action() {
+            return new UIAction() {
                 @Override
-                public void execute(Activity activity) {
+                public void execute(Activity activity, Object... params) {
                     listener.onSuccess(activity, new MailRuWrap(keys));
                 }
             };
         } else {
             final String error = response.getParameter(ERROR_TOKEN);
-            return new Action() {
+            return new UIAction() {
                 @Override
-                public void execute(Activity activity) {
+                public void execute(Activity activity, Object... params) {
                     listener.onFail(activity, error);
                 }
             };

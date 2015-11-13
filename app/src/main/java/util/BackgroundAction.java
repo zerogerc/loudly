@@ -1,7 +1,9 @@
 package util;
 
 /**
- * Created by ZeRoGerc on 13.11.15.
+ * Action, that can be executed without context
+ * @param <Result> Type of result
  */
-public interface BackgroundAction {
+public interface BackgroundAction<Result> {
+    Result execute(Object... params);
 }

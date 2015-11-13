@@ -7,10 +7,10 @@ import base.Networks;
 public class ListenerHolder {
     private static ResponseListener[] listeners = new ResponseListener[Networks.NETWORK_COUNT];
     private static int listenerCount = 0;
-    private static Action onFinish = null;
+    private static UIAction onFinish = null;
 
 
-    public static void startSession(int listenerCount, Action onFinish) {
+    public static void startSession(int listenerCount, UIAction onFinish) {
         ListenerHolder.listenerCount = listenerCount;
         ListenerHolder.onFinish = onFinish;
     }

@@ -1,10 +1,8 @@
 package MailRu;
 
-import java.io.IOException;
-
 import base.Post;
 import base.Wrap;
-import base.attachments.Image;
+import util.BackgroundAction;
 import util.Parameter;
 import util.ParameterBundle;
 
@@ -24,12 +22,12 @@ public class MailRuWrap extends Wrap<MailRuKeyKeeper> {
     }
 
     @Override
-    protected Parameter uploadImage(Image im) throws IOException {
+    protected BackgroundAction<Parameter> uploadImage(BackgroundAction publish) {
         return null;
     }
 
     @Override
-    protected void parseResponse(String response) {
+    protected void parseResponse(Post post, String response) {
 
     }
 }

@@ -13,14 +13,12 @@ import android.widget.TextView;
 import Facebook.FacebookAuthorizer;
 import Facebook.FacebookWrap;
 import MailRu.MailRuAuthoriser;
-import MailRu.MailRuWrap;
 import VK.VKAuthorizer;
 import VK.VKWrap;
 import base.Authorizer;
 import base.Networks;
 import base.Post;
 import base.Wrap;
-import util.Action;
 import util.ListenerHolder;
 import util.LongTask;
 import util.ResponseListener;
@@ -128,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        LongTask uploader = Wrap.makePostUploader(new Post(post), VkWrap, FbWrap);
+        LongTask uploader = Wrap.makePostUploader(VkWrap, FbWrap);
         uploader.attachActivity(this);
-        uploader.execute();
+        uploader.execute(new Post(post));
     }
 
     @Override

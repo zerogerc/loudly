@@ -2,7 +2,7 @@ package util;
 
 public class TaskHolder {
     static LongTask task = null;
-    static Action action = null;
+    static UIAction action = null;
 
     public static LongTask getTask() {
         return task;
@@ -12,11 +12,11 @@ public class TaskHolder {
         TaskHolder.task = task;
     }
 
-    public static Action getAction() {
+    public static UIAction getAction() {
         return action;
     }
 
-    public static void setAction(Action action) {
+    public static void setAction(UIAction action) {
         TaskHolder.action = action;
     }
 }

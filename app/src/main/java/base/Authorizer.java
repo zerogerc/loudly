@@ -8,7 +8,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import ly.loud.loudly.AuthActivity;
-import util.Action;
+import util.UIAction;
 import util.AttachableTask;
 import util.Query;
 
@@ -34,9 +34,9 @@ public abstract class Authorizer implements Parcelable {
      * It's important to put Wrap into wrapHolder before onSuccess method invoked.
      * @param url response from authorization server
      * @param inKeys keys returned from beginAuthorize
-     * @return Action that will be executed in UIThread
+     * @return UIAction that will be executed in UIThread
      */
-    public abstract Action continueAuthorization(final String url, KeyKeeper inKeys);
+    public abstract UIAction continueAuthorization(final String url, KeyKeeper inKeys);
 
     /**
      * @return parameters that will be send to server in order to get proper tokens
