@@ -1,52 +1,58 @@
 package VK;
 
 import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.io.IOException;
 
 import base.KeyKeeper;
+import util.FileWrap;
+import util.Writable;
 
 public class VKKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "5133011";
     private String accessToken = null;
-    private int userID = 0;
+    private String userId = null;
 
     public VKKeyKeeper() {}
 
-    public VKKeyKeeper(String accessToken, int userID) {
+    public VKKeyKeeper(String accessToken, String userID) {
         this.accessToken = accessToken;
-        this.userID = userID;
+        this.userId = userID;
     }
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
 
-    public void setUserID(int userID) {
-        this.userID = userID;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getAccessToken() {
         return accessToken;
     }
 
-    public int getUserID() {
-        return userID;
+    public String getUserId() {
+        return userId;
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    protected String[] toStrings() {
+        return new String[] {accessToken, userId};
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(accessToken);
-        dest.writeInt(userID);
+    public void readFromFile(FileWrap file) throws IOException {
+        accessToken = file.readString();
+        userId = file.readString();
     }
+
     public static final Creator<VKKeyKeeper> CREATOR = new Creator<VKKeyKeeper>() {
         @Override
         public VKKeyKeeper createFromParcel(Parcel source) {
             String token = source.readString();
-            int ID = source.readInt();
+            String ID = source.readString();
             return new VKKeyKeeper(token, ID);
         }
 

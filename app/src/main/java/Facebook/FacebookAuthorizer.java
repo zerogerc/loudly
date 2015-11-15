@@ -1,11 +1,12 @@
 package Facebook;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Parcel;
 
 import base.Authorizer;
 import base.KeyKeeper;
 import base.Networks;
+import ly.loud.loudly.Loudly;
 import util.UIAction;
 import util.ListenerHolder;
 import util.Query;
@@ -35,26 +36,27 @@ public class FacebookAuthorizer extends Authorizer {
         if (response == null) {
             return new UIAction() {
                 @Override
-                public void execute(Activity activity, Object... params) {
-                    listener.onFail(activity, "Failed to parse response: " + url);
+                public void execute(Context context, Object... params) {
+                    listener.onFail(context, "Failed to parse response: " + url);
                 }
             };
         }
         if (response.containsParameter(ACCESS_TOKEN)) {
             String accessToken = response.getParameter(ACCESS_TOKEN);
             keys.setAccessToken(accessToken);
+            Loudly.getContext().setKeyKeeper(network(), keys);
             return new UIAction() {
                 @Override
-                public void execute(Activity activity, Object... params) {
-                    listener.onSuccess(activity, new FacebookWrap(keys));
+                public void execute(Context context, Object... params) {
+                    listener.onSuccess(context, keys);
                 }
             };
         } else {
             final String error = response.getParameter(ERROR_DESCRIPTION);
             return new UIAction() {
                 @Override
-                public void execute(Activity activity, Object... params) {
-                    listener.onFail(activity, error);
+                public void execute(Context context, Object... params) {
+                    listener.onFail(context, error);
                 }
             };
         }

@@ -2,15 +2,17 @@ package MailRu;
 
 import android.os.Parcel;
 
+import java.io.IOException;
+
 import base.KeyKeeper;
+import util.FileWrap;
 
 public class MailRuKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "738872";
     private String sessionKey;
     private String refreshToken;
 
-    public MailRuKeyKeeper() {
-    }
+    public MailRuKeyKeeper() {}
 
     public MailRuKeyKeeper(String sessionKey, String refreshToken) {
         this.sessionKey = sessionKey;
@@ -34,14 +36,14 @@ public class MailRuKeyKeeper extends KeyKeeper {
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    protected String[] toStrings() {
+        return new String[]{sessionKey, refreshToken};
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(sessionKey);
-        dest.writeString(refreshToken);
+    public void readFromFile(FileWrap file) throws IOException {
+        sessionKey = file.readString();
+        refreshToken = file.readString();
     }
 
     public static final Creator<MailRuKeyKeeper> CREATOR = new Creator<MailRuKeyKeeper>() {

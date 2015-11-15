@@ -106,6 +106,27 @@
         android:onClick="post"
         android:id="@+id/postButton"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignRight="@+id/FBReady"
+        android:layout_alignEnd="@+id/FBReady" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:id="@+id/button"
+        android:layout_below="@+id/post"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:onClick="saveClicked" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="load"
+        android:id="@+id/button2"
+        android:layout_below="@+id/post"
+        android:layout_centerHorizontal="true"
+        android:onClick="loadClicked"/>
 
 </RelativeLayout>

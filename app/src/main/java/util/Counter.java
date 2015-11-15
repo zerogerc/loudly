@@ -1,5 +1,8 @@
 package util;
 
+/**
+ * Class for storing number of images, videos, etc of the post
+ */
 public class Counter {
     int textLength, imageCount, videoCount, linkCount;
 

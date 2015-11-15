@@ -1,7 +1,7 @@
 package base;
 
 /**
- * Constants for getting proper social network if proper(for social network) object stored in array
+ * Constants for getting proper social network for holders
  */
 public class Networks {
     public static final int FB = 0;

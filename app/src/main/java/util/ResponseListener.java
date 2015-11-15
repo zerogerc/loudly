@@ -1,8 +1,8 @@
 package util;
 
-import android.app.Activity;
+import android.content.Context;
 
 public interface ResponseListener {
-    void onSuccess(Activity activity, Object result);
-    void onFail(Activity activity, String error);
+    void onSuccess(Context context, Object result);
+    void onFail(Context context, String error);
 }

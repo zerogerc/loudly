@@ -1,9 +1,10 @@
 package VK;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Parcel;
 
 import base.KeyKeeper;
+import ly.loud.loudly.Loudly;
 import util.UIAction;
 import base.Authorizer;
 import base.Networks;
@@ -36,7 +37,7 @@ public class VKAuthorizer extends Authorizer {
         if (response == null) {
             return new UIAction() {
                 @Override
-                public void execute(Activity action, Object... params) {
+                public void execute(Context action, Object... params) {
                     listener.onFail(action, "Failed to parse response: " + url);
                 }
             };
@@ -44,23 +45,25 @@ public class VKAuthorizer extends Authorizer {
 
         if (response.containsParameter(ACCESS_TOKEN)) {
             String accessToken = response.getParameter(ACCESS_TOKEN);
-            int userID = Integer.parseInt(response.getParameter("user_id"));
+            String userID = response.getParameter("user_id");
             keys.setAccessToken(accessToken);
-            keys.setUserID(userID);
+            keys.setUserId(userID);
+
+            Loudly.getContext().setKeyKeeper(network(), keys);
 
             // Add to WrapHolder
             return new UIAction() {
                 @Override
-                public void execute(Activity activity, Object... params) {
-                    listener.onSuccess(activity, new VKWrap(keys));
+                public void execute(Context context, Object... params) {
+                    listener.onSuccess(context, keys);
                 }
             };
         } else {
             final String errorToken = response.getParameter(ERROR_DESCRIPTION);
             return new UIAction() {
                 @Override
-                public void execute(Activity activity, Object... params) {
-                    listener.onFail(activity, errorToken);
+                public void execute(Context context, Object... params) {
+                    listener.onFail(context, errorToken);
                 }
             };
         }

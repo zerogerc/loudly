@@ -2,12 +2,15 @@ package Facebook;
 
 import android.os.Parcel;
 
+import java.io.IOException;
+
 import base.KeyKeeper;
+import util.FileWrap;
 
 public class FacebookKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "443913362466352";
     private String accessToken = null;
-    private String usedId = null;
+    private String userId = null;
 
     public FacebookKeyKeeper() {
         super();
@@ -25,22 +28,23 @@ public class FacebookKeyKeeper extends KeyKeeper {
         this.accessToken = accessToken;
     }
 
-    public String getUsedId() {
-        return usedId;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setUsedId(String usedId) {
-        this.usedId = usedId;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.accessToken);
+    protected String[] toStrings() {
+        return new String[]{accessToken, userId};
+    }
+
+    @Override
+    public void readFromFile(FileWrap file) throws IOException {
+        accessToken = file.readString();
+        userId = file.readString();
     }
 
     public static final Creator<FacebookKeyKeeper> CREATOR = new Creator<FacebookKeyKeeper>() {

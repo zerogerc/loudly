@@ -1,9 +1,10 @@
 package MailRu;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Parcel;
 
 import base.KeyKeeper;
+import ly.loud.loudly.Loudly;
 import util.UIAction;
 import base.Authorizer;
 import base.Networks;
@@ -35,8 +36,8 @@ public class MailRuAuthoriser extends Authorizer {
         if (response == null) {
             return new UIAction() {
                 @Override
-                public void execute(Activity activity, Object... params) {
-                    listener.onFail(activity, "Failed to parse response: " + url);
+                public void execute(Context context, Object... params) {
+                    listener.onFail(context, "Failed to parse response: " + url);
                 }
             };
         }
@@ -45,18 +46,19 @@ public class MailRuAuthoriser extends Authorizer {
             String refreshToken = response.getParameter("refresh_token");
             keys.setSessionKey(accessToken);
             keys.setRefreshToken(refreshToken);
+            Loudly.getContext().setKeyKeeper(network(), keys);
             return new UIAction() {
                 @Override
-                public void execute(Activity activity, Object... params) {
-                    listener.onSuccess(activity, new MailRuWrap(keys));
+                public void execute(Context context, Object... params) {
+                    listener.onSuccess(context, keys);
                 }
             };
         } else {
             final String error = response.getParameter(ERROR_TOKEN);
             return new UIAction() {
                 @Override
-                public void execute(Activity activity, Object... params) {
-                    listener.onFail(activity, error);
+                public void execute(Context context, Object... params) {
+                    listener.onFail(context, error);
                 }
             };
         }

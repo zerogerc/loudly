@@ -15,7 +15,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
-public class Request {
+/**
+ * Class that contains static methods for work with network
+ */
+
+public class Network {
     private static final String TAG = "REQUEST";
     private static final String CRLF = "\r\n";
 
@@ -25,7 +29,7 @@ public class Request {
      * @return response from server
      * @throws IOException if any IO-error occurs
      */
-    public static String makeGET(Query query) throws IOException {
+    public static String makeGetRequest(Query query) throws IOException {
         HttpURLConnection conn = null;
         String response = null;
         try {
@@ -47,9 +51,9 @@ public class Request {
      * @return response from server
      * @throws IOException if any IO-error occurs
      */
-    public static String makePOST(Query query,
-                                  BackgroundAction onProgressUpdate) throws IOException {
-        return makePOST(query, onProgressUpdate, null, null);
+    public static String makePostRequest(Query query,
+                                         BackgroundAction onProgressUpdate) throws IOException {
+        return makePostRequest(query, onProgressUpdate, null, null);
     }
 
     /**
@@ -62,9 +66,9 @@ public class Request {
      * @throws IOException if any IO-error occurs
      */
 
-    public static String makePOST(Query query,
-                                  BackgroundAction onProgressUpdate,
-                                  String fileParamName, File file) throws IOException {
+    public static String makePostRequest(Query query,
+                                         BackgroundAction onProgressUpdate,
+                                         String fileParamName, File file) throws IOException {
 
         String boundary = "===" + System.currentTimeMillis() + "===";
 
@@ -203,7 +207,7 @@ public class Request {
     /**
      * Close instance of Closeable without throwing exception
      */
-    private static void closeQuietly(Closeable c) {
+    public static void closeQuietly(Closeable c) {
         if (c != null) {
             try {
                 c.close();

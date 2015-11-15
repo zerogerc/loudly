@@ -1,6 +1,7 @@
 package base;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Parcel;
@@ -31,7 +32,7 @@ public abstract class Authorizer implements Parcelable {
 
     /**
      * Last step of authorization.
-     * It's important to put Wrap into wrapHolder before onSuccess method invoked.
+     * It's important to store KeyKeeper in Loudly before onSuccess method invoked.
      * @param url response from authorization server
      * @param inKeys keys returned from beginAuthorize
      * @return UIAction that will be executed in UIThread
@@ -69,15 +70,15 @@ public abstract class Authorizer implements Parcelable {
         }
 
         @Override
-        public void ExecuteInUI(Activity activity, KeyKeeper result) {
+        public void ExecuteInUI(Context context, KeyKeeper result) {
             if (result == null) {
                 return;
             }
-            Intent openWeb = new Intent(activity, AuthActivity.class);
+            Intent openWeb = new Intent(context, AuthActivity.class);
             openWeb.putExtra("URL", authorizer.getAuthQuery().toURL());
             openWeb.putExtra("KEYS", result);
             openWeb.putExtra("AUTHORIZER", authorizer);
-            activity.startActivity(openWeb);
+            context.startActivity(openWeb);
         }
     }
 
