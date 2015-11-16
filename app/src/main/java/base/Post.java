@@ -46,6 +46,12 @@ public class Post implements Comparable<Post>, Writable {
         date = System.currentTimeMillis();
     }
 
+    public Post(String text, long date) {
+        super();
+        this.text = text;
+        this.date = date;
+    }
+
     @Override
     public void writeToFile(FileWrap file) {
         file.writeString(text);
@@ -79,6 +85,10 @@ public class Post implements Comparable<Post>, Writable {
 
     public String getText() {
         return text;
+    }
+
+    public long getDate() {
+        return date;
     }
 
     public void addAttachment(Image im) {

@@ -16,7 +16,7 @@ import util.Query;
 
 public class FacebookWrap implements Wrappable {
     private static final int NETWORK = Networks.FB;
-    private static final String MAIN_SERVER = "https://graph.facebook.com/";
+    private static final String MAIN_SERVER = "https://graph.facebook.com/v2.5/";
     private static final String POST_SERVER = "https://graph.facebook.com/me/feed";
     private static final String ACCESS_TOKEN = "access_token";
 
@@ -48,7 +48,7 @@ public class FacebookWrap implements Wrappable {
 
     @Override
     public Query[] makeGetQuery(Post post) {
-        String[] urls = {"/likes", "/comments"};
+        String[] urls = {"/likes", "/comments", "/sharedposts"};
         for (int i = 0; i < urls.length; i++) {
             urls[i] = MAIN_SERVER + post.getInfo(NETWORK).link + urls[i];
         }
@@ -57,6 +57,7 @@ public class FacebookWrap implements Wrappable {
         for (int i = 0; i < urls.length; i++) {
             queries[i] = new Query(urls[i]);
             queries[i].addParameter(ACCESS_TOKEN, keyKeeper.getAccessToken());
+            queries[i].addParameter("field", "data");
         }
         return queries;
     }
@@ -69,7 +70,9 @@ public class FacebookWrap implements Wrappable {
             int likes = parser.getJSONArray("data").length();
             parser = new JSONObject(response[1]);
             int comments = parser.getJSONArray("data").length();
-            post.getInfo(NETWORK).addInfo(likes, 0, comments);
+            parser = new JSONObject(response[2]);
+            int shares = parser.getJSONArray("data").length();
+            post.getInfo(NETWORK).addInfo(likes, shares, comments);
         } catch (JSONException e) {
             e.printStackTrace();
         }

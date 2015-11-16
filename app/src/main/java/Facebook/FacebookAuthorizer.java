@@ -72,7 +72,7 @@ public class FacebookAuthorizer extends Authorizer {
         Query query = new Query(AUTHORIZE_URL);
         query.addParameter("client_id", FacebookKeyKeeper.CLIENT_ID);
         query.addParameter("redirect_uri", RESPONSE_URL);
-        query.addParameter("scope", "publish_actions, manage_pages,publish_pages");
+        query.addParameter("scope", "publish_actions,user_posts");
         query.addParameter("response_type", "token");
         return query;
     }
