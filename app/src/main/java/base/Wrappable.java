@@ -22,10 +22,13 @@ public interface Wrappable {
     Parameter uploadImage(Image image, BackgroundAction publish);
 
     /**
-     * Parse response from server and save PostID to Post object
-     *
+     * Parse response to post request from server and save PostID to Post object
+     * post post post post
      * @param post Post for posting
      * @param response URL-response from server
      */
-    void parseResponse(Post post, String response);
+    void parsePostResponse(Post post, String response);
+
+    Query[] makeGetQuery(Post post);
+    void parseGetResponse(Post post, String[] response);
 }

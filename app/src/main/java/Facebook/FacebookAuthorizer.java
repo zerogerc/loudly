@@ -3,14 +3,19 @@ package Facebook;
 import android.content.Context;
 import android.os.Parcel;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
 import base.Authorizer;
 import base.KeyKeeper;
 import base.Networks;
 import ly.loud.loudly.Loudly;
+import util.Network;
 import util.UIAction;
-import util.ListenerHolder;
 import util.Query;
-import util.ResponseListener;
+import util.ResultListener;
 
 public class FacebookAuthorizer extends Authorizer {
     private static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
@@ -31,7 +36,7 @@ public class FacebookAuthorizer extends Authorizer {
     @Override
     public UIAction continueAuthorization(final String url, KeyKeeper inKeys) {
         final FacebookKeyKeeper keys = (FacebookKeyKeeper) inKeys;
-        final ResponseListener listener = ListenerHolder.getListener(network());
+        final ResultListener listener = Loudly.getContext().getListener();
         Query response = Query.fromURL(url);
         if (response == null) {
             return new UIAction() {

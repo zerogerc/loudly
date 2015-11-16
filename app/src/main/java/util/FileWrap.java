@@ -14,6 +14,7 @@ import java.io.PrintWriter;
  */
 
 public class FileWrap {
+    static final char BREAK_CHARACTER = (char) 10;
     PrintWriter writer;
     InputStreamReader reader;
 
@@ -44,7 +45,7 @@ public class FileWrap {
         }
         // Here encode
         writer.print(s);
-        writer.append('&');
+        writer.append(BREAK_CHARACTER);
     }
 
     /**
@@ -56,10 +57,10 @@ public class FileWrap {
         try {
             do {
                 c = reader.read();
-                if (c != '&' && c != -1) {
+                if (c != BREAK_CHARACTER && c != -1) {
                     builder.append((char)c);
                 }
-            } while (c != '&' && c != -1);
+            } while (c != BREAK_CHARACTER && c != -1);
         } catch (IOException e) {
             return null;
         }

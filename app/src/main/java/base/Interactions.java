@@ -7,6 +7,7 @@ import base.attachments.Image;
 import util.BackgroundAction;
 import util.Counter;
 import util.Network;
+import util.Query;
 
 /**
  * Class that contains simple actions that can be done with social network, such as
@@ -21,12 +22,12 @@ public class Interactions {
      * @param publish Action for publishing result
      */
     public static void post(Wrappable wrap, Post post, final BackgroundAction publish) throws IOException {
-        final Counter counter = post.getCounter();
+        final Post.Counter counter = post.getCounter();
         Integer k = 0;
         for (Attachment attachment : post.getAttachments()) {
             if (attachment instanceof Image) {
                 k++;
-                final double multiplier = k / (counter.getImageCount() + 1);
+                final double multiplier = k / (counter.imageCount + 1);
                 wrap.uploadImage((Image) attachment, new BackgroundAction() {
                     @Override
                     public void execute(Object... params) {
@@ -41,8 +42,15 @@ public class Interactions {
                 publish.execute(params[0]);
             }
         });
-        wrap.parseResponse(post, response);
+        wrap.parsePostResponse(post, response);
     }
 
-
+    public static void getInfo(Wrappable wrap, Post post) throws IOException {
+        Query[] queries = wrap.makeGetQuery(post);
+        String[] responses = new String[queries.length];
+        for (int i = 0; i < queries.length; i++) {
+            responses[i] = Network.makeGetRequest(queries[i]);
+        }
+        wrap.parseGetResponse(post, responses);
+    }
 }

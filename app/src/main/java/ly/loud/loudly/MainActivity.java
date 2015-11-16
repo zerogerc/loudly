@@ -20,10 +20,8 @@ import base.Authorizer;
 import base.Tasks;
 import base.Networks;
 import base.Post;
-import util.ListenerHolder;
 import util.LongTask;
-import util.ResponseListener;
-import util.TaskHolder;
+import util.ResultListener;
 import util.UIAction;
 
 public class MainActivity extends AppCompatActivity {
@@ -70,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        ListenerHolder.setListener(network, new ResponseListener() {
+        Loudly.getContext().setListener(new ResultListener() {
             @Override
             public void onSuccess(Context context, Object result) {
                 MainActivity mainActivity = (MainActivity) context;
@@ -122,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity mainActivity = (MainActivity) context;
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
                     int checkbox = mainActivity.find(checkboxMap, i);
+                    if (checkbox == -1) {
+                        continue;
+                    }
                     ((CheckBox) mainActivity.findViewById(checkbox))
                             .setChecked(Loudly.getContext().getKeyKeeper(i) != null);
                 }
@@ -130,35 +131,93 @@ public class MainActivity extends AppCompatActivity {
         task.execute();
     }
 
+    public void savePost(View v) {
+        Tasks.savePostsTask task = new Tasks.savePostsTask(this) {
+            @Override
+            public void ExecuteInUI(Context context, Integer integer) {
+                if (integer == 0) {
+                    Toast toast = Toast.makeText(context, "Saved", Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    Toast toast = Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+            }
+        };
+        task.execute();
+    }
+
+    public void loadPost(View v) {
+        Tasks.loadPostsTask task = new Tasks.loadPostsTask(this) {
+            @Override
+            public void ExecuteInUI(Context context, Integer integer) {
+                if (integer == 0) {
+                    Toast toast = Toast.makeText(context, "Loaded", Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    Toast toast = Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+            }
+        };
+        task.execute();
+    }
+
+    public void getInfo(View v) {
+        final ResultListener onFinish = new ResultListener() {
+            @Override
+            public void onSuccess(Context context, Object result) {
+                MainActivity mainActivity = (MainActivity) context;
+                TextView likes = (TextView) mainActivity.findViewById(R.id.likes);
+                Post post = (Post) result;
+                String text = Integer.toString(post.getInfo(Networks.FB).like) + " " +
+                        Integer.toString(post.getInfo(Networks.VK).like);
+                likes.setText(text);
+            }
+
+            @Override
+            public void onFail(Context context, String error) {
+                Toast toast = Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        };
+        Post post = Loudly.getContext().getPosts().getLast();
+        LongTask getter = Tasks.makePostInfoGetter(new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                Log.e(TAG, params[0].toString());
+            }
+        }, onFinish, new VKWrap(), new FacebookWrap());
+        getter.attachContext(this);
+        getter.execute(post);
+    }
+
     public void post(View v) {
         final TextView postView = (TextView) findViewById(R.id.post);
         String post = postView.getText().toString();
         VKWrap VkWrap = new VKWrap();
         FacebookWrap FbWrap = new FacebookWrap();
 
-        ListenerHolder.setListener(0, new ResponseListener() {
+        ResultListener onFinish = new ResultListener() {
             @Override
             public void onSuccess(Context context, Object result) {
-                if (context instanceof MainActivity) {
-                    MainActivity mainActivity = (MainActivity) context;
-                    mainActivity.postView.setText("Success!");
-                }
+                Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
+                toast.show();
             }
 
             @Override
             public void onFail(Context context, String error) {
-                if (context instanceof MainActivity) {
-                    MainActivity mainActivity = (MainActivity) context;
-                    mainActivity.postView.setText("Fail :(");
-                }
+                Toast toast = Toast.makeText(context, error, Toast.LENGTH_SHORT);
+                toast.show();
             }
-        });
+        };
+
         LongTask uploader = Tasks.makePostUploader(new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
                 Log.e(TAG, params[0].toString());
             }
-        }, VkWrap, FbWrap);
+        }, onFinish, VkWrap, FbWrap);
         uploader.attachContext(this);
         uploader.execute(new Post(post));
     }
@@ -166,12 +225,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (TaskHolder.getAction() != null) {
-            TaskHolder.getAction().execute(this);
-            TaskHolder.setAction(null);
+        Loudly context = Loudly.getContext();
+        if (context.getAction() != null) {
+            context.getAction().execute(this);
+            context.setAction(null);
         }
-        if (TaskHolder.getTask() != null) {
-            TaskHolder.getTask().attachContext(this);
+        if (context.getTask() != null) {
+            context.getTask().attachContext(this);
         }
     }
 }

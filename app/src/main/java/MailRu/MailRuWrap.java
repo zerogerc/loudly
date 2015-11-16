@@ -20,7 +20,17 @@ public class MailRuWrap implements Wrappable {
     }
 
     @Override
-    public void parseResponse(Post post, String response) {
+    public void parsePostResponse(Post post, String response) {
+
+    }
+
+    @Override
+    public Query[] makeGetQuery(Post post) {
+        return new Query[0];
+    }
+
+    @Override
+    public void parseGetResponse(Post post, String[] response) {
 
     }
 }

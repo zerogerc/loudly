@@ -33,7 +33,7 @@ public class Network {
         HttpURLConnection conn = null;
         String response = null;
         try {
-            conn = (HttpURLConnection) new URL(query.getServerURL()).openConnection();
+            conn = (HttpURLConnection) new URL(query.toURL()).openConnection();
             conn.setRequestMethod("GET");
             response = getResponse(conn);
         } finally {

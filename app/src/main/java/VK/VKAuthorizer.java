@@ -8,8 +8,7 @@ import ly.loud.loudly.Loudly;
 import util.UIAction;
 import base.Authorizer;
 import base.Networks;
-import util.ListenerHolder;
-import util.ResponseListener;
+import util.ResultListener;
 import util.Query;
 
 public class VKAuthorizer extends Authorizer {
@@ -31,7 +30,7 @@ public class VKAuthorizer extends Authorizer {
     @Override
     public UIAction continueAuthorization(final String url, KeyKeeper inKeys) {
         final VKKeyKeeper keys = (VKKeyKeeper) inKeys;
-        final ResponseListener listener = ListenerHolder.getListener(network());
+        final ResultListener listener = Loudly.getContext().getListener();
         Query response = Query.fromURL(url);
 
         if (response == null) {

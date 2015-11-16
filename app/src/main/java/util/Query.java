@@ -59,10 +59,12 @@ public class Query {
     }
 
     public String toURL() {
-        String params = this.params.toString();
         StringBuilder sb = new StringBuilder(serverURL);
-        sb.append('?');
-        sb.append(params);
+        if (this.params.size() > 0) {
+            String params = this.params.toString();
+            sb.append('?');
+            sb.append(params);
+        }
         return sb.toString();
     }
 }

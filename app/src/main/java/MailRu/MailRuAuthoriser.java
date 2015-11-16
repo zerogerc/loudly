@@ -8,8 +8,7 @@ import ly.loud.loudly.Loudly;
 import util.UIAction;
 import base.Authorizer;
 import base.Networks;
-import util.ListenerHolder;
-import util.ResponseListener;
+import util.ResultListener;
 import util.Query;
 
 public class MailRuAuthoriser extends Authorizer {
@@ -31,7 +30,7 @@ public class MailRuAuthoriser extends Authorizer {
     @Override
     public UIAction continueAuthorization(final String url, KeyKeeper inKeys) {
         final MailRuKeyKeeper keys = (MailRuKeyKeeper) inKeys;
-        final ResponseListener listener = ListenerHolder.getListener(network());
+        final ResultListener listener = Loudly.getContext().getListener();
         Query response = Query.fromURL(url);
         if (response == null) {
             return new UIAction() {

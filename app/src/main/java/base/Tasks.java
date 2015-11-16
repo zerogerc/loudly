@@ -3,7 +3,6 @@ package base;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,9 +13,9 @@ import ly.loud.loudly.Loudly;
 import util.AttachableTask;
 import util.BackgroundAction;
 import util.FileWrap;
-import util.ListenerHolder;
 import util.LongTask;
 import util.Network;
+import util.ResultListener;
 import util.UIAction;
 
 /**
@@ -24,17 +23,22 @@ import util.UIAction;
  */
 public class Tasks {
     private static final String KEYS_FILE = "keys";
+    private static final String POSTS_FILE = "posts";
 
     /**
      * Makes LongTask, that uploads post to many network one by one
      *
      * @param wraps Wraps of social networks
      */
-    public static LongTask<Object, Integer> makePostUploader(final UIAction onProgressUpdate, final Wrappable... wraps) {
+    public static LongTask<Object, Integer> makePostUploader(
+            final UIAction onProgressUpdate,
+            final ResultListener listener,
+            final Wrappable... wraps) {
+
         return new LongTask<Object, Integer>() {
             @Override
             protected UIAction doInBackground(Object... params) {
-                Post post = (Post) params[0];
+                final Post post = (Post) params[0];
                 int k = 0;
                 for (Wrappable w : wraps) {
                     try {
@@ -46,23 +50,61 @@ public class Tasks {
                             }
                         });
                         publishProgress(k, params.length);
-                    } catch (IOException e) {
-                        Log.e("TAG", "IOException");
-                    } catch (NullPointerException e) {
-                        Log.e("WRAP", "NullPtrException");
                     } catch (Exception e) {
                         return new UIAction() {
                             @Override
                             public void execute(Context context, Object... params) {
-                                ListenerHolder.getListener(0).onFail(context, "Fail");
+                                listener.onFail(context, "Fail");
                             }
                         };
                     }
                 }
+                // TODO: I DON'T LIKE IT
                 return new UIAction() {
                     @Override
                     public void execute(Context context, Object... params) {
-                        ListenerHolder.getListener(0).onSuccess(context, "Success");
+                        Loudly.getContext().addPost(post);
+                        listener.onSuccess(context, "Success");
+                    }
+                };
+            }
+
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                super.onProgressUpdate(values);
+                onProgressUpdate.execute(context, values);
+            }
+        };
+    }
+
+    public static LongTask<Object, Integer> makePostInfoGetter(
+            final UIAction onProgressUpdate,
+            final ResultListener listener,
+            final Wrappable... wraps) {
+
+        return new LongTask<Object, Integer>() {
+            @Override
+            protected UIAction doInBackground(Object... params) {
+                int k = 0;
+                final Post post = (Post) params[0];
+                try {
+                    for (Wrappable w : wraps) {
+                        k++;
+                        Interactions.getInfo(w, post);
+                        publishProgress(k);
+                    }
+                } catch (IOException e) {
+                    return new UIAction() {
+                        @Override
+                        public void execute(Context context, Object... params) {
+                            listener.onFail(context, "IOException");
+                        }
+                    };
+                }
+                return new UIAction() {
+                    @Override
+                    public void execute(Context context, Object... params) {
+                        listener.onSuccess(context, post);
                     }
                 };
             }
@@ -139,6 +181,69 @@ public class Tasks {
                         throw new IOException("Fail :(");
                     }
                     Loudly.getContext().setKeyKeeper(network, k);
+                }
+            } catch (IOException e) {
+                // Something terrible
+                return -1;
+            } finally {
+                if (file != null) {
+                    file.close();
+                }
+                Network.closeQuietly(input);
+            }
+            return 0;
+        }
+    }
+
+    public static abstract class savePostsTask extends AttachableTask<Object, Void, Integer> {
+        public savePostsTask(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected Integer doInBackground(Object... params) {
+            FileWrap file = null;
+            OutputStream output = null;
+            try {
+
+                output = context.openFileOutput(POSTS_FILE, Context.MODE_PRIVATE);
+
+                file = new FileWrap(output);
+                for (Post post : Loudly.getContext().getPosts()) {
+                    post.writeToFile(file);
+                }
+            } catch (FileNotFoundException e) {
+                return -1;
+            } finally {
+                if (file != null) {
+                    file.close();
+                }
+                Network.closeQuietly(output);
+            }
+            return 0;
+        }
+    }
+
+    public static abstract class loadPostsTask extends AttachableTask<Object, Void, Integer> {
+        public loadPostsTask(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected Integer doInBackground(Object... params) {
+            InputStream input = null;
+            FileWrap file = null;
+            try {
+                input = context.openFileInput(POSTS_FILE);
+                file = new FileWrap(input);
+                while (true) {
+                    Post post = new Post();
+                    try {
+                        post.readFromFile(file);
+                    } catch (IOException e) {
+                        break;
+                    }
+                    Loudly.getContext().addPost(post);
                 }
             } catch (IOException e) {
                 // Something terrible

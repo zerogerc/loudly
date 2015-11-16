@@ -10,6 +10,10 @@ public class ParameterBundle {
         parameters = new ArrayList<>();
     }
 
+    public int size() {
+        return parameters.size();
+    }
+
     public ArrayList<Parameter> asList() {
         return parameters;
     }
