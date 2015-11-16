@@ -1,6 +1,7 @@
 package ly.loud.loudly;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -17,9 +18,9 @@ import MailRu.MailRuAuthoriser;
 import VK.VKAuthorizer;
 import VK.VKWrap;
 import base.Authorizer;
-import base.Tasks;
 import base.Networks;
 import base.Post;
+import base.Tasks;
 import util.LongTask;
 import util.ResultListener;
 import util.UIAction;
@@ -44,8 +45,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        getSupportActionBar().setCustomView(R.layout.toolbar);
+        getSupportActionBar().setDisplayShowCustomEnabled(true);
+
         group = (RadioGroup) findViewById(R.id.networks);
         postView = (EditText) findViewById(R.id.post);
+    }
+
+    public void callInitialAuth(View v) {
+        Intent intent = new Intent(this, InitialSettingsActivity.class);
+        startActivity(intent);
     }
 
     // ToDo: replace with dictionary
