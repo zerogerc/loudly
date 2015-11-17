@@ -22,8 +22,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void populateList(List<Post> posts) {
         for (int i = 0; i < 50; i++) {
-            Post post = new Post("Success №" + i);
-            posts.add(post);
+            if (i % 2 == 0) {
+                Post post = new Post("Success №" + i);
+                posts.add(post);
+            } else {
+                Post post = new Post("aadgdgadgal;dsgl;adsgl;kdasl;gkads;ka;dskvl;akdkgoqejeoitgjejgladsjgdsdas,.basdfgadsgdsgadsl;gdasjgadksjgadsvdasvjdsavadkslvjadskbdjadskbjdsbjadskbdsajlbdas");
+                posts.add(post);
+            }
         }
     }
 
