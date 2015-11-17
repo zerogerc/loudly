@@ -3,54 +3,70 @@ package ly.loud.loudly;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import Facebook.FacebookAuthorizer;
-import Facebook.FacebookWrap;
-import MailRu.MailRuAuthoriser;
-import VK.VKAuthorizer;
-import VK.VKWrap;
-import base.Authorizer;
-import base.Networks;
+import java.util.LinkedList;
+import java.util.List;
+
 import base.Post;
 import base.Tasks;
-import util.LongTask;
-import util.ResultListener;
-import util.UIAction;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
-    private EditText postView;
 
-    private static final int[][] networkMap = new int[][]{
-            {R.id.VKRadio, Networks.VK},
-            {R.id.MailRuRadio, Networks.MAILRU},
-            {R.id.FacebookRadio, Networks.FB}};
+    private void populateList(List<Post> posts) {
+        for (int i = 0; i < 50; i++) {
+            Post post = new Post("Success №" + i);
+            posts.add(post);
+        }
+    }
 
-    private static final int[][] checkboxMap = new int[][]{
-            {Networks.VK, R.id.VKReady},
-            {Networks.MAILRU, R.id.MailRuReady},
-            {Networks.FB, R.id.FBReady}};
+    private void setRecyclerView() {
+        List<Post> posts = new LinkedList<>();
+        populateList(posts);
 
-    private RadioGroup group;
+        RecyclerView recyclerView = (RecyclerView)findViewById(R.id.recyclerView);
+        RecyclerViewAdapter adapter = new RecyclerViewAdapter(posts);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            private FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 10 && fab.isShown()) {
+                    fab.hide();
+                }
+                if (dy < -10 && (!fab.isShown())) {
+                    fab.show();
+                }
+            }
+        });
+
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(layoutManager);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getSupportActionBar().setCustomView(R.layout.toolbar);
-        getSupportActionBar().setDisplayShowCustomEnabled(true);
-
-        group = (RadioGroup) findViewById(R.id.networks);
-        postView = (EditText) findViewById(R.id.post);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the toolbar object
+        setSupportActionBar(toolbar);
+        setRecyclerView();
     }
 
     public void callInitialAuth(View v) {
@@ -69,73 +85,12 @@ public class MainActivity extends AppCompatActivity {
         return -1;
     }
 
-    public void login(View v) {
-        final int currentRadio = group.getCheckedRadioButtonId();
-
-        final int network = find(networkMap, currentRadio);
-
-        if (Loudly.getContext().getKeyKeeper(network) != null) {
-            return;
-        }
-
-        Loudly.getContext().setListener(new ResultListener() {
-            @Override
-            public void onSuccess(Context context, Object result) {
-                MainActivity mainActivity = (MainActivity) context;
-                int checkbox = mainActivity.find(checkboxMap, network);
-                ((CheckBox) mainActivity.findViewById(checkbox)).setChecked(true);
-            }
-
-            @Override
-            public void onFail(Context context, String error) {
-                Log.e(TAG, error);
-                MainActivity mainActivity = (MainActivity) context;
-                int checkbox = mainActivity.find(checkboxMap, network);
-                ((CheckBox) mainActivity.findViewById(checkbox)).setChecked(false);
-            }
-        });
-
-        Authorizer authorizer;
-        switch (network) {
-            case Networks.VK:
-                authorizer = new VKAuthorizer();
-                break;
-            case Networks.MAILRU:
-                authorizer = new MailRuAuthoriser();
-                break;
-            default:
-                authorizer = new FacebookAuthorizer();
-                break;
-        }
-        authorizer.createAsyncTask(this).execute();
-    }
-
     public void saveClicked(View v) {
         Tasks.saveKeysTask task = new Tasks.saveKeysTask(this) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
                 Toast toast = Toast.makeText(context, "Saved", Toast.LENGTH_SHORT);
                 toast.show();
-            }
-        };
-        task.execute();
-    }
-
-    public void loadClicked(View v) {
-        Tasks.loadKeysTask task = new Tasks.loadKeysTask(this) {
-            @Override
-            public void ExecuteInUI(Context context, Integer integer) {
-                Toast toast = Toast.makeText(context, "Loaded", Toast.LENGTH_SHORT);
-                toast.show();
-                MainActivity mainActivity = (MainActivity) context;
-                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                    int checkbox = mainActivity.find(checkboxMap, i);
-                    if (checkbox == -1) {
-                        continue;
-                    }
-                    ((CheckBox) mainActivity.findViewById(checkbox))
-                            .setChecked(Loudly.getContext().getKeyKeeper(i) != null);
-                }
             }
         };
         task.execute();
@@ -171,65 +126,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         task.execute();
-    }
-
-    public void getInfo(View v) {
-        final ResultListener onFinish = new ResultListener() {
-            @Override
-            public void onSuccess(Context context, Object result) {
-                MainActivity mainActivity = (MainActivity) context;
-                TextView likes = (TextView) mainActivity.findViewById(R.id.likes);
-                Post post = (Post) result;
-                String text = Integer.toString(post.getInfo(Networks.FB).like) + " " +
-                        Integer.toString(post.getInfo(Networks.VK).like);
-                likes.setText(text);
-            }
-
-            @Override
-            public void onFail(Context context, String error) {
-                Toast toast = Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
-                toast.show();
-            }
-        };
-        Post post = Loudly.getContext().getPosts().getLast();
-        LongTask getter = Tasks.makePostInfoGetter(new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                Log.e(TAG, params[0].toString());
-            }
-        }, onFinish, new VKWrap(), new FacebookWrap());
-        getter.attachContext(this);
-        getter.execute(post);
-    }
-
-    public void post(View v) {
-        final TextView postView = (TextView) findViewById(R.id.post);
-        String post = postView.getText().toString();
-        VKWrap VkWrap = new VKWrap();
-        FacebookWrap FbWrap = new FacebookWrap();
-
-        ResultListener onFinish = new ResultListener() {
-            @Override
-            public void onSuccess(Context context, Object result) {
-                Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
-                toast.show();
-            }
-
-            @Override
-            public void onFail(Context context, String error) {
-                Toast toast = Toast.makeText(context, error, Toast.LENGTH_SHORT);
-                toast.show();
-            }
-        };
-
-        LongTask uploader = Tasks.makePostUploader(new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                Log.e(TAG, params[0].toString());
-            }
-        }, onFinish, VkWrap, FbWrap);
-        uploader.attachContext(this);
-        uploader.execute(new Post(post));
     }
 
     @Override
