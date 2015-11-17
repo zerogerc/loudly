@@ -42,7 +42,7 @@ public class VKWrap implements Wrappable {
         try {
             parser = new JSONObject(response);
             String id = parser.getJSONObject("response").getString("post_id");
-            post.setInfo(Networks.VK, new PostInfo(id));
+            post.setLink(NETWORK, id);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -52,7 +52,7 @@ public class VKWrap implements Wrappable {
     public Query[] makeGetQuery(Post post) {
         Query query = new Query(GET_SERVER);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
-        query.addParameter("posts", keys.getUserId() + "_" + post.getInfo(NETWORK).link);
+        query.addParameter("posts", keys.getUserId() + "_" + post.getLink(NETWORK));
         return new Query[] {query};
     }
 

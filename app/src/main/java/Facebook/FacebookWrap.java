@@ -40,7 +40,7 @@ public class FacebookWrap implements Wrappable {
         try {
             parser = new JSONObject(response);
             String id = parser.getString("id");
-            post.setInfo(Networks.FB, new PostInfo(id));
+            post.setLink(NETWORK, id);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -50,7 +50,7 @@ public class FacebookWrap implements Wrappable {
     public Query[] makeGetQuery(Post post) {
         String[] urls = {"/likes", "/comments", "/sharedposts"};
         for (int i = 0; i < urls.length; i++) {
-            urls[i] = MAIN_SERVER + post.getInfo(NETWORK).link + urls[i];
+            urls[i] = MAIN_SERVER + post.getLink(NETWORK) + urls[i];
         }
         Query[] queries = new Query[urls.length];
         FacebookKeyKeeper keyKeeper = (FacebookKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);

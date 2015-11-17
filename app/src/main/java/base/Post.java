@@ -16,7 +16,7 @@ import util.Writable;
 /**
  * Сlass that stores text and attachments to post.
  */
-public class Post implements Comparable<Post>, Writable {
+public class Post implements Comparable<Post> {
     public class Counter {
         public int imageCount, linkCount;
 
@@ -28,16 +28,20 @@ public class Post implements Comparable<Post>, Writable {
 
     private String text;
     private ArrayList<Attachment> attachments;
+    private String[] links;
     private PostInfo[] infos;
     private Counter counter;
     private long date;
+    private Location location;
 
     public Post() {
-        this.text = null;
+        text = null;
         attachments = new ArrayList<>();
+        links = new String[Networks.NETWORK_COUNT];
         infos = new PostInfo[Networks.NETWORK_COUNT];
         counter = new Counter();
         date = -1;
+        location = null;
     }
 
     public Post(String text) {
@@ -46,41 +50,15 @@ public class Post implements Comparable<Post>, Writable {
         date = System.currentTimeMillis();
     }
 
-    public Post(String text, long date) {
+    public Post(String text, long date, Location location) {
         super();
         this.text = text;
         this.date = date;
+        this.location = location;
     }
 
-    @Override
-    public void writeToFile(FileWrap file) {
-        file.writeString(text);
-        // TODO: THERE IS NO ATTACHMENTS
-        for (PostInfo info : infos) {
-            if (info == null) {
-                file.writeString("");
-            } else {
-                file.writeString(info.link);
-            }
-        }
-        file.writeString(Long.toString(date));
-    }
-
-    @Override
-    public void readFromFile(FileWrap file) throws IOException {
-        text = file.readString();
-        if (text == null) {
-            throw new IOException();
-        }
-        // TODO: STILL NO ATTACHMENTS
-        for (int i = 0; i < infos.length; i++) {
-            String id = file.readString();
-            if (id == null) {
-                continue;
-            }
-            infos[i] = new PostInfo(id);
-        }
-        date = Long.parseLong(file.readString());
+    public String[] getLinks() {
+        return links;
     }
 
     public String getText() {
@@ -89,6 +67,17 @@ public class Post implements Comparable<Post>, Writable {
 
     public long getDate() {
         return date;
+    }
+
+    public String getLink(int network) { return links[network]; }
+    public void setLink(int network, String link) { links[network] = link; }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
     }
 
     public void addAttachment(Image im) {
@@ -104,6 +93,7 @@ public class Post implements Comparable<Post>, Writable {
     public void setInfo(int network, PostInfo link) {
         infos[network] = link;
     }
+
 
     public PostInfo getInfo(int network) {
         return infos[network];
