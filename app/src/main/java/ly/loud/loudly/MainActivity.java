@@ -69,13 +69,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the toolbar object
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
         setSupportActionBar(toolbar);
         setRecyclerView();
     }
 
     public void callInitialAuth(View v) {
         Intent intent = new Intent(this, InitialSettingsActivity.class);
+        startActivity(intent);
+    }
+
+    public void callPostCreate(View v) {
+        Intent intent = new Intent(this, PostCreateActivity.class);
         startActivity(intent);
     }
 

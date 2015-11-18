@@ -15,7 +15,7 @@
         android:background="@color/background_color">
         <include
             android:id="@+id/toolbar"
-            layout="@layout/toolbar">
+            layout="@layout/main_toolbar">
         </include>
 
         <android.support.v7.widget.RecyclerView
@@ -38,6 +38,6 @@
         app:pressedTranslationZ="12dp"
         app:layout_anchor="@id/main_content"
         app:layout_anchorGravity="bottom|right|end"
-        />
+        android:onClick="callPostCreate" />
 
 </android.support.design.widget.CoordinatorLayout>
