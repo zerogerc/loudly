@@ -18,8 +18,6 @@ import util.database.DatabaseException;
  * Class made for storing different asynchronous tasks
  */
 public class Tasks {
-    private static final String KEYS_FILE = "keys";
-    private static final String POSTS_FILE = "posts";
 
     /**
      * Makes LongTask, that uploads post to many network one by one

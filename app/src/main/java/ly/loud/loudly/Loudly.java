@@ -2,6 +2,8 @@ package ly.loud.loudly;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -20,12 +22,17 @@ import util.UIAction;
  * Stores run-time variables
  */
 public class Loudly extends Application {
+    public static final String LOUDLY_PACKAGE = "ly.loud.loudly";
+    public static final String LOUDLY_LOADED_KEYS = "ly.loud.loudly.keys";
+    public static final String LOUDLY_LOADED_POSTS = "ly.loud.loudly.posts";
+
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
     private LongTask task;
     private UIAction action;
     private ResultListener listener;
     private LinkedList<Post> posts;
+    private boolean postsLoaded = false;
 
     /**
      * @param network ID of the network
@@ -84,6 +91,10 @@ public class Loudly extends Application {
         return posts;
     }
 
+    public boolean arePostsLoaded() {
+        return postsLoaded;
+    }
+
     public Wrap[] getWraps() {
         ArrayList<Wrap> list = new ArrayList<>();
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -104,12 +115,20 @@ public class Loudly extends Application {
         Tasks.loadKeysTask loadKeys = new Tasks.loadKeysTask(context) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
+                Intent message = new Intent(LOUDLY_LOADED_KEYS);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(message);
             }
         };
         loadKeys.execute();
 
-        Tasks.loadPostsTask = new Tasks.loadPostsTask() {
-
-        }
+        Tasks.loadPostsTask loadPosts = new Tasks.loadPostsTask(context) {
+            @Override
+            public void ExecuteInUI(Context context, Integer integer) {
+                postsLoaded = true;
+                Intent message = new Intent(LOUDLY_LOADED_POSTS);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(message);
+            }
+        };
+        loadPosts.execute();
     }
 }

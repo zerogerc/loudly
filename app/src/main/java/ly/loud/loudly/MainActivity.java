@@ -1,9 +1,12 @@
 package ly.loud.loudly;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,9 +21,33 @@ public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
     RecyclerView recyclerView;
     RecyclerViewAdapter recyclerViewAdapter;
+    BroadcastReceiver checkLoaded = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            setRecyclerView();
+            LocalBroadcastManager.getInstance(context).unregisterReceiver(checkLoaded);
+        }
+    };
 
-    void setRecyclerView() {
-        recyclerView = (RecyclerView)findViewById(R.id.recyclerView);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
+        setSupportActionBar(toolbar);
+
+        if (!Loudly.getContext().arePostsLoaded()) {
+            // ToDo: show here rolling circle
+            IntentFilter filter = new IntentFilter(Loudly.LOUDLY_LOADED_POSTS);
+            LocalBroadcastManager.getInstance(this).registerReceiver(checkLoaded, filter);
+        } else {
+            setRecyclerView();
+        }
+    }
+
+    private void setRecyclerView() {
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
@@ -48,15 +75,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
-        setSupportActionBar(toolbar);
     }
 
     public void callInitialAuth(View v) {
@@ -134,5 +152,10 @@ public class MainActivity extends AppCompatActivity {
         if (context.getTask() != null) {
             context.getTask().attachContext(this);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 }

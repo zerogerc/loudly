@@ -21,6 +21,15 @@ public class InitialSettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_initial_settings);
+        int[] checkboxes = {R.id.fb_box, -1, -1, R.id.vk_box, -1, R.id.mail_ru_box};
+        for (int i = 0; i < checkboxes.length; i++) {
+            int id = checkboxes[i];
+            if (id == -1) {
+                continue;
+            }
+            findViewById(id).setEnabled(false);
+            ((CheckBox) findViewById(id)).setChecked(Loudly.getContext().getKeyKeeper(i) != null);
+        }
     }
 
     private void setListener(final int network) {
