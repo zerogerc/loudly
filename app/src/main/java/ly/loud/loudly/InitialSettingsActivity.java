@@ -33,13 +33,12 @@ public class InitialSettingsActivity extends AppCompatActivity {
                 switch (network) {
                     case Networks.VK:
                         cb = (CheckBox) findViewById(R.id.vk_box);
-                        ;
                         break;
                     case Networks.FB:
-                        cb = (CheckBox) findViewById(R.id.vk_box);
+                        cb = (CheckBox) findViewById(R.id.fb_box);
                         break;
                     case Networks.MAILRU:
-                        cb = (CheckBox) findViewById(R.id.vk_box);
+                        cb = (CheckBox) findViewById(R.id.mail_ru_box);
                         break;
                 }
                 cb.setChecked(true);

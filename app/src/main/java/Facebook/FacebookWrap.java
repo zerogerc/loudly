@@ -5,14 +5,14 @@ import org.json.JSONObject;
 
 import base.Networks;
 import base.Post;
-import base.Wrappable;
+import base.Wrap;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.Parameter;
 import util.Query;
 
-public class FacebookWrap implements Wrappable {
+public class FacebookWrap extends Wrap {
     private static final int NETWORK = Networks.FB;
     private static final String MAIN_SERVER = "https://graph.facebook.com/v2.5/";
     private static final String POST_SERVER = "https://graph.facebook.com/me/feed";

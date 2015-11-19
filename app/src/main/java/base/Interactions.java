@@ -5,7 +5,6 @@ import java.io.IOException;
 import base.attachments.Attachment;
 import base.attachments.Image;
 import util.BackgroundAction;
-import util.Counter;
 import util.Network;
 import util.Query;
 
@@ -17,11 +16,11 @@ public class Interactions {
     /**
      * Post posts to one network
      *
-     * @param wrap    Wrappable for the network
+     * @param wrap    Wrap for the network
      * @param post    Post
      * @param publish Action for publishing result
      */
-    public static void post(Wrappable wrap, Post post, final BackgroundAction publish) throws IOException {
+    public static void post(Wrap wrap, Post post, final BackgroundAction publish) throws IOException {
         final Post.Counter counter = post.getCounter();
         Integer k = 0;
         for (Attachment attachment : post.getAttachments()) {
@@ -45,7 +44,7 @@ public class Interactions {
         wrap.parsePostResponse(post, response);
     }
 
-    public static void getInfo(Wrappable wrap, Post post) throws IOException {
+    public static void getInfo(Wrap wrap, Post post) throws IOException {
         Query[] queries = wrap.makeGetQuery(post);
         String[] responses = new String[queries.length];
         for (int i = 0; i < queries.length; i++) {

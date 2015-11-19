@@ -5,40 +5,25 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import base.Post;
 import base.Tasks;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
+    RecyclerView recyclerView;
+    RecyclerViewAdapter recyclerViewAdapter;
 
-    private void populateList(List<Post> posts) {
-        for (int i = 0; i < 50; i++) {
-            if (i % 2 == 0) {
-                Post post = new Post("Success №" + i);
-                posts.add(post);
-            } else {
-                Post post = new Post("aadgdgadgal;dsgl;adsgl;kdasl;gkads;ka;dskvl;akdkgoqejeoitgjejgladsjgdsdas,.basdfgadsgdsgadsl;gdasjgadksjgadsvdasvjdsavadkslvjadskbdjadskbjdsbjadskbdsajlbdas");
-                posts.add(post);
-            }
-        }
-    }
-
-    private void setRecyclerView() {
-        List<Post> posts = new LinkedList<>();
-        populateList(posts);
-
-        RecyclerView recyclerView = (RecyclerView)findViewById(R.id.recyclerView);
-        RecyclerViewAdapter adapter = new RecyclerViewAdapter(posts);
+    void setRecyclerView() {
+        recyclerView = (RecyclerView)findViewById(R.id.recyclerView);
+        recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             private FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -60,8 +45,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setItemAnimator(itemAnimator);
     }
 
     @Override
@@ -71,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
         setSupportActionBar(toolbar);
-        setRecyclerView();
     }
 
     public void callInitialAuth(View v) {

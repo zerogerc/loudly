@@ -1,13 +1,13 @@
 package MailRu;
 
 import base.Post;
-import base.Wrappable;
+import base.Wrap;
 import base.attachments.Image;
 import util.BackgroundAction;
 import util.Parameter;
 import util.Query;
 
-public class MailRuWrap implements Wrappable {
+public class MailRuWrap extends Wrap {
 
     @Override
     public Query makePostQuery(Post post) {

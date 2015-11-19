@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 import base.Networks;
 import base.Post;
-import base.Wrappable;
+import base.Wrap;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
@@ -13,7 +13,7 @@ import util.Parameter;
 import util.Query;
 
 
-public class VKWrap implements Wrappable {
+public class VKWrap extends Wrap {
     private static final int NETWORK = Networks.VK;
     private static final String TAG = "VK_WRAP_TAG";
     private static final String POST_SERVER = "https://api.vk.com/method/wall.post";

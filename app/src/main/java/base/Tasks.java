@@ -1,7 +1,6 @@
 package base;
 
 
-import android.app.Activity;
 import android.content.Context;
 
 import java.io.IOException;
@@ -12,8 +11,8 @@ import util.BackgroundAction;
 import util.LongTask;
 import util.ResultListener;
 import util.UIAction;
-import util.database.DatabaseException;
 import util.database.DatabaseActions;
+import util.database.DatabaseException;
 
 /**
  * Class made for storing different asynchronous tasks
@@ -30,14 +29,14 @@ public class Tasks {
     public static LongTask<Object, Integer> makePostUploader(
             final UIAction onProgressUpdate,
             final ResultListener listener,
-            final Wrappable... wraps) {
+            final Wrap... wraps) {
 
         return new LongTask<Object, Integer>() {
             @Override
             protected UIAction doInBackground(Object... params) {
                 final Post post = (Post) params[0];
                 int k = 0;
-                for (Wrappable w : wraps) {
+                for (Wrap w : wraps) {
                     try {
                         k++;
                         Interactions.post(w, post, new BackgroundAction() {
@@ -74,7 +73,7 @@ public class Tasks {
                     @Override
                     public void execute(Context context, Object... params) {
                         Loudly.getContext().addPost(post);
-                        listener.onSuccess(context, "Success");
+                        listener.onSuccess(context, post);
                     }
                 };
             }
@@ -90,7 +89,7 @@ public class Tasks {
     public static LongTask<Object, Integer> makePostInfoGetter(
             final UIAction onProgressUpdate,
             final ResultListener listener,
-            final Wrappable... wraps) {
+            final Wrap... wraps) {
 
         return new LongTask<Object, Integer>() {
             @Override
@@ -98,7 +97,7 @@ public class Tasks {
                 int k = 0;
                 final Post post = (Post) params[0];
                 try {
-                    for (Wrappable w : wraps) {
+                    for (Wrap w : wraps) {
                         k++;
                         Interactions.getInfo(w, post);
                         publishProgress(k);
@@ -151,8 +150,8 @@ public class Tasks {
      * Task for loading KeyKeepers from file
      */
     public abstract static class loadKeysTask extends AttachableTask<Object, Void, Integer> {
-        public loadKeysTask(Activity activity) {
-            super(activity);
+        public loadKeysTask(Context context) {
+            super(context);
         }
 
         @Override
