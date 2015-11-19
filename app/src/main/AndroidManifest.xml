@@ -24,7 +24,11 @@
         <activity android:name=".InitialSettingsActivity" >
         </activity>
         <activity android:name=".PostCreateActivity"
+            android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="stateVisible|adjustResize">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
         </activity>
     </application>
 
