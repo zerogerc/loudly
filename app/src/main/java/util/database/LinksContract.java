@@ -13,5 +13,13 @@ public final class LinksContract  {
         public static final String COLUMN_NAME_VK = "vk";
         public static final String COLUMN_NAME_OK = "ok";
         public static final String COLUMN_NAME_MAILRU = "mailru";
+
+        public static final String[] LINK_COLUMNS = {
+                COLUMN_NAME_FB,
+                COLUMN_NAME_TWITTER,
+                COLUMN_NAME_INSTAGRAM,
+                COLUMN_NAME_VK,
+                COLUMN_NAME_OK,
+                COLUMN_NAME_MAILRU};
     }
 }

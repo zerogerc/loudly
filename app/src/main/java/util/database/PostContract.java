@@ -12,5 +12,13 @@ public final class PostContract {
         public static final String COLUMN_NAME_LINKS = "links";
         public static final String COLUMN_NAME_FIRST_ATTACHMENT = "attachments";
         public static final String COLUMN_NAME_LOCATION = "locations";
+
+        public static final String[] POST_COLUMNS = {
+                _ID,
+                COLUMN_NAME_TEXT,
+                COLUMN_NAME_DATE,
+                COLUMN_NAME_LOCATION,
+                COLUMN_NAME_LINKS,
+                COLUMN_NAME_FIRST_ATTACHMENT};
     }
 }

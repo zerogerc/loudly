@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
             public void execute(Context context, Object... params) {
                 Log.e(TAG, params[0].toString());
             }
-        }, onFinish, VkWrap, FbWrap);
+        }, onFinish, FbWrap, VkWrap);
         uploader.attachContext(this);
         uploader.execute(new Post(post));
     }

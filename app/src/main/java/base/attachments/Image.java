@@ -4,16 +4,30 @@ import base.Networks;
 import util.Parameter;
 
 public class Image extends Attachment {
-    protected static String[] links;
+    protected String[] links;
     protected String initialLink;
 
-    public Image(String initialLink) {
+    public Image(String initialLink, String[] links) {
         this.initialLink = initialLink;
-        links = new String[Networks.NETWORK_COUNT];
+        this.links = links;
     }
 
-    protected static void setLink(int network, String link) {
+    protected void setLink(int network, String link) {
         links[network] = link;
     }
-    protected static String getLink(int network) { return links[network]; }
+
+    @Override
+    public int getType() {
+        return Attachment.IMAGE;
+    }
+
+    @Override
+    public String[] getLinks() {
+        return links;
+    }
+
+    @Override
+    public String getExtra() {
+        return initialLink;
+    }
 }

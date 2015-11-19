@@ -66,8 +66,8 @@ public class VKWrap implements Wrappable {
             int like = parser.getJSONObject("likes").getInt("count");
             int repost = parser.getJSONObject("reposts").getInt("count");
             int comments = parser.getJSONObject("comments").getInt("count");
-            PostInfo info = post.getInfo(NETWORK);
-            info.addInfo(like, repost, comments);
+
+            post.setInfo(NETWORK, new Post.Info(like, repost, comments));
         } catch (JSONException e) {
             e.printStackTrace();
         }

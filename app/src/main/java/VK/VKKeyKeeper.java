@@ -1,13 +1,8 @@
 package VK;
 
 import android.os.Parcel;
-import android.os.Parcelable;
-
-import java.io.IOException;
 
 import base.KeyKeeper;
-import util.FileWrap;
-import util.Writable;
 
 public class VKKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "5133011";
@@ -43,9 +38,9 @@ public class VKKeyKeeper extends KeyKeeper {
     }
 
     @Override
-    public void readFromFile(FileWrap file) throws IOException {
-        accessToken = file.readString();
-        userId = file.readString();
+    protected void fromStrings(String[] strings) {
+        accessToken = strings[0];
+        userId = strings[1];
     }
 
     public static final Creator<VKKeyKeeper> CREATOR = new Creator<VKKeyKeeper>() {

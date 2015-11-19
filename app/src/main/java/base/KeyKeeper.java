@@ -6,26 +6,36 @@ import android.os.Parcelable;
 import Facebook.FacebookKeyKeeper;
 import MailRu.MailRuKeyKeeper;
 import VK.VKKeyKeeper;
-import util.FileWrap;
-import util.Writable;
 
 /**
  * Store keys, that we need in order to interact with social network
  */
-public abstract class KeyKeeper implements Parcelable, Writable {
+public abstract class KeyKeeper implements Parcelable {
+    private static final char SEPARATOR = '&';
+
     public KeyKeeper() {}
 
     /**
      * @return content of KeyKeeper as list of strings
      */
     protected abstract String[] toStrings();
+    protected abstract void fromStrings(String[] strings);
 
-    @Override
-    public void writeToFile(FileWrap file) {
+    public String toStringBundle() {
         String[] strings = toStrings();
+        StringBuilder sb = new StringBuilder();
         for (String s : strings) {
-            file.writeString(s);
+            sb.append(s);
+            sb.append(SEPARATOR);
         }
+        return sb.toString();
+    }
+
+    public static KeyKeeper fromStringBundle(int network, String bundle) {
+        String[] strings = bundle.split(String.valueOf(SEPARATOR));
+        KeyKeeper result = KeyKeeper.makeKeyKeeper(network);
+        result.fromStrings(strings);
+        return result;
     }
 
     @Override

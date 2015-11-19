@@ -1,8 +1,6 @@
 package base;
 
-/**
- * Created by Данил on 11/17/2015.
- */
+
 public class Location {
     public double latitude, longitude;
     public String name;

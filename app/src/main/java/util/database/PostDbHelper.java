@@ -13,13 +13,7 @@ import util.database.PostContract.PostEntry;
 public class PostDbHelper extends SQLiteOpenHelper {
     private static volatile PostDbHelper self;
     private final Context context;
-    public static final String[] NETWORKS_COLUMNS = {
-            LinksEntry.COLUMN_NAME_FB,
-            LinksEntry.COLUMN_NAME_TWITTER,
-            LinksEntry.COLUMN_NAME_INSTAGRAM,
-            LinksEntry.COLUMN_NAME_VK,
-            LinksEntry.COLUMN_NAME_OK,
-            LinksEntry.COLUMN_NAME_MAILRU};
+
 
     public static PostDbHelper getInstance() {
         if (self == null) {
@@ -48,7 +42,8 @@ public class PostDbHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + AttachmentsEntry.TABLE_NAME + " ("
                     + AttachmentsEntry._ID + " INTEGER PRIMARY KEY, "
                     + AttachmentsEntry.COLUMN_NAME_TYPE + " INTEGER, "
-                    + AttachmentsEntry.COLUMN_NAME_LINK + " TEXT, "
+                    + AttachmentsEntry.COLUMN_NAME_LINK + " INTEGER, "
+                    + AttachmentsEntry.COLUMN_NAME_EXTRA + " TEXT, "
                     + AttachmentsEntry.COLUMN_NAME_NEXT + " INTEGER, "
                     + AttachmentsEntry.COLUMN_NAME_PREV + " INTEGER )";
 

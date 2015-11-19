@@ -4,19 +4,16 @@ package base;
 import android.app.Activity;
 import android.content.Context;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import ly.loud.loudly.Loudly;
 import util.AttachableTask;
 import util.BackgroundAction;
-import util.FileWrap;
 import util.LongTask;
-import util.Network;
 import util.ResultListener;
 import util.UIAction;
+import util.database.DatabaseException;
+import util.database.DatabaseActions;
 
 /**
  * Class made for storing different asynchronous tasks
@@ -59,6 +56,19 @@ public class Tasks {
                         };
                     }
                 }
+
+                try {
+                    DatabaseActions.savePost(post);
+                } catch (DatabaseException e) {
+                    e.printStackTrace();
+                    return new UIAction() {
+                        @Override
+                        public void execute(Context context, Object... params) {
+                            listener.onFail(context, "Failed due to database");
+                        }
+                    };
+                }
+
                 // TODO: I DON'T LIKE IT
                 return new UIAction() {
                     @Override
@@ -127,27 +137,11 @@ public class Tasks {
 
         @Override
         protected Integer doInBackground(Object... params) {
-            FileWrap file = null;
-            OutputStream output = null;
             try {
-
-                output = context.openFileOutput(KEYS_FILE, Context.MODE_PRIVATE);
-
-                file = new FileWrap(output);
-                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                    KeyKeeper keyKeeper = Loudly.getContext().getKeyKeeper(i);
-                    if (keyKeeper != null) {
-                        file.writeString(Integer.toString(i));
-                        keyKeeper.writeToFile(file);
-                    }
-                }
-            } catch (FileNotFoundException e) {
+                DatabaseActions.saveKeys();
+            } catch (DatabaseException e) {
+                e.printStackTrace();
                 return -1;
-            } finally {
-                if (file != null) {
-                    file.close();
-                }
-                Network.closeQuietly(output);
             }
             return 0;
         }
@@ -163,62 +157,30 @@ public class Tasks {
 
         @Override
         protected Integer doInBackground(Object... params) {
-            InputStream input = null;
-            FileWrap file = null;
             try {
-                input = context.openFileInput(KEYS_FILE);
-                file = new FileWrap(input);
-                while (true) {
-                    String networkS = file.readString();
-                    if (networkS == null) {
-                        break;
-                    }
-                    int network = Integer.parseInt(networkS);
-                    KeyKeeper k = KeyKeeper.makeKeyKeeper(network);
-                    if (k != null) {
-                        k.readFromFile(file);
-                    } else {
-                        throw new IOException("Fail :(");
-                    }
-                    Loudly.getContext().setKeyKeeper(network, k);
-                }
-            } catch (IOException e) {
-                // Something terrible
+                DatabaseActions.loadKeys();
+            } catch (DatabaseException e) {
+                e.printStackTrace();
                 return -1;
-            } finally {
-                if (file != null) {
-                    file.close();
-                }
-                Network.closeQuietly(input);
             }
             return 0;
         }
     }
 
-    public static abstract class savePostsTask extends AttachableTask<Object, Void, Integer> {
+    public static abstract class savePostsTask extends AttachableTask<Post, Void, Integer> {
         public savePostsTask(Context context) {
             super(context);
         }
 
         @Override
-        protected Integer doInBackground(Object... params) {
-            FileWrap file = null;
-            OutputStream output = null;
+        protected Integer doInBackground(Post... posts) {
             try {
-
-                output = context.openFileOutput(POSTS_FILE, Context.MODE_PRIVATE);
-
-                file = new FileWrap(output);
-                for (Post post : Loudly.getContext().getPosts()) {
-                    post.writeToFile(file);
+                for (Post p : posts) {
+                    DatabaseActions.savePost(p);
                 }
-            } catch (FileNotFoundException e) {
+            } catch (DatabaseException e) {
+                e.printStackTrace();
                 return -1;
-            } finally {
-                if (file != null) {
-                    file.close();
-                }
-                Network.closeQuietly(output);
             }
             return 0;
         }
@@ -231,28 +193,11 @@ public class Tasks {
 
         @Override
         protected Integer doInBackground(Object... params) {
-            InputStream input = null;
-            FileWrap file = null;
             try {
-                input = context.openFileInput(POSTS_FILE);
-                file = new FileWrap(input);
-                while (true) {
-                    Post post = new Post();
-                    try {
-                        post.readFromFile(file);
-                    } catch (IOException e) {
-                        break;
-                    }
-                    Loudly.getContext().addPost(post);
-                }
-            } catch (IOException e) {
-                // Something terrible
+                DatabaseActions.loadPosts();
+            } catch (DatabaseException e) {
+                e.printStackTrace();
                 return -1;
-            } finally {
-                if (file != null) {
-                    file.close();
-                }
-                Network.closeQuietly(input);
             }
             return 0;
         }

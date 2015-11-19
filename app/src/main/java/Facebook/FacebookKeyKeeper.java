@@ -2,10 +2,7 @@ package Facebook;
 
 import android.os.Parcel;
 
-import java.io.IOException;
-
 import base.KeyKeeper;
-import util.FileWrap;
 
 public class FacebookKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "443913362466352";
@@ -42,9 +39,9 @@ public class FacebookKeyKeeper extends KeyKeeper {
     }
 
     @Override
-    public void readFromFile(FileWrap file) throws IOException {
-        accessToken = file.readString();
-        userId = file.readString();
+    protected void fromStrings(String[] strings) {
+        accessToken = strings[0];
+        userId = strings[1];
     }
 
     public static final Creator<FacebookKeyKeeper> CREATOR = new Creator<FacebookKeyKeeper>() {

@@ -72,7 +72,8 @@ public class FacebookWrap implements Wrappable {
             int comments = parser.getJSONArray("data").length();
             parser = new JSONObject(response[2]);
             int shares = parser.getJSONArray("data").length();
-            post.getInfo(NETWORK).addInfo(likes, shares, comments);
+
+            post.setInfo(NETWORK, new Post.Info(likes, shares, comments));
         } catch (JSONException e) {
             e.printStackTrace();
         }

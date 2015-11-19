@@ -13,5 +13,10 @@ public final class LocationContract {
         public static final String COLUMN_NAME_LATITUDE = "latitude";
         public static final String COLUMN_NAME_LONGITUDE = "longitude";
         public static final String COLUMN_NAME_NAME = "name";
+
+        public static final String[] LOCATION_COLUMNS = {
+                COLUMN_NAME_LATITUDE,
+                COLUMN_NAME_LONGITUDE,
+                COLUMN_NAME_NAME};
     }
 }

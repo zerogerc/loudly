@@ -2,22 +2,16 @@ package base;
 
 import android.support.annotation.NonNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 
 import base.attachments.Attachment;
 import base.attachments.Image;
-import base.attachments.Link;
-import util.FileWrap;
-import util.Network;
-import util.Writable;
 
 /**
  * Сlass that stores text and attachments to post.
  */
 public class Post implements Comparable<Post> {
-    public class Counter {
+    public static class Counter {
         public int imageCount, linkCount;
 
         public Counter() {
@@ -26,28 +20,58 @@ public class Post implements Comparable<Post> {
         }
     }
 
+    public static class Info {
+        public int like, repost, comment;
+
+        public Info (int like, int repost, int comment) {
+            this.like = like;
+            this.repost = repost;
+            this.comment = comment;
+        }
+    }
+
     private String text;
     private ArrayList<Attachment> attachments;
     private String[] links;
-    private PostInfo[] infos;
+    private Info[] infos;
     private Counter counter;
     private long date;
     private Location location;
+
+    private long localId;
+
+    public Post(
+            String text,
+            ArrayList<Attachment> attachments,
+            String[] links,
+            long date,
+            Location location,
+            long localId) {
+        this();
+        this.text = text;
+        this.attachments = attachments;
+        this.links = links;
+        this.date = date;
+        this.location = location;
+        this.localId = localId;
+    }
 
     public Post() {
         text = null;
         attachments = new ArrayList<>();
         links = new String[Networks.NETWORK_COUNT];
-        infos = new PostInfo[Networks.NETWORK_COUNT];
+        infos = new Info[Networks.NETWORK_COUNT];
         counter = new Counter();
         date = -1;
         location = null;
+        localId = -1;
     }
 
     public Post(String text) {
         this();
         this.text = text;
         date = System.currentTimeMillis();
+        location = new Location(0, 0, "");
     }
 
     public Post(String text, long date, Location location) {
@@ -85,17 +109,11 @@ public class Post implements Comparable<Post> {
         counter.imageCount++;
     }
 
-    public void addAttachment(Link l) {
-        attachments.add(l);
-        counter.linkCount++;
+    public void setInfo(int network, Info info) {
+        infos[network] = info;
     }
 
-    public void setInfo(int network, PostInfo link) {
-        infos[network] = link;
-    }
-
-
-    public PostInfo getInfo(int network) {
+    public Info getInfo(int network) {
         return infos[network];
     }
 
@@ -105,6 +123,14 @@ public class Post implements Comparable<Post> {
 
     public Counter getCounter() {
         return counter;
+    }
+
+    public long getLocalId() {
+        return localId;
+    }
+
+    public void setLocalId(long localId) {
+        this.localId = localId;
     }
 
     @Override

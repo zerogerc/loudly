@@ -2,10 +2,7 @@ package MailRu;
 
 import android.os.Parcel;
 
-import java.io.IOException;
-
 import base.KeyKeeper;
-import util.FileWrap;
 
 public class MailRuKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "738872";
@@ -41,9 +38,9 @@ public class MailRuKeyKeeper extends KeyKeeper {
     }
 
     @Override
-    public void readFromFile(FileWrap file) throws IOException {
-        sessionKey = file.readString();
-        refreshToken = file.readString();
+    protected void fromStrings(String[] strings) {
+        sessionKey = strings[0];
+        refreshToken = strings[1];
     }
 
     public static final Creator<MailRuKeyKeeper> CREATOR = new Creator<MailRuKeyKeeper>() {
