@@ -1,172 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/main_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     tools:context="ly.loud.loudly.MainActivity">
 
-    <Button
-        android:id="@+id/loginButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Login"
-        android:onClick="login"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/networks"
-        android:layout_toEndOf="@+id/networks"
-        android:layout_marginLeft="30dp" />
-
-    <RadioGroup
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:id="@+id/networks">
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="VK"
-            android:id="@+id/VKRadio"
-            android:layout_alignBottom="@+id/loginButton"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:checked="true" />
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mail.ru"
-            android:id="@+id/MailRuRadio"
-            android:layout_below="@+id/loginButton"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Facebook"
-            android:id="@+id/FacebookRadio"
-            android:layout_below="@+id/loginButton"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-    </RadioGroup>
-
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/VKReady"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/loginButton"
-        android:layout_toEndOf="@+id/loginButton"
-        android:checked="false"
-        android:text="VK ready"
-        android:clickable="false" />
-
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="MailRu ready"
-        android:id="@+id/MailRuReady"
-        android:layout_below="@+id/VKReady"
-        android:layout_alignLeft="@+id/VKReady"
-        android:layout_alignStart="@+id/VKReady"
-        android:checked="false"
-        android:clickable="false" />
-
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Facebook ready"
-        android:id="@+id/FBReady"
-        android:layout_below="@+id/MailRuReady"
-        android:layout_alignLeft="@+id/MailRuReady"
-        android:layout_alignStart="@+id/MailRuReady"
-        android:checked="false"
-        android:clickable="false" />
-
-    <EditText
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="What do you think?"
-        android:id="@+id/post"
-        android:layout_below="@+id/networks"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="false"
-        android:gravity="top"
-        android:layout_above="@+id/postButton" />
+        android:layout_height="match_parent"
+        android:id="@+id/parent_layout"
+        android:background="@color/background_color">
+        <include
+            android:id="@+id/toolbar"
+            layout="@layout/main_toolbar">
+        </include>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Post"
-        android:onClick="post"
-        android:id="@+id/postButton"
-        android:layout_centerVertical="true"
-        android:layout_toRightOf="@+id/button2"
-        android:layout_toEndOf="@+id/button2" />
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/recyclerView"
+            android:layout_below="@id/toolbar"
+            />
 
-    <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Save"
-        android:id="@+id/button"
-        android:onClick="saveClicked"
-        android:layout_centerVertical="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+    </RelativeLayout>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="load"
-        android:id="@+id/button2"
-        android:onClick="loadClicked"
-        android:layout_alignTop="@+id/button"
-        android:layout_toRightOf="@+id/button"
-        android:layout_toEndOf="@+id/button" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom|right"
+        android:src="@mipmap/ic_add_white_24dp"
+        android:layout_margin="12dp"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"
+        app:layout_anchor="@id/main_content"
+        app:layout_anchorGravity="bottom|right|end"
+        android:onClick="callPostCreate" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Load post"
-        android:id="@+id/button3"
-        android:layout_below="@+id/postButton"
-        android:layout_toRightOf="@+id/button4"
-        android:layout_toEndOf="@+id/button4"
-        android:onClick="loadPost"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Save post"
-        android:id="@+id/button4"
-        android:layout_below="@+id/button"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:onClick="savePost"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Get Likes"
-        android:id="@+id/button5"
-        android:layout_below="@+id/button4"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:onClick="getInfo"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:id="@+id/likes"
-        android:layout_below="@+id/button3"
-        android:layout_toRightOf="@+id/button4"
-        android:layout_toEndOf="@+id/button4" />
-
-</RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

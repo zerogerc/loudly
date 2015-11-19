@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/post_toolbar"
+        layout="@layout/post_toolbar">
+    </include>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:id="@+id/post_footer"
+        android:background="@color/colorPrimary"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:id="@+id/post_geo_data_button"
+            android:background="@null"
+            android:src="@mipmap/ic_place_white_24dp"/>
+
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:id="@+id/post_camera_button"
+            android:background="@null"
+            android:src="@mipmap/ic_photo_camera_white_24dp"/>
+
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:id="@+id/post_gallery_button"
+            android:background="@null"
+            android:src="@mipmap/ic_photo_library_white_24dp"/>
+    </LinearLayout>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/post_toolbar"
+        android:layout_above="@id/post_footer"
+        android:inputType="textMultiLine"
+        android:id="@+id/post_edit_text"
+        android:padding="12dp"
+        android:textSize="17sp"
+        android:hint="What's on your mind?"
+        android:gravity="start"
+        android:background="@null" />
+
+</RelativeLayout>
