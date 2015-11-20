@@ -6,6 +6,7 @@ import org.json.JSONObject;
 import base.Networks;
 import base.Post;
 import base.Wrap;
+import base.attachments.Attachment;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
@@ -18,6 +19,8 @@ public class VKWrap extends Wrap {
     private static final String TAG = "VK_WRAP_TAG";
     private static final String POST_SERVER = "https://api.vk.com/method/wall.post";
     private static final String GET_SERVER = "https://api.vk.com/method/wall.getById";
+    private static final String DELETE_SERVER = "https://api.vk.com/method/wall.delete";
+    private static final String ACCESS_TOKEN = "access_token";
 
     @Override
     public Query makePostQuery(Post post) {
@@ -26,7 +29,7 @@ public class VKWrap extends Wrap {
             query.addParameter("message", post.getText());
         }
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
-        query.addParameter("access_token", keys.getAccessToken());
+        query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
         return query;
     }
 
@@ -48,7 +51,7 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public Query[] makeGetQuery(Post post) {
+    public Query[] makeGetQueries(Post post) {
         Query query = new Query(GET_SERVER);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter("posts", keys.getUserId() + "_" + post.getLink(NETWORK));
@@ -69,6 +72,23 @@ public class VKWrap extends Wrap {
             post.setInfo(NETWORK, new Post.Info(like, repost, comments));
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Query makeDeleteQuery(Post post) {
+        Query query = new Query(DELETE_SERVER);
+        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
+        query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
+        query.addParameter("owner_id", keys.getUserId());
+        query.addParameter("post_id", post.getLink(NETWORK));
+        return query;
+    }
+
+    @Override
+    public void parseDeleteResponse(Post post, String response) {
+        if (response.equals("1")) {
+            post.detachFromNetwork(NETWORK);
         }
     }
 }

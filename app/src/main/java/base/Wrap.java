@@ -1,7 +1,8 @@
 package base;
 
+import java.util.LinkedList;
+
 import Facebook.FacebookWrap;
-import MailRu.MailRuWrap;
 import VK.VKWrap;
 import base.attachments.Image;
 import util.BackgroundAction;
@@ -37,7 +38,7 @@ public abstract class Wrap {
      * @param post Post for getting info
      * @return array of queries
      */
-    public abstract Query[] makeGetQuery(Post post);
+    public abstract Query[] makeGetQueries(Post post);
 
     /**
      * Parse JSON-response from server (// TODO: 11/19/2015 should be remade)
@@ -52,10 +53,15 @@ public abstract class Wrap {
                 return new FacebookWrap();
             case Networks.VK:
                 return  new VKWrap();
-            case Networks.MAILRU:
-                return new MailRuWrap();
             default:
                 return null;
         }
     }
+
+    public abstract Query makeDeleteQuery(Post post);
+
+    public abstract void parseDeleteResponse(Post post, String response);
+
+    public abstract Query makeLoadPostsQuery(long since, long before);
+    public abstract long parsePostsLoadedResponse(LinkedList<Post> posts, long since, String response);
 }

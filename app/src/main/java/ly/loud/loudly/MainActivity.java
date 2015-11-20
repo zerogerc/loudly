@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void saveClicked(View v) {
-        Tasks.saveKeysTask task = new Tasks.saveKeysTask(this) {
+        Tasks.SaveKeysTask task = new Tasks.SaveKeysTask(this) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
                 Toast toast = Toast.makeText(context, "Saved", Toast.LENGTH_SHORT);
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void savePost(View v) {
-        Tasks.savePostsTask task = new Tasks.savePostsTask(this) {
+        Tasks.SavePostsTask task = new Tasks.SavePostsTask(this) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
                 if (integer == 0) {
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadPost(View v) {
-        Tasks.loadPostsTask task = new Tasks.loadPostsTask(this) {
+        Tasks.LoadPostsTask task = new Tasks.LoadPostsTask(this) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
                 if (integer == 0) {

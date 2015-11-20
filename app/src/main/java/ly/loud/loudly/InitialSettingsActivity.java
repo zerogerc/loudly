@@ -85,7 +85,7 @@ public class InitialSettingsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Tasks.saveKeysTask task = new Tasks.saveKeysTask(this) {
+        Tasks.SaveKeysTask task = new Tasks.SaveKeysTask(this) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {}
         };

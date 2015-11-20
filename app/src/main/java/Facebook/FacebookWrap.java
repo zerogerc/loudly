@@ -45,7 +45,7 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public Query[] makeGetQuery(Post post) {
+    public Query[] makeGetQueries(Post post) {
         String[] urls = {"/likes", "/comments", "/sharedposts"};
         for (int i = 0; i < urls.length; i++) {
             urls[i] = MAIN_SERVER + post.getLink(NETWORK) + urls[i];
@@ -74,6 +74,23 @@ public class FacebookWrap extends Wrap {
             post.setInfo(NETWORK, new Post.Info(likes, shares, comments));
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Query makeDeleteQuery(Post post) {
+        return new Query(MAIN_SERVER + post.getLink(NETWORK));
+    }
+
+    @Override
+    public void parseDeleteResponse(Post post, String response) {
+        try {
+            JSONObject parse = new JSONObject(response);
+            if (parse.getString("success") == "true") {
+                post.detachFromNetwork(NETWORK);
+            }
+        } catch (JSONException e) {
+            // ToDo: tell about fails
         }
     }
 }

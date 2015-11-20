@@ -112,7 +112,7 @@ public class Loudly extends Application {
         context = this;
         posts = new LinkedList<>();
 
-        Tasks.loadKeysTask loadKeys = new Tasks.loadKeysTask(context) {
+        Tasks.LoadKeysTask loadKeys = new Tasks.LoadKeysTask(context) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
                 Intent message = new Intent(LOUDLY_LOADED_KEYS);
@@ -121,7 +121,7 @@ public class Loudly extends Application {
         };
         loadKeys.execute();
 
-        Tasks.loadPostsTask loadPosts = new Tasks.loadPostsTask(context) {
+        Tasks.LoadPostsTask loadPosts = new Tasks.LoadPostsTask(context) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
                 postsLoaded = true;

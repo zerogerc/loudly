@@ -4,12 +4,14 @@ package base;
 import android.content.Context;
 
 import java.io.IOException;
+import java.util.LinkedList;
 
 import ly.loud.loudly.Loudly;
 import util.AttachableTask;
 import util.BackgroundAction;
 import util.LongTask;
 import util.ResultListener;
+import util.TaskWithProgress;
 import util.UIAction;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
@@ -20,115 +22,186 @@ import util.database.DatabaseException;
 public class Tasks {
 
     /**
-     * Makes LongTask, that uploads post to many network one by one
-     *
-     * @param wraps Wraps of social networks
+     * TaskWithProgress for uploading posts into networks
      */
-    public static LongTask<Object, Integer> makePostUploader(
-            final UIAction onProgressUpdate,
-            final ResultListener listener,
-            final Wrap... wraps) {
 
-        return new LongTask<Object, Integer>() {
-            @Override
-            protected UIAction doInBackground(Object... params) {
-                final Post post = (Post) params[0];
-                int k = 0;
+    public static class PostUploader extends TaskWithProgress<Post, Integer> {
+        public PostUploader(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
+            super(onProgressUpdate, onFinish, wraps);
+        }
+
+        @Override
+        protected UIAction doInBackground(Post... params) {
+            final Post post = params[0];
+            int k = 0;
+            for (Wrap w : wraps) {
+                try {
+                    k++;
+                    Interactions.post(w, post, new BackgroundAction() {
+                        @Override
+                        public void execute(Object... params) {
+                            publishProgress((Integer) params[0]);
+                        }
+                    });
+                    publishProgress(k, params.length);
+                } catch (Exception e) {
+                    return new UIAction() {
+                        @Override
+                        public void execute(Context context, Object... params) {
+                            onFinish.onFail(context, "Fail");
+                        }
+                    };
+                }
+            }
+
+            try {
+                DatabaseActions.savePost(post);
+            } catch (DatabaseException e) {
+                e.printStackTrace();
+                return new UIAction() {
+                    @Override
+                    public void execute(Context context, Object... params) {
+                        onFinish.onFail(context, "Failed due to database");
+                    }
+                };
+            }
+
+            // TODO: I DON'T LIKE IT
+            return new UIAction() {
+                @Override
+                public void execute(Context context, Object... params) {
+                    Loudly.getContext().addPost(post);
+                    onFinish.onSuccess(context, post);
+                }
+            };
+        }
+    }
+
+    public static class InfoGetter extends TaskWithProgress<Post, Integer>     {
+        public InfoGetter(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
+            super(onProgressUpdate, onFinish, wraps);
+        }
+
+        @Override
+        protected UIAction doInBackground(Post... params) {
+            int k = 0;
+            final Post post = params[0];
+            try {
                 for (Wrap w : wraps) {
-                    try {
-                        k++;
-                        Interactions.post(w, post, new BackgroundAction() {
-                            @Override
-                            public void execute(Object... params) {
-                                publishProgress((Integer) params[0]);
-                            }
-                        });
-                        publishProgress(k, params.length);
-                    } catch (Exception e) {
-                        return new UIAction() {
-                            @Override
-                            public void execute(Context context, Object... params) {
-                                listener.onFail(context, "Fail");
-                            }
-                        };
-                    }
+                    k++;
+                    Interactions.getInfo(w, post);
+                    publishProgress(k);
                 }
-
-                try {
-                    DatabaseActions.savePost(post);
-                } catch (DatabaseException e) {
-                    e.printStackTrace();
-                    return new UIAction() {
-                        @Override
-                        public void execute(Context context, Object... params) {
-                            listener.onFail(context, "Failed due to database");
-                        }
-                    };
-                }
-
-                // TODO: I DON'T LIKE IT
+            } catch (IOException e) {
                 return new UIAction() {
                     @Override
                     public void execute(Context context, Object... params) {
-                        Loudly.getContext().addPost(post);
-                        listener.onSuccess(context, post);
+                        onFinish.onFail(context, "IOException");
                     }
                 };
             }
-
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                super.onProgressUpdate(values);
-                onProgressUpdate.execute(context, values);
-            }
-        };
+            return new UIAction() {
+                @Override
+                public void execute(Context context, Object... params) {
+                    onFinish.onSuccess(context, post);
+                }
+            };
+        }
     }
 
-    public static LongTask<Object, Integer> makePostInfoGetter(
-            final UIAction onProgressUpdate,
-            final ResultListener listener,
-            final Wrap... wraps) {
+    public static class PostDeleter extends TaskWithProgress<Post, Integer> {
+        public PostDeleter(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
+            super(onProgressUpdate, onFinish, wraps);
+        }
 
-        return new LongTask<Object, Integer>() {
-            @Override
-            protected UIAction doInBackground(Object... params) {
-                int k = 0;
-                final Post post = (Post) params[0];
-                try {
-                    for (Wrap w : wraps) {
-                        k++;
-                        Interactions.getInfo(w, post);
-                        publishProgress(k);
-                    }
-                } catch (IOException e) {
-                    return new UIAction() {
-                        @Override
-                        public void execute(Context context, Object... params) {
-                            listener.onFail(context, "IOException");
-                        }
-                    };
+        @Override
+        protected UIAction doInBackground(Post... params) {
+            int k = 0;
+            final Post post = params[0];
+            try {
+                for (Wrap w : Loudly.getContext().getWraps()) {
+                    k++;
+                    Interactions.deletePost(w, post);
+                    publishProgress(k);
                 }
+            } catch (IOException e) {
                 return new UIAction() {
                     @Override
                     public void execute(Context context, Object... params) {
-                        listener.onSuccess(context, post);
+                        onFinish.onFail(context, "IOException");
                     }
                 };
             }
-
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                super.onProgressUpdate(values);
-                onProgressUpdate.execute(context, values);
+            boolean dead = true;
+            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                if (post.getLink(i) != null) {
+                    dead = false;
+                    break;
+                }
             }
-        };
+            if (dead) {
+                try {
+                    DatabaseActions.deletePost(post);
+                } catch (final DatabaseException e) {
+                    return new UIAction() {
+                        @Override
+                        public void execute(Context context, Object... params) {
+                            onFinish.onFail(context, "Database error: " + e.getMessage());
+                        }
+                    };
+                }
+                Loudly.getContext().getPosts().remove(post);
+            }
+            return new UIAction() {
+                @Override
+                public void execute(Context context, Object... params) {
+                    onFinish.onSuccess(context, post);
+                }
+            };
+        }
     }
+
+
+    public static class PostsLoader extends TaskWithProgress<Long, Integer> {
+        public PostsLoader(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
+            super(onProgressUpdate, onFinish, wraps);
+        }
+
+        @Override
+        protected UIAction doInBackground(Long... params) {
+            long since = params[0];
+            long before = params[1];
+            int k = 0;
+            try {
+                for (Wrap w : wraps) {
+                    k++;
+                    LinkedList<Post> posts = Interactions.loadPosts(w, since, before);
+                    // ToDo: Merge with posts in Loudly
+                    publishProgress(k);
+                }
+            } catch (final IOException e) {
+                return new UIAction() {
+                    @Override
+                    public void execute(Context context, Object... params) {
+                        onFinish.onFail(context, e.getMessage());
+                    }
+                };
+            }
+            return new UIAction() {
+                @Override
+                public void execute(Context context, Object... params) {
+                    onFinish.onSuccess(context, params);
+                }
+            };
+        }
+    }
+
 
     /**
      * Task for saving KeyKeepers to file
      */
-    public abstract static class saveKeysTask extends AttachableTask<Object, Void, Integer> {
-        public saveKeysTask(Context context) {
+    public abstract static class SaveKeysTask extends AttachableTask<Object, Void, Integer> {
+        public SaveKeysTask(Context context) {
             super(context);
         }
 
@@ -147,8 +220,8 @@ public class Tasks {
     /**
      * Task for loading KeyKeepers from file
      */
-    public abstract static class loadKeysTask extends AttachableTask<Object, Void, Integer> {
-        public loadKeysTask(Context context) {
+    public abstract static class LoadKeysTask extends AttachableTask<Object, Void, Integer> {
+        public LoadKeysTask(Context context) {
             super(context);
         }
 
@@ -164,8 +237,8 @@ public class Tasks {
         }
     }
 
-    public static abstract class savePostsTask extends AttachableTask<Post, Void, Integer> {
-        public savePostsTask(Context context) {
+    public static abstract class SavePostsTask extends AttachableTask<Post, Void, Integer> {
+        public SavePostsTask(Context context) {
             super(context);
         }
 
@@ -183,8 +256,8 @@ public class Tasks {
         }
     }
 
-    public static abstract class loadPostsTask extends AttachableTask<Object, Void, Integer> {
-        public loadPostsTask(Context context) {
+    public static abstract class LoadPostsTask extends AttachableTask<Object, Void, Integer> {
+        public LoadPostsTask(Context context) {
             super(context);
         }
 

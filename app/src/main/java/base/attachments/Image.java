@@ -12,7 +12,7 @@ public class Image extends Attachment {
         this.links = links;
     }
 
-    protected void setLink(int network, String link) {
+    public void setLink(int network, String link) {
         links[network] = link;
     }
 
@@ -24,6 +24,11 @@ public class Image extends Attachment {
     @Override
     public String[] getLinks() {
         return links;
+    }
+
+    @Override
+    public String getLink(int network) {
+        return links[network];
     }
 
     @Override

@@ -138,6 +138,38 @@ public class DatabaseActions {
         }
     }
 
+    public static void deletePost(Post post) throws DatabaseException {
+        SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.query(PostEntry.TABLE_NAME, PostEntry.POST_COLUMNS,
+                    sqlEqual(PostEntry._ID, post.getLocalId()), null, null, null, null);
+            if (cursor.getCount() == 0) {
+                return;
+            }
+            long locId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LOCATION));
+            long atId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_FIRST_ATTACHMENT));
+            long linkId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LINKS));
+
+            db.beginTransaction();
+            if (db.delete(LocationEntry.TABLE_NAME, sqlEqual(LocationEntry._ID, locId), null) != 1) {
+                throw new DatabaseException("Can't delete location: " + locId);
+            }
+            if (db.delete(LinksEntry.TABLE_NAME, sqlEqual(LinksEntry._ID, linkId), null) != 1) {
+                throw new DatabaseException("Can't delete post's link: " + linkId);
+            }
+            while (atId != AttachmentsEntry.END_OF_LIST_VALUE) {
+                atId = deleteAttachment(db, atId);
+            }
+            if (db.delete(PostEntry.TABLE_NAME, sqlEqual(PostEntry._ID, post.getLocalId()), null) != 1) {
+                throw new DatabaseException("Can't delete post: " + post.getLocalId());
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            Network.closeQuietly(cursor);
+        }
+    }
+
     public static void loadKeys() throws DatabaseException {
         SQLiteDatabase db = KeysDbHelper.getInstance().getReadableDatabase();
         Loudly context = Loudly.getContext();
@@ -152,7 +184,6 @@ public class DatabaseActions {
             cursor.moveToFirst();
 
             while (!cursor.isAfterLast()) {
-                long c = cursor.getCount();
                 int network = cursor.getInt(cursor.getColumnIndex(KeysEntry.COLUMN_NAME_NETWORK));
                 String bundle = cursor.getString(cursor.getColumnIndex(KeysEntry.COLUMN_NAME_VALUE));
 
@@ -162,6 +193,12 @@ public class DatabaseActions {
         } finally {
             Network.closeQuietly(cursor);
         }
+    }
+
+    public static void deleteKey(int network) throws DatabaseException {
+        SQLiteDatabase db = KeysDbHelper.getInstance().getWritableDatabase();
+        db.delete(KeysEntry.TABLE_NAME,
+                sqlEqual(KeysEntry.COLUMN_NAME_NETWORK, network), null);
     }
 
     private static long upsert(SQLiteDatabase db, String tableName,
@@ -298,9 +335,34 @@ public class DatabaseActions {
         return list;
     }
 
+    private static long deleteAttachment(SQLiteDatabase db, long atId) throws DatabaseException {
+        Cursor cursor = null;
+        long nextId = AttachmentsEntry.END_OF_LIST_VALUE;
+        try {
+            cursor = db.query(AttachmentsEntry.TABLE_NAME, AttachmentsEntry.ATTACHMENTS_COLUMNS,
+                    sqlEqual(AttachmentsEntry._ID, atId), null, null, null, null);
+
+            cursor.moveToFirst();
+            long linkId = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_LINK));
+            nextId = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_NEXT));
+
+
+            if (db.delete(LinksEntry.TABLE_NAME, sqlEqual(LinksEntry._ID, linkId), null) != 1) {
+                throw new DatabaseException("Can't delete attachment's link: " + linkId);
+            }
+            if (db.delete(AttachmentsEntry.TABLE_NAME, sqlEqual(AttachmentsEntry._ID, atId), null) != 1) {
+                throw new DatabaseException("Can't delete attachment: " + atId);
+            }
+        } finally {
+            Network.closeQuietly(cursor);
+        }
+        return nextId;
+    }
+
     private static String sqlEqual(String column, long value) {
         return sqlEqual(column, Long.toString(value));
     }
+
     private static String sqlEqual(String column, String value) {
         return column + " = " + value;
     }

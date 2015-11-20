@@ -14,6 +14,7 @@ import base.Post;
 import base.Tasks;
 import util.LongTask;
 import util.ResultListener;
+import util.TaskWithProgress;
 import util.UIAction;
 
 
@@ -50,7 +51,8 @@ public class PostCreateActivity extends AppCompatActivity {
     }
 
     public void sendClicked(View v) {
-        LongTask uploader = Tasks.makePostUploader(new UIAction() {
+
+        TaskWithProgress uploader = new Tasks.PostUploader(new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
             }

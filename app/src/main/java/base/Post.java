@@ -133,6 +133,13 @@ public class Post implements Comparable<Post> {
         this.localId = localId;
     }
 
+    public void detachFromNetwork(int network) {
+        links[network] = null;
+        for (Attachment attachment : attachments) {
+            attachment.setLink(network, null);
+        }
+    }
+
     @Override
     public int compareTo(@NonNull Post another) {
         if (date < another.date) {
@@ -142,5 +149,14 @@ public class Post implements Comparable<Post> {
             return 1;
         }
         return 0;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Post)) {
+            return false;
+        }
+        Post p = (Post) o;
+        return localId == p.localId;
     }
 }

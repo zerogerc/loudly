@@ -163,7 +163,20 @@ public class Network {
         return response;
     }
 
-
+    public static String makeDeleteRequest(Query query) throws IOException{
+        HttpURLConnection conn = null;
+        String response = null;
+        try {
+            conn = (HttpURLConnection) new URL(query.toURL()).openConnection();
+            conn.setRequestMethod("DELETE");
+            response = getResponse(conn);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+        return response;
+    }
 
     /**
      * Get response from server after sending request
