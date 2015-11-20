@@ -1,12 +1,9 @@
 package ly.loud.loudly;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,23 +12,31 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
-import base.Tasks;
+import util.AttachableReceiver;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
     RecyclerView recyclerView;
     RecyclerViewAdapter recyclerViewAdapter;
-    BroadcastReceiver checkLoaded = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            setRecyclerView();
-            LocalBroadcastManager.getInstance(context).unregisterReceiver(checkLoaded);
-        }
-    };
+
+    private static final int LOAD_POSTS_RECEIVER = 0;
+    private static final int POST_PROGRESS_RECEIVER = 1;
+    private static final int POST_FINISHED_RECEIVER = 2;
+    private static final int RECEIVER_COUNT = 3;
+
+    private static AttachableReceiver[] receivers = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (receivers == null) {
+            receivers = new AttachableReceiver[RECEIVER_COUNT];
+        }
+        for (AttachableReceiver receiver : receivers) {
+            if (receiver != null) {
+                receiver.attach(this);
+            }
+        }
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
@@ -39,8 +44,15 @@ public class MainActivity extends AppCompatActivity {
 
         if (!Loudly.getContext().arePostsLoaded()) {
             // ToDo: show here rolling circle
-            IntentFilter filter = new IntentFilter(Loudly.LOUDLY_LOADED_POSTS);
-            LocalBroadcastManager.getInstance(this).registerReceiver(checkLoaded, filter);
+            receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.LOADED_POSTS) {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    MainActivity mainActivity = (MainActivity) getContext();
+                    mainActivity.setRecyclerView();
+                    stop();
+                    receivers[LOAD_POSTS_RECEIVER] = null;
+                }
+            };
         } else {
             setRecyclerView();
         }
@@ -83,79 +95,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void callPostCreate(View v) {
+
+        // Start receivers with a little crutch
+
+        if (receivers[POST_PROGRESS_RECEIVER] == null) {
+            receivers[POST_PROGRESS_RECEIVER] = new AttachableReceiver(this, Loudly.POST_UPLOAD_PROGRESS) {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    int progress = intent.getIntExtra("progress", 0);
+                    Toast toast = Toast.makeText(context, "" + progress, Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+            };
+        }
+
+        if (receivers[POST_FINISHED_RECEIVER] == null) {
+            receivers[POST_FINISHED_RECEIVER] = new AttachableReceiver(this, Loudly.POST_UPLOAD_FINISHED) {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    boolean success = intent.getBooleanExtra("success", false);
+                    if (success) {
+                        // Turn off receivers
+                        receivers[POST_PROGRESS_RECEIVER].stop();
+                        receivers[POST_PROGRESS_RECEIVER] = null;
+                        stop();
+                        receivers[POST_FINISHED_RECEIVER] = null;
+
+                        Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
+                        toast.show();
+
+                        MainActivity mainActivity = (MainActivity) getContext();
+                        mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    } else {
+                        String error = intent.getStringExtra("error");
+                        Toast toast = Toast.makeText(context, "Failed to create Post: " + error, Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
+                }
+            };
+        }
+
         Intent intent = new Intent(this, PostCreateActivity.class);
         startActivity(intent);
-    }
-
-    // ToDo: replace with dictionary
-
-    int find(int[][] map, int val) {
-        for (int[] aMap : map) {
-            if (aMap[0] == val) {
-                return aMap[1];
-            }
-        }
-        return -1;
-    }
-
-    public void saveClicked(View v) {
-        Tasks.SaveKeysTask task = new Tasks.SaveKeysTask(this) {
-            @Override
-            public void ExecuteInUI(Context context, Integer integer) {
-                Toast toast = Toast.makeText(context, "Saved", Toast.LENGTH_SHORT);
-                toast.show();
-            }
-        };
-        task.execute();
-    }
-
-    public void savePost(View v) {
-        Tasks.SavePostsTask task = new Tasks.SavePostsTask(this) {
-            @Override
-            public void ExecuteInUI(Context context, Integer integer) {
-                if (integer == 0) {
-                    Toast toast = Toast.makeText(context, "Saved", Toast.LENGTH_SHORT);
-                    toast.show();
-                } else {
-                    Toast toast = Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-            }
-        };
-        task.execute();
-    }
-
-    public void loadPost(View v) {
-        Tasks.LoadPostsTask task = new Tasks.LoadPostsTask(this) {
-            @Override
-            public void ExecuteInUI(Context context, Integer integer) {
-                if (integer == 0) {
-                    Toast toast = Toast.makeText(context, "Loaded", Toast.LENGTH_SHORT);
-                    toast.show();
-                } else {
-                    Toast toast = Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-            }
-        };
-        task.execute();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Loudly context = Loudly.getContext();
-        if (context.getAction() != null) {
-            context.getAction().execute(this);
-            context.setAction(null);
-        }
-        if (context.getTask() != null) {
-            context.getTask().attachContext(this);
-        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        for (AttachableReceiver receiver : receivers) {
+            if (receiver != null) {
+                receiver.detach();
+            }
+        }
     }
+
 }

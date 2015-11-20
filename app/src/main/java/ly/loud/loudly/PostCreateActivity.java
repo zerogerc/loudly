@@ -52,23 +52,8 @@ public class PostCreateActivity extends AppCompatActivity {
 
     public void sendClicked(View v) {
 
-        TaskWithProgress uploader = new Tasks.PostUploader(new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-            }
-        }, new ResultListener() {
-            @Override
-            public void onSuccess(Context context, Object result) {
-                MainActivity activity = (MainActivity)context;
-                activity.recyclerViewAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onFail(Context context, String error) {
-                Toast toast = Toast.makeText(context, "Failed to create Post", Toast.LENGTH_SHORT);
-                toast.show();
-            }
-        }, Loudly.getContext().getWraps());
+        Tasks.PostUploader uploader = new Tasks.PostUploader(Loudly.POST_UPLOAD_PROGRESS,
+                Loudly.getContext().getWraps());
 
         String text = editText.getText().toString();
         uploader.execute(new Post(text));

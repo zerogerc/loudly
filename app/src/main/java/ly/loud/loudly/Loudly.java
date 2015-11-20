@@ -22,9 +22,16 @@ import util.UIAction;
  * Stores run-time variables
  */
 public class Loudly extends Application {
-    public static final String LOUDLY_PACKAGE = "ly.loud.loudly";
-    public static final String LOUDLY_LOADED_KEYS = "ly.loud.loudly.keys";
-    public static final String LOUDLY_LOADED_POSTS = "ly.loud.loudly.posts";
+    public static final String LOADED_KEYS = "ly.loud.loudly.keys";
+    public static final String LOADED_POSTS = "ly.loud.loudly.posts";
+    public static final String AUTHORIZATION_FINISHED = "ly.loud.loudly.auth.finished";
+
+    public static final String POST_UPLOAD_PROGRESS = "ly.loud.loudly.post.progress";
+    public static final String POST_UPLOAD_FINISHED = "ly.loud.loudly.post.finished";
+
+    public static final String POST_GET_INFO_PROGRESS = "ly.loud.loudly.post.info.progress";
+    public static final String POST_GET_INFO_FINISHED = "ly.loud.loudly.post.info.finished";
+
 
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
@@ -115,7 +122,7 @@ public class Loudly extends Application {
         Tasks.LoadKeysTask loadKeys = new Tasks.LoadKeysTask(context) {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
-                Intent message = new Intent(LOUDLY_LOADED_KEYS);
+                Intent message = new Intent(LOADED_KEYS);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(message);
             }
         };
@@ -125,7 +132,7 @@ public class Loudly extends Application {
             @Override
             public void ExecuteInUI(Context context, Integer integer) {
                 postsLoaded = true;
-                Intent message = new Intent(LOUDLY_LOADED_POSTS);
+                Intent message = new Intent(LOADED_POSTS);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(message);
             }
         };

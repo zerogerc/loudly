@@ -3,6 +3,8 @@ package VK;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.LinkedList;
+
 import base.Networks;
 import base.Post;
 import base.Wrap;
@@ -90,5 +92,15 @@ public class VKWrap extends Wrap {
         if (response.equals("1")) {
             post.detachFromNetwork(NETWORK);
         }
+    }
+
+    @Override
+    public Query makeLoadPostsQuery(long since, long before) {
+        return null;
+    }
+
+    @Override
+    public long parsePostsLoadedResponse(LinkedList<Post> posts, long since, String response) {
+        return 0;
     }
 }

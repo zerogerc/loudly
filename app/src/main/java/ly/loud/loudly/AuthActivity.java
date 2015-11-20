@@ -1,7 +1,9 @@
 package ly.loud.loudly;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -43,7 +45,8 @@ public class AuthActivity extends AppCompatActivity {
                 super.onPageFinished(view, url);
                 if (authorizer.isResponse(url)) {
                     view.setVisibility(View.INVISIBLE);
-                    FinishAuthorizationTask continueAuth = new FinishAuthorizationTask();
+
+                    FinishAuthorization continueAuth = new FinishAuthorization();
                     continueAuth.execute(authorizer, url, keys);
                     gotResponse = true;
                     finish();
@@ -55,21 +58,39 @@ public class AuthActivity extends AppCompatActivity {
         });
     }
 
-    static class FinishAuthorizationTask extends LongTask<Object, Void> {
+//    static class FinishAuthorizationTask extends LongTask<Object, Void> {
+//        @Override
+//        protected UIAction doInBackground(Object... params) {
+//            Authorizer authorizer = (Authorizer) params[0];
+//            String url = (String) params[1];
+//            KeyKeeper keys = (KeyKeeper) params[2];
+//
+//            return authorizer.continueAuthorization(url, keys);
+//        }
+//    }
+
+    private static class FinishAuthorization extends AsyncTask<Object, Void, Intent> {
         @Override
-        protected UIAction doInBackground(Object... params) {
+        protected Intent doInBackground(Object... params) {
             Authorizer authorizer = (Authorizer) params[0];
             String url = (String) params[1];
             KeyKeeper keys = (KeyKeeper) params[2];
 
             return authorizer.continueAuthorization(url, keys);
         }
+
+        @Override
+        protected void onPostExecute(Intent message) {
+            LocalBroadcastManager.getInstance(Loudly.getContext()).sendBroadcast(message);
+        }
     }
 
     @Override
     protected void onDestroy() {
         if (!gotResponse) {
-            Log.e("TAG", "User declined authorisation");
+            Intent message = new Intent(Loudly.AUTHORIZATION_FINISHED);
+            message.putExtra("success", false);
+            message.putExtra("error", "User declined authorization");
         }
         super.onDestroy();
 

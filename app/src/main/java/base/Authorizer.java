@@ -9,6 +9,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import ly.loud.loudly.AuthActivity;
+import ly.loud.loudly.Loudly;
 import util.UIAction;
 import util.AttachableTask;
 import util.Query;
@@ -31,13 +32,22 @@ public abstract class Authorizer implements Parcelable {
     protected abstract KeyKeeper beginAuthorize();
 
     /**
-     * Last step of authorization.
-     * It's important to store KeyKeeper in Loudly before onSuccess method invoked.
-     * @param url response from authorization server
-     * @param inKeys keys returned from beginAuthorize
-     * @return UIAction that will be executed in UIThread
+     * @return Token that determines that response is successful
      */
-    public abstract UIAction continueAuthorization(final String url, KeyKeeper inKeys);
+    public abstract String successToken();
+
+    /**
+     * @return Token that says that response is unsuccessful, E.G. "error"
+     */
+    public abstract String errorToken();
+
+    /**
+     * Add fields such as access_token from response to KeyKeeper
+     * @param keys Keys, generated during beginAuthorize
+     * @param response Response from server
+     */
+    public abstract void addFieldsFromQuery(KeyKeeper keys, Query response);
+
 
     /**
      * @return parameters that will be send to server in order to get proper tokens
@@ -55,6 +65,7 @@ public abstract class Authorizer implements Parcelable {
      * Static Authorization class, which holds Authorizer.
      * It performs initial steps of authorisation and opens AuthActivity to get authorisation tokens
      */
+
     private static class AuthorizationTask extends AttachableTask<Object, Void, KeyKeeper> {
         private Authorizer authorizer;
 
@@ -89,6 +100,42 @@ public abstract class Authorizer implements Parcelable {
      */
     public AsyncTask<Object, Void, KeyKeeper> createAsyncTask(Activity activity) {
         return new AuthorizationTask(activity, this);
+    }
+
+    /**
+     * Last step of authorization.
+     * @param url response from authorization server
+     * @param inKeys keys returned from beginAuthorize
+     * @return message to Settings Activity
+     */
+
+    public Intent continueAuthorization(final String url, KeyKeeper inKeys) {
+        Query response = Query.fromURL(url);
+
+        if (response == null) {
+            Intent message = new Intent(Loudly.AUTHORIZATION_FINISHED);
+            message.putExtra("success", false);
+            message.putExtra("error", "Failed to parse response");
+            return message;
+        }
+
+        if (response.containsParameter(successToken())) {
+            addFieldsFromQuery(inKeys, response);
+
+            Loudly.getContext().setKeyKeeper(network(), inKeys);
+
+            Intent message = new Intent(Loudly.AUTHORIZATION_FINISHED);
+            message.putExtra("success", true);
+            message.putExtra("network", network());
+
+            return message;
+        } else {
+            String errorToken = response.getParameter(errorToken());
+            Intent message = new Intent(Loudly.AUTHORIZATION_FINISHED);
+            message.putExtra("success", false);
+            message.putExtra("error", errorToken);
+            return message;
+        }
     }
 
     @Override

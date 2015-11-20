@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+import VK.VKKeyKeeper;
 import base.Authorizer;
 import base.KeyKeeper;
 import base.Networks;
@@ -34,37 +35,18 @@ public class FacebookAuthorizer extends Authorizer {
     }
 
     @Override
-    public UIAction continueAuthorization(final String url, KeyKeeper inKeys) {
-        final FacebookKeyKeeper keys = (FacebookKeyKeeper) inKeys;
-        final ResultListener listener = Loudly.getContext().getListener();
-        Query response = Query.fromURL(url);
-        if (response == null) {
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    listener.onFail(context, "Failed to parse response: " + url);
-                }
-            };
-        }
-        if (response.containsParameter(ACCESS_TOKEN)) {
-            String accessToken = response.getParameter(ACCESS_TOKEN);
-            keys.setAccessToken(accessToken);
-            Loudly.getContext().setKeyKeeper(network(), keys);
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    listener.onSuccess(context, keys);
-                }
-            };
-        } else {
-            final String error = response.getParameter(ERROR_DESCRIPTION);
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    listener.onFail(context, error);
-                }
-            };
-        }
+    public String successToken() {
+        return ACCESS_TOKEN;
+    }
+
+    @Override
+    public String errorToken() {
+        return "error";
+    }
+
+    @Override
+    public void addFieldsFromQuery(KeyKeeper keys, Query response) {
+        ((FacebookKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
     }
 
     @Override

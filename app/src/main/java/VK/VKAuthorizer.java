@@ -1,6 +1,7 @@
 package VK;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Parcel;
 
 import base.KeyKeeper;
@@ -16,6 +17,7 @@ public class VKAuthorizer extends Authorizer {
     private static final String RESPONSE_URL = "https://oauth.vk.com/blank.html";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String ERROR_DESCRIPTION = "error";
+    private static final String USER_ID = "user_id";
 
     @Override
     public int network() {
@@ -28,44 +30,19 @@ public class VKAuthorizer extends Authorizer {
     }
 
     @Override
-    public UIAction continueAuthorization(final String url, KeyKeeper inKeys) {
-        final VKKeyKeeper keys = (VKKeyKeeper) inKeys;
-        final ResultListener listener = Loudly.getContext().getListener();
-        Query response = Query.fromURL(url);
+    public String successToken() {
+        return ACCESS_TOKEN;
+    }
 
-        if (response == null) {
-            return new UIAction() {
-                @Override
-                public void execute(Context action, Object... params) {
-                    listener.onFail(action, "Failed to parse response: " + url);
-                }
-            };
-        }
+    @Override
+    public String errorToken() {
+        return ERROR_DESCRIPTION;
+    }
 
-        if (response.containsParameter(ACCESS_TOKEN)) {
-            String accessToken = response.getParameter(ACCESS_TOKEN);
-            String userID = response.getParameter("user_id");
-            keys.setAccessToken(accessToken);
-            keys.setUserId(userID);
-
-            Loudly.getContext().setKeyKeeper(network(), keys);
-
-            // Add to WrapHolder
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    listener.onSuccess(context, keys);
-                }
-            };
-        } else {
-            final String errorToken = response.getParameter(ERROR_DESCRIPTION);
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    listener.onFail(context, errorToken);
-                }
-            };
-        }
+    @Override
+    public void addFieldsFromQuery(KeyKeeper keys, Query response) {
+        ((VKKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
+        ((VKKeyKeeper) keys).setUserId(response.getParameter(USER_ID));
     }
 
     @Override

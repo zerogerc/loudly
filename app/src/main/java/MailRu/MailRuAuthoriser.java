@@ -1,6 +1,7 @@
 package MailRu;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Parcel;
 
 import base.KeyKeeper;
@@ -15,7 +16,6 @@ public class MailRuAuthoriser extends Authorizer {
     private static final String AUTHORIZE_URL = "https://connect.mail.ru/oauth/authorize";
     private static final String REDIRECT_URL = "http://connect.mail.ru/oauth/success.html";
     private static final String ACCESS_TOKEN = "access_token";
-    private static final String ERROR_TOKEN = "error";
 
     @Override
     public int network() {
@@ -28,39 +28,19 @@ public class MailRuAuthoriser extends Authorizer {
     }
 
     @Override
-    public UIAction continueAuthorization(final String url, KeyKeeper inKeys) {
-        final MailRuKeyKeeper keys = (MailRuKeyKeeper) inKeys;
-        final ResultListener listener = Loudly.getContext().getListener();
-        Query response = Query.fromURL(url);
-        if (response == null) {
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    listener.onFail(context, "Failed to parse response: " + url);
-                }
-            };
-        }
-        if (response.containsParameter(ACCESS_TOKEN)) {
-            String accessToken = response.getParameter(ACCESS_TOKEN);
-            String refreshToken = response.getParameter("refresh_token");
-            keys.setSessionKey(accessToken);
-            keys.setRefreshToken(refreshToken);
-            Loudly.getContext().setKeyKeeper(network(), keys);
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    listener.onSuccess(context, keys);
-                }
-            };
-        } else {
-            final String error = response.getParameter(ERROR_TOKEN);
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    listener.onFail(context, error);
-                }
-            };
-        }
+    public String successToken() {
+        return ACCESS_TOKEN;
+    }
+
+    @Override
+    public String errorToken() {
+        return "error";
+    }
+
+    @Override
+    public void addFieldsFromQuery(KeyKeeper keys, Query response) {
+        ((MailRuKeyKeeper) keys).setSessionKey(response.getParameter(ACCESS_TOKEN));
+        ((MailRuKeyKeeper)keys).setSessionKey(response.getParameter("refresh_token"));
     }
 
     @Override

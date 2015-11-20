@@ -1,6 +1,7 @@
 package ly.loud.loudly;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -13,9 +14,11 @@ import VK.VKAuthorizer;
 import base.Authorizer;
 import base.Networks;
 import base.Tasks;
+import util.AttachableReceiver;
 import util.ResultListener;
 
 public class InitialSettingsActivity extends AppCompatActivity {
+    private static AttachableReceiver authReceiver = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,51 +35,66 @@ public class InitialSettingsActivity extends AppCompatActivity {
         }
     }
 
-    private void setListener(final int network) {
-        Loudly.getContext().setListener(new ResultListener() {
+    // That's here because of 3 different click listeners
+    private void startReceiver() {
+        authReceiver = new AttachableReceiver(this, Loudly.AUTHORIZATION_FINISHED) {
             @Override
-            public void onSuccess(Context context, Object result) {
-                Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
-                toast.show();
-                CheckBox cb = (CheckBox) findViewById(R.id.vk_box);
-                switch (network) {
-                    case Networks.VK:
-                        cb = (CheckBox) findViewById(R.id.vk_box);
-                        break;
-                    case Networks.FB:
-                        cb = (CheckBox) findViewById(R.id.fb_box);
-                        break;
-                    case Networks.MAILRU:
-                        cb = (CheckBox) findViewById(R.id.mail_ru_box);
-                        break;
+            public void onReceive(Context context, Intent intent) {
+                boolean success = intent.getBooleanExtra("success", false);
+                if (success) {
+                    Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
+                    toast.show();
+                    int network = intent.getIntExtra("network", -1);
+                    CheckBox cb = (CheckBox) findViewById(R.id.vk_box);
+                    switch (network) {
+                        case Networks.VK:
+                            cb = (CheckBox) findViewById(R.id.vk_box);
+                            break;
+                        case Networks.FB:
+                            cb = (CheckBox) findViewById(R.id.fb_box);
+                            break;
+                        case Networks.MAILRU:
+                            cb = (CheckBox) findViewById(R.id.mail_ru_box);
+                            break;
+                    }
+                    cb.setChecked(true);
+                } else {
+                    String error = intent.getStringExtra("error");
+                    Toast toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
+                    toast.show();
                 }
-                cb.setChecked(true);
+                stop();
+                authReceiver = null;
             }
-
-            @Override
-            public void onFail(Context context, String error) {
-                Toast toast = Toast.makeText(context, "Fail", Toast.LENGTH_SHORT);
-                toast.show();
-            }
-        });
+        };
     }
 
+    // ToDo: make buttons onclickable during authorization
+
     public void VKButtonClick(View v) {
-        setListener(Networks.VK);
+        startReceiver();
         Authorizer authorizer = new VKAuthorizer();
         authorizer.createAsyncTask(this).execute();
     }
 
     public void FBButtonClick(View v) {
-        setListener(Networks.FB);
+        startReceiver();
         Authorizer authorizer = new FacebookAuthorizer();
         authorizer.createAsyncTask(this).execute();
     }
 
     public void MailRuButtonClick(View v) {
-        setListener(Networks.MAILRU);
+        startReceiver();
         Authorizer authorizer = new MailRuAuthoriser();
         authorizer.createAsyncTask(this).execute();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (authReceiver != null) {
+            authReceiver.detach();
+        }
     }
 
     /**
@@ -85,23 +103,7 @@ public class InitialSettingsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Tasks.SaveKeysTask task = new Tasks.SaveKeysTask(this) {
-            @Override
-            public void ExecuteInUI(Context context, Integer integer) {}
-        };
+        Tasks.SaveKeysTask task = new Tasks.SaveKeysTask(this);
         task.execute();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Loudly context = Loudly.getContext();
-        if (context.getAction() != null) {
-            context.getAction().execute(this);
-            context.setAction(null);
-        }
-        if (context.getTask() != null) {
-            context.getTask().attachContext(this);
-        }
     }
 }
