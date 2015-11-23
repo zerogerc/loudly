@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.Toast;
 
 import java.util.Calendar;
-import java.util.Date;
 
 import base.Tasks;
 import util.AttachableReceiver;
@@ -91,12 +90,28 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (dy > 10 && fab.isShown()) {
+                if (dy > 5 && fab.isShown()) {
                     fab.hide();
+//                    ObjectAnimator anim = ObjectAnimator.ofFloat(fab, "translationY", 100).setDuration(200);
+//                    anim.addListener(new AnimatorListenerAdapter() {
+//                        @Override
+//                        public void onAnimationEnd(Animator animation) {
+//                            fab.hide();
+//                        }
+//                    });
+//                    anim.start();
                 }
-                if (dy < -10 && (!fab.isShown())) {
+                if (dy < -5 && (!fab.isShown())) {
                     fab.show();
+//                    ObjectAnimator anim = ObjectAnimator.ofFloat(fab, "translationY", -100).setDuration(200);
+//                    anim.addListener(new AnimatorListenerAdapter(){
+//                        @Override public void onAnimationEnd(Animator animation) {
+//                            fab.show();
+//                        }
+//                    });
+//                    anim.start();
                 }
+
             }
         });
 
