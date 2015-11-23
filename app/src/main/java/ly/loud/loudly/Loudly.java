@@ -92,7 +92,7 @@ public class Loudly extends Application {
         Tasks.LoadKeysTask loadKeys = new Tasks.LoadKeysTask();
         loadKeys.execute();
 
-        Tasks.LoadPostsTask loadPosts = new Tasks.LoadPostsTask();
+        Tasks.LoadPostsTask loadPosts = new Tasks.LoadPostsTask(-1, 0);
         loadPosts.execute();
     }
 }

@@ -162,18 +162,20 @@ public class DatabaseActions {
         }
     }
 
-    public static LinkedList<Post> loadPosts() throws DatabaseException {
+    public static LinkedList<Post> loadPosts(long beforeID, long sinceTime) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getReadableDatabase();
         Loudly context = Loudly.getContext();
 
         String sortOrder = PostEntry.COLUMN_NAME_DATE + " DESC";
         LinkedList<Post> res = new LinkedList<>();
         Cursor cursor = null;
+        String select = ((beforeID == -1) ? "" : PostEntry._ID + " < " + Long.toString(beforeID) + " AND ") +
+                PostEntry.COLUMN_NAME_DATE + " >= " + Long.toString(sinceTime);
         try {
             cursor = db.query(
                     PostEntry.TABLE_NAME,
                     PostEntry.POST_COLUMNS,
-                    null, null, null, null, sortOrder);
+                    select, null, null, null, sortOrder);
 
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {

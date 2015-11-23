@@ -4,6 +4,7 @@ package base;
 import android.content.Intent;
 
 import java.io.IOException;
+import java.util.LinkedList;
 
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
@@ -28,17 +29,17 @@ public class Tasks {
 
     /**
      * BroadcastReceivingTask for uploading post to network
-     * <p>
+     * <p/>
      * When post is added to DB, it sends Loudly.POST_UPLOAD_STARTED broadcast with
      * localId stored in field BroadcastSendingTask.ID_FIELD
-     * <p>
+     * <p/>
      * Then during upload it sends Loudly.POST_UPLOAD_PROGRESS broadcast
      * with localId of post in BroadcastSendingTask.ID_FIELD and progress stored in
      * BroadcastSendingTask.PROGRESS_FIELD
-     * <p>
+     * <p/>
      * When upload is successfully finished, it sends
      * Loudly.POST_UPLOAD_FINISHED with BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.POST_UPLOAD_FINISHED with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -90,15 +91,15 @@ public class Tasks {
 
     /**
      * BroadcastReceivingTask for getting post's likes, shares and comments number
-     * <p>
+     * <p/>
      * During getting info for every network, passed in constructor, it sends
      * Loudly.POST_GET_INFO_PROGRESS broadcast
      * with localId of post in BroadcastSendingTask.ID_FIELD and ID of network stored in
      * BroadcastSendingTask.NETWORK_FIELD
-     * <p>
+     * <p/>
      * When getting info is successfully finished, it sends
      * Loudly.POST_GET_INFO_FINISHED with BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.POST_GET_INFO_FINISHED with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -129,10 +130,10 @@ public class Tasks {
 
     /**
      * BroadcastSendingTask for saving KeyKeepers to DB.
-     * <p>
+     * <p/>
      * After successful saving it sends Loudly.SAVED_KEYS broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.SAVED_KEYS broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -152,10 +153,10 @@ public class Tasks {
 
     /**
      * BroadcastSendingTask for loading KeyKeepers from DB.
-     * <p>
+     * <p/>
      * After successful loading it sends Loudly.LOADED_KEYS broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.LOADED_KEYS broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -175,25 +176,43 @@ public class Tasks {
 
     /**
      * BroadcastSendingTask for loading Posts from DB
-     * <p>
+     * <p/>
      * After successful loading it sends Loudly.LOADED_POSTS broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.LOADED_POSTS broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
      */
 
-    public static class LoadPostsTask extends BroadcastSendingTask<Object> {
+    public static class LoadPostsTask extends SocialNetworkTask {
+        long beforeID, sinceTime;
+
+        public LoadPostsTask(long beforeID, long sinceTime, Wrap... wraps) {
+            super(wraps);
+            this.beforeID = beforeID;
+            this.sinceTime = sinceTime;
+        }
+
         @Override
-        protected Intent doInBackground(Object... params) {
+        protected Intent doInBackground(Post... params) {
+            LinkedList<Post> res = null;
             try {
-                Loudly.getContext().addPosts(DatabaseActions.loadPosts());
+                res = DatabaseActions.loadPosts(beforeID, sinceTime);
+                for (Wrap w : wraps) {
+                    try {
+                        LinkedList<Post> tmp = Interactions.loadPosts(w, beforeID, sinceTime);
+                    } catch (IOException e) {
+                        publishProgress(makeError(Loudly.LOADED_POSTS, -1, e.getMessage()));
+                    }
+                }
+
             } catch (DatabaseException e) {
                 e.printStackTrace();
                 return makeError(Loudly.LOADED_POSTS, -1, e.getMessage());
             }
-            Loudly.getContext().postsLoaded = true; // TODO: 11/23/2015 Remove crutch
+
+            Loudly.getContext().addPosts(res);
             return makeSuccess(Loudly.LOADED_POSTS, -1);
         }
     }
