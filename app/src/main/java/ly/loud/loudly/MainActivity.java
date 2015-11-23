@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
         setSupportActionBar(toolbar);
 
-        if (!Loudly.getContext().postsLoaded) {
+        if (!Loudly.getContext().getPosts().isEmpty()) {
             // ToDo: show here rolling circle
             receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.LOADED_POSTS) {
                 @Override

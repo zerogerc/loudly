@@ -196,7 +196,7 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Post... params) {
-            LinkedList<Post> resultList = null;
+            LinkedList<Post> resultList;
             //TODO: we could do it faster
             try {
                 resultList = DatabaseActions.loadPosts(beforeID, sinceTime);

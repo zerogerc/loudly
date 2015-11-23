@@ -33,7 +33,6 @@ public class Loudly extends Application {
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
     private LinkedList<Post> posts;
-    public boolean postsLoaded = false;
 
     /**
      * @param network ID of the network
