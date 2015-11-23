@@ -186,12 +186,23 @@ public class Tasks {
      */
 
     public static class LoadPostsTask extends SocialNetworkTask {
-        long beforeID, sinceTime;
+        long sinceID, beforeID, sinceTime, beforeTime;
 
-        public LoadPostsTask(long beforeID, long sinceTime, Wrap... wraps) {
+        /**
+         * Loads posts from every network
+         * @param sinceID Load posts with ID greater than it
+         * @param beforeID Load posts with ID lower than it
+         * @param sinceTime Load posts with time greater than it
+         * @param beforeTime Load posts with time lower than it
+         * @param wraps Networks, from which load posts
+         */
+        public LoadPostsTask(long sinceID, long beforeID, long sinceTime, long beforeTime,
+                             Wrap... wraps) {
             super(wraps);
+            this.sinceID = sinceID;
             this.beforeID = beforeID;
             this.sinceTime = sinceTime;
+            this.beforeTime = beforeTime;
         }
 
         @Override
@@ -199,7 +210,7 @@ public class Tasks {
             LinkedList<Post> resultList;
             //TODO: we could do it faster
             try {
-                resultList = DatabaseActions.loadPosts(beforeID, sinceTime);
+                resultList = DatabaseActions.loadPosts(sinceID, beforeID, sinceTime, beforeTime);
             } catch (DatabaseException e) {
                 e.printStackTrace();
                 return makeError(Loudly.LOADED_POSTS, -1, e.getMessage());
@@ -208,7 +219,7 @@ public class Tasks {
             for (Wrap w : wraps) {
                 try {
                     LinkedList<Post> temp = new LinkedList<>();
-                    LinkedList<Post> currentList = Interactions.loadPosts(w, beforeID, sinceTime);
+                    LinkedList<Post> currentList = Interactions.loadPosts(w, sinceID, beforeID, sinceTime, beforeTime);
 
                     while (resultList.size() != 0 || currentList.size() != 0) {
                         if (resultList.size() == 0) {

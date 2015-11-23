@@ -1,5 +1,6 @@
 package Facebook;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -93,7 +94,7 @@ public class FacebookWrap extends Wrap {
     public void parseDeleteResponse(Post post, String response) {
         try {
             JSONObject parse = new JSONObject(response);
-            if (parse.getString("success") == "true") {
+            if (parse.getString("success").equals("true")) {
                 post.detachFromNetwork(NETWORK);
             }
         } catch (JSONException e) {
@@ -102,12 +103,39 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public Query makeLoadPostsQuery(long since, long before) {
-        return null;
+    public Query makeLoadPostsQuery(long sinceID, long beforeID, long sinceTime, long beforeTime) {
+        Query query = new Query(POST_SERVER);
+        if (sinceTime != -1) {
+            query.addParameter("since", (sinceTime / 1000) + "");
+        }
+        if (beforeTime != -1) {
+            query.addParameter("until", (beforeTime / 1000) + "");
+        }
+        FacebookKeyKeeper keys = (FacebookKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
+        query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
+        return query;
     }
 
     @Override
-    public long parsePostsLoadedResponse(LinkedList<Post> posts, long since, String response) {
-        return 0;
+    public long parsePostsLoadedResponse(LinkedList<Post> posts, long sinceTime, long beforeTime, String response) {
+        JSONObject parser;
+        try {
+            long lastTime = -1;
+            parser = new JSONObject(response);
+            JSONArray postsJ = parser.getJSONArray("data");
+            for (int i = 0; i < postsJ.length(); i++) {
+                JSONObject obj = postsJ.getJSONObject(i);
+                String text = obj.getString("message");
+                String id = obj.getString("id");
+                // Extract time here
+                Post post = new Post(text);
+                post.setLink(NETWORK, id);
+                posts.add(post);
+            }
+            return lastTime;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 }

@@ -162,15 +162,26 @@ public class DatabaseActions {
         }
     }
 
-    public static LinkedList<Post> loadPosts(long beforeID, long sinceTime) throws DatabaseException {
+    public static LinkedList<Post> loadPosts(long sinceID, long beforeID, long sinceTime, long beforeTime) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getReadableDatabase();
         Loudly context = Loudly.getContext();
 
         String sortOrder = PostEntry.COLUMN_NAME_DATE + " DESC";
         LinkedList<Post> res = new LinkedList<>();
         Cursor cursor = null;
-        String select = ((beforeID == -1) ? "" : PostEntry._ID + " < " + Long.toString(beforeID) + " AND ") +
-                PostEntry.COLUMN_NAME_DATE + " >= " + Long.toString(sinceTime);
+
+        String sinceIDQuery = (sinceID != -1) ? PostEntry._ID + " > " + Long.toString(sinceID) : "";
+        String beforeIDQuery = (beforeID != -1) ? PostEntry._ID + " < " + Long.toString(beforeID) : "";
+        String sinceTimeQuery = (sinceTime != -1) ? PostEntry.COLUMN_NAME_DATE + " > " + Long.toString(sinceTime) : "";
+        String beforeTimeQuery = (beforeTime != -1) ? PostEntry.COLUMN_NAME_DATE + " < " + Long.toString(beforeTime) : "";
+        String IDQuery = (sinceIDQuery.equals("") ? beforeIDQuery : sinceIDQuery) +
+                (beforeIDQuery.equals("") ? "" : " AND " + beforeTimeQuery);
+
+        String timeQuery = (sinceTimeQuery.equals("") ? beforeTimeQuery : sinceTimeQuery) +
+                (beforeTimeQuery.equals("") ? "" : " AND " + beforeTimeQuery);
+
+        String select = IDQuery.equals("") ? timeQuery : IDQuery + " AND " + timeQuery;
+
         try {
             cursor = db.query(
                     PostEntry.TABLE_NAME,

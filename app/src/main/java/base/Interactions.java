@@ -67,14 +67,15 @@ public class Interactions {
         wrap.parseDeleteResponse(post, response);
     }
 
-    public static LinkedList<Post> loadPosts(Wrap wrap, long since, long before) throws IOException {
+    public static LinkedList<Post> loadPosts(Wrap wrap, long sinceID, long beforeID,
+                                             long sinceTime, long beforeTime) throws IOException {
         LinkedList<Post> posts = new LinkedList<>();
         long lastPostTime;
         do {
-            Query query = wrap.makeLoadPostsQuery(since, before);
+            Query query = wrap.makeLoadPostsQuery(sinceID, beforeID, sinceTime, beforeTime);
             String response = Network.makeGetRequest(query);
-            lastPostTime = wrap.parsePostsLoadedResponse(posts, since, response);
-        } while (lastPostTime > since);
+            lastPostTime = wrap.parsePostsLoadedResponse(posts, sinceTime, beforeTime, response);
+        } while (lastPostTime > sinceTime);
         return posts;
     }
 }

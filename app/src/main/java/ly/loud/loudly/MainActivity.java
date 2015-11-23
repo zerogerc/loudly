@@ -12,6 +12,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import base.Tasks;
 import util.AttachableReceiver;
 import util.BroadcastSendingTask;
@@ -61,7 +64,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
-            loadPosts = new Tasks.LoadPostsTask(-1, 0);
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.WEEK_OF_MONTH, -1);
+
+            loadPosts = new Tasks.LoadPostsTask(-1, -1, cal.getTimeInMillis(), -1, Loudly.getContext().getWraps());
             loadPosts.execute();
         } else {
             setRecyclerView();

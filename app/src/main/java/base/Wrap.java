@@ -67,6 +67,7 @@ public abstract class Wrap {
 
     public abstract void parseDeleteResponse(Post post, String response);
 
-    public abstract Query makeLoadPostsQuery(long since, long before);
-    public abstract long parsePostsLoadedResponse(LinkedList<Post> posts, long since, String response);
+    public abstract Query makeLoadPostsQuery(long sinceID, long beforeID, long sinceTime, long beforeTime);
+    public abstract long parsePostsLoadedResponse(LinkedList<Post> posts, long sinceTime, long beforeTime,
+                                                  String response);
 }

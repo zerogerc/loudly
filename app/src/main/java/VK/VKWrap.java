@@ -100,12 +100,12 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public Query makeLoadPostsQuery(long since, long before) {
+    public Query makeLoadPostsQuery(long sinceID, long beforeID, long sinceTime, long beforeTime) {
         return null;
     }
 
     @Override
-    public long parsePostsLoadedResponse(LinkedList<Post> posts, long since, String response) {
+    public long parsePostsLoadedResponse(LinkedList<Post> posts, long sinceTime, long beforeTime, String response) {
         return 0;
     }
 }
