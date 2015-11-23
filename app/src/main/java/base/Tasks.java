@@ -188,7 +188,7 @@ public class Tasks {
         @Override
         protected Intent doInBackground(Object... params) {
             try {
-                DatabaseActions.loadPosts();
+                Loudly.getContext().addPosts(DatabaseActions.loadPosts());
             } catch (DatabaseException e) {
                 e.printStackTrace();
                 return makeError(Loudly.LOADED_POSTS, -1, e.getMessage());

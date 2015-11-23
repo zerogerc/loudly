@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import base.KeyKeeper;
 import base.Location;
@@ -161,12 +162,12 @@ public class DatabaseActions {
         }
     }
 
-    public static void loadPosts() throws DatabaseException {
+    public static LinkedList<Post> loadPosts() throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getReadableDatabase();
         Loudly context = Loudly.getContext();
 
         String sortOrder = PostEntry.COLUMN_NAME_DATE + " DESC";
-
+        LinkedList<Post> res = new LinkedList<>();
         Cursor cursor = null;
         try {
             cursor = db.query(
@@ -189,13 +190,14 @@ public class DatabaseActions {
                 ArrayList<Attachment> attachments = readAttachments(db, atId);
 
                 Post post = new Post(text, attachments, links, date, location, localId);
-                context.addPost(post);
+                res.add(post);
 
                 cursor.moveToNext();
             }
         } finally {
             Network.closeQuietly(cursor);
         }
+        return res;
     }
 
     public static void deletePost(Post post) throws DatabaseException {
