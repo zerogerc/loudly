@@ -23,7 +23,7 @@ public abstract class AttachableTask<Params, Progress, Result> extends AsyncTask
 
     /**
      * Attach task to current context
-     * @param context link to current context. Don't forget to detach, when context destroys
+     * @param context link to current context. Don't forget to detach, if context was destroyed
      */
     public void attachContext(Context context) {
         this.context = context;

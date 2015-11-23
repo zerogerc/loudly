@@ -2,6 +2,7 @@ package ly.loud.loudly;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -15,7 +16,9 @@ import base.Authorizer;
 import base.Networks;
 import base.Tasks;
 import util.AttachableReceiver;
-import util.ResultListener;
+import util.BroadcastSendingTask;
+import util.database.DatabaseActions;
+import util.database.DatabaseException;
 
 public class InitialSettingsActivity extends AppCompatActivity {
     private static AttachableReceiver authReceiver = null;
@@ -33,18 +36,23 @@ public class InitialSettingsActivity extends AppCompatActivity {
             findViewById(id).setEnabled(false);
             ((CheckBox) findViewById(id)).setChecked(Loudly.getContext().getKeyKeeper(i) != null);
         }
+
+        if (authReceiver != null) {
+            authReceiver.attach(this);
+        }
     }
 
     // That's here because of 3 different click listeners
     private void startReceiver() {
         authReceiver = new AttachableReceiver(this, Loudly.AUTHORIZATION_FINISHED) {
             @Override
-            public void onReceive(Context context, Intent intent) {
-                boolean success = intent.getBooleanExtra("success", false);
+            public void onMessageReceive(Context context, Intent message) {
+                boolean success = message.getBooleanExtra(BroadcastSendingTask.SUCCESS_FIELD, false);
                 if (success) {
                     Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
                     toast.show();
-                    int network = intent.getIntExtra("network", -1);
+                    int network = message.getIntExtra(BroadcastSendingTask.NETWORK_FIELD, -1);
+
                     CheckBox cb = (CheckBox) findViewById(R.id.vk_box);
                     switch (network) {
                         case Networks.VK:
@@ -59,7 +67,7 @@ public class InitialSettingsActivity extends AppCompatActivity {
                     }
                     cb.setChecked(true);
                 } else {
-                    String error = intent.getStringExtra("error");
+                    String error = message.getStringExtra(BroadcastSendingTask.ERROR_FIELD);
                     Toast toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
                     toast.show();
                 }
@@ -89,12 +97,37 @@ public class InitialSettingsActivity extends AppCompatActivity {
         authorizer.createAsyncTask(this).execute();
     }
 
+    public void LogoutClick(View v) {
+        AsyncTask<Object, Void, Object> task = new AsyncTask<Object, Void, Object>() {
+            @Override
+            protected Object doInBackground(Object... params) {
+                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                    if (Loudly.getContext().getKeyKeeper(i) != null) {
+                        try {
+                            DatabaseActions.deleteKey(i);
+                            Loudly.getContext().setKeyKeeper(i, null);
+                        } catch (DatabaseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                Toast toast = Toast.makeText(Loudly.getContext(), "Deleted", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        };
+        task.execute();
+    }
+
+
     @Override
     protected void onStop() {
         super.onStop();
-        if (authReceiver != null) {
-            authReceiver.detach();
-        }
+
     }
 
     /**
@@ -103,7 +136,12 @@ public class InitialSettingsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Tasks.SaveKeysTask task = new Tasks.SaveKeysTask(this);
-        task.execute();
+        if (authReceiver != null) {
+            authReceiver.detach();
+        }
+        if (isFinishing()) {
+            Tasks.SaveKeysTask task = new Tasks.SaveKeysTask();
+            task.execute();
+        }
     }
 }

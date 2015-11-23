@@ -15,6 +15,11 @@ import util.Query;
  */
 
 public abstract class Wrap {
+    /**
+     * @return ID of the network (from Networks class)
+     */
+    public abstract int networkID();
+
     public abstract Query makePostQuery(Post post);
 
     /**

@@ -12,14 +12,13 @@ import util.database.PostContract.PostEntry;
 
 public class PostDbHelper extends SQLiteOpenHelper {
     private static volatile PostDbHelper self;
-    private final Context context;
 
 
     public static PostDbHelper getInstance() {
         if (self == null) {
             synchronized (PostDbHelper.class) {
                 if (self == null) {
-                    self = new PostDbHelper(Loudly.getContext());
+                    self = new PostDbHelper();
                 }
             }
         }
@@ -68,9 +67,8 @@ public class PostDbHelper extends SQLiteOpenHelper {
         return "DROP TABLE IF EXISTS " + table;
     }
 
-    private PostDbHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        this.context = Loudly.getContext();
+    private PostDbHelper() {
+        super(Loudly.getContext(), DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override

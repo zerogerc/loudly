@@ -1,20 +1,17 @@
 package ly.loud.loudly;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
-import util.UIAction;
+import util.BroadcastSendingTask;
 import base.Authorizer;
 import base.KeyKeeper;
-import util.LongTask;
 
 public class AuthActivity extends AppCompatActivity {
     ProgressBar circle;
@@ -58,18 +55,7 @@ public class AuthActivity extends AppCompatActivity {
         });
     }
 
-//    static class FinishAuthorizationTask extends LongTask<Object, Void> {
-//        @Override
-//        protected UIAction doInBackground(Object... params) {
-//            Authorizer authorizer = (Authorizer) params[0];
-//            String url = (String) params[1];
-//            KeyKeeper keys = (KeyKeeper) params[2];
-//
-//            return authorizer.continueAuthorization(url, keys);
-//        }
-//    }
-
-    private static class FinishAuthorization extends AsyncTask<Object, Void, Intent> {
+    private static class FinishAuthorization extends BroadcastSendingTask<Object> {
         @Override
         protected Intent doInBackground(Object... params) {
             Authorizer authorizer = (Authorizer) params[0];
@@ -78,19 +64,14 @@ public class AuthActivity extends AppCompatActivity {
 
             return authorizer.continueAuthorization(url, keys);
         }
-
-        @Override
-        protected void onPostExecute(Intent message) {
-            LocalBroadcastManager.getInstance(Loudly.getContext()).sendBroadcast(message);
-        }
     }
 
     @Override
     protected void onDestroy() {
         if (!gotResponse) {
-            Intent message = new Intent(Loudly.AUTHORIZATION_FINISHED);
-            message.putExtra("success", false);
-            message.putExtra("error", "User declined authorization");
+            LocalBroadcastManager.getInstance(Loudly.getContext()).sendBroadcast(
+                    BroadcastSendingTask.makeError(Loudly.AUTHORIZATION_FINISHED, -1, "User declined authorization")
+            );
         }
         super.onDestroy();
 

@@ -21,36 +21,54 @@ import util.database.PostContract.PostEntry;
 
 public class DatabaseActions {
 
+    // TODO: 11/23/2015 rewrite a bit
     public static void savePost(Post post) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
 
-        // ToDo: catch -1 in ids
         db.beginTransaction();
         try {
 
-            // Insert post's links
-            long linksId = db.insert(LinksEntry.TABLE_NAME, null,
+            // Insert post's links (Facebook as nullColumn)
+            long linksId = db.insert(LinksEntry.TABLE_NAME, LinksEntry.COLUMN_NAME_FB,
                     createLinkRow(post.getLinks()));
-
+            if (linksId == -1) {
+                throw new DatabaseException("Can't insert links");
+            }
             // Insert location
-            long locID = db.insert(LocationEntry.TABLE_NAME, null,
-                    createLocationRow(post.getLocation()));
+            long locID = -1;
+            if (post.getLocation() != null) {
+                locID = db.insert(LocationEntry.TABLE_NAME, null,
+                        createLocationRow(post.getLocation()));
+                if (locID == -1) {
+                    throw new DatabaseException("Can't insert location");
+                }
+            }
 
             long prevId = AttachmentsEntry.END_OF_LIST_VALUE;
             long firstId = AttachmentsEntry.END_OF_LIST_VALUE;
             for (Attachment attachment : post.getAttachments()) {
                 // Insert attachment's links
-                long atLinkId = db.insert(LinksEntry.TABLE_NAME, null,
+                long atLinkId = db.insert(LinksEntry.TABLE_NAME, LinksEntry.COLUMN_NAME_FB,
                         createLinkRow(attachment.getLinks()));
+
+                if (atLinkId == -1) {
+                    throw new DatabaseException("Can't insert links for an attachment");
+                }
 
                 // Insert attachment
                 long curId = db.insert(AttachmentsEntry.TABLE_NAME, null,
                         createAttachmentsRow(attachment, prevId, atLinkId));
+                if (curId == -1) {
+                    throw new DatabaseException("Can't insert attachment");
+                }
 
                 // Update link to the next in previous
                 ContentValues update = new ContentValues();
                 update.put(AttachmentsEntry.COLUMN_NAME_NEXT, curId);
-                db.update(AttachmentsEntry.TABLE_NAME, update, sqlEqual(AttachmentsEntry._ID, prevId), null);
+                int count = db.update(AttachmentsEntry.TABLE_NAME, update, sqlEqual(AttachmentsEntry._ID, prevId), null);
+                if (count != 1) {
+                    throw new DatabaseException("Can't update attachment");
+                }
 
                 if (prevId == AttachmentsEntry.END_OF_LIST_VALUE) {
                     firstId = curId;
@@ -63,11 +81,72 @@ public class DatabaseActions {
             long localId = db.insert(PostEntry.TABLE_NAME, null,
                     createPostRow(post, firstId, linksId, locID));
 
+            if (localId == -1) {
+                throw new DatabaseException("Can't insert post");
+            }
+
             post.setLocalId(localId);
 
             // Success
             db.setTransactionSuccessful();
         } finally {
+            db.endTransaction();
+        }
+    }
+
+    public static void updatePostLinks(int network, Post post) throws DatabaseException {
+        SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
+
+        db.beginTransaction();
+        Cursor cursor = null;
+        try {
+            String[] projection = {
+                    PostEntry.COLUMN_NAME_LINKS, PostEntry.COLUMN_NAME_FIRST_ATTACHMENT};
+            cursor = db.query(PostEntry.TABLE_NAME,
+                    projection, sqlEqual(PostEntry._ID, post.getLocalId()),
+                    null, null, null, null);
+            if (cursor.getCount() == 0) {
+                throw new DatabaseException("Can't find post: " + post.getLocalId());
+            }
+
+            cursor.moveToFirst();
+            long linkTd = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LINKS));
+            long atId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_FIRST_ATTACHMENT));
+
+            ContentValues update = new ContentValues();
+            update.put(LinksEntry.LINK_COLUMNS[network], post.getLink(network));
+            if (db.update(LinksEntry.TABLE_NAME, update,
+                    sqlEqual(LinksEntry._ID, linkTd), null) != 1) {
+                throw new DatabaseException("Failed updating links for post: " + post.getLocalId());
+            }
+
+            projection = new String[]{AttachmentsEntry.COLUMN_NAME_LINK,
+                    AttachmentsEntry.COLUMN_NAME_NEXT};
+
+            int ind = 0;
+            while (atId != AttachmentsEntry.END_OF_LIST_VALUE) {
+                cursor = db.query(AttachmentsEntry.TABLE_NAME,
+                        projection, sqlEqual(AttachmentsEntry._ID, atId),
+                        null, null, null, null);
+                if (cursor.getCount() == 0) {
+                    throw new DatabaseException("Can't find attachments for post: " + post.getLocalId());
+                }
+
+                cursor.moveToFirst();
+                atId = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_NEXT));
+                linkTd = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_LINK));
+
+                update = new ContentValues();
+                update.put(LinksEntry.LINK_COLUMNS[network], post.getAttachments().get(ind++).getLink(network));
+
+                if (db.update(LinksEntry.TABLE_NAME,
+                        update, sqlEqual(LinksEntry._ID, linkTd), null) != 1) {
+                    throw new DatabaseException("Can't update links for attachment: " + atId);
+                }
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            Network.closeQuietly(cursor);
             db.endTransaction();
         }
     }
@@ -95,7 +174,7 @@ public class DatabaseActions {
                 long locId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LOCATION));
                 long localId = cursor.getLong(cursor.getColumnIndex(PostEntry._ID));
 
-                Location location = readLocation(db, locId);
+                Location location = (locId == -1) ? null : readLocation(db, locId);
                 String[] links = readLinks(db, linksId);
                 ArrayList<Attachment> attachments = readAttachments(db, atId);
 
@@ -109,11 +188,45 @@ public class DatabaseActions {
         }
     }
 
+    public static void deletePost(Post post) throws DatabaseException {
+        SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.query(PostEntry.TABLE_NAME, PostEntry.POST_COLUMNS,
+                    sqlEqual(PostEntry._ID, post.getLocalId()), null, null, null, null);
+            if (cursor.getCount() == 0) {
+                return;
+            }
+            long locId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LOCATION));
+            long atId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_FIRST_ATTACHMENT));
+            long linkId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LINKS));
+
+            db.beginTransaction();
+            if (db.delete(LocationEntry.TABLE_NAME, sqlEqual(LocationEntry._ID, locId), null) != 1) {
+                throw new DatabaseException("Can't delete location: " + locId);
+            }
+
+            if (db.delete(LinksEntry.TABLE_NAME, sqlEqual(LinksEntry._ID, linkId), null) != 1) {
+                throw new DatabaseException("Can't delete post's link: " + linkId);
+            }
+
+            while (atId != AttachmentsEntry.END_OF_LIST_VALUE) {
+                atId = deleteAttachment(db, atId);
+            }
+
+            if (db.delete(PostEntry.TABLE_NAME, sqlEqual(PostEntry._ID, post.getLocalId()), null) != 1) {
+                throw new DatabaseException("Can't delete post: " + post.getLocalId());
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            Network.closeQuietly(cursor);
+        }
+    }
+
     public static void saveKeys() throws DatabaseException {
         SQLiteDatabase db = KeysDbHelper.getInstance().getWritableDatabase();
         Loudly context = Loudly.getContext();
 
-        // ToDo: check -1
         db.beginTransaction();
         try {
             for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -138,37 +251,6 @@ public class DatabaseActions {
         }
     }
 
-    public static void deletePost(Post post) throws DatabaseException {
-        SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
-        Cursor cursor = null;
-        try {
-            cursor = db.query(PostEntry.TABLE_NAME, PostEntry.POST_COLUMNS,
-                    sqlEqual(PostEntry._ID, post.getLocalId()), null, null, null, null);
-            if (cursor.getCount() == 0) {
-                return;
-            }
-            long locId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LOCATION));
-            long atId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_FIRST_ATTACHMENT));
-            long linkId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LINKS));
-
-            db.beginTransaction();
-            if (db.delete(LocationEntry.TABLE_NAME, sqlEqual(LocationEntry._ID, locId), null) != 1) {
-                throw new DatabaseException("Can't delete location: " + locId);
-            }
-            if (db.delete(LinksEntry.TABLE_NAME, sqlEqual(LinksEntry._ID, linkId), null) != 1) {
-                throw new DatabaseException("Can't delete post's link: " + linkId);
-            }
-            while (atId != AttachmentsEntry.END_OF_LIST_VALUE) {
-                atId = deleteAttachment(db, atId);
-            }
-            if (db.delete(PostEntry.TABLE_NAME, sqlEqual(PostEntry._ID, post.getLocalId()), null) != 1) {
-                throw new DatabaseException("Can't delete post: " + post.getLocalId());
-            }
-            db.setTransactionSuccessful();
-        } finally {
-            Network.closeQuietly(cursor);
-        }
-    }
 
     public static void loadKeys() throws DatabaseException {
         SQLiteDatabase db = KeysDbHelper.getInstance().getReadableDatabase();
@@ -264,7 +346,7 @@ public class DatabaseActions {
         return values;
     }
 
-    private static Location readLocation(SQLiteDatabase db, long locId) {
+    private static Location readLocation(SQLiteDatabase db, long locId) throws DatabaseException {
         Cursor cursor = null;
         try {
             cursor = db.query(
@@ -274,6 +356,9 @@ public class DatabaseActions {
                     null, null, null, null);
 
             cursor.moveToFirst();
+            if (cursor.getCount() == 0) {
+                throw new DatabaseException("Can't read location: " + locId);
+            }
             String name = cursor.getString(cursor.getColumnIndex(LocationEntry.COLUMN_NAME_NAME));
             double longitude = cursor.getDouble(cursor.getColumnIndex(LocationEntry.COLUMN_NAME_LONGITUDE));
             double latitude = cursor.getDouble(cursor.getColumnIndex(LocationEntry.COLUMN_NAME_LATITUDE));
@@ -284,7 +369,7 @@ public class DatabaseActions {
         }
     }
 
-    private static String[] readLinks(SQLiteDatabase db, long linksId) {
+    private static String[] readLinks(SQLiteDatabase db, long linksId) throws DatabaseException {
         Cursor cursor = null;
         try {
             cursor = db.query(
@@ -295,6 +380,9 @@ public class DatabaseActions {
 
             cursor.moveToFirst();
 
+            if (cursor.getCount() == 0) {
+                throw new DatabaseException("Can't read links");
+            }
             String[] links = new String[Networks.NETWORK_COUNT];
             for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
                 links[i] = cursor.getString(cursor.getColumnIndex(LinksEntry.LINK_COLUMNS[i]));
@@ -305,7 +393,7 @@ public class DatabaseActions {
         }
     }
 
-    private static ArrayList<Attachment> readAttachments(SQLiteDatabase db, long firstId) {
+    private static ArrayList<Attachment> readAttachments(SQLiteDatabase db, long firstId) throws DatabaseException {
         ArrayList<Attachment> list = new ArrayList<>();
 
         Cursor cursor = null;
@@ -320,7 +408,9 @@ public class DatabaseActions {
                         null, null, null, null);
 
                 cursor.moveToFirst();
-
+                if (cursor.getCount() == 0) {
+                    throw new DatabaseException("Can't read attachment");
+                }
                 int type = cursor.getInt(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_TYPE));
                 String extra = cursor.getString(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_EXTRA));
                 nextId = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_NEXT));
@@ -343,6 +433,9 @@ public class DatabaseActions {
                     sqlEqual(AttachmentsEntry._ID, atId), null, null, null, null);
 
             cursor.moveToFirst();
+            if (cursor.getCount() == 0) {
+                throw new DatabaseException("Can't find attachment: " + atId);
+            }
             long linkId = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_LINK));
             nextId = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_NEXT));
 

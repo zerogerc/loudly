@@ -1,15 +1,10 @@
 package VK;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Parcel;
 
 import base.KeyKeeper;
-import ly.loud.loudly.Loudly;
-import util.UIAction;
 import base.Authorizer;
 import base.Networks;
-import util.ResultListener;
 import util.Query;
 
 public class VKAuthorizer extends Authorizer {

@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import util.AttachableReceiver;
+import util.BroadcastSendingTask;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
@@ -20,9 +21,10 @@ public class MainActivity extends AppCompatActivity {
     RecyclerViewAdapter recyclerViewAdapter;
 
     private static final int LOAD_POSTS_RECEIVER = 0;
-    private static final int POST_PROGRESS_RECEIVER = 1;
-    private static final int POST_FINISHED_RECEIVER = 2;
-    private static final int RECEIVER_COUNT = 3;
+    private static final int POST_UPLOAD_RECEIVER = 1;
+    private static final int POST_PROGRESS_RECEIVER = 2;
+    private static final int POST_FINISHED_RECEIVER = 3;
+    private static final int RECEIVER_COUNT = 4;
 
     private static AttachableReceiver[] receivers = null;
 
@@ -42,12 +44,12 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
         setSupportActionBar(toolbar);
 
-        if (!Loudly.getContext().arePostsLoaded()) {
+        if (!Loudly.getContext().postsLoaded) {
             // ToDo: show here rolling circle
             receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.LOADED_POSTS) {
                 @Override
-                public void onReceive(Context context, Intent intent) {
-                    MainActivity mainActivity = (MainActivity) getContext();
+                public void onMessageReceive(Context context, Intent message) {
+                    MainActivity mainActivity = (MainActivity) context;
                     mainActivity.setRecyclerView();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
@@ -97,44 +99,54 @@ public class MainActivity extends AppCompatActivity {
     public void callPostCreate(View v) {
 
         // Start receivers with a little crutch
+        if (receivers[POST_UPLOAD_RECEIVER] == null) {
 
-        if (receivers[POST_PROGRESS_RECEIVER] == null) {
-            receivers[POST_PROGRESS_RECEIVER] = new AttachableReceiver(this, Loudly.POST_UPLOAD_PROGRESS) {
+            receivers[POST_UPLOAD_RECEIVER] = new AttachableReceiver(this, Loudly.POST_UPLOAD_STARTED) {
                 @Override
-                public void onReceive(Context context, Intent intent) {
-                    int progress = intent.getIntExtra("progress", 0);
-                    Toast toast = Toast.makeText(context, "" + progress, Toast.LENGTH_SHORT);
-                    toast.show();
+                public void onMessageReceive(Context context, Intent message) {
+                    // Stop itself
+                    stop();
+                    receivers[POST_UPLOAD_RECEIVER] = null;
+
+                    // Make place for the post
+                    MainActivity mainActivity = (MainActivity) context;
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+
+                    // Start progress receiver
+                    receivers[POST_PROGRESS_RECEIVER] = new AttachableReceiver(context, Loudly.POST_UPLOAD_PROGRESS) {
+                        @Override
+                        public void onMessageReceive(Context context, Intent message) {
+                            int progress = message.getIntExtra(BroadcastSendingTask.PROGRESS_FIELD, 0);
+                            Toast toast = Toast.makeText(context, "" + progress, Toast.LENGTH_SHORT);
+                            toast.show();
+                        }
+                    };
+
+                    // Start finished receiver
+                    receivers[POST_FINISHED_RECEIVER] = new AttachableReceiver(context, Loudly.POST_UPLOAD_FINISHED) {
+                        @Override
+                        public void onMessageReceive(Context context, Intent message) {
+                            boolean success = message.getBooleanExtra(BroadcastSendingTask.SUCCESS_FIELD, false);
+
+                            if (success) {
+                                Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
+                                toast.show();
+                            } else {
+                                String error = message.getStringExtra(BroadcastSendingTask.ERROR_FIELD);
+                                Toast toast = Toast.makeText(context, "Failed to create Post: " + error, Toast.LENGTH_SHORT);
+                                toast.show();
+                            }
+
+                            // Turn off receivers
+                            receivers[POST_PROGRESS_RECEIVER].stop();
+                            receivers[POST_PROGRESS_RECEIVER] = null;
+                            stop();
+                            receivers[POST_FINISHED_RECEIVER] = null;
+                        }
+                    };
                 }
             };
         }
-
-        if (receivers[POST_FINISHED_RECEIVER] == null) {
-            receivers[POST_FINISHED_RECEIVER] = new AttachableReceiver(this, Loudly.POST_UPLOAD_FINISHED) {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    boolean success = intent.getBooleanExtra("success", false);
-                    if (success) {
-                        // Turn off receivers
-                        receivers[POST_PROGRESS_RECEIVER].stop();
-                        receivers[POST_PROGRESS_RECEIVER] = null;
-                        stop();
-                        receivers[POST_FINISHED_RECEIVER] = null;
-
-                        Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
-                        toast.show();
-
-                        MainActivity mainActivity = (MainActivity) getContext();
-                        mainActivity.recyclerViewAdapter.notifyDataSetChanged();
-                    } else {
-                        String error = intent.getStringExtra("error");
-                        Toast toast = Toast.makeText(context, "Failed to create Post: " + error, Toast.LENGTH_SHORT);
-                        toast.show();
-                    }
-                }
-            };
-        }
-
         Intent intent = new Intent(this, PostCreateActivity.class);
         startActivity(intent);
     }

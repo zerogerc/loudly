@@ -1,20 +1,13 @@
 package base;
 
 
-import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.IOException;
-import java.util.LinkedList;
 
 import ly.loud.loudly.Loudly;
-import util.AttachableTask;
 import util.BackgroundAction;
-import util.ResultListener;
-import util.TaskWithProgress;
-import util.UIAction;
+import util.BroadcastSendingTask;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -22,89 +15,17 @@ import util.database.DatabaseException;
  * Class made for storing different asynchronous tasks
  */
 public class Tasks {
-
-    public static abstract class SocialNetworkTask extends AsyncTask<Post, Integer, Intent> {
-        public static String PROGRESS_NAME = "progress";
-        String progressAction;
+    public static abstract class SocialNetworkTask extends BroadcastSendingTask<Post> {
         Wrap[] wraps;
 
-        public SocialNetworkTask(String progressAction, Wrap... wraps) {
-            this.progressAction = progressAction;
+        public SocialNetworkTask(Wrap... wraps) {
             this.wraps = wraps;
-        }
-
-        @Override
-        protected void onPostExecute(Intent intent) {
-            LocalBroadcastManager.getInstance(Loudly.getContext()).sendBroadcast(intent);
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            Intent message = new Intent(progressAction);
-            message.putExtra(PROGRESS_NAME, values[0]);
-            LocalBroadcastManager.getInstance(Loudly.getContext()).sendBroadcast(message);
         }
     }
 
-    /**
-     * TaskWithProgress for uploading posts into networks
-     */
-
-//    public static class PostUploader1 extends TaskWithProgress<Post, Integer> {
-//        public PostUploader(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
-//            super(onProgressUpdate, onFinish, wraps);
-//        }
-//
-//        @Override
-//        protected UIAction doInBackground(Post... params) {
-//            final Post post = params[0];
-//            int k = 0;
-//            for (Wrap w : wraps) {
-//                try {
-//                    k++;
-//                    Interactions.post(w, post, new BackgroundAction() {
-//                        @Override
-//                        public void execute(Object... params) {
-//                            publishProgress((Integer) params[0]);
-//                        }
-//                    });
-//                    publishProgress(k, params.length);
-//                } catch (Exception e) {
-//                    return new UIAction() {
-//                        @Override
-//                        public void execute(Context context, Object... params) {
-//                            onFinish.onFail(context, "Fail");
-//                        }
-//                    };
-//                }
-//            }
-//
-//            try {
-//                DatabaseActions.savePost(post);
-//            } catch (DatabaseException e) {
-//                e.printStackTrace();
-//                return new UIAction() {
-//                    @Override
-//                    public void execute(Context context, Object... params) {
-//                        onFinish.onFail(context, "Failed due to database");
-//                    }
-//                };
-//            }
-//
-//            // TODO: I DON'T LIKE IT
-//            return new UIAction() {
-//                @Override
-//                public void execute(Context context, Object... params) {
-//                    Loudly.getContext().addPost(post);
-//                    onFinish.onSuccess(context, post);
-//                }
-//            };
-//        }
-//    }
-
     public static class PostUploader extends SocialNetworkTask {
-        public PostUploader(String progressAction, Wrap... wraps) {
-            super(progressAction, wraps);
+        public PostUploader(Wrap... wraps) {
+            super(wraps);
         }
 
         @Override
@@ -112,62 +33,70 @@ public class Tasks {
             final Post post = params[0];
             int k = 0;
             try {
+                DatabaseActions.savePost(post);
+            } catch (DatabaseException e) {
+                return makeError(Loudly.POST_UPLOAD_FINISHED, -1, e.getMessage());
+            }
+
+            Loudly.getContext().addPost(post);
+
+            publishProgress(makeMessage(Loudly.POST_UPLOAD_STARTED, post.getLocalId()));
+
+            try {
                 for (Wrap w : wraps) {
                     k++;
                     Interactions.post(w, post, new BackgroundAction() {
                         @Override
                         public void execute(Object... params) {
-                            publishProgress((Integer) params[0]);
+                            // Do sth here, plz
                         }
                     });
-                    publishProgress(k, params.length);
+
+                    Intent message = makeMessage(Loudly.POST_UPLOAD_PROGRESS, post.getLocalId());
+                    message.putExtra(BroadcastSendingTask.PROGRESS_FIELD, k);
+
+                    DatabaseActions.updatePostLinks(w.networkID(), post);
+                    publishProgress(message);
                 }
-                DatabaseActions.savePost(post);
+
             } catch (Exception e) {
-                Intent message = new Intent(Loudly.POST_UPLOAD_FINISHED);
-                message.putExtra("success", false);
-                message.putExtra("error", e.getMessage());
-                return message;
+                return makeError(Loudly.POST_UPLOAD_FINISHED, post.getLocalId(), e.getMessage());
             }
 
-            Loudly.getContext().addPost(post);
-            Intent message = new Intent(Loudly.POST_UPLOAD_FINISHED);
-            message.putExtra("success", true);
-            return message;
+
+            return makeSuccess(Loudly.POST_UPLOAD_FINISHED, post.getLocalId());
         }
     }
 
-    public static class InfoGetter extends TaskWithProgress<Post, Integer> {
-        public InfoGetter(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
-            super(onProgressUpdate, onFinish, wraps);
+    public static class InfoGetter extends SocialNetworkTask {
+        public InfoGetter(Wrap... wraps) {
+            super(wraps);
         }
 
         @Override
-        protected UIAction doInBackground(Post... params) {
-            int k = 0;
-            final Post post = params[0];
-            try {
-                for (Wrap w : wraps) {
-                    k++;
-                    Interactions.getInfo(w, post);
-                    publishProgress(k);
-                }
-            } catch (IOException e) {
-                return new UIAction() {
-                    @Override
-                    public void execute(Context context, Object... params) {
-                        onFinish.onFail(context, "IOException");
+        protected Intent doInBackground(Post... posts) {
+            for (Post post : posts) {
+                int k = 0;
+                try {
+                    for (Wrap w : wraps) {
+                        k++;
+                        Interactions.getInfo(w, post);
+                        Intent message = makeMessage(Loudly.POST_GET_INFO_PROGRESS, post.getLocalId());
+                        message.putExtra(BroadcastSendingTask.PROGRESS_FIELD, k);
+                        publishProgress(message);
                     }
-                };
-            }
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    onFinish.onSuccess(context, post);
+                } catch (IOException e) {
+                    publishProgress(makeError(Loudly.POST_GET_INFO_FINISHED, post.getLocalId(), e.getMessage()));
                 }
-            };
+            }
+
+            return makeSuccess(Loudly.POST_UPLOAD_FINISHED, -1);
         }
     }
+
+
+    /*
+    // Experimental features
 
     public static class PostDeleter extends TaskWithProgress<Post, Integer> {
         public PostDeleter(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
@@ -255,85 +184,51 @@ public class Tasks {
             };
         }
     }
-
+    */
 
     /**
      * Task for saving KeyKeepers to file
      */
-    public static class SaveKeysTask extends AttachableTask<Object, Void, Integer> {
-        public SaveKeysTask(Context context) {
-            super(context);
-        }
-
+    public static class SaveKeysTask extends BroadcastSendingTask<Object> {
         @Override
-        protected Integer doInBackground(Object... params) {
+        protected Intent doInBackground(Object... params) {
             try {
                 DatabaseActions.saveKeys();
             } catch (DatabaseException e) {
                 e.printStackTrace();
-                return -1;
+                return makeError(Loudly.SAVED_KEYS, -1, e.getMessage());
             }
-            return 0;
-        }
-
-        @Override
-        public void ExecuteInUI(Context context, Integer integer) {
+            return makeSuccess(Loudly.SAVED_KEYS, -1);
         }
     }
 
     /**
      * Task for loading KeyKeepers from file
      */
-    public abstract static class LoadKeysTask extends AttachableTask<Object, Void, Integer> {
-        public LoadKeysTask(Context context) {
-            super(context);
-        }
-
+    public static class LoadKeysTask extends BroadcastSendingTask<Object> {
         @Override
-        protected Integer doInBackground(Object... params) {
+        protected Intent doInBackground(Object... params) {
             try {
                 DatabaseActions.loadKeys();
             } catch (DatabaseException e) {
                 e.printStackTrace();
-                return -1;
+                return makeError(Loudly.LOADED_KEYS, -1, e.getMessage());
             }
-            return 0;
+            return makeSuccess(Loudly.LOADED_KEYS, -1);
         }
     }
 
-    public static abstract class SavePostsTask extends AttachableTask<Post, Void, Integer> {
-        public SavePostsTask(Context context) {
-            super(context);
-        }
-
+    public static class LoadPostsTask extends BroadcastSendingTask<Object> {
         @Override
-        protected Integer doInBackground(Post... posts) {
-            try {
-                for (Post p : posts) {
-                    DatabaseActions.savePost(p);
-                }
-            } catch (DatabaseException e) {
-                e.printStackTrace();
-                return -1;
-            }
-            return 0;
-        }
-    }
-
-    public static abstract class LoadPostsTask extends AttachableTask<Object, Void, Integer> {
-        public LoadPostsTask(Context context) {
-            super(context);
-        }
-
-        @Override
-        protected Integer doInBackground(Object... params) {
+        protected Intent doInBackground(Object... params) {
             try {
                 DatabaseActions.loadPosts();
             } catch (DatabaseException e) {
                 e.printStackTrace();
-                return -1;
+                return makeError(Loudly.LOADED_POSTS, -1, e.getMessage());
             }
-            return 0;
+            Loudly.getContext().postsLoaded = true; // TODO: 11/23/2015 Remove crutch
+            return makeSuccess(Loudly.LOADED_POSTS, -1);
         }
     }
 }

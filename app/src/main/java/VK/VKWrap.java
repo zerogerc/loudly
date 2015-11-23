@@ -25,6 +25,11 @@ public class VKWrap extends Wrap {
     private static final String ACCESS_TOKEN = "access_token";
 
     @Override
+    public int networkID() {
+        return NETWORK;
+    }
+
+    @Override
     public Query makePostQuery(Post post) {
         Query query = new Query(POST_SERVER);
         if (post.getText().length() > 0) {

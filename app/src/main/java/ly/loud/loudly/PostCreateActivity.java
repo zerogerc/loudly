@@ -1,6 +1,5 @@
 package ly.loud.loudly;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -12,10 +11,6 @@ import android.widget.Toast;
 
 import base.Post;
 import base.Tasks;
-import util.LongTask;
-import util.ResultListener;
-import util.TaskWithProgress;
-import util.UIAction;
 
 
 public class PostCreateActivity extends AppCompatActivity {
@@ -52,8 +47,7 @@ public class PostCreateActivity extends AppCompatActivity {
 
     public void sendClicked(View v) {
 
-        Tasks.PostUploader uploader = new Tasks.PostUploader(Loudly.POST_UPLOAD_PROGRESS,
-                Loudly.getContext().getWraps());
+        Tasks.PostUploader uploader = new Tasks.PostUploader(Loudly.getContext().getWraps());
 
         String text = editText.getText().toString();
         uploader.execute(new Post(text));

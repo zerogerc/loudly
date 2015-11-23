@@ -21,6 +21,11 @@ public class FacebookWrap extends Wrap {
     private static final String ACCESS_TOKEN = "access_token";
 
     @Override
+    public int networkID() {
+        return NETWORK;
+    }
+
+    @Override
     public Query makePostQuery(Post post) {
         Query query = new Query(POST_SERVER);
         query.addParameter("message", post.getText());

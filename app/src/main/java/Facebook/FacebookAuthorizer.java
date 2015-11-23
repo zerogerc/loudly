@@ -1,22 +1,11 @@
 package Facebook;
 
-import android.content.Context;
 import android.os.Parcel;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-
-import VK.VKKeyKeeper;
 import base.Authorizer;
 import base.KeyKeeper;
 import base.Networks;
-import ly.loud.loudly.Loudly;
-import util.Network;
-import util.UIAction;
 import util.Query;
-import util.ResultListener;
 
 public class FacebookAuthorizer extends Authorizer {
     private static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
