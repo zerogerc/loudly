@@ -12,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
+import base.Tasks;
 import util.AttachableReceiver;
 import util.BroadcastSendingTask;
 
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int RECEIVER_COUNT = 4;
 
     private static AttachableReceiver[] receivers = null;
+    private static Tasks.LoadPostsTask loadPosts = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +46,9 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
         setSupportActionBar(toolbar);
 
-        if (!Loudly.getContext().getPosts().isEmpty()) {
+        if (Loudly.getContext().getPosts().isEmpty() && loadPosts == null) {
+            // Loading posts
+
             // ToDo: show here rolling circle
             receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.LOADED_POSTS) {
                 @Override
@@ -53,8 +57,12 @@ public class MainActivity extends AppCompatActivity {
                     mainActivity.setRecyclerView();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
+                    loadPosts = null;
                 }
             };
+
+            loadPosts = new Tasks.LoadPostsTask(-1, 0);
+            loadPosts.execute();
         } else {
             setRecyclerView();
         }
