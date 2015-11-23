@@ -21,7 +21,11 @@ import util.database.PostContract.PostEntry;
 
 public class DatabaseActions {
 
-    // TODO: 11/23/2015 rewrite a bit
+    /**
+     * Function for saving post to Database
+     * @param post Post for saving
+     * @throws DatabaseException if anything went wrong with database
+     */
     public static void savePost(Post post) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
 
@@ -94,6 +98,12 @@ public class DatabaseActions {
         }
     }
 
+    /**
+     * Updates post's link in DB according to current links in post
+     * @param network ID of network, that must be updated
+     * @param post Post, that should be updated
+     * @throws DatabaseException if anything went wrong with database
+     */
     public static void updatePostLinks(int network, Post post) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
 
@@ -223,6 +233,10 @@ public class DatabaseActions {
         }
     }
 
+    /**
+     * Function that saves KeyKeepers to database
+     * @throws DatabaseException if anything went wrong with DB
+     */
     public static void saveKeys() throws DatabaseException {
         SQLiteDatabase db = KeysDbHelper.getInstance().getWritableDatabase();
         Loudly context = Loudly.getContext();
@@ -251,7 +265,10 @@ public class DatabaseActions {
         }
     }
 
-
+    /**
+     * Function that loads KeyKeepers from DB
+     * @throws DatabaseException if anything went wrong with DB
+     */
     public static void loadKeys() throws DatabaseException {
         SQLiteDatabase db = KeysDbHelper.getInstance().getReadableDatabase();
         Loudly context = Loudly.getContext();
@@ -277,12 +294,29 @@ public class DatabaseActions {
         }
     }
 
+    /**
+     * Delete KeyKeeper from DB
+     * @param network ID of network, whose key should be deleted
+     * @throws DatabaseException if anything went wrong with DB
+     */
     public static void deleteKey(int network) throws DatabaseException {
         SQLiteDatabase db = KeysDbHelper.getInstance().getWritableDatabase();
-        db.delete(KeysEntry.TABLE_NAME,
+        int count = db.delete(KeysEntry.TABLE_NAME,
                 sqlEqual(KeysEntry.COLUMN_NAME_NETWORK, network), null);
+        if (count == 0) {
+            throw new DatabaseException("Can't delete keys for network: " + network);
+        }
     }
 
+    /**
+     * Method that inserts or updates one row in DB
+     * @param db database
+     * @param tableName name of the Table
+     * @param findByColumn name of column for searching
+     * @param columnValue unique value of column
+     * @param values new (or updated) values in a row
+     * @return ID of newly created entry, 0 if update is successful or -1 if was error during update
+     */
     private static long upsert(SQLiteDatabase db, String tableName,
                                String findByColumn, String columnValue, ContentValues values) {
         Cursor cursor = null;

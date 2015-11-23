@@ -22,7 +22,7 @@ import util.Query;
 
 public abstract class Authorizer implements Parcelable {
     /**
-     * @return number of proper social network
+     * @return ID of proper social network
      */
     public abstract int network();
 

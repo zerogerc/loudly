@@ -15,6 +15,9 @@ import util.database.DatabaseException;
  * Class made for storing different asynchronous tasks
  */
 public class Tasks {
+    /**
+     * Main class for tasks that use wraps
+     */
     public static abstract class SocialNetworkTask extends BroadcastSendingTask<Post> {
         Wrap[] wraps;
 
@@ -23,6 +26,23 @@ public class Tasks {
         }
     }
 
+    /**
+     * BroadcastReceivingTask for uploading post to network
+     * <p>
+     * When post is added to DB, it sends Loudly.POST_UPLOAD_STARTED broadcast with
+     * localId stored in field BroadcastSendingTask.ID_FIELD
+     * <p>
+     * Then during upload it sends Loudly.POST_UPLOAD_PROGRESS broadcast
+     * with localId of post in BroadcastSendingTask.ID_FIELD and progress stored in
+     * BroadcastSendingTask.PROGRESS_FIELD
+     * <p>
+     * When upload is successfully finished, it sends
+     * Loudly.POST_UPLOAD_FINISHED with BroadcastSendingTask.SUCCESS_FIELD = true
+     * <p>
+     * If an error occurred, it sends Loudly.POST_UPLOAD_FINISHED with
+     * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
+     * description
+     */
     public static class PostUploader extends SocialNetworkTask {
         public PostUploader(Wrap... wraps) {
             super(wraps);
@@ -68,6 +88,21 @@ public class Tasks {
         }
     }
 
+    /**
+     * BroadcastReceivingTask for getting post's likes, shares and comments number
+     * <p>
+     * During getting info for every network, passed in constructor, it sends
+     * Loudly.POST_GET_INFO_PROGRESS broadcast
+     * with localId of post in BroadcastSendingTask.ID_FIELD and ID of network stored in
+     * BroadcastSendingTask.NETWORK_FIELD
+     * <p>
+     * When getting info is successfully finished, it sends
+     * Loudly.POST_GET_INFO_FINISHED with BroadcastSendingTask.SUCCESS_FIELD = true
+     * <p>
+     * If an error occurred, it sends Loudly.POST_GET_INFO_FINISHED with
+     * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
+     * description
+     */
     public static class InfoGetter extends SocialNetworkTask {
         public InfoGetter(Wrap... wraps) {
             super(wraps);
@@ -76,13 +111,11 @@ public class Tasks {
         @Override
         protected Intent doInBackground(Post... posts) {
             for (Post post : posts) {
-                int k = 0;
                 try {
                     for (Wrap w : wraps) {
-                        k++;
                         Interactions.getInfo(w, post);
                         Intent message = makeMessage(Loudly.POST_GET_INFO_PROGRESS, post.getLocalId());
-                        message.putExtra(BroadcastSendingTask.PROGRESS_FIELD, k);
+                        message.putExtra(BroadcastSendingTask.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
                     }
                 } catch (IOException e) {
@@ -94,6 +127,76 @@ public class Tasks {
         }
     }
 
+    /**
+     * BroadcastSendingTask for saving KeyKeepers to DB.
+     * <p>
+     * After successful saving it sends Loudly.SAVED_KEYS broadcast with
+     * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
+     * <p>
+     * If an error occurred, it sends Loudly.SAVED_KEYS broadcast with
+     * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
+     * description
+     */
+    public static class SaveKeysTask extends BroadcastSendingTask<Object> {
+        @Override
+        protected Intent doInBackground(Object... params) {
+            try {
+                DatabaseActions.saveKeys();
+            } catch (DatabaseException e) {
+                e.printStackTrace();
+                return makeError(Loudly.SAVED_KEYS, -1, e.getMessage());
+            }
+            return makeSuccess(Loudly.SAVED_KEYS, -1);
+        }
+    }
+
+    /**
+     * BroadcastSendingTask for loading KeyKeepers from DB.
+     * <p>
+     * After successful loading it sends Loudly.LOADED_KEYS broadcast with
+     * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
+     * <p>
+     * If an error occurred, it sends Loudly.LOADED_KEYS broadcast with
+     * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
+     * description
+     */
+    public static class LoadKeysTask extends BroadcastSendingTask<Object> {
+        @Override
+        protected Intent doInBackground(Object... params) {
+            try {
+                DatabaseActions.loadKeys();
+            } catch (DatabaseException e) {
+                e.printStackTrace();
+                return makeError(Loudly.LOADED_KEYS, -1, e.getMessage());
+            }
+            return makeSuccess(Loudly.LOADED_KEYS, -1);
+        }
+    }
+
+    /**
+     * BroadcastSendingTask for loading Posts from DB
+     * <p>
+     * After successful loading it sends Loudly.LOADED_POSTS broadcast with
+     * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
+     * <p>
+     * If an error occurred, it sends Loudly.LOADED_POSTS broadcast with
+     * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
+     * description
+     */
+
+    public static class LoadPostsTask extends BroadcastSendingTask<Object> {
+        @Override
+        protected Intent doInBackground(Object... params) {
+            try {
+                DatabaseActions.loadPosts();
+            } catch (DatabaseException e) {
+                e.printStackTrace();
+                return makeError(Loudly.LOADED_POSTS, -1, e.getMessage());
+            }
+            Loudly.getContext().postsLoaded = true; // TODO: 11/23/2015 Remove crutch
+            return makeSuccess(Loudly.LOADED_POSTS, -1);
+        }
+    }
 
     /*
     // Experimental features
@@ -186,49 +289,5 @@ public class Tasks {
     }
     */
 
-    /**
-     * Task for saving KeyKeepers to file
-     */
-    public static class SaveKeysTask extends BroadcastSendingTask<Object> {
-        @Override
-        protected Intent doInBackground(Object... params) {
-            try {
-                DatabaseActions.saveKeys();
-            } catch (DatabaseException e) {
-                e.printStackTrace();
-                return makeError(Loudly.SAVED_KEYS, -1, e.getMessage());
-            }
-            return makeSuccess(Loudly.SAVED_KEYS, -1);
-        }
-    }
 
-    /**
-     * Task for loading KeyKeepers from file
-     */
-    public static class LoadKeysTask extends BroadcastSendingTask<Object> {
-        @Override
-        protected Intent doInBackground(Object... params) {
-            try {
-                DatabaseActions.loadKeys();
-            } catch (DatabaseException e) {
-                e.printStackTrace();
-                return makeError(Loudly.LOADED_KEYS, -1, e.getMessage());
-            }
-            return makeSuccess(Loudly.LOADED_KEYS, -1);
-        }
-    }
-
-    public static class LoadPostsTask extends BroadcastSendingTask<Object> {
-        @Override
-        protected Intent doInBackground(Object... params) {
-            try {
-                DatabaseActions.loadPosts();
-            } catch (DatabaseException e) {
-                e.printStackTrace();
-                return makeError(Loudly.LOADED_POSTS, -1, e.getMessage());
-            }
-            Loudly.getContext().postsLoaded = true; // TODO: 11/23/2015 Remove crutch
-            return makeSuccess(Loudly.LOADED_POSTS, -1);
-        }
-    }
 }
