@@ -4,7 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -40,9 +40,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private TextView data;
         private TextView geoData;
         private TextView likes_amount;
-        private ImageButton likes_button;
+        private ImageView likes_button;
         private TextView reposts_amount;
-        private ImageButton reposts_button;
+        private ImageView reposts_button;
 
         public ViewHolder(View itemView, Post post) {
             super(itemView);
@@ -51,9 +51,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             data = (TextView)itemView.findViewById(R.id.post_view_data_text);
             geoData = (TextView)itemView.findViewById(R.id.post_view_geo_data_text);
             likes_amount = (TextView)itemView.findViewById(R.id.post_view_likes_amount);
-            likes_button = (ImageButton)itemView.findViewById(R.id.post_view_likes_button);
+            likes_button = (ImageView)itemView.findViewById(R.id.post_view_likes_button);
             reposts_amount = (TextView)itemView.findViewById(R.id.post_view_reposts_amount);
-            reposts_button = (ImageButton)itemView.findViewById(R.id.post_view_reposts_button);
+            reposts_button = (ImageView)itemView.findViewById(R.id.post_view_reposts_button);
 
             text.setText(post.getText());
         }

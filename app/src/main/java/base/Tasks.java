@@ -196,24 +196,43 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Post... params) {
-            LinkedList<Post> res = null;
+            LinkedList<Post> resultList = null;
+            //TODO: we could do it faster
             try {
-                res = DatabaseActions.loadPosts(beforeID, sinceTime);
-                for (Wrap w : wraps) {
-                    try {
-                        LinkedList<Post> tmp = Interactions.loadPosts(w, beforeID, sinceTime);
-
-                    } catch (IOException e) {
-                        publishProgress(makeError(Loudly.LOADED_POSTS, -1, e.getMessage()));
-                    }
-                }
-
+                resultList = DatabaseActions.loadPosts(beforeID, sinceTime);
             } catch (DatabaseException e) {
                 e.printStackTrace();
                 return makeError(Loudly.LOADED_POSTS, -1, e.getMessage());
             }
 
-            Loudly.getContext().addPosts(res);
+            for (Wrap w : wraps) {
+                try {
+                    LinkedList<Post> temp = new LinkedList<>();
+                    LinkedList<Post> currentList = Interactions.loadPosts(w, beforeID, sinceTime);
+
+                    while (resultList.size() != 0 || currentList.size() != 0) {
+                        if (resultList.size() == 0) {
+                            temp.add(currentList.removeFirst());
+                            continue;
+                        }
+                        if (currentList.size() == 0) {
+                            temp.add(resultList.removeFirst());
+                            continue;
+                        }
+                        if (resultList.getFirst().getDate() <= currentList.getFirst().getDate()) {
+                            temp.add(resultList.removeFirst());
+                        } else {
+                            temp.add(currentList.removeFirst());
+                        }
+                    }
+                    resultList = temp;
+
+                } catch (IOException e) {
+                    publishProgress(makeError(Loudly.LOADED_POSTS, -1, e.getMessage()));
+                }
+            }
+
+            Loudly.getContext().addPosts(resultList);
             return makeSuccess(Loudly.LOADED_POSTS, -1);
         }
     }

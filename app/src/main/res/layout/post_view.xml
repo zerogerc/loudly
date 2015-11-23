@@ -18,22 +18,31 @@
             android:layout_height="wrap_content"
             android:id="@+id/post_view_header">
 
-            <ImageButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/post_view_social_network_icon"
-                android:src="@drawable/new_vk_icon"
-                android:gravity="center_vertical"
-                android:padding="16dp"
-                android:background="@color/colorPrimary"
-                android:layout_margin="8dp"
-                android:layout_centerVertical="true" />
+            <android.support.v7.widget.CardView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:id="@+id/post_view_castyl_layout"
+                post_card:cardCornerRadius="24dp"
+                post_card:cardBackgroundColor="@color/colorPrimary"
+                >
+                <ImageView
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:id="@+id/post_view_social_network_icon"
+                    android:src="@drawable/ic_brand_vk"
+                    android:tint="@android:color/white"
+                    android:scaleType="fitXY"
+                    android:adjustViewBounds="true"
+                    android:gravity="center_vertical"
+                    android:background="@null"
+                    android:layout_gravity="center"/>
+            </android.support.v7.widget.CardView>
 
             <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toEndOf="@id/post_view_social_network_icon"
-                android:layout_toRightOf="@id/post_view_social_network_icon"
+                android:layout_toEndOf="@id/post_view_castyl_layout"
+                android:layout_toRightOf="@id/post_view_castyl_layout"
                 android:layout_centerVertical="true">
                 <TextView
                     android:layout_width="match_parent"
@@ -116,11 +125,12 @@
                 android:textSize="12sp"
                 android:layout_centerVertical="true" />
 
-            <ImageButton
+            <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/post_view_likes_button"
-                android:src="@mipmap/ic_favorite_black_18dp"
+                android:src="@drawable/ic_favorite"
+                android:tint="@color/colorAccent"
                 android:background="@null"
                 android:layout_toLeftOf="@id/post_view_likes_amount"
                 android:layout_toStartOf="@id/post_view_likes_amount"
@@ -140,11 +150,12 @@
                 android:textSize="12sp"
                 android:layout_centerVertical="true" />
 
-            <ImageButton
+            <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/post_view_reposts_button"
-                android:src="@mipmap/ic_share_black_18dp"
+                android:src="@drawable/ic_share"
+                android:tint="@color/colorAccent"
                 android:background="@null"
                 android:layout_toLeftOf="@id/post_view_reposts_amount"
                 android:layout_toStartOf="@id/post_view_reposts_amount"
