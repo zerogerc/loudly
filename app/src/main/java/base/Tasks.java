@@ -202,6 +202,7 @@ public class Tasks {
                 for (Wrap w : wraps) {
                     try {
                         LinkedList<Post> tmp = Interactions.loadPosts(w, beforeID, sinceTime);
+
                     } catch (IOException e) {
                         publishProgress(makeError(Loudly.LOADED_POSTS, -1, e.getMessage()));
                     }
