@@ -32,7 +32,7 @@
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:layout_gravity="bottom|right"
-        android:src="@mipmap/ic_add_white_24dp"
+        android:src="@mipmap/ic_mode_edit_white_24dp"
         android:layout_margin="12dp"
         app:elevation="6dp"
         app:pressedTranslationZ="12dp"

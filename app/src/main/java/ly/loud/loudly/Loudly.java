@@ -91,7 +91,7 @@ public class Loudly extends Application {
     }
 
     public void addPost(Post post) {
-        posts.add(post);
+        posts.add(0, post);
     }
 
     public LinkedList<Post> getPosts() {
