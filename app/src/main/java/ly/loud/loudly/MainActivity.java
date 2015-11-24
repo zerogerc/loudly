@@ -1,5 +1,8 @@
 package ly.loud.loudly;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -81,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             private FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+            private boolean isShowFab = true;
 
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -90,26 +94,37 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (dy > 5 && fab.isShown()) {
-                    fab.hide();
-//                    ObjectAnimator anim = ObjectAnimator.ofFloat(fab, "translationY", 100).setDuration(200);
-//                    anim.addListener(new AnimatorListenerAdapter() {
-//                        @Override
-//                        public void onAnimationEnd(Animator animation) {
-//                            fab.hide();
-//                        }
-//                    });
-//                    anim.start();
+                if (dy > 5 && isShowFab) {
+                    isShowFab = false;
+                    ObjectAnimator anim = ObjectAnimator.ofFloat(fab, "translationY", 0, 100).setDuration(100);
+                    anim.addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+                            fab.setVisibility(View.GONE);
+//                            fab.setTranslationY(100);
+//                            fab.setTranslationY(fab.getTranslationY() + 100);
+                        }
+                    });
+                    anim.start();
                 }
-                if (dy < -5 && (!fab.isShown())) {
-                    fab.show();
-//                    ObjectAnimator anim = ObjectAnimator.ofFloat(fab, "translationY", -100).setDuration(200);
-//                    anim.addListener(new AnimatorListenerAdapter(){
-//                        @Override public void onAnimationEnd(Animator animation) {
-//                            fab.show();
-//                        }
-//                    });
-//                    anim.start();
+                if (dy < -5 && (!isShowFab)) {
+                    isShowFab = true;
+                    ObjectAnimator anim = ObjectAnimator.ofFloat(fab, "translationY", 100, 0).setDuration(100);
+                    anim.addListener(new AnimatorListenerAdapter(){
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+                            super.onAnimationStart(animation);
+                            fab.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+//                            fab.setTranslationY(-100);
+                        }
+                    });
+                    anim.start();
                 }
 
             }
