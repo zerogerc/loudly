@@ -73,9 +73,11 @@ public class DatabaseActions {
                 // Update link to the next in previous
                 ContentValues update = new ContentValues();
                 update.put(AttachmentsEntry.COLUMN_NAME_NEXT, curId);
-                int count = db.update(AttachmentsEntry.TABLE_NAME, update, sqlEqual(AttachmentsEntry._ID, prevId), null);
-                if (count != 1) {
-                    throw new DatabaseException("Can't update attachment");
+                if (prevId != AttachmentsEntry.END_OF_LIST_VALUE) {
+                    int count = db.update(AttachmentsEntry.TABLE_NAME, update, sqlEqual(AttachmentsEntry._ID, prevId), null);
+                    if (count != 1) {
+                        throw new DatabaseException("Can't update attachment");
+                    }
                 }
 
                 if (prevId == AttachmentsEntry.END_OF_LIST_VALUE) {

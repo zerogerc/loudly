@@ -1,7 +1,8 @@
 package base.attachments;
 
+import android.net.Uri;
+
 import base.Networks;
-import util.Parameter;
 
 public class Image extends Attachment {
     protected String[] links;
@@ -10,6 +11,11 @@ public class Image extends Attachment {
     public Image(String initialLink, String[] links) {
         this.initialLink = initialLink;
         this.links = links;
+    }
+
+    public Image(Uri initialLink) {
+        this.initialLink = initialLink.toString();
+        this.links = new String[Networks.NETWORK_COUNT];
     }
 
     public void setLink(int network, String link) {

@@ -84,13 +84,15 @@
                 android:textColor="@color/black_color"
                 />
 
-            <RelativeLayout
+            <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/post_view_images_layout"
-                android:layout_below="@id/post_view_post_text">
-
-            </RelativeLayout>
+                android:id="@+id/post_view_post_image"
+                android:adjustViewBounds="true"
+                android:scaleType="centerInside"
+                android:background="@null"
+                android:layout_below="@id/post_view_post_text"
+                android:layout_centerInParent="true"/>
 
         </RelativeLayout>
 

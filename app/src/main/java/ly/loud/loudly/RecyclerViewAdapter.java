@@ -1,6 +1,9 @@
 package ly.loud.loudly;
 
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +17,8 @@ import java.util.List;
 
 import base.Networks;
 import base.Post;
+import base.attachments.Image;
+import util.UtilsBundle;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private List<Post> posts;
@@ -61,6 +66,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.likesAmount.setText(Integer.toString(likes_amount));
         holder.repostsAmount.setText(Integer.toString(resposts_amount));
+
+        if (post.getAttachments().size() != 0) {
+            Image image = (Image)post.getAttachments().get(0);
+            Uri uri = Uri.parse(image.getExtra());
+            int desiredWidth = ((CardView)holder.postImageView.getParent().getParent().getParent()).getWidth();
+            int desiredHeight = ((CardView)holder.postImageView.getParent().getParent().getParent()).getHeight();
+            Bitmap bitmap = UtilsBundle.loadBitmap(uri, desiredWidth, desiredHeight);
+            holder.postImageView.setImageBitmap(bitmap);
+        }
     }
 
     @Override
@@ -77,6 +91,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private ImageView likesButton;
         private TextView repostsAmount;
         private ImageView repostsButton;
+        private ImageView postImageView;
 
         public ViewHolder(View itemView, Post post) {
             super(itemView);
@@ -89,6 +104,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             likesButton = (ImageView)itemView.findViewById(R.id.post_view_likes_button);
             repostsAmount = (TextView)itemView.findViewById(R.id.post_view_reposts_amount);
             repostsButton = (ImageView)itemView.findViewById(R.id.post_view_reposts_button);
+            postImageView = (ImageView)itemView.findViewById(R.id.post_view_post_image);
 
             if (Math.random() > 0.5) {
                 socialIcon.setImageDrawable(ContextCompat.getDrawable(itemView.getContext(), R.mipmap.ic_instagram_round));
@@ -118,6 +134,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             likesAmount.setText(Integer.toString(likes_amount));
             repostsAmount.setText(Integer.toString(resposts_amount));
 
+            if (post.getAttachments().size() != 0) {
+                Image image = (Image)post.getAttachments().get(0);
+                Uri uri = Uri.parse(image.getExtra());
+                int desiredWidth = ((CardView)postImageView.getParent().getParent().getParent()).getWidth();
+                int desiredHeight = ((CardView)postImageView.getParent().getParent().getParent()).getHeight();
+
+                Bitmap bitmap = UtilsBundle.loadBitmap(uri, desiredWidth, desiredHeight);
+                postImageView.setImageBitmap(bitmap);
+            }
         }
     }
 }

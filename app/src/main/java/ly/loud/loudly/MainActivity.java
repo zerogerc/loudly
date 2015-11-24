@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Display;
 import android.view.View;
 import android.widget.Toast;
 
@@ -110,60 +112,81 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public int getScreenHeight() {
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        return size.y;
+    }
+
+
+    static class CustomRecyclerViewListener extends RecyclerView.OnScrollListener {
+        private FloatingActionButton fab;
+        private boolean isShowFab = true;
+        private boolean nowAnimating = false;
+        private int animDuration = 200;
+        private ObjectAnimator fabAnimSlideDown;
+        private ObjectAnimator fabAnimSlideUp;
+
+        public CustomRecyclerViewListener(FloatingActionButton fab, int screenHeight) {
+            this.fab = fab;
+            this.fabAnimSlideDown = ObjectAnimator.ofFloat(fab, "translationY", 0, screenHeight / 4).setDuration(animDuration);
+            fabAnimSlideUp = ObjectAnimator.ofFloat(fab, "translationY", screenHeight / 4, 0).setDuration(animDuration);
+        }
+
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+        }
+
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+            if (dy > 5 && isShowFab && (!nowAnimating)) {
+                fabAnimSlideDown.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        super.onAnimationStart(animation);
+                        nowAnimating = true;
+                        isShowFab = false;
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        fab.setVisibility(View.GONE);
+                        nowAnimating = false;
+                    }
+                });
+                fabAnimSlideDown.start();
+            }
+            if (dy < -5 && (!isShowFab) && (!nowAnimating)) {
+                fabAnimSlideUp.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        super.onAnimationStart(animation);
+                        nowAnimating = true;
+                        isShowFab = true;
+                        fab.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        nowAnimating = false;
+                    }
+                });
+                fabAnimSlideUp.start();
+            }
+        }
+    }
+
     private void setRecyclerView() {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            private FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-            private boolean isShowFab = true;
-
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                if (dy > 5 && isShowFab) {
-                    isShowFab = false;
-                    ObjectAnimator anim = ObjectAnimator.ofFloat(fab, "translationY", 0, 100).setDuration(100);
-                    anim.addListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-                            fab.setVisibility(View.GONE);
-//                            fab.setTranslationY(100);
-//                            fab.setTranslationY(fab.getTranslationY() + 100);
-                        }
-                    });
-                    anim.start();
-                }
-                if (dy < -5 && (!isShowFab)) {
-                    isShowFab = true;
-                    ObjectAnimator anim = ObjectAnimator.ofFloat(fab, "translationY", 100, 0).setDuration(100);
-                    anim.addListener(new AnimatorListenerAdapter(){
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-                            super.onAnimationStart(animation);
-                            fab.setVisibility(View.VISIBLE);
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-//                            fab.setTranslationY(-100);
-                        }
-                    });
-                    anim.start();
-                }
-
-            }
-        });
-
+        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton)findViewById(R.id.fab), getScreenHeight()){});
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);

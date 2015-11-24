@@ -2,7 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    tools:context=".PostCreateActivity">
 
     <include
         android:id="@+id/post_toolbar"
@@ -16,6 +18,7 @@
         android:background="@color/colorPrimary"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
+        android:layout_marginTop="4dp"
         android:weightSum="3">
 
         <ImageButton
@@ -40,20 +43,42 @@
             android:layout_height="match_parent"
             android:id="@+id/post_gallery_button"
             android:background="@null"
-            android:src="@mipmap/ic_photo_library_white_24dp"/>
+            android:src="@mipmap/ic_photo_library_white_24dp"
+            android:onClick="pickImage"/>
     </LinearLayout>
 
-    <EditText
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/post_toolbar"
         android:layout_above="@id/post_footer"
-        android:inputType="textMultiLine"
-        android:id="@+id/post_edit_text"
-        android:padding="12dp"
-        android:textSize="17sp"
-        android:hint="What's on your mind?"
-        android:gravity="start"
-        android:background="@null" />
+        android:fillViewport="true">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true">
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:id="@+id/post_edit_text"
+                android:layout_alignParentTop="true"
+                android:minLines="1"
+                android:padding="12dp"
+                android:textSize="17sp"
+                android:hint="What's on your mind?"
+                android:gravity="start"
+                android:background="@null" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/new_post_post_image"
+                android:adjustViewBounds="true"
+                android:scaleType="centerInside"
+                android:layout_below="@id/post_edit_text"/>
+        </RelativeLayout>
+    </ScrollView>
 
 </RelativeLayout>
