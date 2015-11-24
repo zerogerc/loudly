@@ -47,12 +47,9 @@ public class Interactions {
     }
 
     public static void getInfo(Wrap wrap, Post post) throws IOException {
-        Query[] queries = wrap.makeGetQueries(post);
-        String[] responses = new String[queries.length];
-        for (int i = 0; i < queries.length; i++) {
-            responses[i] = Network.makeGetRequest(queries[i]);
-        }
-        wrap.parseGetResponse(post, responses);
+        Query queries = wrap.makeGetQueries(post);
+        String response = Network.makeGetRequest(queries);
+        wrap.parseGetResponse(post, response);
     }
 
     public static void deletePost(Wrap wrap, Post post) throws IOException {

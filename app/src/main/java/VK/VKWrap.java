@@ -58,18 +58,18 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public Query[] makeGetQueries(Post post) {
+    public Query makeGetQueries(Post post) {
         Query query = new Query(GET_SERVER);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter("posts", keys.getUserId() + "_" + post.getLink(NETWORK));
-        return new Query[] {query};
+        return query;
     }
 
     @Override
-    public void parseGetResponse(Post post, String[] response) {
+    public void parseGetResponse(Post post, String response) {
         JSONObject parser;
         try {
-            parser = new JSONObject(response[0])
+            parser = new JSONObject(response)
                     .getJSONArray("response")
                     .getJSONObject(0);
             int like = parser.getJSONObject("likes").getInt("count");

@@ -28,6 +28,18 @@ public class Post implements Comparable<Post> {
             this.repost = repost;
             this.comment = comment;
         }
+
+        public Info() {
+            like = 0;
+            repost = 0;
+            comment = 0;
+        }
+
+        public void add(Info info) {
+            like += info.like;
+            repost += info.repost;
+            comment += info.comment;
+        }
     }
 
     private String text;
@@ -37,6 +49,8 @@ public class Post implements Comparable<Post> {
     private Counter counter;
     private long date;
     private Location location;
+    private int mainNetwork; // -1 - Loudly, 0,1,... - as in Networks class
+    private Info totalInfo;
 
     private long localId;
 
@@ -93,8 +107,29 @@ public class Post implements Comparable<Post> {
         return date;
     }
 
+    public void setDate(long date) {
+        this.date = date;
+    }
     public String getLink(int network) { return links[network]; }
-    public void setLink(int network, String link) { links[network] = link; }
+
+    public void setLink(int network, String link) {
+        links[network] = link;
+        int connectedNetworks = 0;
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (getLink(i) != null) {
+                connectedNetworks++;
+            }
+        }
+        if (connectedNetworks == 1) {
+            mainNetwork = network;
+        } else {
+            mainNetwork = -1;
+        }
+    }
+
+    public int getMainNetwork() {
+        return mainNetwork;
+    }
 
     public Location getLocation() {
         return location;
@@ -111,6 +146,16 @@ public class Post implements Comparable<Post> {
 
     public void setInfo(int network, Info info) {
         infos[network] = info;
+        totalInfo = new Info();
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (infos[i] != null) {
+                totalInfo.add(infos[i]);
+            }
+        }
+    }
+
+    public Info getTotalInfo() {
+        return totalInfo;
     }
 
     public Info getInfo(int network) {

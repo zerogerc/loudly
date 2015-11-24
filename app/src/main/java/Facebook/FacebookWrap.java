@@ -53,31 +53,32 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public Query[] makeGetQueries(Post post) {
-        String[] urls = {"/likes", "/comments", "/sharedposts"};
-        for (int i = 0; i < urls.length; i++) {
-            urls[i] = MAIN_SERVER + post.getLink(NETWORK) + urls[i];
-        }
-        Query[] queries = new Query[urls.length];
+    public Query makeGetQueries(Post post) {
+        Query query = new Query(MAIN_SERVER + post.getLink(NETWORK));
+        query.addParameter("fields", "likes.limit(0).summary(true),comments.limit(0).summary(true),shares");
         FacebookKeyKeeper keyKeeper = (FacebookKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
-        for (int i = 0; i < urls.length; i++) {
-            queries[i] = new Query(urls[i]);
-            queries[i].addParameter(ACCESS_TOKEN, keyKeeper.getAccessToken());
-            queries[i].addParameter("field", "data");
-        }
-        return queries;
+        query.addParameter(ACCESS_TOKEN, keyKeeper.getAccessToken());
+        return query;
     }
 
     @Override
-    public void parseGetResponse(Post post, String[] response) {
+    public void parseGetResponse(Post post, String response) {
         JSONObject parser;
         try {
-            parser = new JSONObject(response[0]);
-            int likes = parser.getJSONArray("data").length();
-            parser = new JSONObject(response[1]);
-            int comments = parser.getJSONArray("data").length();
-            parser = new JSONObject(response[2]);
-            int shares = parser.getJSONArray("data").length();
+            parser = new JSONObject(response);
+            int likes = 0;
+            if (parser.has("likes")) {
+                likes = parser.getJSONObject("likes").getJSONObject("summary").getInt("total_count");
+            }
+            int comments = 0;
+            if (parser.has("comments")) {
+                comments = parser.getJSONObject("comments").getJSONObject("summary").getInt("total_count");
+            }
+
+            int shares = 0;
+            if (parser.has("shares")) {
+                comments = parser.getJSONObject("shares").getInt("count");
+            }
 
             post.setInfo(NETWORK, new Post.Info(likes, shares, comments));
         } catch (JSONException e) {
@@ -113,6 +114,7 @@ public class FacebookWrap extends Wrap {
         }
         FacebookKeyKeeper keys = (FacebookKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
+        query.addParameter("date_format", "U");
         return query;
     }
 
@@ -127,9 +129,10 @@ public class FacebookWrap extends Wrap {
                 JSONObject obj = postsJ.getJSONObject(i);
                 String text = obj.getString("message");
                 String id = obj.getString("id");
-                // Extract time here
+                lastTime = obj.getLong("created_time") * 1000;
                 Post post = new Post(text);
                 post.setLink(NETWORK, id);
+                post.setDate(lastTime);
                 posts.add(post);
             }
             return lastTime;

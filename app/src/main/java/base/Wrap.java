@@ -39,18 +39,18 @@ public abstract class Wrap {
     public abstract void parsePostResponse(Post post, String response);
 
     /**
-     * Make queries for getting likes, shares and reposts
+     * Make query for getting likes, shares and reposts
      * @param post Post for getting info
      * @return array of queries
      */
-    public abstract Query[] makeGetQueries(Post post);
+    public abstract Query makeGetQueries(Post post);
 
     /**
      * Parse JSON-response from server (// TODO: 11/19/2015 should be remade)
      * @param post Post that should contain info
      * @param response responses from server
      */
-    public abstract void parseGetResponse(Post post, String[] response);
+    public abstract void parseGetResponse(Post post, String response);
 
     public static Wrap makeWrap(int network) {
         switch (network) {
