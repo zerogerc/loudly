@@ -24,7 +24,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     private String getDateFormatted(long date) {
         Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(date);
+        cal.setTimeInMillis(date * 1000);
         return cal.get(Calendar.DAY_OF_MONTH) + "." + + (cal.get(Calendar.MONTH) + 1) + "." + cal.get(Calendar.YEAR)
                 + " around " + cal.get(Calendar.HOUR_OF_DAY) + " hours";
     }
@@ -43,7 +43,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.data.setText(getDateFormatted(post.getDate()));
 
-        if (Math.random() > 0.5) {
+        if (post.getMainNetwork() == Networks.FB) {
             holder.socialIcon.setImageDrawable(ContextCompat.getDrawable(holder.itemView.getContext(), R.mipmap.ic_instagram_round));
         } else {
             holder.socialIcon.setImageDrawable(ContextCompat.getDrawable(holder.itemView.getContext(), R.mipmap.ic_mail_ru_round));

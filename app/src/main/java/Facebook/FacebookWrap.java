@@ -12,8 +12,11 @@ import base.Wrap;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
+import util.IDInterval;
+import util.Interval;
 import util.Parameter;
 import util.Query;
+import util.TimeInterval;
 
 public class FacebookWrap extends Wrap {
     private static final int NETWORK = Networks.FB;
@@ -104,41 +107,79 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public Query makeLoadPostsQuery(long sinceID, long beforeID, long sinceTime, long beforeTime) {
+    public Query makeLoadPostsQuery(TimeInterval time) {
         Query query = new Query(POST_SERVER);
-        if (sinceTime != -1) {
-            query.addParameter("since", (sinceTime / 1000) + "");
+        if (time.from != -1) {
+            query.addParameter("since", (time.from + 1) + "");
         }
-        if (beforeTime != -1) {
-            query.addParameter("until", (beforeTime / 1000) + "");
+        if (time.to != -1) {
+            query.addParameter("until", (time.to - 1) + "");
         }
         FacebookKeyKeeper keys = (FacebookKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
         query.addParameter("date_format", "U");
+        query.addParameter("fields",
+                "message,created_time,id,likes.limit(0).summary(true),shares,comments.limit(0).summary(true)");
         return query;
     }
 
     @Override
-    public long parsePostsLoadedResponse(LinkedList<Post> posts, long sinceTime, long beforeTime, String response) {
+    public boolean parsePostsLoadedResponse(LinkedList<Post> posts, TimeInterval time, String response) {
         JSONObject parser;
         try {
-            long lastTime = -1;
             parser = new JSONObject(response);
             JSONArray postsJ = parser.getJSONArray("data");
+            if (postsJ.length() == 0) {
+                return false;
+            }
+
+            TimeInterval oldTime = time.copy();
+
             for (int i = 0; i < postsJ.length(); i++) {
                 JSONObject obj = postsJ.getJSONObject(i);
                 String text = obj.getString("message");
                 String id = obj.getString("id");
-                lastTime = obj.getLong("created_time") * 1000;
-                Post post = new Post(text);
-                post.setLink(NETWORK, id);
-                post.setDate(lastTime);
-                posts.add(post);
+                long postTime = obj.getLong("created_time");
+
+                if (Loudly.getContext().getPostInterval(networkID()) == null) {
+                    Loudly.getContext().setPostInterval(networkID(), new IDInterval(id, id));
+                }
+
+                if (i == 0) {
+                    time.from = postTime;
+                }
+
+                time.to = postTime;
+                Loudly.getContext().getPostInterval(networkID()).from = id;
+
+                if (oldTime.contains(postTime)) {
+                    Post post = new Post(text);
+                    post.setLink(NETWORK, id);
+                    post.setDate(postTime);
+
+                    int likes = 0;
+                    if (obj.has("likes")) {
+                        likes = obj.getJSONObject("likes").getJSONObject("summary").getInt("total_count");
+                    }
+                    int shares = 0;
+                    if (obj.has("shares")) {
+                        shares = obj.getJSONObject("shares").getInt("count");
+                    }
+                    int comments = 0;
+                    if (obj.has("comments")) {
+                        comments = obj.getJSONObject("comments").getJSONObject("summary").getInt("total_count");
+                    }
+                    post.setInfo(networkID(), new Post.Info(likes, shares, comments));
+                    posts.add(post);
+                } else {
+                    return false;
+                }
             }
-            return lastTime;
+
+            return true;
         } catch (JSONException e) {
             e.printStackTrace();
-            return -1;
+            return false;
         }
     }
 }

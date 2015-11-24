@@ -7,8 +7,11 @@ import Facebook.FacebookWrap;
 import base.attachments.Attachment;
 import base.attachments.Image;
 import util.BackgroundAction;
+import util.IDInterval;
+import util.Interval;
 import util.Network;
 import util.Query;
+import util.TimeInterval;
 
 /**
  * Class that contains simple actions that can be done with social network, such as
@@ -64,15 +67,15 @@ public class Interactions {
         wrap.parseDeleteResponse(post, response);
     }
 
-    public static LinkedList<Post> loadPosts(Wrap wrap, long sinceID, long beforeID,
-                                             long sinceTime, long beforeTime) throws IOException {
+    public static LinkedList<Post> loadPosts(Wrap wrap, TimeInterval time) throws IOException {
         LinkedList<Post> posts = new LinkedList<>();
-        long lastPostTime;
+        TimeInterval loadedTimeInterval = time.copy();
+        boolean hasMore;
         do {
-            Query query = wrap.makeLoadPostsQuery(sinceID, beforeID, sinceTime, beforeTime);
+            Query query = wrap.makeLoadPostsQuery(loadedTimeInterval);
             String response = Network.makeGetRequest(query);
-            lastPostTime = wrap.parsePostsLoadedResponse(posts, sinceTime, beforeTime, response);
-        } while (lastPostTime > sinceTime);
+            hasMore = wrap.parsePostsLoadedResponse(posts, loadedTimeInterval, response);
+        } while (hasMore);
         return posts;
     }
 }

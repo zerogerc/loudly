@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
+import util.TimeInterval;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -177,49 +178,49 @@ public class Tasks {
     /**
      * BroadcastSendingTask for loading Posts from DB
      * <p/>
-     * After successful loading it sends Loudly.LOADED_POSTS broadcast with
+     * After loading from DB it sends Loudly.POST_LOAD_STARTED broadcast
+     * <p/>
+     * After loading of every network it sends Loudly.POST_LOAD_PROGRESS broadcast with
+     * ID of the network in BroadcastSendingTask.NETWORK_FIELD.
+     * <p/>
+     * After successful loading it sends Loudly.POST_LOAD_FINISHED broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
      * <p/>
-     * If an error occurred, it sends Loudly.LOADED_POSTS broadcast with
+     * If an error occurred, it sends Loudly.POST_LOAD_FINISHED broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
      */
 
     public static class LoadPostsTask extends SocialNetworkTask {
-        long sinceID, beforeID, sinceTime, beforeTime;
-
+        TimeInterval time;
         /**
          * Loads posts from every network
-         * @param sinceID Load posts with ID greater than it
-         * @param beforeID Load posts with ID lower than it
-         * @param sinceTime Load posts with time greater than it
-         * @param beforeTime Load posts with time lower than it
+         * @param time Load posts with date int interval
          * @param wraps Networks, from which load posts
          */
-        public LoadPostsTask(long sinceID, long beforeID, long sinceTime, long beforeTime,
+        public LoadPostsTask(TimeInterval time,
                              Wrap... wraps) {
             super(wraps);
-            this.sinceID = sinceID;
-            this.beforeID = beforeID;
-            this.sinceTime = sinceTime;
-            this.beforeTime = beforeTime;
+            this.time = time;
         }
 
         @Override
         protected Intent doInBackground(Post... params) {
             LinkedList<Post> resultList;
+
             //TODO: we could do it faster
             try {
-                resultList = DatabaseActions.loadPosts(sinceID, beforeID, sinceTime, beforeTime);
+                resultList = DatabaseActions.loadPosts(time);
             } catch (DatabaseException e) {
                 e.printStackTrace();
-                return makeError(Loudly.LOADED_POSTS, -1, e.getMessage());
+                return makeError(Loudly.POST_LOAD_FINISHED, -1, e.getMessage());
             }
+            publishProgress(makeMessage(Loudly.POST_LOAD_STARTED, -1));
 
             for (Wrap w : wraps) {
                 try {
                     LinkedList<Post> temp = new LinkedList<>();
-                    LinkedList<Post> currentList = Interactions.loadPosts(w, sinceID, beforeID, sinceTime, beforeTime);
+                    LinkedList<Post> currentList = Interactions.loadPosts(w, time);
 
                     while (resultList.size() != 0 || currentList.size() != 0) {
                         if (resultList.size() == 0) {
@@ -231,20 +232,23 @@ public class Tasks {
                             continue;
                         }
                         if (resultList.getFirst().getDate() <= currentList.getFirst().getDate()) {
-                            temp.add(resultList.removeFirst());
-                        } else {
                             temp.add(currentList.removeFirst());
+                        } else {
+                            temp.add(resultList.removeFirst());
                         }
                     }
                     resultList = temp;
 
                 } catch (IOException e) {
-                    publishProgress(makeError(Loudly.LOADED_POSTS, -1, e.getMessage()));
+                    return makeError(Loudly.POST_LOAD_FINISHED, -1, e.getMessage());
                 }
+                Intent message = makeMessage(Loudly.POST_LOAD_PROGRESS, -1);
+                message.putExtra(BroadcastSendingTask.NETWORK_FIELD, w.networkID());
+                publishProgress(message);
             }
 
             Loudly.getContext().addPosts(resultList);
-            return makeSuccess(Loudly.LOADED_POSTS, -1);
+            return makeSuccess(Loudly.POST_LOAD_FINISHED, -1);
         }
     }
 

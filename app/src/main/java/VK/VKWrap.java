@@ -1,5 +1,6 @@
 package VK;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -8,12 +9,13 @@ import java.util.LinkedList;
 import base.Networks;
 import base.Post;
 import base.Wrap;
-import base.attachments.Attachment;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
+import util.IDInterval;
 import util.Parameter;
 import util.Query;
+import util.TimeInterval;
 
 
 public class VKWrap extends Wrap {
@@ -22,6 +24,7 @@ public class VKWrap extends Wrap {
     private static final String POST_SERVER = "https://api.vk.com/method/wall.post";
     private static final String GET_SERVER = "https://api.vk.com/method/wall.getById";
     private static final String DELETE_SERVER = "https://api.vk.com/method/wall.delete";
+    private static final String LOAD_POSTS_SERVER = "https://api.vk.com/method/wall.get";
     private static final String ACCESS_TOKEN = "access_token";
 
     @Override
@@ -100,12 +103,63 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public Query makeLoadPostsQuery(long sinceID, long beforeID, long sinceTime, long beforeTime) {
-        return null;
+    public Query makeLoadPostsQuery(TimeInterval time) {
+        Query query = new Query(LOAD_POSTS_SERVER);
+        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
+        query.addParameter("owner_id", keys.getUserId());
+        query.addParameter("filter", "owner");
+        query.addParameter("count", "10");
+        query.addParameter("offset", "" + Loudly.getContext().getOffset(networkID()));
+        return query;
     }
 
     @Override
-    public long parsePostsLoadedResponse(LinkedList<Post> posts, long sinceTime, long beforeTime, String response) {
-        return 0;
+    public boolean parsePostsLoadedResponse(LinkedList<Post> posts, TimeInterval loadedTime, String response) {
+        JSONObject parser;
+        try {
+            parser = new JSONObject(response);
+            JSONArray postJ = parser.getJSONArray("response");
+
+            int offset = Loudly.getContext().getOffset(networkID());
+            if (postJ.length() == 1) {
+                return false;
+            }
+            TimeInterval oldTime = loadedTime.copy();
+            for (int i = 1; i < postJ.length(); i++) {
+                JSONObject post = postJ.getJSONObject(i);
+                String id = post.getString("id");
+                String text = post.getString("text");
+                long date = post.getLong("date");
+
+                if (Loudly.getContext().getPostInterval(networkID()) == null) {
+                    Loudly.getContext().setPostInterval(networkID(), new IDInterval(id, id));
+                }
+
+                loadedTime.to = date;
+                Loudly.getContext().getPostInterval(networkID()).from = id;
+
+                if (oldTime.contains(date)) {
+                    Post res = new Post(text);
+                    res.setLink(NETWORK, id);
+                    res.setDate(date);
+
+                    int likes = post.getJSONObject("likes").getInt("count");
+                    int shares = post.getJSONObject("reposts").getInt("count");
+                    int comments = post.getJSONObject("comments").getInt("count");
+                    res.setInfo(networkID(), new Post.Info(likes, shares, comments));
+
+                    posts.add(res);
+                    offset++;
+                } else {
+                    Loudly.getContext().setOffset(networkID(), offset);
+                    return false;
+                }
+            }
+            Loudly.getContext().setOffset(networkID(), offset);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }

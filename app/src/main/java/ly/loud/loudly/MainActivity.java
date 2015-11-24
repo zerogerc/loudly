@@ -15,8 +15,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
-import java.util.Calendar;
-
 import base.Tasks;
 import util.AttachableReceiver;
 import util.BroadcastSendingTask;
@@ -27,10 +25,12 @@ public class MainActivity extends AppCompatActivity {
     RecyclerViewAdapter recyclerViewAdapter;
 
     private static final int LOAD_POSTS_RECEIVER = 0;
-    private static final int POST_UPLOAD_RECEIVER = 1;
-    private static final int POST_PROGRESS_RECEIVER = 2;
-    private static final int POST_FINISHED_RECEIVER = 3;
-    private static final int RECEIVER_COUNT = 4;
+    private static final int LOAD_PROGRESS_RECEIVER = 1;
+    private static final int LOAD_FINISHED_RECEIVER = 2;
+    private static final int POST_UPLOAD_RECEIVER = 3;
+    private static final int POST_PROGRESS_RECEIVER = 4;
+    private static final int POST_FINISHED_RECEIVER = 5;
+    private static final int RECEIVER_COUNT = 6;
 
     private static AttachableReceiver[] receivers = null;
     private static Tasks.LoadPostsTask loadPosts = null;
@@ -55,21 +55,55 @@ public class MainActivity extends AppCompatActivity {
             // Loading posts
 
             // ToDo: show here rolling circle
-            receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.LOADED_POSTS) {
+            receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.POST_LOAD_STARTED) {
                 @Override
                 public void onMessageReceive(Context context, Intent message) {
+                    Toast toast = Toast.makeText(context, "DB loaded", Toast.LENGTH_SHORT);
+                    toast.show();
                     MainActivity mainActivity = (MainActivity) context;
                     mainActivity.setRecyclerView();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
-                    loadPosts = null;
+                    receivers[LOAD_PROGRESS_RECEIVER] = new AttachableReceiver(context, Loudly.POST_LOAD_PROGRESS) {
+                        @Override
+                        public void onMessageReceive(Context context, Intent message) {
+                            MainActivity mainActivity = (MainActivity) context;
+                            mainActivity.setRecyclerView();
+                            Toast toast = Toast.makeText(context,
+                                    "" + message.getIntExtra(BroadcastSendingTask.NETWORK_FIELD, -1), Toast.LENGTH_SHORT);
+                            toast.show();
+                        }
+                    };
+
+                    receivers[LOAD_FINISHED_RECEIVER] = new AttachableReceiver(context, Loudly.POST_LOAD_FINISHED) {
+                        @Override
+                        public void onMessageReceive(Context context, Intent message) {
+                            boolean success = message.getBooleanExtra(BroadcastSendingTask.SUCCESS_FIELD, false);
+
+                            if (success) {
+                                Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
+                                toast.show();
+                            } else {
+                                String error = message.getStringExtra(BroadcastSendingTask.ERROR_FIELD);
+                                Toast toast = Toast.makeText(context, "Failed to load Posts: " + error, Toast.LENGTH_SHORT);
+                                toast.show();
+                            }
+
+                            // Turn off receivers
+                            receivers[LOAD_PROGRESS_RECEIVER].stop();
+                            receivers[LOAD_PROGRESS_RECEIVER] = null;
+                            stop();
+                            receivers[LOAD_FINISHED_RECEIVER] = null;
+                            loadPosts = null;
+                        }
+                    };
                 }
             };
 
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.WEEK_OF_MONTH, -1);
 
-            loadPosts = new Tasks.LoadPostsTask(-1, -1, cal.getTimeInMillis(), -1, Loudly.getContext().getWraps());
+            loadPosts = new Tasks.LoadPostsTask(Loudly.getContext().getTimeInterval(),
+                    Loudly.getContext().getWraps());
+
             loadPosts.execute();
         } else {
             setRecyclerView();

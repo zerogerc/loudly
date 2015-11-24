@@ -84,7 +84,7 @@ public class Post implements Comparable<Post> {
     public Post(String text) {
         this();
         this.text = text;
-        date = System.currentTimeMillis();
+        date = System.currentTimeMillis() / 1000;
         location = new Location(0, 0, "");
     }
 

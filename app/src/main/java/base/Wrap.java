@@ -6,8 +6,11 @@ import Facebook.FacebookWrap;
 import VK.VKWrap;
 import base.attachments.Image;
 import util.BackgroundAction;
+import util.IDInterval;
+import util.Interval;
 import util.Parameter;
 import util.Query;
+import util.TimeInterval;
 
 /**
  * Base interface for all interactions with particular social network.
@@ -67,7 +70,7 @@ public abstract class Wrap {
 
     public abstract void parseDeleteResponse(Post post, String response);
 
-    public abstract Query makeLoadPostsQuery(long sinceID, long beforeID, long sinceTime, long beforeTime);
-    public abstract long parsePostsLoadedResponse(LinkedList<Post> posts, long sinceTime, long beforeTime,
-                                                  String response);
+    public abstract Query makeLoadPostsQuery(TimeInterval time);
+    public abstract boolean parsePostsLoadedResponse(LinkedList<Post> posts,
+                                                     TimeInterval loadedTime, String response);
 }
