@@ -2,14 +2,18 @@ package base;
 
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 
 import java.io.IOException;
 import java.util.LinkedList;
 
+import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.TimeInterval;
+import util.UtilsBundle;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -247,6 +251,14 @@ public class Tasks {
                 publishProgress(message);
             }
 
+            for (Post post : resultList) {
+                if (post.getAttachments().size() != 0) {
+                    Image image = (Image)post.getAttachments().get(0);
+                    Uri uri = Uri.parse(image.getExtra());
+                    Bitmap bitmap = UtilsBundle.loadBitmap(uri, UtilsBundle.getDefaultScreenWidth(), UtilsBundle.getDefaultScreenWidth());
+                    image.setBitmap(bitmap);
+                }
+            }
             Loudly.getContext().addPosts(resultList);
             return makeSuccess(Loudly.POST_LOAD_FINISHED, -1);
         }

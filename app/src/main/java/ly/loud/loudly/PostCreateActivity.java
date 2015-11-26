@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import base.Post;
@@ -26,7 +25,7 @@ public class PostCreateActivity extends AppCompatActivity {
 
     private EditText editText;
     private ImageView postImageView;
-    private static Image postImage = null;
+    private static Image postImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +38,7 @@ public class PostCreateActivity extends AppCompatActivity {
 
         editText = (EditText)findViewById(R.id.post_edit_text);
         postImageView = (ImageView)findViewById(R.id.new_post_post_image);
+        postImage = null;
 
         editText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -67,6 +67,7 @@ public class PostCreateActivity extends AppCompatActivity {
         Post post = new Post(text);
         if (postImage != null) {
             post.addAttachment(postImage);
+            postImage = null;
         }
         uploader.execute(post);
         finish();
@@ -86,9 +87,7 @@ public class PostCreateActivity extends AppCompatActivity {
                 Log.e("IMG_LOAD_TAG", "Data to received");
             } else {
                 postImage = new Image(data.getData());
-                int desiredWidth = ((RelativeLayout)postImageView.getParent()).getWidth();
-                int desiredHeight = ((RelativeLayout)postImageView.getParent()).getHeight();
-                Bitmap bitmap = UtilsBundle.loadBitmap(data.getData(), desiredWidth, desiredHeight);
+                Bitmap bitmap = UtilsBundle.loadBitmap(data.getData(), UtilsBundle.getScreenWidth(this), UtilsBundle.getScreenWidth(this));
                 postImageView.setImageBitmap(bitmap);
             }
         }

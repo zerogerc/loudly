@@ -1,5 +1,6 @@
 package base.attachments;
 
+import android.graphics.Bitmap;
 import android.net.Uri;
 
 import base.Networks;
@@ -7,6 +8,7 @@ import base.Networks;
 public class Image extends Attachment {
     protected String[] links;
     protected String initialLink;
+    protected Bitmap bitmap;
 
     public Image(String initialLink, String[] links) {
         this.initialLink = initialLink;
@@ -16,6 +18,14 @@ public class Image extends Attachment {
     public Image(Uri initialLink) {
         this.initialLink = initialLink.toString();
         this.links = new String[Networks.NETWORK_COUNT];
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public Bitmap getBitmap() {
+        return this.bitmap;
     }
 
     public void setLink(int network, String link) {

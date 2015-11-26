@@ -34,7 +34,6 @@ public class Loudly extends Application {
     public static final String POST_GET_INFO_PROGRESS = "ly.loud.loudly.post.info.progress";
     public static final String POST_GET_INFO_FINISHED = "ly.loud.loudly.post.info.finished";
 
-
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
     private LinkedList<Post> posts;

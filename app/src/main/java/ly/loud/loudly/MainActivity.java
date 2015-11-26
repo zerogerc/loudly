@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setRecyclerView() {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts());
+        recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts(), this);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton)findViewById(R.id.fab), getScreenHeight()){});

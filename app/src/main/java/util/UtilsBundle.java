@@ -1,6 +1,7 @@
 package util;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -8,6 +9,7 @@ import android.net.Uri;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.WindowManager;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,11 +20,34 @@ import ly.loud.loudly.Loudly;
 public class UtilsBundle {
     private static final String TAG = "UTIL_TAG";
 
+    public static int getDefaultScreenHeight() {
+        WindowManager windowManager = (WindowManager) Loudly.getContext().getSystemService(Context.WINDOW_SERVICE);
+        Display display = windowManager.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        return size.y;
+    }
+
+    public static int getDefaultScreenWidth() {
+        WindowManager windowManager = (WindowManager) Loudly.getContext().getSystemService(Context.WINDOW_SERVICE);
+        Display display = windowManager.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        return size.x;
+    }
+
     public static int getScreenHeight(Activity context) {
         Display display = context.getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
         return size.y;
+    }
+
+    public static int getScreenWidth(Activity context) {
+        Display display = context.getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        return size.x;
     }
 
     public static int dpToPx(int dp) {
