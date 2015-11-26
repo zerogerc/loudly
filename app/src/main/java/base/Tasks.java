@@ -13,7 +13,7 @@ import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.TimeInterval;
-import util.UtilsBundle;
+import util.Utils;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -34,17 +34,17 @@ public class Tasks {
 
     /**
      * BroadcastReceivingTask for uploading post to network
-     * <p/>
+     * <p>
      * When post is added to DB, it sends Loudly.POST_UPLOAD_STARTED broadcast with
      * localId stored in field BroadcastSendingTask.ID_FIELD
-     * <p/>
+     * <p>
      * Then during upload it sends Loudly.POST_UPLOAD_PROGRESS broadcast
      * with localId of post in BroadcastSendingTask.ID_FIELD and progress stored in
      * BroadcastSendingTask.PROGRESS_FIELD
-     * <p/>
+     * <p>
      * When upload is successfully finished, it sends
      * Loudly.POST_UPLOAD_FINISHED with BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p/>
+     * <p>
      * If an error occurred, it sends Loudly.POST_UPLOAD_FINISHED with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -96,15 +96,15 @@ public class Tasks {
 
     /**
      * BroadcastReceivingTask for getting post's likes, shares and comments number
-     * <p/>
+     * <p>
      * During getting info for every network, passed in constructor, it sends
      * Loudly.POST_GET_INFO_PROGRESS broadcast
      * with localId of post in BroadcastSendingTask.ID_FIELD and ID of network stored in
      * BroadcastSendingTask.NETWORK_FIELD
-     * <p/>
+     * <p>
      * When getting info is successfully finished, it sends
      * Loudly.POST_GET_INFO_FINISHED with BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p/>
+     * <p>
      * If an error occurred, it sends Loudly.POST_GET_INFO_FINISHED with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -135,10 +135,10 @@ public class Tasks {
 
     /**
      * BroadcastSendingTask for saving KeyKeepers to DB.
-     * <p/>
+     * <p>
      * After successful saving it sends Loudly.SAVED_KEYS broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p/>
+     * <p>
      * If an error occurred, it sends Loudly.SAVED_KEYS broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -158,10 +158,10 @@ public class Tasks {
 
     /**
      * BroadcastSendingTask for loading KeyKeepers from DB.
-     * <p/>
+     * <p>
      * After successful loading it sends Loudly.LOADED_KEYS broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p/>
+     * <p>
      * If an error occurred, it sends Loudly.LOADED_KEYS broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -179,27 +179,44 @@ public class Tasks {
         }
     }
 
+    public interface LoadCallback {
+        /**
+         * Is post stored in DB
+         *
+         * @param postID  Post
+         * @param network network
+         * @return Link to post, if it exists, or null, if not
+         */
+        Post findLoudlyPost(String postID, int network);
+
+        void postLoaded(Post post);
+    }
+
     /**
      * BroadcastSendingTask for loading Posts from DB
-     * <p/>
+     * <p>
      * After loading from DB it sends Loudly.POST_LOAD_STARTED broadcast
-     * <p/>
+     * <p>
      * After loading of every network it sends Loudly.POST_LOAD_PROGRESS broadcast with
      * ID of the network in BroadcastSendingTask.NETWORK_FIELD.
-     * <p/>
+     * <p>
      * After successful loading it sends Loudly.POST_LOAD_FINISHED broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p/>
+     * <p>
      * If an error occurred, it sends Loudly.POST_LOAD_FINISHED broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
      */
 
-    public static class LoadPostsTask extends SocialNetworkTask {
-        TimeInterval time;
+    public static class LoadPostsTask extends SocialNetworkTask implements LoadCallback {
+        private TimeInterval time;
+        private LinkedList<Post> loudlyPosts;
+        private LinkedList<Post> currentPosts;
+
         /**
          * Loads posts from every network
-         * @param time Load posts with date int interval
+         *
+         * @param time  Load posts with date int interval
          * @param wraps Networks, from which load posts
          */
         public LoadPostsTask(TimeInterval time,
@@ -209,56 +226,115 @@ public class Tasks {
         }
 
         @Override
-        protected Intent doInBackground(Post... params) {
-            LinkedList<Post> resultList;
+        public Post findLoudlyPost(String postID, int network) {
+            for (Post lPost : loudlyPosts) {
+                if (lPost.getLink(network) != null && lPost.getLink(network).equals(postID)) {
+                    lPost.setExistence(network);
+                    return lPost;
+                }
+            }
+            return null;
+        }
 
+        @Override
+        public void postLoaded(Post post) {
+            currentPosts.add(post);
+            // loadImage here
+        }
+
+        private LinkedList<Post> merge(LinkedList<Post> oldPosts, LinkedList<Post> newPosts) {
+
+            LinkedList<Post> temp = new LinkedList<>();
+            while (oldPosts.size() != 0 || newPosts.size() != 0) {
+                if (oldPosts.size() == 0) {
+                    temp.add(newPosts.removeFirst());
+                    continue;
+                }
+                if (newPosts.size() == 0) {
+                    temp.add(oldPosts.removeFirst());
+                    continue;
+                }
+                if (oldPosts.getFirst().getDate() <= newPosts.getFirst().getDate()) {
+                    temp.add(newPosts.removeFirst());
+                } else {
+                    temp.add(oldPosts.removeFirst());
+                }
+            }
+            return temp;
+        }
+
+        @Override
+        protected Intent doInBackground(Post... params) {
+            LinkedList<Post> resultList = new LinkedList<>();
             //TODO: we could do it faster
             try {
-                resultList = DatabaseActions.loadPosts(time);
+                loudlyPosts = DatabaseActions.loadPosts(time);
             } catch (DatabaseException e) {
                 e.printStackTrace();
                 return makeError(Loudly.POST_LOAD_FINISHED, -1, e.getMessage());
             }
             publishProgress(makeMessage(Loudly.POST_LOAD_STARTED, -1));
 
+            boolean[] successfulLoading = new boolean[Networks.NETWORK_COUNT];
+
             for (Wrap w : wraps) {
                 try {
-                    LinkedList<Post> temp = new LinkedList<>();
-                    LinkedList<Post> currentList = Interactions.loadPosts(w, time);
+                    currentPosts = new LinkedList<>();
+                    Interactions.loadPosts(w, time, this);
+                    resultList = merge(resultList, currentPosts);
 
-                    while (resultList.size() != 0 || currentList.size() != 0) {
-                        if (resultList.size() == 0) {
-                            temp.add(currentList.removeFirst());
-                            continue;
-                        }
-                        if (currentList.size() == 0) {
-                            temp.add(resultList.removeFirst());
-                            continue;
-                        }
-                        if (resultList.getFirst().getDate() <= currentList.getFirst().getDate()) {
-                            temp.add(currentList.removeFirst());
-                        } else {
-                            temp.add(resultList.removeFirst());
-                        }
-                    }
-                    resultList = temp;
+                    Intent message = makeSuccess(Loudly.POST_LOAD_PROGRESS, -1);
+                    message.putExtra(BroadcastSendingTask.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
 
+                    successfulLoading[w.networkID()] = true;
                 } catch (IOException e) {
-                    return makeError(Loudly.POST_LOAD_FINISHED, -1, e.getMessage());
+                    Intent message = makeError(Loudly.POST_LOAD_PROGRESS, -1, e.getMessage());
+                    message.putExtra(BroadcastSendingTask.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
+                    successfulLoading[w.networkID()] = false;
                 }
-                Intent message = makeMessage(Loudly.POST_LOAD_PROGRESS, -1);
-                message.putExtra(BroadcastSendingTask.NETWORK_FIELD, w.networkID());
-                publishProgress(message);
             }
+
+            LinkedList<Post> cleaned = new LinkedList<>();
+
+            for (Post p : loudlyPosts) {
+                for (Wrap w : wraps) {
+                    if (successfulLoading[w.networkID()] && !p.existsIn(w.networkID())) {
+                        p.removeOutdatedLinks(w.networkID());
+                    }
+                }
+                if (p.exists()) {
+                    cleaned.add(p);
+                }
+//                if (!p.exists()) {
+//                    loudlyPosts.remove(p);
+//                    // remove from DB here
+//                }
+            }
+
+            resultList = merge(resultList, cleaned);
 
             for (Post post : resultList) {
                 if (post.getAttachments().size() != 0) {
-                    Image image = (Image)post.getAttachments().get(0);
-                    Uri uri = Uri.parse(image.getExtra());
-                    Bitmap bitmap = UtilsBundle.loadBitmap(uri, UtilsBundle.getDefaultScreenWidth(), UtilsBundle.getDefaultScreenWidth());
-                    image.setBitmap(bitmap);
+                    Image image = (Image) post.getAttachments().get(0);
+                    try {
+                        Bitmap bitmap;
+                        if (image.isLocal()) {
+                            Uri uri = Uri.parse(image.getExtra());
+                            bitmap = Utils.loadBitmap(uri,
+                                    Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
+                        } else {
+                            bitmap = Utils.downloadBitmap(image.getExtra(),
+                                    Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
+                        }
+                        image.setBitmap(bitmap);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
+
             Loudly.getContext().addPosts(resultList);
             return makeSuccess(Loudly.POST_LOAD_FINISHED, -1);
         }

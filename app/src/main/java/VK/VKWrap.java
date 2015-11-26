@@ -1,13 +1,17 @@
 package VK;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.LinkedList;
 
+import base.KeyKeeper;
 import base.Networks;
 import base.Post;
+import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
@@ -21,6 +25,7 @@ import util.TimeInterval;
 public class VKWrap extends Wrap {
     private static final int NETWORK = Networks.VK;
     private static final String TAG = "VK_WRAP_TAG";
+    private static final String API_VERSION = "5.40";
     private static final String POST_SERVER = "https://api.vk.com/method/wall.post";
     private static final String GET_SERVER = "https://api.vk.com/method/wall.getById";
     private static final String DELETE_SERVER = "https://api.vk.com/method/wall.delete";
@@ -32,14 +37,26 @@ public class VKWrap extends Wrap {
         return NETWORK;
     }
 
+
+    private Query makeAPIQuery(String URL) {
+        Query query = new Query(URL);
+        query.addParameter("v", API_VERSION);
+        return query;
+    }
+
+    private Query makeSignedQuery(String URL) {
+        Query query = makeAPIQuery(URL);
+        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
+        query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
+        return query;
+    }
+
     @Override
     public Query makePostQuery(Post post) {
-        Query query = new Query(POST_SERVER);
+        Query query = makeSignedQuery(POST_SERVER);
         if (post.getText().length() > 0) {
             query.addParameter("message", post.getText());
         }
-        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
-        query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
         return query;
     }
 
@@ -57,12 +74,13 @@ public class VKWrap extends Wrap {
             post.setLink(NETWORK, id);
         } catch (JSONException e) {
             e.printStackTrace();
+            Log.e("VK", response);
         }
     }
 
     @Override
     public Query makeGetQueries(Post post) {
-        Query query = new Query(GET_SERVER);
+        Query query = makeAPIQuery(GET_SERVER);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter("posts", keys.getUserId() + "_" + post.getLink(NETWORK));
         return query;
@@ -87,7 +105,7 @@ public class VKWrap extends Wrap {
 
     @Override
     public Query makeDeleteQuery(Post post) {
-        Query query = new Query(DELETE_SERVER);
+        Query query = makeAPIQuery(DELETE_SERVER);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
         query.addParameter("owner_id", keys.getUserId());
@@ -104,7 +122,7 @@ public class VKWrap extends Wrap {
 
     @Override
     public Query makeLoadPostsQuery(TimeInterval time) {
-        Query query = new Query(LOAD_POSTS_SERVER);
+        Query query = makeAPIQuery(LOAD_POSTS_SERVER);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         query.addParameter("owner_id", keys.getUserId());
         query.addParameter("filter", "owner");
@@ -114,21 +132,31 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public boolean parsePostsLoadedResponse(LinkedList<Post> posts, TimeInterval loadedTime, String response) {
+    public boolean parsePostsLoadedResponse(TimeInterval loadedTime, String response,
+                                            Tasks.LoadCallback callback) {
         JSONObject parser;
         try {
             parser = new JSONObject(response);
-            JSONArray postJ = parser.getJSONArray("response");
+            JSONArray postJ = parser.getJSONObject("response").getJSONArray("items");
 
             int offset = Loudly.getContext().getOffset(networkID());
             if (postJ.length() == 1) {
                 return false;
             }
             TimeInterval oldTime = loadedTime.copy();
-            for (int i = 1; i < postJ.length(); i++) {
+            for (int i = 0; i < postJ.length(); i++) {
                 JSONObject post = postJ.getJSONObject(i);
                 String id = post.getString("id");
-                String text = post.getString("text");
+
+                Post loudlyPost = callback.findLoudlyPost(id, networkID());
+                if (loudlyPost != null) {
+                    int likes = post.getJSONObject("likes").getInt("count");
+                    int shares = post.getJSONObject("reposts").getInt("count");
+                    int comments = post.getJSONObject("comments").getInt("count");
+                    loudlyPost.setInfo(networkID(), new Post.Info(likes, shares, comments));
+                    continue;
+                }
+
                 long date = post.getLong("date");
 
                 if (Loudly.getContext().getPostInterval(networkID()) == null) {
@@ -139,16 +167,39 @@ public class VKWrap extends Wrap {
                 Loudly.getContext().getPostInterval(networkID()).from = id;
 
                 if (oldTime.contains(date)) {
+                    String text = post.getString("text");
+
                     Post res = new Post(text);
                     res.setLink(NETWORK, id);
                     res.setDate(date);
+
+                    if (post.has("attachments")) {
+                        JSONArray attachments = post.getJSONArray("attachments");
+                        for (int j = 0; j < attachments.length(); j++) {
+                            JSONObject obj = attachments.getJSONObject(j);
+                            String type = obj.getString("type");
+                            if (type.equals("photo") || type.equals("posted_photo")) {
+                                JSONObject photo = obj.getJSONObject("photo");
+                                String photoID = photo.getString("id");
+                                String link;
+                                if (photo.has("photo_604")) {
+                                    link = photo.getString("photo_604");
+                                } else {
+                                    link = photo.getString("photo_130");
+                                }
+                                Image image = new Image(link, false);
+                                image.setLink(networkID(), photoID);
+                                res.addAttachment(image);
+                            }
+                        }
+                    }
 
                     int likes = post.getJSONObject("likes").getInt("count");
                     int shares = post.getJSONObject("reposts").getInt("count");
                     int comments = post.getJSONObject("comments").getInt("count");
                     res.setInfo(networkID(), new Post.Info(likes, shares, comments));
 
-                    posts.add(res);
+                    callback.postLoaded(res);
                     offset++;
                 } else {
                     Loudly.getContext().setOffset(networkID(), offset);

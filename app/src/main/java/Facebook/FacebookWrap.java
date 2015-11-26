@@ -8,6 +8,7 @@ import java.util.LinkedList;
 
 import base.Networks;
 import base.Post;
+import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
@@ -124,7 +125,8 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public boolean parsePostsLoadedResponse(LinkedList<Post> posts, TimeInterval time, String response) {
+    public boolean parsePostsLoadedResponse(TimeInterval time, String response,
+                                            Tasks.LoadCallback callback) {
         JSONObject parser;
         try {
             parser = new JSONObject(response);
@@ -137,8 +139,26 @@ public class FacebookWrap extends Wrap {
 
             for (int i = 0; i < postsJ.length(); i++) {
                 JSONObject obj = postsJ.getJSONObject(i);
-                String text = obj.getString("message");
                 String id = obj.getString("id");
+                Post loudlyPost = callback.findLoudlyPost(id, networkID());
+                if (loudlyPost != null) {
+                    int likes = 0;
+                    if (obj.has("likes")) {
+                        likes = obj.getJSONObject("likes").getJSONObject("summary").getInt("total_count");
+                    }
+                    int shares = 0;
+                    if (obj.has("shares")) {
+                        shares = obj.getJSONObject("shares").getInt("count");
+                    }
+                    int comments = 0;
+                    if (obj.has("comments")) {
+                        comments = obj.getJSONObject("comments").getJSONObject("summary").getInt("total_count");
+                    }
+                    loudlyPost.setInfo(networkID(), new Post.Info(likes, shares, comments));
+                    continue;
+                }
+
+                String text = obj.getString("message");
                 long postTime = obj.getLong("created_time");
 
                 if (Loudly.getContext().getPostInterval(networkID()) == null) {
@@ -170,7 +190,7 @@ public class FacebookWrap extends Wrap {
                         comments = obj.getJSONObject("comments").getJSONObject("summary").getInt("total_count");
                     }
                     post.setInfo(networkID(), new Post.Info(likes, shares, comments));
-                    posts.add(post);
+                    callback.postLoaded(post);
                 } else {
                     return false;
                 }

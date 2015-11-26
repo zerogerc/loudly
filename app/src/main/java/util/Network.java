@@ -3,7 +3,6 @@ package util;
 import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,6 +13,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+
 
 /**
  * Class that contains static methods for work with network
@@ -158,7 +158,7 @@ public class Network {
             if (conn != null) {
                 conn.disconnect();
             }
-            closeQuietly(outputStream);
+            Utils.closeQuietly(outputStream);
         }
         return response;
     }
@@ -197,7 +197,7 @@ public class Network {
                     response.append('\n').append(line);
                 }
             } finally {
-                closeQuietly(reader);
+                Utils.closeQuietly(reader);
             }
         } else {
             throw new IOException("Server returned non-OK status: " + status);
@@ -219,16 +219,4 @@ public class Network {
         pw.flush();
     }
 
-    /**
-     * Close instance of Closeable without throwing exception
-     */
-    public static void closeQuietly(Closeable c) {
-        if (c != null) {
-            try {
-                c.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Exception while closing: " + e.getMessage());
-            }
-        }
-    }
 }

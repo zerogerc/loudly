@@ -14,10 +14,12 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.IOException;
+
 import base.Post;
 import base.Tasks;
 import base.attachments.Image;
-import util.UtilsBundle;
+import util.Utils;
 
 
 public class PostCreateActivity extends AppCompatActivity {
@@ -36,8 +38,8 @@ public class PostCreateActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        editText = (EditText)findViewById(R.id.post_edit_text);
-        postImageView = (ImageView)findViewById(R.id.new_post_post_image);
+        editText = (EditText) findViewById(R.id.post_edit_text);
+        postImageView = (ImageView) findViewById(R.id.new_post_post_image);
         postImage = null;
 
         editText.addTextChangedListener(new TextWatcher() {
@@ -87,8 +89,13 @@ public class PostCreateActivity extends AppCompatActivity {
                 Log.e("IMG_LOAD_TAG", "Data to received");
             } else {
                 postImage = new Image(data.getData());
-                Bitmap bitmap = UtilsBundle.loadBitmap(data.getData(), UtilsBundle.getScreenWidth(this), UtilsBundle.getScreenWidth(this));
-                postImageView.setImageBitmap(bitmap);
+                try {
+                    Bitmap bitmap = Utils.loadBitmap(data.getData(), Utils.getScreenWidth(this), Utils.getScreenWidth(this));
+                    postImageView.setImageBitmap(bitmap);
+                    postImage.setBitmap(bitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

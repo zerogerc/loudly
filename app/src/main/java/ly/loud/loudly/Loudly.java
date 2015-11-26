@@ -122,7 +122,7 @@ public class Loudly extends Application {
         // Load it from preferences
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.WEEK_OF_MONTH, -1);
-        timeInterval = new TimeInterval(cal.getTimeInMillis() / 1000, System.currentTimeMillis() / 1000);
+        timeInterval = new TimeInterval(cal.getTimeInMillis() / 1000, -1l);
 
         Tasks.LoadKeysTask loadKeys = new Tasks.LoadKeysTask();
         loadKeys.execute();

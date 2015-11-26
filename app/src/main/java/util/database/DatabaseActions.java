@@ -17,6 +17,7 @@ import util.IDInterval;
 import util.Interval;
 import util.Network;
 import util.TimeInterval;
+import util.Utils;
 import util.database.AttachmentsContract.AttachmentsEntry;
 import util.database.KeysContract.KeysEntry;
 import util.database.LinksContract.LinksEntry;
@@ -162,7 +163,7 @@ public class DatabaseActions {
             }
             db.setTransactionSuccessful();
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
             db.endTransaction();
         }
     }
@@ -213,7 +214,7 @@ public class DatabaseActions {
                 cursor.moveToNext();
             }
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
         }
         return res;
     }
@@ -249,7 +250,7 @@ public class DatabaseActions {
             }
             db.setTransactionSuccessful();
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
         }
     }
 
@@ -310,7 +311,7 @@ public class DatabaseActions {
                 cursor.moveToNext();
             }
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
         }
     }
 
@@ -358,7 +359,7 @@ public class DatabaseActions {
                 return (count == 1) ? 0 : -1;
             }
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
         }
     }
 
@@ -419,7 +420,7 @@ public class DatabaseActions {
 
             return new Location(latitude, longitude, name);
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
         }
     }
 
@@ -443,7 +444,7 @@ public class DatabaseActions {
             }
             return links;
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
         }
     }
 
@@ -474,7 +475,7 @@ public class DatabaseActions {
                 list.add(Attachment.makeAttachment(type, extra, links));
             }
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
         }
         return list;
     }
@@ -501,7 +502,7 @@ public class DatabaseActions {
                 throw new DatabaseException("Can't delete attachment: " + atId);
             }
         } finally {
-            Network.closeQuietly(cursor);
+            Utils.closeQuietly(cursor);
         }
         return nextId;
     }

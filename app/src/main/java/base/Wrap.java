@@ -71,6 +71,6 @@ public abstract class Wrap {
     public abstract void parseDeleteResponse(Post post, String response);
 
     public abstract Query makeLoadPostsQuery(TimeInterval time);
-    public abstract boolean parsePostsLoadedResponse(LinkedList<Post> posts,
-                                                     TimeInterval loadedTime, String response);
+    public abstract boolean parsePostsLoadedResponse(TimeInterval loadedTime, String response,
+                                                     Tasks.LoadCallback callback);
 }

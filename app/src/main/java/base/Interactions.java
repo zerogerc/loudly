@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import Facebook.FacebookWrap;
 import base.attachments.Attachment;
 import base.attachments.Image;
+import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.IDInterval;
 import util.Interval;
@@ -67,15 +68,14 @@ public class Interactions {
         wrap.parseDeleteResponse(post, response);
     }
 
-    public static LinkedList<Post> loadPosts(Wrap wrap, TimeInterval time) throws IOException {
-        LinkedList<Post> posts = new LinkedList<>();
+    public static void loadPosts(Wrap wrap, TimeInterval time,
+                                             Tasks.LoadCallback callback) throws IOException {
         TimeInterval loadedTimeInterval = time.copy();
         boolean hasMore;
         do {
             Query query = wrap.makeLoadPostsQuery(loadedTimeInterval);
             String response = Network.makeGetRequest(query);
-            hasMore = wrap.parsePostsLoadedResponse(posts, loadedTimeInterval, response);
+            hasMore = wrap.parsePostsLoadedResponse(loadedTimeInterval, response, callback);
         } while (hasMore);
-        return posts;
     }
 }

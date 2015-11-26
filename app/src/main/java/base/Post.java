@@ -23,7 +23,7 @@ public class Post implements Comparable<Post> {
     public static class Info {
         public int like, repost, comment;
 
-        public Info (int like, int repost, int comment) {
+        public Info(int like, int repost, int comment) {
             this.like = like;
             this.repost = repost;
             this.comment = comment;
@@ -46,6 +46,7 @@ public class Post implements Comparable<Post> {
     private ArrayList<Attachment> attachments;
     private String[] links;
     private Info[] infos;
+    private boolean[] exists;       // Does the post still exist in some network?
     private Counter counter;
     private long date;
     private Location location;
@@ -79,6 +80,7 @@ public class Post implements Comparable<Post> {
         date = -1;
         location = null;
         localId = -1;
+        exists = new boolean[Networks.NETWORK_COUNT];
     }
 
     public Post(String text) {
@@ -110,10 +112,14 @@ public class Post implements Comparable<Post> {
     public void setDate(long date) {
         this.date = date;
     }
-    public String getLink(int network) { return links[network]; }
+
+    public String getLink(int network) {
+        return links[network];
+    }
 
     public void setLink(int network, String link) {
         links[network] = link;
+        exists[network] = true;
         int connectedNetworks = 0;
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (getLink(i) != null) {
@@ -125,6 +131,30 @@ public class Post implements Comparable<Post> {
         } else {
             mainNetwork = -1;
         }
+    }
+
+    public boolean existsIn(int network) {
+        return exists[network];
+    }
+
+    public boolean exists() {
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (exists[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void removeOutdatedLinks(int network) {
+        links[network] = null;
+        for (Attachment attachment : attachments) {
+            attachment.setLink(network, null);
+        }
+    }
+
+    public void setExistence(int network) {
+        exists[network] = true;
     }
 
     public int getMainNetwork() {
@@ -163,7 +193,7 @@ public class Post implements Comparable<Post> {
     }
 
     public ArrayList<Attachment> getAttachments() {
-        return (ArrayList<Attachment>)attachments.clone();
+        return (ArrayList<Attachment>) attachments.clone();
     }
 
     public Counter getCounter() {

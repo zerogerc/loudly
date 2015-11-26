@@ -40,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
         if (receivers == null) {
             receivers = new AttachableReceiver[RECEIVER_COUNT];
         }
@@ -48,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
                 receiver.attach(this);
             }
         }
-        setContentView(R.layout.activity_main);
+
+        setRecyclerView();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
         setSupportActionBar(toolbar);
@@ -62,15 +65,13 @@ public class MainActivity extends AppCompatActivity {
                 public void onMessageReceive(Context context, Intent message) {
                     Toast toast = Toast.makeText(context, "DB loaded", Toast.LENGTH_SHORT);
                     toast.show();
-                    MainActivity mainActivity = (MainActivity) context;
-                    mainActivity.setRecyclerView();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
                     receivers[LOAD_PROGRESS_RECEIVER] = new AttachableReceiver(context, Loudly.POST_LOAD_PROGRESS) {
                         @Override
                         public void onMessageReceive(Context context, Intent message) {
                             MainActivity mainActivity = (MainActivity) context;
-                            mainActivity.setRecyclerView();
+                            mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                             Toast toast = Toast.makeText(context,
                                     "" + message.getIntExtra(BroadcastSendingTask.NETWORK_FIELD, -1), Toast.LENGTH_SHORT);
                             toast.show();
@@ -85,6 +86,9 @@ public class MainActivity extends AppCompatActivity {
                             if (success) {
                                 Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
                                 toast.show();
+
+                                MainActivity mainActivity = (MainActivity) context;
+                                mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                             } else {
                                 String error = message.getStringExtra(BroadcastSendingTask.ERROR_FIELD);
                                 Toast toast = Toast.makeText(context, "Failed to load Posts: " + error, Toast.LENGTH_SHORT);
@@ -186,7 +190,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts(), this);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton)findViewById(R.id.fab), getScreenHeight()){});
+        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), getScreenHeight()) {
+        });
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);

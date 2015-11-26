@@ -22,6 +22,12 @@ public class TimeInterval extends Interval<Long> {
 
     @Override
     public boolean contains(Long x) {
+        if (to == -1) {
+            return from < x;
+        }
+        if (from == -1) {
+            return x < to;
+        }
         return from < x && x < to;
     }
 }
