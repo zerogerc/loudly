@@ -6,18 +6,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.LinkedList;
+import java.io.IOException;
 
-import base.KeyKeeper;
 import base.Networks;
 import base.Post;
 import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
-import util.BackgroundAction;
 import util.IDInterval;
-import util.Parameter;
+import util.Network;
 import util.Query;
 import util.TimeInterval;
 
@@ -26,10 +24,14 @@ public class VKWrap extends Wrap {
     private static final int NETWORK = Networks.VK;
     private static final String TAG = "VK_WRAP_TAG";
     private static final String API_VERSION = "5.40";
-    private static final String POST_SERVER = "https://api.vk.com/method/wall.post";
-    private static final String GET_SERVER = "https://api.vk.com/method/wall.getById";
-    private static final String DELETE_SERVER = "https://api.vk.com/method/wall.delete";
-    private static final String LOAD_POSTS_SERVER = "https://api.vk.com/method/wall.get";
+    private static final String MAIN_SERVER = "https://api.vk.com/method/";
+    private static final String POST_METHOD = "wall.post";
+    private static final String GET_METHOD = "wall.getById";
+    private static final String DELETE_METHOD = "wall.delete";
+    private static final String LOAD_POSTS_METHOD = "wall.get";
+    private static final String PHOTO_UPLOAD_METHOD = "photos.getWallUploadServer";
+    private static final String SAVE_PHOTO_METHOD = "photos.saveWallPhoto";
+
     private static final String ACCESS_TOKEN = "access_token";
 
     @Override
@@ -38,14 +40,14 @@ public class VKWrap extends Wrap {
     }
 
 
-    private Query makeAPIQuery(String URL) {
-        Query query = new Query(URL);
+    private Query makeAPIQuery(String method) {
+        Query query = new Query(MAIN_SERVER + method);
         query.addParameter("v", API_VERSION);
         return query;
     }
 
-    private Query makeSignedQuery(String URL) {
-        Query query = makeAPIQuery(URL);
+    private Query makeSignedQuery(String method) {
+        Query query = makeAPIQuery(method);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
         return query;
@@ -53,16 +55,16 @@ public class VKWrap extends Wrap {
 
     @Override
     public Query makePostQuery(Post post) {
-        Query query = makeSignedQuery(POST_SERVER);
+        Query query = makeSignedQuery(POST_METHOD);
         if (post.getText().length() > 0) {
             query.addParameter("message", post.getText());
         }
+        if (post.getAttachments().size()>0) {
+            Image image = (Image)post.getAttachments().get(0);
+            String userID = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID())).getUserId();
+            query.addParameter("attachments", "photo"+userID + "_"+image.getLink(networkID()));
+        }
         return query;
-    }
-
-    @Override
-    public Parameter uploadImage(Image image, BackgroundAction publish) {
-        return null;
     }
 
     @Override
@@ -80,7 +82,7 @@ public class VKWrap extends Wrap {
 
     @Override
     public Query makeGetQueries(Post post) {
-        Query query = makeAPIQuery(GET_SERVER);
+        Query query = makeAPIQuery(GET_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter("posts", keys.getUserId() + "_" + post.getLink(NETWORK));
         return query;
@@ -105,7 +107,7 @@ public class VKWrap extends Wrap {
 
     @Override
     public Query makeDeleteQuery(Post post) {
-        Query query = makeAPIQuery(DELETE_SERVER);
+        Query query = makeAPIQuery(DELETE_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
         query.addParameter("owner_id", keys.getUserId());
@@ -122,7 +124,7 @@ public class VKWrap extends Wrap {
 
     @Override
     public Query makeLoadPostsQuery(TimeInterval time) {
-        Query query = makeAPIQuery(LOAD_POSTS_SERVER);
+        Query query = makeAPIQuery(LOAD_POSTS_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         query.addParameter("owner_id", keys.getUserId());
         query.addParameter("filter", "owner");
@@ -212,5 +214,46 @@ public class VKWrap extends Wrap {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Query makeUploadImageQuery() {
+        Query getAddress = makeSignedQuery(PHOTO_UPLOAD_METHOD);
+        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
+        getAddress.addParameter("user_id", keys.getUserId());
+        try {
+            String response = Network.makeGetRequest(getAddress);
+
+            JSONObject parser = new JSONObject(response).getJSONObject("response");
+
+            Query query = new Query(parser.getString("upload_url"));
+            return query;
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public String uploadImageTag() {
+        return "photo";
+    }
+
+    @Override
+    public void parseUploadImageResponse(Image image, String response) {
+        Query getPhotoId = makeSignedQuery(SAVE_PHOTO_METHOD);
+        try {
+            JSONObject parser = new JSONObject(response);
+            getPhotoId.addParameter("photo", parser.getString("photo"));
+            getPhotoId.addParameter("server", parser.getString("server"));
+            getPhotoId.addParameter("hash", parser.getString("hash"));
+            getPhotoId.addParameter("user_id", ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID())).getUserId());
+            response = Network.makeGetRequest(getPhotoId);
+            parser = new JSONObject(response).getJSONArray("response").getJSONObject(0);
+            String id = parser.getString("id");
+            image.setLink(networkID(), id);
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+        }
     }
 }

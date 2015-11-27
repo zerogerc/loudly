@@ -4,8 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.LinkedList;
-
 import base.Networks;
 import base.Post;
 import base.Tasks;
@@ -14,7 +12,6 @@ import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.IDInterval;
-import util.Interval;
 import util.Parameter;
 import util.Query;
 import util.TimeInterval;
@@ -23,7 +20,15 @@ public class FacebookWrap extends Wrap {
     private static final int NETWORK = Networks.FB;
     private static final String MAIN_SERVER = "https://graph.facebook.com/v2.5/";
     private static final String POST_SERVER = "https://graph.facebook.com/me/feed";
+    private static final String IMAGE_SERVER = "https://graph.facebook.com/me/photos";
     private static final String ACCESS_TOKEN = "access_token";
+
+    protected Query makeSignedRequest(String server) {
+        Query query = new Query(server);
+        FacebookKeyKeeper keys = (FacebookKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
+        query.addParameter("access_token", keys.getAccessToken());
+        return query;
+    }
 
     @Override
     public int networkID() {
@@ -32,16 +37,12 @@ public class FacebookWrap extends Wrap {
 
     @Override
     public Query makePostQuery(Post post) {
-        Query query = new Query(POST_SERVER);
+        Query query = makeSignedRequest(POST_SERVER);
         query.addParameter("message", post.getText());
-        FacebookKeyKeeper keys = (FacebookKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
-        query.addParameter("access_token", keys.getAccessToken());
+        if (post.getAttachments().size() > 0) {
+            query.addParameter("object_attachment", post.getAttachments().get(0).getLink(networkID()));
+        }
         return query;
-    }
-
-    @Override
-    public Parameter uploadImage(Image image, BackgroundAction publish) {
-        return null;
     }
 
     @Override
@@ -120,7 +121,7 @@ public class FacebookWrap extends Wrap {
         query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
         query.addParameter("date_format", "U");
         query.addParameter("fields",
-                "message,created_time,id,likes.limit(0).summary(true),shares,comments.limit(0).summary(true)");
+                "message,created_time,id,likes.limit(0).summary(true),shares,comments.limit(0).summary(true),attachments");
         return query;
     }
 
@@ -158,7 +159,6 @@ public class FacebookWrap extends Wrap {
                     continue;
                 }
 
-                String text = obj.getString("message");
                 long postTime = obj.getLong("created_time");
 
                 if (Loudly.getContext().getPostInterval(networkID()) == null) {
@@ -173,10 +173,20 @@ public class FacebookWrap extends Wrap {
                 Loudly.getContext().getPostInterval(networkID()).from = id;
 
                 if (oldTime.contains(postTime)) {
+                    String text = obj.getString("message");
                     Post post = new Post(text);
                     post.setLink(NETWORK, id);
                     post.setDate(postTime);
 
+                    if (obj.has("attachments")) {
+                        JSONObject attachment = obj.getJSONObject("attachments").
+                                getJSONArray("data").
+                                getJSONObject(0).getJSONObject("media").getJSONObject("image");
+                        String link = attachment.getString("src");
+                        Image image = new Image(link, false);
+                        post.addAttachment(image);
+
+                    }
                     int likes = 0;
                     if (obj.has("likes")) {
                         likes = obj.getJSONObject("likes").getJSONObject("summary").getInt("total_count");
@@ -200,6 +210,30 @@ public class FacebookWrap extends Wrap {
         } catch (JSONException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    @Override
+    public Query makeUploadImageQuery() {
+        Query query = makeSignedRequest(IMAGE_SERVER);
+        query.addParameter("published", "true");
+        query.addParameter("no_story", "true");
+        return query;
+    }
+
+    @Override
+    public String uploadImageTag() {
+        return "source";
+    }
+
+    @Override
+    public void parseUploadImageResponse(Image image, String response) {
+        JSONObject parser;
+        try {
+            parser = new JSONObject(response);
+            image.setLink(networkID(), parser.getString("id"));
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 }

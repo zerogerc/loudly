@@ -11,6 +11,7 @@ public class Image extends Attachment {
     protected boolean local;
     protected Bitmap bitmap;
 
+
     public Image(String initialLink, String[] links) {
         this.initialLink = initialLink;
         this.links = links;

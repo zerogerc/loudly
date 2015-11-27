@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -53,22 +54,23 @@ public class Network {
      */
     public static String makePostRequest(Query query,
                                          BackgroundAction onProgressUpdate) throws IOException {
-        return makePostRequest(query, onProgressUpdate, null, null);
+        return makePostRequest(query, onProgressUpdate, null, null, null);
     }
 
     /**
      * Performs POST-request
      * @param query request to server
      * @param onProgressUpdate is called during making request
-     * @param fileParamName name, representing uploaded file in POST-request
-     * @param file file, that must be uploaded
+     * @param tag - name of the photo field
+     * @param type - MIME-type of the file
+     * @param stream - InputStream with content of the file
      * @return response from server
      * @throws IOException if any IO-error occurs
      */
 
     public static String makePostRequest(Query query,
                                          BackgroundAction onProgressUpdate,
-                                         String fileParamName, File file) throws IOException {
+                                         String tag, String type, InputStream stream) throws IOException {
 
         String boundary = "===" + System.currentTimeMillis() + "===";
 
@@ -86,13 +88,13 @@ public class Network {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setDoInput(true);
-            String requestFormat = (file == null) ? "application/x-www-form-urlencoded" : "multipart/form-data";
+            String requestFormat = (stream == null) ? "application/x-www-form-urlencoded" : "multipart/form-data";
             conn.setRequestProperty("Content-type", requestFormat + "; boundary=" + boundary);
 
             outputStream = conn.getOutputStream();
             pw = new PrintWriter(outputStream);
 
-            if (file == null) {
+            if (stream == null) {
                 // If we should send only text
                 String request = query.getParameters().toString(); // Get parameters in proper format
                 pw.append(request);
@@ -106,31 +108,28 @@ public class Network {
 
                 // Append file as sequence of bytes
                 // Appending file's info:
-                String filename = file.getName();
                 pw.append("--").append(boundary).append(CRLF);
                 pw.append("Content-Disposition: file; name=\"")
-                        .append(fileParamName)
+                        .append(tag)
                         .append("\"; filename=\"")
-                        .append(filename)
+                        .append("source." + type.substring(type.indexOf('/') + 1))
                         .append("\"")
                         .append(CRLF);
                 pw.append("Content-type: ")
-                        .append(URLConnection.guessContentTypeFromName(filename))
+                        .append(type)
                         .append(CRLF);
                 pw.append("Content-Transfer-Encoding: binary").append(CRLF);
                 pw.append(CRLF);
                 pw.flush();
 
                 // Appending file's data
-                FileInputStream inputStream = new FileInputStream(file);
                 byte[] buffer = new byte[4096];
                 int bytesRead = -1;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                while ((bytesRead = stream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, bytesRead);
                     // ToDo: And here publish
                 }
                 outputStream.flush();
-                inputStream.close();
                 pw.append(CRLF);
                 pw.flush();
 

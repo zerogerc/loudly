@@ -1,6 +1,10 @@
 package base;
 
+import android.net.Uri;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.util.LinkedList;
 
 import Facebook.FacebookWrap;
@@ -13,6 +17,7 @@ import util.Interval;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
+import util.Utils;
 
 /**
  * Class that contains simple actions that can be done with social network, such as
@@ -33,7 +38,7 @@ public class Interactions {
             if (attachment instanceof Image) {
                 k++;
                 final double multiplier = k / (counter.imageCount + 1);
-                wrap.uploadImage((Image) attachment, new BackgroundAction() {
+                uploadImage(wrap, (Image) attachment, new BackgroundAction() {
                     @Override
                     public void execute(Object... params) {
                         // ToDo: do it later
@@ -77,5 +82,20 @@ public class Interactions {
             String response = Network.makeGetRequest(query);
             hasMore = wrap.parsePostsLoadedResponse(loadedTimeInterval, response, callback);
         } while (hasMore);
+    }
+
+    public static void uploadImage(Wrap wrap, Image image, BackgroundAction publish) throws IOException {
+        Query query = wrap.makeUploadImageQuery();
+        String tag = wrap.uploadImageTag();
+        InputStream stream = null;
+        try {
+            Uri uri = Uri.parse(image.getExtra());
+            stream = Loudly.getContext().getContentResolver().openInputStream(uri);
+            String type = Loudly.getContext().getContentResolver().getType(uri);
+            String response = Network.makePostRequest(query, publish, tag, type,stream);
+            wrap.parseUploadImageResponse(image, response);
+        } finally {
+            Utils.closeQuietly(stream);
+        }
     }
 }

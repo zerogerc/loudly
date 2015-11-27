@@ -25,13 +25,11 @@ public abstract class Wrap {
 
     public abstract Query makePostQuery(Post post);
 
-    /**
-     * Make BackgroundAction, that can publish it's progress
-     *
-     * @param image Image that shoud be published
-     * @param publish action, that can publish current progress to UI
-     */
-    public abstract Parameter uploadImage(Image image, BackgroundAction publish);
+    public abstract Query makeUploadImageQuery();
+
+    public abstract String uploadImageTag();
+
+    public abstract void parseUploadImageResponse(Image image, String response);
 
     /**
      * Parse response to post request from server and save PostID to Post object
