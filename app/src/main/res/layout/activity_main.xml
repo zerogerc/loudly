@@ -27,6 +27,12 @@
 
     </RelativeLayout>
 
+    <fragment android:name="ly.loud.loudly.PostCreateFragment"
+        android:id="@+id/new_post_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp" />
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="56dp"

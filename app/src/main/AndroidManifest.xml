@@ -25,7 +25,7 @@
 
         <activity android:name=".InitialSettingsActivity" />
 
-        <activity android:name=".PostCreateActivity"
+        <activity android:name=".PostCreateFragment"
             android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="stateVisible|adjustResize">
             <meta-data

@@ -3,9 +3,11 @@ package ly.loud.loudly;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -13,18 +15,21 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.Display;
 import android.view.View;
 import android.widget.Toast;
 
 import base.Tasks;
 import util.AttachableReceiver;
 import util.BroadcastSendingTask;
+import util.UtilsBundle;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
     RecyclerView recyclerView;
     RecyclerViewAdapter recyclerViewAdapter;
+    FloatingActionButton floatingActionButton;
+    View newPostFragmentView;
+    Fragment newPostFragment;
 
     private static final int LOAD_POSTS_RECEIVER = 0;
     private static final int LOAD_PROGRESS_RECEIVER = 1;
@@ -55,6 +60,17 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
         setSupportActionBar(toolbar);
+
+        FragmentManager manager = getFragmentManager();
+        newPostFragment = manager.findFragmentById(R.id.new_post_fragment);
+        ((PostCreateFragment)newPostFragment).setListeners();
+
+        newPostFragmentView = findViewById(R.id.new_post_fragment);
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.hide(newPostFragment);
+        ft.commit();
+
+        floatingActionButton = (FloatingActionButton)findViewById(R.id.fab);
 
         if (Loudly.getContext().getPosts().isEmpty() && loadPosts == null) {
             // Loading posts
@@ -115,14 +131,6 @@ public class MainActivity extends AppCompatActivity {
             setRecyclerView();
         }
     }
-
-    public int getScreenHeight() {
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        return size.y;
-    }
-
 
     static class CustomRecyclerViewListener extends RecyclerView.OnScrollListener {
         private FloatingActionButton fab;
@@ -187,11 +195,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void setRecyclerView() {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts(), this);
+        recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), getScreenHeight()) {
-        });
+        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton)findViewById(R.id.fab), UtilsBundle.getDefaultScreenHeight()){});
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
@@ -203,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void callPostCreate(View v) {
-
         // Start receivers with a little crutch
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
 
@@ -253,8 +259,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
         }
-        Intent intent = new Intent(this, PostCreateActivity.class);
-        startActivity(intent);
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.show(newPostFragment);
+        ft.commit();
+        floatingActionButton.setVisibility(View.GONE);
     }
 
     @Override
@@ -268,4 +276,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onPostCreated() {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.hide(newPostFragment);
+        ft.commit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (newPostFragmentView.isShown()) {
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.hide(newPostFragment);
+            ft.commit();
+            floatingActionButton.show();
+        } else {
+            super.onBackPressed();
+        }
+    }
 }

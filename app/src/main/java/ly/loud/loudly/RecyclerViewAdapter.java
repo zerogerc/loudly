@@ -1,6 +1,5 @@
 package ly.loud.loudly;
 
-import android.app.Activity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -18,11 +17,9 @@ import base.Post;
 import base.attachments.Image;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
-    private Activity activity;
     private List<Post> posts;
 
-    RecyclerViewAdapter(List<Post> posts, Activity activity) {
-        this.activity = activity;
+    RecyclerViewAdapter(List<Post> posts) {
         this.posts = posts;
     }
 
