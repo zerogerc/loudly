@@ -38,10 +38,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int POST_UPLOAD_RECEIVER = 3;
     private static final int POST_PROGRESS_RECEIVER = 4;
     private static final int POST_FINISHED_RECEIVER = 5;
-    private static final int RECEIVER_COUNT = 6;
+    private static final int INFO_GOT_RECEIVER = 6;
+    private static final int RECEIVER_COUNT = 7;
 
     private static AttachableReceiver[] receivers = null;
     private static Tasks.LoadPostsTask loadPosts = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,14 +66,14 @@ public class MainActivity extends AppCompatActivity {
 
         FragmentManager manager = getFragmentManager();
         newPostFragment = manager.findFragmentById(R.id.new_post_fragment);
-        ((PostCreateFragment)newPostFragment).setListeners();
+        ((PostCreateFragment) newPostFragment).setListeners();
 
         newPostFragmentView = findViewById(R.id.new_post_fragment);
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
 
-        floatingActionButton = (FloatingActionButton)findViewById(R.id.fab);
+        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
         if (Loudly.getContext().getPosts().isEmpty() && loadPosts == null) {
             // Loading posts
@@ -82,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.POST_LOAD_STARTED) {
                 @Override
                 public void onMessageReceive(Context context, Intent message) {
-                    Toast toast = Toast.makeText(context, "DB loaded", Toast.LENGTH_SHORT);
+                    final Toast toast = Toast.makeText(context, "DB loaded", Toast.LENGTH_SHORT);
                     toast.show();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
@@ -94,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
                             Toast toast = Toast.makeText(context,
                                     "" + message.getIntExtra(BroadcastSendingTask.NETWORK_FIELD, -1), Toast.LENGTH_SHORT);
                             toast.show();
+                            Loudly.getContext().startGetInfoService();
                         }
                     };
 
@@ -121,6 +124,17 @@ public class MainActivity extends AppCompatActivity {
                             stop();
                             receivers[LOAD_FINISHED_RECEIVER] = null;
                             loadPosts = null;
+                            Loudly.getContext().startGetInfoService();
+                            receivers[INFO_GOT_RECEIVER] = new AttachableReceiver(context, Loudly.POST_GET_INFO_PROGRESS) {
+                                @Override
+                                public void onMessageReceive(Context context, Intent message) {
+                                    MainActivity mainActivity = (MainActivity) context;
+                                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+
+                                    Toast t = Toast.makeText(context, "Info got", Toast.LENGTH_SHORT);
+                                    t.show();
+                                }
+                            };
                         }
                     };
                 }
@@ -202,7 +216,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton)findViewById(R.id.fab), UtilsBundle.getDefaultScreenHeight()){});
+        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), UtilsBundle.getDefaultScreenHeight()) {
+        });
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
@@ -276,6 +291,13 @@ public class MainActivity extends AppCompatActivity {
         for (AttachableReceiver receiver : receivers) {
             if (receiver != null) {
                 receiver.detach();
+            }
+        }
+
+        if (isFinishing()) {
+            Loudly.getContext().stopGetInfoService();
+            if (receivers[INFO_GOT_RECEIVER] != null) {
+                receivers[INFO_GOT_RECEIVER].stop();
             }
         }
     }

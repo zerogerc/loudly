@@ -8,6 +8,7 @@ import android.net.Uri;
 import java.io.IOException;
 import java.util.LinkedList;
 
+import base.attachments.Attachment;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
@@ -34,17 +35,17 @@ public class Tasks {
 
     /**
      * BroadcastReceivingTask for uploading post to network
-     * <p>
+     * <p/>
      * When post is added to DB, it sends Loudly.POST_UPLOAD_STARTED broadcast with
      * localId stored in field BroadcastSendingTask.ID_FIELD
-     * <p>
+     * <p/>
      * Then during upload it sends Loudly.POST_UPLOAD_PROGRESS broadcast
      * with localId of post in BroadcastSendingTask.ID_FIELD and progress stored in
      * BroadcastSendingTask.PROGRESS_FIELD
-     * <p>
+     * <p/>
      * When upload is successfully finished, it sends
      * Loudly.POST_UPLOAD_FINISHED with BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.POST_UPLOAD_FINISHED with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -57,7 +58,6 @@ public class Tasks {
         @Override
         protected Intent doInBackground(Post... params) {
             final Post post = params[0];
-            int k = 0;
             try {
                 DatabaseActions.savePost(post);
             } catch (DatabaseException e) {
@@ -70,16 +70,21 @@ public class Tasks {
 
             try {
                 for (Wrap w : wraps) {
-                    k++;
-                    Interactions.post(w, post, new BackgroundAction() {
-                        @Override
-                        public void execute(Object... params) {
-                            // Do sth here, plz
-                        }
-                    });
+                    for (final Attachment attachment : post.getAttachments()) {
+                        w.uploadImage((Image) attachment, new BackgroundAction() {
+                            @Override
+                            public void execute(Object... params) {
+                                Intent message = makeMessage(Loudly.POST_UPLOAD_PROGRESS, post.getLocalId());
+                                message.putExtra(BroadcastSendingTask.IMAGE_FIELD, attachment.getLocalID());
+                                message.putExtra(BroadcastSendingTask.PROGRESS_FIELD, (int) params[0]);
+                                publishProgress(message);
+                            }
+                        });
+                    }
+                    w.uploadPost(post);
 
                     Intent message = makeMessage(Loudly.POST_UPLOAD_PROGRESS, post.getLocalId());
-                    message.putExtra(BroadcastSendingTask.PROGRESS_FIELD, k);
+                    message.putExtra(BroadcastSendingTask.PROGRESS_FIELD, w.networkID());
 
                     DatabaseActions.updatePostLinks(w.networkID(), post);
                     publishProgress(message);
@@ -96,15 +101,15 @@ public class Tasks {
 
     /**
      * BroadcastReceivingTask for getting post's likes, shares and comments number
-     * <p>
+     * <p/>
      * During getting info for every network, passed in constructor, it sends
      * Loudly.POST_GET_INFO_PROGRESS broadcast
      * with localId of post in BroadcastSendingTask.ID_FIELD and ID of network stored in
      * BroadcastSendingTask.NETWORK_FIELD
-     * <p>
+     * <p/>
      * When getting info is successfully finished, it sends
      * Loudly.POST_GET_INFO_FINISHED with BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.POST_GET_INFO_FINISHED with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -116,17 +121,15 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Post... posts) {
-            for (Post post : posts) {
-                try {
-                    for (Wrap w : wraps) {
-                        Interactions.getInfo(w, post);
-                        Intent message = makeMessage(Loudly.POST_GET_INFO_PROGRESS, post.getLocalId());
-                        message.putExtra(BroadcastSendingTask.NETWORK_FIELD, w.networkID());
-                        publishProgress(message);
-                    }
-                } catch (IOException e) {
-                    publishProgress(makeError(Loudly.POST_GET_INFO_FINISHED, post.getLocalId(), e.getMessage()));
+            try {
+                for (Wrap w : wraps) {
+                    w.getPostsInfo(posts);
+                    Intent message = makeMessage(Loudly.POST_GET_INFO_PROGRESS, -1);
+                    message.putExtra(BroadcastSendingTask.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                 }
+            } catch (IOException e) {
+                publishProgress(makeError(Loudly.POST_GET_INFO_FINISHED, -1, e.getMessage()));
             }
 
             return makeSuccess(Loudly.POST_UPLOAD_FINISHED, -1);
@@ -135,10 +138,10 @@ public class Tasks {
 
     /**
      * BroadcastSendingTask for saving KeyKeepers to DB.
-     * <p>
+     * <p/>
      * After successful saving it sends Loudly.SAVED_KEYS broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.SAVED_KEYS broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -158,10 +161,10 @@ public class Tasks {
 
     /**
      * BroadcastSendingTask for loading KeyKeepers from DB.
-     * <p>
+     * <p/>
      * After successful loading it sends Loudly.LOADED_KEYS broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.LOADED_KEYS broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -194,15 +197,15 @@ public class Tasks {
 
     /**
      * BroadcastSendingTask for loading Posts from DB
-     * <p>
+     * <p/>
      * After loading from DB it sends Loudly.POST_LOAD_STARTED broadcast
-     * <p>
+     * <p/>
      * After loading of every network it sends Loudly.POST_LOAD_PROGRESS broadcast with
      * ID of the network in BroadcastSendingTask.NETWORK_FIELD.
-     * <p>
+     * <p/>
      * After successful loading it sends Loudly.POST_LOAD_FINISHED broadcast with
      * BroadcastSendingTask.ID_FIELD = -1 and BroadcastSendingTask.SUCCESS_FIELD = true
-     * <p>
+     * <p/>
      * If an error occurred, it sends Loudly.POST_LOAD_FINISHED broadcast with
      * BroadcastSendingTask.SUCCESS_FIELD = false and BroadcastSendingTask.ERROR_FIELD = error
      * description
@@ -280,7 +283,8 @@ public class Tasks {
             for (Wrap w : wraps) {
                 try {
                     currentPosts = new LinkedList<>();
-                    Interactions.loadPosts(w, time, this);
+                    w.loadPosts(time, this);
+
                     resultList = merge(resultList, currentPosts);
 
                     Intent message = makeSuccess(Loudly.POST_LOAD_PROGRESS, -1);

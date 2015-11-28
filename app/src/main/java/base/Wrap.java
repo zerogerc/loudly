@@ -1,14 +1,13 @@
 package base;
 
+import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 
 import Facebook.FacebookWrap;
 import VK.VKWrap;
 import base.attachments.Image;
 import util.BackgroundAction;
-import util.IDInterval;
-import util.Interval;
-import util.Parameter;
 import util.Query;
 import util.TimeInterval;
 
@@ -23,52 +22,26 @@ public abstract class Wrap {
      */
     public abstract int networkID();
 
-    public abstract Query makePostQuery(Post post);
+    protected abstract Query makeAPICall(String url);
+    protected abstract Query makeSignedAPICall(String url);
 
-    public abstract Query makeUploadImageQuery();
+    public abstract void uploadPost(Post post) throws IOException;
 
-    public abstract String uploadImageTag();
+    public abstract void uploadImage(Image image, BackgroundAction progress) throws IOException;
 
-    public abstract void parseUploadImageResponse(Image image, String response);
+    public abstract void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException;
 
-    /**
-     * Parse response to post request from server and save PostID to Post object
-     * post post post post
-     * @param post Post for posting
-     * @param response URL-response from server
-     */
-    public abstract void parsePostResponse(Post post, String response);
+    public abstract void getPostsInfo(Post... posts) throws IOException;
 
-    /**
-     * Make query for getting likes, shares and reposts
-     * @param post Post for getting info
-     * @return array of queries
-     */
-    public abstract Query makeGetQueries(Post post);
-
-    /**
-     * Parse JSON-response from server (// TODO: 11/19/2015 should be remade)
-     * @param post Post that should contain info
-     * @param response responses from server
-     */
-    public abstract void parseGetResponse(Post post, String response);
 
     public static Wrap makeWrap(int network) {
         switch (network) {
             case Networks.FB:
                 return new FacebookWrap();
             case Networks.VK:
-                return  new VKWrap();
+                return new VKWrap();
             default:
                 return null;
         }
     }
-
-    public abstract Query makeDeleteQuery(Post post);
-
-    public abstract void parseDeleteResponse(Post post, String response);
-
-    public abstract Query makeLoadPostsQuery(TimeInterval time);
-    public abstract boolean parsePostsLoadedResponse(TimeInterval loadedTime, String response,
-                                                     Tasks.LoadCallback callback);
 }

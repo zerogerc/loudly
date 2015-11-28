@@ -12,6 +12,7 @@ public abstract class BroadcastSendingTask<Param> extends AsyncTask<Param, Inten
     public static final String PROGRESS_FIELD = "progress";
     public static final String ERROR_FIELD = "error";
     public static final String NETWORK_FIELD = "network";
+    public static final String IMAGE_FIELD = "image";
 
     public static Intent makeMessage(String action, long id) {
         Intent message = new Intent(action);

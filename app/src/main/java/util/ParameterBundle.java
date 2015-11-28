@@ -26,8 +26,8 @@ public class ParameterBundle {
         parameters.add(parameter);
     }
 
-    public void addParameter(String parameter, String value) {
-        parameters.add(new Parameter(parameter, value));
+    public void addParameter(String parameter, Object value) {
+        parameters.add(new Parameter(parameter, value.toString()));
     }
 
     public String getParameter(String name) {

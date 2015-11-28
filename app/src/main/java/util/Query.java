@@ -17,8 +17,8 @@ public class Query {
         params.addParameter(parameter);
     }
 
-    public void addParameter(String parameter, String value) {
-        params.addParameter(new Parameter(parameter, value));
+    public void addParameter(String parameter, Object value) {
+        params.addParameter(parameter, value);
     }
 
     public String getParameter(String name) {

@@ -48,13 +48,11 @@ public class Network {
     /**
      * Performs POST-request
      * @param query request to server
-     * @param onProgressUpdate is called during making request
      * @return response from server
      * @throws IOException if any IO-error occurs
      */
-    public static String makePostRequest(Query query,
-                                         BackgroundAction onProgressUpdate) throws IOException {
-        return makePostRequest(query, onProgressUpdate, null, null, null);
+    public static String makePostRequest(Query query) throws IOException {
+        return makePostRequest(query, null, null, null, null);
     }
 
     /**

@@ -1,6 +1,9 @@
 package ly.loud.loudly;
 
+import android.app.AlarmManager;
 import android.app.Application;
+import android.app.PendingIntent;
+import android.content.Intent;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,6 +37,10 @@ public class Loudly extends Application {
     public static final String POST_GET_INFO_PROGRESS = "ly.loud.loudly.post.info.progress";
     public static final String POST_GET_INFO_FINISHED = "ly.loud.loudly.post.info.finished";
 
+    public static final String GET_INFO_ALARM = "ly.loud.loudly.get.info.alarm";
+
+    public static final int GET_INFO_INTERVAL = 30 * 1000;
+
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
     private LinkedList<Post> posts;
@@ -41,6 +48,9 @@ public class Loudly extends Application {
     private IDInterval[] loadedPosts;
     private int[] offsets;
     private TimeInterval timeInterval;
+
+    private AlarmManager alarmManager;
+    private PendingIntent getInfoService;
 
     /**
      * @param network ID of the network
@@ -110,6 +120,17 @@ public class Loudly extends Application {
         offsets[network] = offset;
     }
 
+    public void startGetInfoService() {
+        Intent runService = new Intent(context, GetInfoService.class);
+        getInfoService = PendingIntent.getService(context, 0, runService, PendingIntent.FLAG_CANCEL_CURRENT);
+        alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(),
+                GET_INFO_INTERVAL, getInfoService);
+    }
+
+    public void stopGetInfoService() {
+        alarmManager.cancel(getInfoService);
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -124,6 +145,7 @@ public class Loudly extends Application {
         cal.add(Calendar.WEEK_OF_MONTH, -1);
         timeInterval = new TimeInterval(cal.getTimeInMillis() / 1000, -1l);
 
+        alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
         Tasks.LoadKeysTask loadKeys = new Tasks.LoadKeysTask();
         loadKeys.execute();
     }

@@ -69,6 +69,7 @@ public class Post implements Comparable<Post> {
         this.date = date;
         this.location = location;
         this.localId = localId;
+        this.mainNetwork = -1;
     }
 
     public Post() {
@@ -120,10 +121,16 @@ public class Post implements Comparable<Post> {
     public void setLink(int network, String link) {
         links[network] = link;
         exists[network] = true;
+        chooseMainNetwork();
+    }
+
+    private void chooseMainNetwork() {
         int connectedNetworks = 0;
+        int network = -1;
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (getLink(i) != null) {
                 connectedNetworks++;
+                network = i;
             }
         }
         if (connectedNetworks == 1) {
