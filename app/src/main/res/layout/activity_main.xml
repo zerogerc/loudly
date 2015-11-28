@@ -31,7 +31,7 @@
         android:id="@+id/new_post_fragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="8dp" />
+        tools:layout="@layout/activity_new_post" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -45,5 +45,14 @@
         app:layout_anchor="@id/main_content"
         app:layout_anchorGravity="bottom|right|end"
         android:onClick="callPostCreate" />
+
+
+    <ProgressBar
+        android:id="@+id/main_activity_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        style="@android:style/Widget.Holo.Light.ProgressBar.Large.Inverse"
+        android:indeterminate="false" />
 
 </android.support.design.widget.CoordinatorLayout>

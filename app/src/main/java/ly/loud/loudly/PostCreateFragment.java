@@ -46,7 +46,6 @@ public class PostCreateFragment extends Fragment {
                 postImageView.setImageBitmap(null);
                 editText.setText(null);
                 MainActivity activity = (MainActivity)getActivity();
-                UtilsBundle.hidePhoneKeypad(rootView);
                 activity.onPostCreated();
             }
         });
@@ -86,7 +85,7 @@ public class PostCreateFragment extends Fragment {
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (hidden) {
-            UtilsBundle.hidePhoneKeypad(this.rootView);
+            UtilsBundle.hidePhoneKeyboard(getActivity());
         } else {
             InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);

@@ -1,6 +1,5 @@
 package ly.loud.loudly;
 
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,9 +11,9 @@ import android.widget.TextView;
 import java.util.Calendar;
 import java.util.List;
 
-import base.Networks;
 import base.Post;
 import base.attachments.Image;
+import util.UtilsBundle;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private List<Post> posts;
@@ -28,11 +27,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.data.setText(getDateFormatted(post.getDate()));
 
-        if (post.getMainNetwork() == Networks.FB) {
-            holder.socialIcon.setImageDrawable(ContextCompat.getDrawable(holder.itemView.getContext(), R.mipmap.ic_instagram_round));
-        } else {
-            holder.socialIcon.setImageDrawable(ContextCompat.getDrawable(holder.itemView.getContext(), R.mipmap.ic_mail_ru_round));
-        }
+        holder.socialIcon.setImageBitmap(UtilsBundle.getIconByNetwork(post.getMainNetwork()));
 
         if (post.getTotalInfo() != null) {
             holder.likesAmount.setText(Integer.toString(post.getTotalInfo().like));
@@ -98,12 +93,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             repostsAmount = (TextView)itemView.findViewById(R.id.post_view_reposts_amount);
             repostsButton = (ImageView)itemView.findViewById(R.id.post_view_reposts_button);
             postImageView = (ImageView)itemView.findViewById(R.id.post_view_post_image);
-
-            if (Math.random() > 0.5) {
-                socialIcon.setImageDrawable(ContextCompat.getDrawable(itemView.getContext(), R.mipmap.ic_instagram_round));
-            } else {
-                socialIcon.setImageDrawable(ContextCompat.getDrawable(itemView.getContext(), R.mipmap.ic_mail_ru_round));
-            }
 
             geoData.setHeight(0);
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)geoData.getLayoutParams();

@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
-import android.os.IBinder;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -18,19 +21,22 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import base.Networks;
 import ly.loud.loudly.Loudly;
+import ly.loud.loudly.R;
 
 public class UtilsBundle {
     private static final String TAG = "UTIL_TAG";
 
-    public static void hidePhoneKeypad(View view) {
-        InputMethodManager inputManager = (InputMethodManager) view
-                .getContext()
-                .getSystemService(Context.INPUT_METHOD_SERVICE);
-
-        IBinder binder = view.getWindowToken();
-        inputManager.hideSoftInputFromWindow(binder,
-                InputMethodManager.HIDE_NOT_ALWAYS);
+    public static void hidePhoneKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = activity.getCurrentFocus();
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if(view == null) {
+            view = new View(activity);
+        }
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     public static int getDefaultScreenHeight() {
@@ -120,5 +126,46 @@ public class UtilsBundle {
             Log.e(TAG, npe.getMessage());
         }
         return result;
+    }
+
+    public static Bitmap getIconByNetwork(int network) {
+        int resource;
+        switch(network) {
+            case Networks.FB:
+                resource = R.mipmap.ic_facebook_round;
+                break;
+            case Networks.INSTAGRAM:
+                resource = R.mipmap.ic_instagram_round;
+                break;
+            case Networks.MAILRU:
+                resource = R.mipmap.ic_mail_ru_round;
+                break;
+            case Networks.TWITTER:
+                resource = R.mipmap.ic_twitter_round;
+                break;
+            case Networks.VK:
+                resource = R.mipmap.ic_vk_round;
+                break;
+            default:
+                resource = R.mipmap.ic_ok_round;
+        }
+        return BitmapFactory.decodeResource(Loudly.getContext().getResources(), resource);
+    }
+
+    public static Bitmap toGrayscale(Bitmap bmpOriginal)
+    {
+        int width, height;
+        height = bmpOriginal.getHeight();
+        width = bmpOriginal.getWidth();
+
+        Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bmpGrayscale);
+        Paint paint = new Paint();
+        ColorMatrix cm = new ColorMatrix();
+        cm.setSaturation(0);
+        ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+        paint.setColorFilter(f);
+        c.drawBitmap(bmpOriginal, 0, 0, paint);
+        return bmpGrayscale;
     }
 }

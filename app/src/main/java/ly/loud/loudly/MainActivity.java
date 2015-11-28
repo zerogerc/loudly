@@ -16,6 +16,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import base.Tasks;
@@ -76,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
             // Loading posts
 
             // ToDo: show here rolling circle
+            final ProgressBar progressBar = (ProgressBar)findViewById(R.id.main_activity_progress);
+            progressBar.setVisibility(View.VISIBLE);
             receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.POST_LOAD_STARTED) {
                 @Override
                 public void onMessageReceive(Context context, Intent message) {
@@ -111,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
                                 toast.show();
                             }
 
+                            progressBar.setVisibility(View.GONE);
                             // Turn off receivers
                             receivers[LOAD_PROGRESS_RECEIVER].stop();
                             receivers[LOAD_PROGRESS_RECEIVER] = null;
@@ -205,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void callInitialAuth(View v) {
-        Intent intent = new Intent(this, InitialSettingsActivity.class);
+        Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
     }
 
@@ -280,6 +284,7 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
+        floatingActionButton.show();
     }
 
     @Override
