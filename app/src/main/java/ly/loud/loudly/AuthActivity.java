@@ -23,6 +23,7 @@ public class AuthActivity extends Fragment {
     private SettingsActivity activity;
     ProgressBar circle;
     boolean gotResponse;
+    WebView webView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -34,40 +35,9 @@ public class AuthActivity extends Fragment {
         rootView = inflater.inflate(R.layout.activity_auth, container, false);
         activity = (SettingsActivity)getActivity();
 
-        final WebView webView = (WebView) rootView.findViewById(R.id.webView);
+        webView = (WebView) rootView.findViewById(R.id.webView);
         circle = (ProgressBar) rootView.findViewById(R.id.progressBar);
 
-        String url = activity.webViewURL;
-        final Authorizer authorizer = activity.webViewAuthorizer;
-        final KeyKeeper keys = activity.webViewKeyKeeper;
-//        webView.setVisibility(View.INVISIBLE);
-        circle.setVisibility(View.VISIBLE);
-
-        final Fragment fragment = this;
-        webView.loadUrl(url);
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                if (authorizer.isResponse(url)) {
-                    view.setVisibility(View.VISIBLE);
-
-                    FinishAuthorization continueAuth = new FinishAuthorization();
-                    continueAuth.execute(authorizer, url, keys);
-                    gotResponse = true;
-
-                    //TODO strange
-
-                    FragmentTransaction ft = getFragmentManager().beginTransaction();
-                    ft.hide(fragment);
-                    ft.commit();
-
-                } else {
-                    circle.setVisibility(View.INVISIBLE);
-                    webView.setVisibility(View.VISIBLE);
-                }
-            }
-        });
 
         return rootView;
     }
@@ -85,7 +55,38 @@ public class AuthActivity extends Fragment {
                 );
             }
         } else {
-            //TODO maybe show???
+            String url = SettingsActivity.webViewURL;
+            final Authorizer authorizer = SettingsActivity.webViewAuthorizer;
+            final KeyKeeper keys = SettingsActivity.webViewKeyKeeper;
+//        webView.setVisibility(View.INVISIBLE);
+            circle.setVisibility(View.VISIBLE);
+
+            final Fragment fragment = this;
+            webView.loadUrl(url);
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
+                    if (authorizer.isResponse(url)) {
+                        view.setVisibility(View.VISIBLE);
+
+                        FinishAuthorization continueAuth = new FinishAuthorization();
+                        continueAuth.execute(authorizer, url, keys);
+                        gotResponse = true;
+
+                        //TODO strange
+
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        ft.hide(fragment);
+                        ft.commit();
+
+                    } else {
+                        circle.setVisibility(View.INVISIBLE);
+                        webView.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+
         }
 
     }

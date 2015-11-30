@@ -313,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
 
                     toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
                     toast.show();
-                    receivers[LOAD_POSTS_RECEIVER].stop();
+                    stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
                     loadPosts = null; // Posts loaded
 
@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
                     String error = message.getStringExtra(Broadcasts.ERROR);
                     toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
                     toast.show();
-                    receivers[LOAD_POSTS_RECEIVER].stop();
+                    stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
                     break;
             }
@@ -351,14 +351,14 @@ public class MainActivity extends AppCompatActivity {
                     mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     t = Toast.makeText(context, "Info got", Toast.LENGTH_SHORT);
                     t.show();
-                    receivers[GET_INFO_RECEIVER].stop();
+                    stop();
                     receivers[GET_INFO_RECEIVER] = null;
                     break;
                 case Broadcasts.ERROR:
                     String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
                     t = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
                     t.show();
-                    receivers[GET_INFO_RECEIVER].stop();
+                    stop();
                     receivers[GET_INFO_RECEIVER] = null;
                     break;
             }
