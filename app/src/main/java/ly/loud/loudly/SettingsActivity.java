@@ -161,7 +161,9 @@ public class SettingsActivity extends AppCompatActivity {
             authReceiver.detach();
         }
         if (isFinishing()) {
-            authReceiver.stop();
+            if (authReceiver != null) {
+                authReceiver.stop();
+            }
             authReceiver = null;
             Tasks.SaveKeysTask task = new Tasks.SaveKeysTask();
             task.execute();
