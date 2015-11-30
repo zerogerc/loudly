@@ -16,6 +16,7 @@ import base.Authorizer;
 import base.KeyKeeper;
 import util.BroadcastSendingTask;
 import util.UtilsBundle;
+import util.Broadcasts;
 
 public class AuthActivity extends Fragment {
     private View rootView;
@@ -79,7 +80,8 @@ public class AuthActivity extends Fragment {
             UtilsBundle.hidePhoneKeyboard(getActivity());
             if (!gotResponse) {
                 LocalBroadcastManager.getInstance(Loudly.getContext()).sendBroadcast(
-                        BroadcastSendingTask.makeError(Loudly.AUTHORIZATION_FINISHED, -1, "User declined authorization")
+                        BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION,
+                                Broadcasts.AUTH_FAIL, "User declined authorization")
                 );
             }
         } else {
@@ -98,5 +100,4 @@ public class AuthActivity extends Fragment {
             return authorizer.continueAuthorization(url, keys);
         }
     }
-
 }

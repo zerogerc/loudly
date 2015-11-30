@@ -21,7 +21,7 @@ import android.widget.Toast;
 
 import base.Tasks;
 import util.AttachableReceiver;
-import util.BroadcastSendingTask;
+import util.Broadcasts;
 import util.UtilsBundle;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,16 +31,11 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton floatingActionButton;
     View newPostFragmentView;
     Fragment newPostFragment;
-    ProgressBar progressBar;
 
     private static final int LOAD_POSTS_RECEIVER = 0;
-    private static final int LOAD_PROGRESS_RECEIVER = 1;
-    private static final int LOAD_FINISHED_RECEIVER = 2;
-    private static final int POST_UPLOAD_RECEIVER = 3;
-    private static final int POST_PROGRESS_RECEIVER = 4;
-    private static final int POST_FINISHED_RECEIVER = 5;
-    private static final int INFO_GOT_RECEIVER = 6;
-    private static final int RECEIVER_COUNT = 7;
+    private static final int POST_UPLOAD_RECEIVER = 1;
+    private static final int GET_INFO_RECEIVER = 2;
+    private static final int RECEIVER_COUNT = 3;
 
     private static AttachableReceiver[] receivers = null;
     private static Tasks.LoadPostsTask loadPosts = null;
@@ -70,79 +65,19 @@ public class MainActivity extends AppCompatActivity {
         ((PostCreateFragment) newPostFragment).setListeners();
 
         newPostFragmentView = findViewById(R.id.new_post_fragment);
-        newPostFragmentView.getBackground().setAlpha(100);
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
-        progressBar = (ProgressBar)findViewById(R.id.main_activity_progress);
-        progressBar.setVisibility(View.GONE);
-
         if (Loudly.getContext().getPosts().isEmpty() && loadPosts == null) {
             // Loading posts
+
+            ProgressBar progressBar = (ProgressBar) findViewById(R.id.main_activity_progress);
             progressBar.setVisibility(View.VISIBLE);
-            // ToDo: show here rolling circle
-            receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.POST_LOAD_STARTED) {
-                @Override
-                public void onMessageReceive(Context context, Intent message) {
-                    final Toast toast = Toast.makeText(context, "DB loaded", Toast.LENGTH_SHORT);
-                    toast.show();
-                    stop();
-                    receivers[LOAD_POSTS_RECEIVER] = null;
-                    receivers[LOAD_PROGRESS_RECEIVER] = new AttachableReceiver(context, Loudly.POST_LOAD_PROGRESS) {
-                        @Override
-                        public void onMessageReceive(Context context, Intent message) {
-                            MainActivity mainActivity = (MainActivity) context;
-                            mainActivity.recyclerViewAdapter.notifyDataSetChanged();
-                            Toast toast = Toast.makeText(context,
-                                    "" + message.getIntExtra(BroadcastSendingTask.NETWORK_FIELD, -1), Toast.LENGTH_SHORT);
-                            toast.show();
-                            Loudly.getContext().startGetInfoService();
-                        }
-                    };
 
-                    receivers[LOAD_FINISHED_RECEIVER] = new AttachableReceiver(context, Loudly.POST_LOAD_FINISHED) {
-                        @Override
-                        public void onMessageReceive(Context context, Intent message) {
-                            boolean success = message.getBooleanExtra(BroadcastSendingTask.SUCCESS_FIELD, false);
-
-                            if (success) {
-                                Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
-                                toast.show();
-
-                                MainActivity mainActivity = (MainActivity) context;
-                                mainActivity.recyclerViewAdapter.notifyDataSetChanged();
-                            } else {
-                                String error = message.getStringExtra(BroadcastSendingTask.ERROR_FIELD);
-                                Toast toast = Toast.makeText(context, "Failed to load Posts: " + error, Toast.LENGTH_SHORT);
-                                toast.show();
-                            }
-
-                            progressBar.setVisibility(View.GONE);
-                            // Turn off receivers
-                            receivers[LOAD_PROGRESS_RECEIVER].stop();
-                            receivers[LOAD_PROGRESS_RECEIVER] = null;
-                            stop();
-                            receivers[LOAD_FINISHED_RECEIVER] = null;
-                            loadPosts = null;
-                            Loudly.getContext().startGetInfoService();
-                            receivers[INFO_GOT_RECEIVER] = new AttachableReceiver(context, Loudly.POST_GET_INFO_PROGRESS) {
-                                @Override
-                                public void onMessageReceive(Context context, Intent message) {
-                                    MainActivity mainActivity = (MainActivity) context;
-                                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
-
-                                    Toast t = Toast.makeText(context, "Info got", Toast.LENGTH_SHORT);
-                                    t.show();
-                                }
-                            };
-                        }
-                    };
-                }
-            };
-
+            receivers[LOAD_POSTS_RECEIVER] = new PostLoadReceiver(this);
 
             loadPosts = new Tasks.LoadPostsTask(Loudly.getContext().getTimeInterval(),
                     Loudly.getContext().getWraps());
@@ -234,52 +169,8 @@ public class MainActivity extends AppCompatActivity {
     public void callPostCreate(View v) {
         // Start receivers with a little crutch
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
-
-            receivers[POST_UPLOAD_RECEIVER] = new AttachableReceiver(this, Loudly.POST_UPLOAD_STARTED) {
-                @Override
-                public void onMessageReceive(Context context, Intent message) {
-                    // Stop itself
-                    stop();
-                    receivers[POST_UPLOAD_RECEIVER] = null;
-
-                    // Make place for the post
-                    MainActivity mainActivity = (MainActivity) context;
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
-
-                    // Start progress receiver
-                    receivers[POST_PROGRESS_RECEIVER] = new AttachableReceiver(context, Loudly.POST_UPLOAD_PROGRESS) {
-                        @Override
-                        public void onMessageReceive(Context context, Intent message) {
-                            int progress = message.getIntExtra(BroadcastSendingTask.PROGRESS_FIELD, 0);
-                            Toast toast = Toast.makeText(context, "" + progress, Toast.LENGTH_SHORT);
-                            toast.show();
-                        }
-                    };
-
-                    // Start finished receiver
-                    receivers[POST_FINISHED_RECEIVER] = new AttachableReceiver(context, Loudly.POST_UPLOAD_FINISHED) {
-                        @Override
-                        public void onMessageReceive(Context context, Intent message) {
-                            boolean success = message.getBooleanExtra(BroadcastSendingTask.SUCCESS_FIELD, false);
-
-                            if (success) {
-                                Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
-                                toast.show();
-                            } else {
-                                String error = message.getStringExtra(BroadcastSendingTask.ERROR_FIELD);
-                                Toast toast = Toast.makeText(context, "Failed to create Post: " + error, Toast.LENGTH_SHORT);
-                                toast.show();
-                            }
-
-                            // Turn off receivers
-                            receivers[POST_PROGRESS_RECEIVER].stop();
-                            receivers[POST_PROGRESS_RECEIVER] = null;
-                            stop();
-                            receivers[POST_FINISHED_RECEIVER] = null;
-                        }
-                    };
-                }
-            };
+            // Starting receiver
+            receivers[POST_UPLOAD_RECEIVER] = new PostLoadReceiver(this);
         }
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.show(newPostFragment);
@@ -299,8 +190,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (isFinishing()) {
             Loudly.getContext().stopGetInfoService();
-            if (receivers[INFO_GOT_RECEIVER] != null) {
-                receivers[INFO_GOT_RECEIVER].stop();
+            if (receivers[GET_INFO_RECEIVER] != null) {
+                receivers[GET_INFO_RECEIVER].stop();
             }
         }
     }
@@ -321,6 +212,156 @@ public class MainActivity extends AppCompatActivity {
             floatingActionButton.show();
         } else {
             super.onBackPressed();
+        }
+    }
+
+    static class PostUploaderReceiver extends AttachableReceiver {
+        public PostUploaderReceiver(Context context) {
+            super(context, Broadcasts.POST_UPLOAD);
+        }
+
+        @Override
+        public void onMessageReceive(Context context, Intent message) {
+            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            Toast toast;
+            long postID, imageID;
+            int progress;
+            switch (status) {
+                case Broadcasts.STARTED:
+                    // Saved to DB. Make place for the post
+                    MainActivity mainActivity = (MainActivity) context;
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    break;
+                case Broadcasts.PROGRESS:
+                    // Uploaded to network
+                    postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
+                    int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
+                    toast = Toast.makeText(context, "" + networkID, Toast.LENGTH_SHORT);
+                    toast.show();
+                    break;
+                case Broadcasts.IMAGE:
+                    // Image is loading
+                    imageID = message.getLongExtra(Broadcasts.IMAGE_FIELD, 0);
+                    postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
+                    progress = message.getIntExtra(Broadcasts.PROGRESS, 0);
+                    break;
+                case Broadcasts.IMAGE_FINISHED:
+                    // Image loaded
+                    imageID = message.getLongExtra(Broadcasts.IMAGE_FIELD, 0);
+                    postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
+                    networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
+                    toast = Toast.makeText(context, "Image " + imageID + " uploaded to " + networkID, Toast.LENGTH_SHORT);
+                    toast.show();
+                    break;
+                case Broadcasts.FINISHED:
+                    // Post uploaded
+                    toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
+                    toast.show();
+                    receivers[POST_UPLOAD_RECEIVER].stop();
+                    receivers[POST_UPLOAD_RECEIVER] = null;
+                    break;
+                case Broadcasts.ERROR:
+                    // Got an error
+                    String errorKind = message.getStringExtra(Broadcasts.ERROR_KIND);
+                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
+                    toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
+                    toast.show();
+                    receivers[POST_UPLOAD_RECEIVER].stop();
+                    receivers[POST_UPLOAD_RECEIVER] = null;
+                    break;
+            }
+        }
+    }
+
+    static class PostLoadReceiver extends AttachableReceiver {
+        public PostLoadReceiver(Context context) {
+            super(context, Broadcasts.POST_LOAD);
+        }
+
+        @Override
+        public void onMessageReceive(Context context, Intent message) {
+            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+
+            Toast toast;
+            MainActivity mainActivity = (MainActivity) context;
+            switch (status) {
+                case Broadcasts.STARTED:
+                    toast = Toast.makeText(context, "DB loaded", Toast.LENGTH_SHORT);
+                    toast.show();
+                    break;
+                case Broadcasts.PROGRESS:
+                    toast = Toast.makeText(context,
+                            "" + message.getIntExtra(Broadcasts.NETWORK_FIELD, -1), Toast.LENGTH_SHORT);
+                    toast.show();
+                    break;
+                case Broadcasts.LOADED:
+                    toast = Toast.makeText(context,
+                            "Posts loaded", Toast.LENGTH_SHORT);
+                    toast.show();
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    break;
+                case Broadcasts.IMAGE:
+                    // Here progress of loading images
+                    break;
+                case Broadcasts.IMAGE_FINISHED:
+                    // Image loaded, show it
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    break;
+                case Broadcasts.FINISHED:
+                    ProgressBar progressBar = (ProgressBar) mainActivity.findViewById(R.id.main_activity_progress);
+                    progressBar.setVisibility(View.GONE);
+
+                    toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
+                    toast.show();
+                    receivers[LOAD_POSTS_RECEIVER].stop();
+                    receivers[LOAD_POSTS_RECEIVER] = null;
+                    loadPosts = null; // Posts loaded
+
+                    receivers[GET_INFO_RECEIVER] = new GetInfoReceiver(context);
+                    Loudly.getContext().startGetInfoService(); // Let's get info about posts
+                    break;
+                case Broadcasts.ERROR:
+                    String error = message.getStringExtra(Broadcasts.ERROR);
+                    toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
+                    toast.show();
+                    receivers[LOAD_POSTS_RECEIVER].stop();
+                    receivers[LOAD_POSTS_RECEIVER] = null;
+                    break;
+            }
+        }
+    }
+
+    static class GetInfoReceiver extends AttachableReceiver {
+        public GetInfoReceiver(Context context) {
+            super(context, Broadcasts.POST_GET_INFO);
+        }
+
+        @Override
+        public void onMessageReceive(Context context, Intent message) {
+            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            Toast t;
+            switch (status) {
+                case Broadcasts.PROGRESS:
+                    int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    t = Toast.makeText(context, "Got info for " + networkID, Toast.LENGTH_SHORT);
+                    t.show();
+                    break;
+                case Broadcasts.FINISHED:
+                    MainActivity mainActivity = (MainActivity) context;
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    t = Toast.makeText(context, "Info got", Toast.LENGTH_SHORT);
+                    t.show();
+                    receivers[GET_INFO_RECEIVER].stop();
+                    receivers[GET_INFO_RECEIVER] = null;
+                    break;
+                case Broadcasts.ERROR:
+                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
+                    t = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
+                    t.show();
+                    receivers[GET_INFO_RECEIVER].stop();
+                    receivers[GET_INFO_RECEIVER] = null;
+                    break;
+            }
         }
     }
 }

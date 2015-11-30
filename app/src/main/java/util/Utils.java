@@ -82,17 +82,39 @@ public class Utils {
             }
         }
 
+        public SavedInputStream(InputStream input, BackgroundAction onProgress) {
+            bufferedStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int len;
+            int received = 0;
+            try {
+                while ((len = input.read(buffer)) > -1) {
+                    bufferedStream.write(buffer, 0, len);
+                    received += len;
+                    onProgress.execute(received);
+                }
+                bufferedStream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         public InputStream getInputStream() {
             return new ByteArrayInputStream(bufferedStream.toByteArray());
         }
     }
 
     public static Bitmap makeResizedBitmap(@NonNull InputStream input,
-                                           int desiredWidth, int desiredHeight) throws IOException {
+                                           int desiredWidth, int desiredHeight,
+                                           BackgroundAction... onProgress) throws IOException {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
 
-        SavedInputStream saved = new SavedInputStream(input);
+        SavedInputStream saved;
+        if (onProgress.length == 0) {
+            saved = new SavedInputStream(input);
+        } else {
+            saved = new SavedInputStream(input, onProgress[0]);
+        }
 
         BitmapFactory.decodeStream(saved.getInputStream(), null, options);
 
@@ -130,13 +152,19 @@ public class Utils {
         }
     }
 
-    public static Bitmap downloadBitmap(String url, int desiredWidth, int desiredHeight) throws IOException {
+    public static Bitmap downloadBitmap(String url, final BackgroundAction onProgress, int desiredWidth, int desiredHeight) throws IOException {
         HttpURLConnection conn = null;
         InputStream in = null;
         try {
             conn = (HttpURLConnection) new URL(url).openConnection();
+            final int size = conn.getContentLength();
             in = conn.getInputStream();
-            return makeResizedBitmap(in, desiredWidth, desiredHeight);
+            return makeResizedBitmap(in, desiredWidth, desiredHeight, new BackgroundAction() {
+                @Override
+                public void execute(Object... params) {
+                    onProgress.execute(100 * (int) (params[0]) / size);
+                }
+            });
         } finally {
             if (conn != null) {
                 conn.disconnect();

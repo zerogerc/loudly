@@ -20,7 +20,7 @@ import base.KeyKeeper;
 import base.Networks;
 import base.Tasks;
 import util.AttachableReceiver;
-import util.BroadcastSendingTask;
+import util.Broadcasts;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -59,27 +59,37 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    private static class AuthReceiver extends AttachableReceiver {
+        public AuthReceiver(Context context, String... filters) {
+            super(context, Broadcasts.AUTHORIZATION);
+        }
+
+        @Override
+        public void onMessageReceive(Context context, Intent message) {
+            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            SettingsActivity activity = (SettingsActivity)context;
+            Toast toast;
+            switch (status) {
+                case Broadcasts.FINISHED:
+                    toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
+                    toast.show();
+                    int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    activity.iconsHolder.setVisible(network);
+                    break;
+                case Broadcasts.ERROR:
+                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
+                    toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
+                    toast.show();
+                    break;
+            }
+            stop();
+            authReceiver = null;
+        }
+    }
+
     // That's here because of 3 different click listeners
     private void startReceiver() {
-        authReceiver = new AttachableReceiver(this, Loudly.AUTHORIZATION_FINISHED) {
-            @Override
-            public void onMessageReceive(Context context, Intent message) {
-                boolean success = message.getBooleanExtra(BroadcastSendingTask.SUCCESS_FIELD, false);
-                if (success) {
-                    Toast toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
-                    toast.show();
-                    int network = message.getIntExtra(BroadcastSendingTask.NETWORK_FIELD, -1);
-                    iconsHolder.setVisible(network);
-
-                } else {
-                    String error = message.getStringExtra(BroadcastSendingTask.ERROR_FIELD);
-                    Toast toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-                stop();
-                authReceiver = null;
-            }
-        };
+        authReceiver = new AuthReceiver(this);
     }
 
     // ToDo: make buttons onclickable during authorization
@@ -151,6 +161,8 @@ public class SettingsActivity extends AppCompatActivity {
             authReceiver.detach();
         }
         if (isFinishing()) {
+            authReceiver.stop();
+            authReceiver = null;
             Tasks.SaveKeysTask task = new Tasks.SaveKeysTask();
             task.execute();
         }

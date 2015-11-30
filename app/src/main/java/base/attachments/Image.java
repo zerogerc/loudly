@@ -14,7 +14,9 @@ public class Image extends Attachment {
     protected String internalLink;
     protected boolean local;
     protected Bitmap bitmap;
-
+    {
+        localID = 0;
+    }
 
     public Image(String internalLink, String[] links) {
         this.internalLink = internalLink;

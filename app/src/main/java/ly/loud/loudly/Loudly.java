@@ -22,28 +22,12 @@ import util.TimeInterval;
  * Stores run-time variables
  */
 public class Loudly extends Application {
-    public static final String SAVED_KEYS = "ly.load.loudly.keys.saved";
-    public static final String LOADED_KEYS = "ly.loud.loudly.keys.loaded";
-    public static final String AUTHORIZATION_FINISHED = "ly.loud.loudly.auth.finished";
-
-    public static final String POST_LOAD_STARTED = "ly.loud.loudly.load.started";
-    public static final String POST_LOAD_PROGRESS = "ly.loud.loudly.load.progress";
-    public static final String POST_LOAD_FINISHED = "ly.loud.loudly.load.finished";
-
-    public static final String POST_UPLOAD_STARTED = "ly.loud.loudly.post.started";
-    public static final String POST_UPLOAD_PROGRESS = "ly.loud.loudly.post.progress";
-    public static final String POST_UPLOAD_FINISHED = "ly.loud.loudly.post.finished";
-
-    public static final String POST_GET_INFO_PROGRESS = "ly.loud.loudly.post.info.progress";
-    public static final String POST_GET_INFO_FINISHED = "ly.loud.loudly.post.info.finished";
-
-    public static final String GET_INFO_ALARM = "ly.loud.loudly.get.info.alarm";
-
     public static final int GET_INFO_INTERVAL = 30 * 1000;
 
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
     private LinkedList<Post> posts;
+    private long postFromOtherNetworks = 0;
 
     private IDInterval[] loadedPosts;
     private int[] offsets;
@@ -110,6 +94,10 @@ public class Loudly extends Application {
 
     public void setPostInterval(int network, IDInterval interval) {
         loadedPosts[network] = interval;
+    }
+
+    public long makeLocalIDForOtherNetworks() {
+        return -(++postFromOtherNetworks);
     }
 
     public int getOffset(int network) {

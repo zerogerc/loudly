@@ -9,9 +9,10 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import ly.loud.loudly.Loudly;
+import util.BroadcastSendingTask;
+import util.Broadcasts;
 import ly.loud.loudly.SettingsActivity;
 import util.AttachableTask;
-import util.BroadcastSendingTask;
 import util.Query;
 
 /**
@@ -113,7 +114,8 @@ public abstract class Authorizer implements Parcelable {
         Query response = Query.fromURL(url);
 
         if (response == null) {
-            return BroadcastSendingTask.makeError(Loudly.AUTHORIZATION_FINISHED, -1, "Failed to parse response");
+            return BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION_FINISHED, Broadcasts.AUTH_FAIL,
+                    "Failed to parse response");
         }
 
         if (response.containsParameter(successToken())) {
@@ -121,13 +123,14 @@ public abstract class Authorizer implements Parcelable {
 
             Loudly.getContext().setKeyKeeper(network(), inKeys);
 
-            Intent message = BroadcastSendingTask.makeSuccess(Loudly.AUTHORIZATION_FINISHED, -1);
-            message.putExtra(BroadcastSendingTask.NETWORK_FIELD, network());
+            Intent message = BroadcastSendingTask.makeSuccess(Broadcasts.AUTHORIZATION_FINISHED);
+            message.putExtra(Broadcasts.NETWORK_FIELD, network());
 
             return message;
         } else {
             String errorToken = response.getParameter(errorToken());
-            return BroadcastSendingTask.makeError(Loudly.AUTHORIZATION_FINISHED, -1, errorToken);
+            return BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION, Broadcasts.AUTH_FAIL,
+                    errorToken);
         }
     }
 
