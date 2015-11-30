@@ -83,8 +83,6 @@ public class MainActivity extends AppCompatActivity {
                     Loudly.getContext().getWraps());
 
             loadPosts.execute();
-        } else {
-            setRecyclerView();
         }
     }
 

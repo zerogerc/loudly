@@ -21,6 +21,7 @@ public abstract class BroadcastSendingTask<Param> extends AsyncTask<Param, Inten
 
     public static Intent makeError(String action, String errorKind, String error) {
         Intent message = new Intent(action);
+        message.putExtra(Broadcasts.STATUS_FIELD, Broadcasts.ERROR);
         message.putExtra(Broadcasts.ERROR_KIND, errorKind);
         message.putExtra(Broadcasts.ERROR_FIELD, error);
         return message;

@@ -38,6 +38,7 @@ public abstract class AttachableReceiver extends BroadcastReceiver {
         for (String filter : filters) {
             intentFilter.addAction(filter);
         }
+        lastMessage = null;
         LocalBroadcastManager.getInstance(Loudly.getContext()).registerReceiver(this, intentFilter);
     }
 
