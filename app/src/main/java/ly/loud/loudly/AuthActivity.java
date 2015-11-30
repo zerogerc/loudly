@@ -88,7 +88,6 @@ public class AuthActivity extends Fragment {
             });
 
         }
-
     }
 
     private static class FinishAuthorization extends BroadcastSendingTask<Object> {

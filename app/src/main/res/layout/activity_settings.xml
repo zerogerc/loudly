@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:post_card="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/settings_parent_layout"
     tools:context="ly.loud.loudly.SettingsActivity">
@@ -15,20 +17,38 @@
             layout="@layout/settings_toolbar">
         </include>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/settings_your_networks"
-            android:layout_alignParentBottom="true">
-
-            <ly.loud.loudly.IconsHolder
+       <android.support.v7.widget.CardView
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:layout_below="@+id/settings_toolbar"
+           post_card:cardCornerRadius="4dp"
+           android:id="@+id/settings_your_networks">
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:id="@+id/settings_icons_holder"
-                android:background="@null"
-                />
-        </RelativeLayout>
+                android:gravity="center">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your social networks"
+                    android:id="@+id/settings_your_networks_text"
+                    android:textSize="17sp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginRight="8dp"
+                    android:layout_marginTop="8dp"
+                    />
+
+                <ly.loud.loudly.IconsHolder
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:id="@+id/settings_icons_holder"
+                    android:layout_below="@+id/settings_your_networks_text"
+                    android:layout_margin="8dp"
+                    android:background="@null"
+                    />
+            </RelativeLayout>
+       </android.support.v7.widget.CardView>
 
         <RelativeLayout
             android:layout_width="match_parent"

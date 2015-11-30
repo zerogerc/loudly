@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -30,9 +31,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.socialIcon.setImageBitmap(UtilsBundle.getIconByNetwork(post.getMainNetwork()));
 
         if (post.getTotalInfo() != null) {
+            holder.commentsAmount.setText(Integer.toString(post.getTotalInfo().comment));
             holder.likesAmount.setText(Integer.toString(post.getTotalInfo().like));
             holder.repostsAmount.setText(Integer.toString(post.getTotalInfo().repost));
         } else {
+            holder.commentsAmount.setText("0");
             holder.likesAmount.setText("0");
             holder.repostsAmount.setText("0");
         }
@@ -42,6 +45,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             holder.postImageView.setImageBitmap(image.getBitmap());
         } else {
             holder.postImageView.setImageBitmap(null);
+        }
+        if (post.isLoadedImage()) {
+            holder.progressBar.setVisibility(View.GONE);
+        } else {
+            holder.progressBar.setVisibility(View.VISIBLE);
         }
     }
 
@@ -75,11 +83,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private TextView text;
         private TextView data;
         private TextView geoData;
+        private TextView commentsAmount;
+        private ImageView commentsButton;
         private TextView likesAmount;
         private ImageView likesButton;
         private TextView repostsAmount;
         private ImageView repostsButton;
         private ImageView postImageView;
+        private ProgressBar progressBar;
 
         public ViewHolder(View itemView, Post post) {
             super(itemView);
@@ -88,11 +99,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             text = (TextView)itemView.findViewById(R.id.post_view_post_text);
             data = (TextView)itemView.findViewById(R.id.post_view_data_text);
             geoData = (TextView)itemView.findViewById(R.id.post_view_geo_data_text);
+            commentsAmount = (TextView)itemView.findViewById(R.id.post_view_comments_amount);
+            commentsButton = (ImageView)itemView.findViewById(R.id.post_view_comments_button);
             likesAmount = (TextView)itemView.findViewById(R.id.post_view_likes_amount);
             likesButton = (ImageView)itemView.findViewById(R.id.post_view_likes_button);
             repostsAmount = (TextView)itemView.findViewById(R.id.post_view_reposts_amount);
             repostsButton = (ImageView)itemView.findViewById(R.id.post_view_reposts_button);
             postImageView = (ImageView)itemView.findViewById(R.id.post_view_post_image);
+            progressBar = (ProgressBar)itemView.findViewById(R.id.post_view_progress);
 
             geoData.setHeight(0);
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)geoData.getLayoutParams();

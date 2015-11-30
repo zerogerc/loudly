@@ -55,6 +55,16 @@ public class Post implements Comparable<Post> {
 
     private long localId;
 
+    private boolean loadedImage = true;
+
+    public boolean isLoadedImage() {
+        return loadedImage;
+    }
+
+    public void setLoadedImage(boolean loadedImage) {
+        this.loadedImage = loadedImage;
+    }
+
     public Post(
             String text,
             ArrayList<Attachment> attachments,

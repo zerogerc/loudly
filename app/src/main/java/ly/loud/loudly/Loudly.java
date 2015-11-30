@@ -22,7 +22,7 @@ import util.TimeInterval;
  * Stores run-time variables
  */
 public class Loudly extends Application {
-    public static final int GET_INFO_INTERVAL = 120;
+    public static final int GET_INFO_INTERVAL = 30;
 
     private static Loudly context;
     private KeyKeeper[] keyKeepers;

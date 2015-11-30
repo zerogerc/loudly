@@ -438,12 +438,21 @@ public class Tasks {
             publishProgress(message);
 
             for (Post post : resultList) {
+                if (post.getAttachments().isEmpty()) {
+                    post.setLoadedImage(true);
+                } else {
+                    post.setLoadedImage(false);
+                }
+            }
+
+            for (Post post : resultList) {
                 if (post.getAttachments().size() != 0) {
                     final long postID = post.getLocalId();
                     Image image = (Image) post.getAttachments().get(0);
                     try {
                         final long imageID = image.getLocalID();
                         Bitmap bitmap;
+                        post.setLoadedImage(false);
                         if (image.isLocal()) {
                             Uri uri = Uri.parse(image.getExtra());
                             bitmap = Utils.loadBitmap(uri,
@@ -462,6 +471,7 @@ public class Tasks {
                                     Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
                         }
                         image.setBitmap(bitmap);
+                        post.setLoadedImage(true);
                         message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.IMAGE_FINISHED, postID);
                         message.putExtra(Broadcasts.IMAGE_FIELD, imageID);
                         publishProgress(message);

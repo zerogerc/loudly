@@ -55,6 +55,7 @@ public class PostCreateFragment extends Fragment {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/*");
+                UtilsBundle.hidePhoneKeyboard(getActivity());
                 startActivityForResult(intent, PICK_PHOTO_FROM_GALLERY);
             }
         });

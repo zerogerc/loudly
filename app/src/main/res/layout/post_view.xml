@@ -87,6 +87,15 @@
                 android:layout_margin="8dp"
                 />
 
+            <ProgressBar
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/post_view_progress"
+                android:visibility="gone"
+                android:layout_below="@id/post_view_post_text"
+                android:layout_centerHorizontal="true" />
+
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -94,7 +103,7 @@
                 android:adjustViewBounds="true"
                 android:scaleType="centerInside"
                 android:background="@null"
-                android:layout_below="@id/post_view_post_text"
+                android:layout_below="@id/post_view_progress"
                 android:layout_centerInParent="true"/>
 
         </RelativeLayout>
@@ -107,6 +116,33 @@
             android:padding="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginTop="4dp">
+
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/post_view_comments_button"
+                android:src="@drawable/ic_comments"
+                android:tint="@color/colorAccent"
+                android:background="@null"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginLeft="4dp"
+                android:layout_marginStart="4dp"
+                android:layout_centerVertical="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/post_view_comments_amount"
+                android:layout_toRightOf="@id/post_view_comments_button"
+                android:layout_toEndOf="@id/post_view_comments_button"
+                android:layout_marginLeft="4dp"
+                android:layout_marginStart="4dp"
+                android:text="437"
+                android:textSize="12sp"
+                android:layout_centerVertical="true" />
+
 
             <TextView
                 android:layout_width="wrap_content"

@@ -50,6 +50,7 @@ public class SettingsActivity extends AppCompatActivity {
 
 
         webViewFragmentView = findViewById(R.id.setting_web_view);
+        webViewFragmentView.getBackground().setAlpha(100);
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(webViewFragment);
         ft.commit();
@@ -149,6 +150,17 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webViewFragmentView.isShown()) {
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.hide(webViewFragment);
+            ft.commit();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     /**

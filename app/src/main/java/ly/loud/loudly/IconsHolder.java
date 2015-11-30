@@ -93,11 +93,11 @@ public class IconsHolder extends View {
         int x = (int)event.getX();
         int y = (int)event.getY();
 
-        if (zones[Networks.FB].contains(x, y)) {
+        if (zones[Networks.FB].contains(x, y) && !isVisible[Networks.FB]) {
             activity.FBButtonClick();
         }
 
-        if (zones[Networks.VK].contains(x, y)) {
+        if (zones[Networks.VK].contains(x, y) && !isVisible[Networks.VK]) {
             activity.VKButtonClick();
         }
 

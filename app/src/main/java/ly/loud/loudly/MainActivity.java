@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         ((PostCreateFragment) newPostFragment).setListeners();
 
         newPostFragmentView = findViewById(R.id.new_post_fragment);
+        newPostFragmentView.getBackground().setAlpha(100);
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
@@ -293,6 +294,9 @@ public class MainActivity extends AppCompatActivity {
                     toast.show();
                     break;
                 case Broadcasts.LOADED:
+                    ProgressBar progressBar = (ProgressBar) mainActivity.findViewById(R.id.main_activity_progress);
+                    progressBar.setVisibility(View.GONE);
+
                     toast = Toast.makeText(context,
                             "Posts loaded", Toast.LENGTH_SHORT);
                     toast.show();
@@ -306,8 +310,6 @@ public class MainActivity extends AppCompatActivity {
                     mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.FINISHED:
-                    ProgressBar progressBar = (ProgressBar) mainActivity.findViewById(R.id.main_activity_progress);
-                    progressBar.setVisibility(View.GONE);
 
                     toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
                     toast.show();
