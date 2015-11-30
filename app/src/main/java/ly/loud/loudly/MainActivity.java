@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton floatingActionButton;
     View newPostFragmentView;
     Fragment newPostFragment;
+    ProgressBar progressBar;
 
     private static final int LOAD_POSTS_RECEIVER = 0;
     private static final int LOAD_PROGRESS_RECEIVER = 1;
@@ -69,18 +70,20 @@ public class MainActivity extends AppCompatActivity {
         ((PostCreateFragment) newPostFragment).setListeners();
 
         newPostFragmentView = findViewById(R.id.new_post_fragment);
+        newPostFragmentView.getBackground().setAlpha(100);
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
+        progressBar = (ProgressBar)findViewById(R.id.main_activity_progress);
+        progressBar.setVisibility(View.GONE);
+
         if (Loudly.getContext().getPosts().isEmpty() && loadPosts == null) {
             // Loading posts
-
-            // ToDo: show here rolling circle
-            final ProgressBar progressBar = (ProgressBar)findViewById(R.id.main_activity_progress);
             progressBar.setVisibility(View.VISIBLE);
+            // ToDo: show here rolling circle
             receivers[LOAD_POSTS_RECEIVER] = new AttachableReceiver(this, Loudly.POST_LOAD_STARTED) {
                 @Override
                 public void onMessageReceive(Context context, Intent message) {

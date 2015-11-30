@@ -4,7 +4,8 @@
     tools:context=".PostCreateActivity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@null"
+    android:id="@+id/new_post_parent"
+    android:background="@android:color/black"
     android:padding="8dp">
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"

@@ -48,11 +48,12 @@
 
 
     <ProgressBar
+        style="?android:attr/progressBarStyleLarge"
         android:id="@+id/main_activity_progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        style="@android:style/Widget.Holo.Light.ProgressBar.Large.Inverse"
-        android:indeterminate="false" />
+        android:indeterminate="false"
+        />
 
 </android.support.design.widget.CoordinatorLayout>

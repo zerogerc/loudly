@@ -1,5 +1,8 @@
 package ly.loud.loudly;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -13,6 +16,7 @@ import Facebook.FacebookAuthorizer;
 import MailRu.MailRuAuthoriser;
 import VK.VKAuthorizer;
 import base.Authorizer;
+import base.KeyKeeper;
 import base.Networks;
 import base.Tasks;
 import util.AttachableReceiver;
@@ -23,6 +27,11 @@ import util.database.DatabaseException;
 public class SettingsActivity extends AppCompatActivity {
     private static AttachableReceiver authReceiver = null;
     private IconsHolder iconsHolder;
+    private Fragment webViewFragment;
+    private View webViewFragmentView;
+    public static String webViewURL;
+    public static Authorizer webViewAuthorizer;
+    public static KeyKeeper webViewKeyKeeper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,18 +41,18 @@ public class SettingsActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar)findViewById(R.id.settings_toolbar);
         setSupportActionBar(toolbar);
 
-        iconsHolder = (IconsHolder)findViewById(R.id.settings_icons_holder);
+//        iconsHolder = (IconsHolder)findViewById(R.id.settings_icons_holder);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        int[] checkboxes = {R.id.fb_box, -1, -1, R.id.vk_box, -1, R.id.mail_ru_box};
-//        for (int i = 0; i < checkboxes.length; i++) {
-//            int id = checkboxes[i];
-//            if (id == -1) {
-//                continue;
-//            }
-//            findViewById(id).setEnabled(false);
-//            ((CheckBox) findViewById(id)).setChecked(Loudly.getContext().getKeyKeeper(i) != null);
-//        }
+
+        FragmentManager manager = getFragmentManager();
+        webViewFragment = manager.findFragmentById(R.id.setting_web_view);
+
+
+        webViewFragmentView = findViewById(R.id.setting_web_view);
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.hide(webViewFragment);
+        ft.commit();
 
         if (authReceiver != null) {
             authReceiver.attach(this);
@@ -74,6 +83,12 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     // ToDo: make buttons onclickable during authorization
+
+    public void startWebView() {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.show(webViewFragment);
+        ft.commit();
+    }
 
     public void VKButtonClick() {
         startReceiver();

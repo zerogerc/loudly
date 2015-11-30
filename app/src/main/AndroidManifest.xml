@@ -22,8 +22,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".AuthActivity"/>
-
         <activity android:name=".SettingsActivity"
             android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="stateVisible|adjustResize">
@@ -31,7 +29,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity android:name=".InitialSettingsActivity" />
 
         <service android:name=".GetInfoService" />
 

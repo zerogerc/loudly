@@ -8,11 +8,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-import ly.loud.loudly.AuthActivity;
 import ly.loud.loudly.Loudly;
-import util.BroadcastSendingTask;
-import util.UIAction;
+import ly.loud.loudly.SettingsActivity;
 import util.AttachableTask;
+import util.BroadcastSendingTask;
 import util.Query;
 
 /**
@@ -86,11 +85,11 @@ public abstract class Authorizer implements Parcelable {
             if (result == null) {
                 return;
             }
-            Intent openWeb = new Intent(context, AuthActivity.class);
-            openWeb.putExtra("URL", authorizer.getAuthQuery().toURL());
-            openWeb.putExtra("KEYS", result);
-            openWeb.putExtra("AUTHORIZER", authorizer);
-            context.startActivity(openWeb);
+            SettingsActivity activity = (SettingsActivity)context;
+            SettingsActivity.webViewURL = authorizer.getAuthQuery().toURL();
+            SettingsActivity.webViewKeyKeeper = result;
+            SettingsActivity.webViewAuthorizer = authorizer;
+            activity.startWebView();
         }
     }
 
