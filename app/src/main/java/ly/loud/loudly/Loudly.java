@@ -22,7 +22,7 @@ import util.TimeInterval;
  * Stores run-time variables
  */
 public class Loudly extends Application {
-    public static final int GET_INFO_INTERVAL = 30 * 1000;
+    public static final int GET_INFO_INTERVAL = 120;
 
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
@@ -111,8 +111,9 @@ public class Loudly extends Application {
     public void startGetInfoService() {
         Intent runService = new Intent(context, GetInfoService.class);
         getInfoService = PendingIntent.getService(context, 0, runService, PendingIntent.FLAG_CANCEL_CURRENT);
-        alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(),
-                GET_INFO_INTERVAL, getInfoService);
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.SECOND, GET_INFO_INTERVAL);
+        alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), getInfoService);
     }
 
     public void stopGetInfoService() {

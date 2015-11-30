@@ -41,7 +41,7 @@ public class SettingsActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar)findViewById(R.id.settings_toolbar);
         setSupportActionBar(toolbar);
 
-//        iconsHolder = (IconsHolder)findViewById(R.id.settings_icons_holder);
+        iconsHolder = (IconsHolder)findViewById(R.id.settings_icons_holder);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -60,7 +60,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private static class AuthReceiver extends AttachableReceiver {
-        public AuthReceiver(Context context, String... filters) {
+        public AuthReceiver(Context context) {
             super(context, Broadcasts.AUTHORIZATION);
         }
 

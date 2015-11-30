@@ -9,7 +9,6 @@ public class Broadcasts {
     public static final String KEYS_LOADED = "ly.loud.loudly.keys.loaded";
 
     public static final String AUTHORIZATION = "ly.loud.loudly.auth";
-    public static final String AUTHORIZATION_FINISHED = "ly.loud.loudly.auth.finished";
 
     public static final String POST_LOAD = "ly.loud.loudly.post.load";
 

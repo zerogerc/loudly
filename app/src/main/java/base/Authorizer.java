@@ -114,7 +114,7 @@ public abstract class Authorizer implements Parcelable {
         Query response = Query.fromURL(url);
 
         if (response == null) {
-            return BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION_FINISHED, Broadcasts.AUTH_FAIL,
+            return BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION, Broadcasts.AUTH_FAIL,
                     "Failed to parse response");
         }
 
@@ -123,7 +123,7 @@ public abstract class Authorizer implements Parcelable {
 
             Loudly.getContext().setKeyKeeper(network(), inKeys);
 
-            Intent message = BroadcastSendingTask.makeSuccess(Broadcasts.AUTHORIZATION_FINISHED);
+            Intent message = BroadcastSendingTask.makeSuccess(Broadcasts.AUTHORIZATION);
             message.putExtra(Broadcasts.NETWORK_FIELD, network());
 
             return message;
