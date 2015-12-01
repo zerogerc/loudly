@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         // Start receivers with a little crutch
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
             // Starting receiver
-            receivers[POST_UPLOAD_RECEIVER] = new PostLoadReceiver(this);
+            receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.show(newPostFragment);

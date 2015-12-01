@@ -103,6 +103,11 @@ public class Tasks {
             }
 
             Loudly.getContext().addPost(post);
+            if (post.getAttachments().isEmpty()) {
+                post.setLoadedImage(true);
+            } else {
+                post.setLoadedImage(false);
+            }
 
             publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED,
                     post.getLocalId()));
@@ -141,7 +146,7 @@ public class Tasks {
                 return makeError(Broadcasts.POST_UPLOAD, Broadcasts.NETWORK_ERROR,
                         post.getLocalId(), e.getMessage());
             }
-
+            post.setLoadedImage(true);
             return makeSuccess(Broadcasts.POST_UPLOAD, post.getLocalId());
         }
     }

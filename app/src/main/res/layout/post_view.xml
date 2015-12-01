@@ -87,25 +87,28 @@
                 android:layout_margin="8dp"
                 />
 
-            <ProgressBar
-                style="?android:attr/progressBarStyleLarge"
+            <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/post_view_progress"
-                android:visibility="gone"
                 android:layout_below="@id/post_view_post_text"
-                android:layout_centerHorizontal="true" />
+                android:layout_centerHorizontal="true">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/post_view_post_image"
-                android:adjustViewBounds="true"
-                android:scaleType="centerInside"
-                android:background="@null"
-                android:layout_below="@id/post_view_progress"
-                android:layout_centerInParent="true"/>
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/post_view_post_image"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerInside"
+                    android:background="@null"/>
 
+                <ProgressBar
+                    style="?android:attr/progressBarStyleLarge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/post_view_progress"
+                    android:visibility="visible"
+                    android:layout_gravity="center" />
+            </FrameLayout>
         </RelativeLayout>
 
         <RelativeLayout
