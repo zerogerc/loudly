@@ -110,7 +110,7 @@ public class SettingsActivity extends AppCompatActivity {
     public void FBButtonClick() {
         startReceiver();
         Authorizer authorizer = new FacebookAuthorizer();
-        authorizer.createAsyncTask(this).execute();
+        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void MailRuButtonClick() {
@@ -140,7 +140,7 @@ public class SettingsActivity extends AppCompatActivity {
                 toast.show();
             }
         };
-        task.execute();
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
 

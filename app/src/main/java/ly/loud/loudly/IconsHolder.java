@@ -10,7 +10,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import base.Networks;
-import util.UtilsBundle;
+import util.Utils;
 
 /**
  * Created by ZeRoGerc on 29.11.15.
@@ -38,7 +38,7 @@ public class IconsHolder extends View {
             }
         }
 
-        Bitmap bitmap = UtilsBundle.getIconByNetwork(Networks.FB);
+        Bitmap bitmap = Utils.getIconByNetwork(Networks.FB);
         iconHeight = bitmap.getHeight();
         iconWidth = bitmap.getWidth();
     }
@@ -66,10 +66,10 @@ public class IconsHolder extends View {
             Bitmap bitmap = null;
             Log.d("ICONS", "image");
             if (isVisible[network]) {
-                bitmap = UtilsBundle.getIconByNetwork(network);
+                bitmap = Utils.getIconByNetwork(network);
             } else {
-                Bitmap bm = UtilsBundle.getIconByNetwork(network);
-                bitmap = UtilsBundle.toGrayscale(bm);
+                Bitmap bm = Utils.getIconByNetwork(network);
+                bitmap = Utils.toGrayscale(bm);
             }
             zones[network] = new Rect(cur_w, cur_h, cur_w + iconWidth, cur_h + iconHeight);
             canvas.drawBitmap(bitmap, cur_w, cur_h, null);

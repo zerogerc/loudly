@@ -15,8 +15,8 @@ import android.widget.ProgressBar;
 import base.Authorizer;
 import base.KeyKeeper;
 import util.BroadcastSendingTask;
+import util.Utils;
 import util.Broadcasts;
-import util.UtilsBundle;
 
 public class AuthActivity extends Fragment {
     private View rootView;
@@ -47,7 +47,7 @@ public class AuthActivity extends Fragment {
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (hidden) {
-            UtilsBundle.hidePhoneKeyboard(getActivity());
+            Utils.hidePhoneKeyboard(getActivity());
             if (!gotResponse) {
                 LocalBroadcastManager.getInstance(Loudly.getContext()).sendBroadcast(
                         BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION,

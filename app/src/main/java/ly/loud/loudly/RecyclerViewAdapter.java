@@ -14,7 +14,7 @@ import java.util.List;
 
 import base.Post;
 import base.attachments.Image;
-import util.UtilsBundle;
+import util.Utils;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private List<Post> posts;
@@ -28,7 +28,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.data.setText(getDateFormatted(post.getDate()));
 
-        holder.socialIcon.setImageBitmap(UtilsBundle.getIconByNetwork(post.getMainNetwork()));
+        holder.socialIcon.setImageBitmap(Utils.getIconByNetwork(post.getMainNetwork()));
 
         if (post.getTotalInfo() != null) {
             holder.commentsAmount.setText(Integer.toString(post.getTotalInfo().comment));

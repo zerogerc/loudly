@@ -22,7 +22,7 @@ import android.widget.Toast;
 import base.Tasks;
 import util.AttachableReceiver;
 import util.Broadcasts;
-import util.UtilsBundle;
+import util.Utils;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerViewAdapter = new RecyclerViewAdapter(Loudly.getContext().getPosts());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), UtilsBundle.getDefaultScreenHeight()) {
+        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), Utils.getDefaultScreenHeight()) {
         });
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);

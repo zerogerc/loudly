@@ -15,10 +15,12 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import java.io.IOException;
+
 import base.Post;
 import base.Tasks;
 import base.attachments.Image;
-import util.UtilsBundle;
+import util.Utils;
 
 
 public class PostCreateFragment extends Fragment {
@@ -55,7 +57,7 @@ public class PostCreateFragment extends Fragment {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/*");
-                UtilsBundle.hidePhoneKeyboard(getActivity());
+                Utils.hidePhoneKeyboard(getActivity());
                 startActivityForResult(intent, PICK_PHOTO_FROM_GALLERY);
             }
         });
@@ -86,7 +88,7 @@ public class PostCreateFragment extends Fragment {
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (hidden) {
-            UtilsBundle.hidePhoneKeyboard(getActivity());
+            Utils.hidePhoneKeyboard(getActivity());
         } else {
             InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
@@ -109,18 +111,24 @@ public class PostCreateFragment extends Fragment {
                 Log.e("IMG_LOAD_TAG", "Data to received");
             } else {
                 postImage = new Image(data.getData());
-                Bitmap bitmap = UtilsBundle.loadBitmap(data.getData(), UtilsBundle.getDefaultScreenWidth(), UtilsBundle.getDefaultScreenWidth());
-                postImage.setBitmap(bitmap);
-                final float scale = getResources().getDisplayMetrics().density;
-                int dpWidthInPx  = (int) (72 * scale);
-                int dpHeightInPx = (int) (72 * scale);
-                int margins = (int) (4 * scale);
-                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) postImageView.getLayoutParams();
-                layoutParams.width = dpWidthInPx;
-                layoutParams.height = dpHeightInPx;
-                layoutParams.setMargins(margins, margins, margins, margins);
-                postImageView.setLayoutParams(layoutParams);
-                postImageView.setImageBitmap(bitmap);
+                try {
+                    Bitmap bitmap = Utils.loadBitmap(data.getData(), Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
+
+                    postImage.setBitmap(bitmap);
+                    final float scale = getResources().getDisplayMetrics().density;
+                    int dpWidthInPx = (int) (72 * scale);
+                    int dpHeightInPx = (int) (72 * scale);
+                    int margins = (int) (4 * scale);
+                    RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) postImageView.getLayoutParams();
+                    layoutParams.width = dpWidthInPx;
+                    layoutParams.height = dpHeightInPx;
+                    layoutParams.setMargins(margins, margins, margins, margins);
+                    postImageView.setLayoutParams(layoutParams);
+                    postImageView.setImageBitmap(bitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // File not found
+                }
             }
         }
     }
