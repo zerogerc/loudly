@@ -17,7 +17,6 @@ import MailRu.MailRuAuthoriser;
 import VK.VKAuthorizer;
 import base.Authorizer;
 import base.KeyKeeper;
-import base.Networks;
 import base.Tasks;
 import util.AttachableReceiver;
 import util.Broadcasts;
@@ -76,6 +75,7 @@ public class SettingsActivity extends AppCompatActivity {
                     toast.show();
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
                     activity.iconsHolder.setVisible(network);
+                    Loudly.getContext().getPosts().clear();
                     break;
                 case Broadcasts.ERROR:
                     String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
@@ -119,18 +119,16 @@ public class SettingsActivity extends AppCompatActivity {
         authorizer.createAsyncTask(this).execute();
     }
 
-    public void LogoutClick(View v) {
+    public void LogoutClick(final int network) {
         AsyncTask<Object, Void, Object> task = new AsyncTask<Object, Void, Object>() {
             @Override
             protected Object doInBackground(Object... params) {
-                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                    if (Loudly.getContext().getKeyKeeper(i) != null) {
-                        try {
-                            DatabaseActions.deleteKey(i);
-                            Loudly.getContext().setKeyKeeper(i, null);
-                        } catch (DatabaseException e) {
-                            e.printStackTrace();
-                        }
+                if (Loudly.getContext().getKeyKeeper(network) != null) {
+                    try {
+                        DatabaseActions.deleteKey(network);
+                        Loudly.getContext().setKeyKeeper(network, null);
+                    } catch (DatabaseException e) {
+                        e.printStackTrace();
                     }
                 }
                 return null;

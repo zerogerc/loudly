@@ -10,6 +10,7 @@ import util.Query;
 public class FacebookAuthorizer extends Authorizer {
     private static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
     private static final String RESPONSE_URL = "https://www.facebook.com/connect/login_success.html";
+    private static final String REDIRECT_URL = "https://web.facebook.com/connect/login_success.html";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String ERROR_DESCRIPTION = "error";
 
@@ -50,7 +51,7 @@ public class FacebookAuthorizer extends Authorizer {
 
     @Override
     public boolean isResponse(String url) {
-        return url.startsWith(RESPONSE_URL);
+        return url.startsWith(REDIRECT_URL) || url.startsWith(RESPONSE_URL);
     }
 
     public static final Creator<FacebookAuthorizer> CREATOR = new Creator<FacebookAuthorizer>() {

@@ -42,6 +42,25 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (Loudly.getContext().getPosts().isEmpty() && loadPosts == null) {
+            // Loading posts
+
+            ProgressBar progressBar = (ProgressBar) findViewById(R.id.main_activity_progress);
+            progressBar.setVisibility(View.VISIBLE);
+
+            receivers[LOAD_POSTS_RECEIVER] = new PostLoadReceiver(this);
+
+            loadPosts = new Tasks.LoadPostsTask(Loudly.getContext().getTimeInterval(),
+                    Loudly.getContext().getWraps());
+
+            loadPosts.execute();
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -72,19 +91,6 @@ public class MainActivity extends AppCompatActivity {
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
-        if (Loudly.getContext().getPosts().isEmpty() && loadPosts == null) {
-            // Loading posts
-
-            ProgressBar progressBar = (ProgressBar) findViewById(R.id.main_activity_progress);
-            progressBar.setVisibility(View.VISIBLE);
-
-            receivers[LOAD_POSTS_RECEIVER] = new PostLoadReceiver(this);
-
-            loadPosts = new Tasks.LoadPostsTask(Loudly.getContext().getTimeInterval(),
-                    Loudly.getContext().getWraps());
-
-            loadPosts.execute();
-        }
     }
 
     static class CustomRecyclerViewListener extends RecyclerView.OnScrollListener {
@@ -225,10 +231,10 @@ public class MainActivity extends AppCompatActivity {
             Toast toast;
             long postID, imageID;
             int progress;
+            MainActivity mainActivity = (MainActivity) context;
             switch (status) {
                 case Broadcasts.STARTED:
                     // Saved to DB. Make place for the post
-                    MainActivity mainActivity = (MainActivity) context;
                     mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.PROGRESS:
@@ -251,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
                     networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
                     toast = Toast.makeText(context, "Image " + imageID + " uploaded to " + networkID, Toast.LENGTH_SHORT);
                     toast.show();
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.FINISHED:
                     // Post uploaded
@@ -258,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
                     toast.show();
                     receivers[POST_UPLOAD_RECEIVER].stop();
                     receivers[POST_UPLOAD_RECEIVER] = null;
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.ERROR:
                     // Got an error

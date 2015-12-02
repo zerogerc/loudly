@@ -82,9 +82,13 @@ public class IconsHolder extends View {
         }
     }
 
-
     public void setVisible(int network) {
         isVisible[network] = true;
+        invalidate();
+    }
+
+    public void setInvisible(int network) {
+        isVisible[network] = false;
         invalidate();
     }
 
@@ -93,12 +97,22 @@ public class IconsHolder extends View {
         int x = (int)event.getX();
         int y = (int)event.getY();
 
-        if (zones[Networks.FB].contains(x, y) && !isVisible[Networks.FB]) {
-            activity.FBButtonClick();
+        if (zones[Networks.FB].contains(x, y)) {
+            if (isVisible[Networks.FB]) {
+                activity.LogoutClick(Networks.FB);
+                setInvisible(Networks.FB);
+            } else {
+                activity.FBButtonClick();
+            }
         }
 
-        if (zones[Networks.VK].contains(x, y) && !isVisible[Networks.VK]) {
-            activity.VKButtonClick();
+        if (zones[Networks.VK].contains(x, y)) {
+            if (isVisible[Networks.VK]) {
+                activity.LogoutClick(Networks.VK);
+                setInvisible(Networks.VK);
+            } else {
+                activity.VKButtonClick();
+            }
         }
 
         return super.onTouchEvent(event);

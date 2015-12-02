@@ -15,8 +15,8 @@ import android.widget.ProgressBar;
 import base.Authorizer;
 import base.KeyKeeper;
 import util.BroadcastSendingTask;
-import util.UtilsBundle;
 import util.Broadcasts;
+import util.UtilsBundle;
 
 public class AuthActivity extends Fragment {
     private View rootView;
@@ -65,8 +65,7 @@ public class AuthActivity extends Fragment {
             webView.loadUrl(url);
             webView.setWebViewClient(new WebViewClient() {
                 @Override
-                public void onPageFinished(WebView view, String url) {
-                    super.onPageFinished(view, url);
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
                     if (authorizer.isResponse(url)) {
                         view.setVisibility(View.VISIBLE);
 
@@ -79,11 +78,14 @@ public class AuthActivity extends Fragment {
                         FragmentTransaction ft = getFragmentManager().beginTransaction();
                         ft.hide(fragment);
                         ft.commit();
+                        return true;
 
                     } else {
                         circle.setVisibility(View.INVISIBLE);
                         webView.setVisibility(View.VISIBLE);
                     }
+                    return false;
+
                 }
             });
 
