@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,7 +14,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
-import java.io.IOException;
+import com.squareup.picasso.Picasso;
 
 import base.Post;
 import base.Tasks;
@@ -111,24 +110,18 @@ public class PostCreateFragment extends Fragment {
                 Log.e("IMG_LOAD_TAG", "Data to received");
             } else {
                 postImage = new Image(data.getData());
-                try {
-                    Bitmap bitmap = Utils.loadBitmap(data.getData(), Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
-
-                    postImage.setBitmap(bitmap);
-                    final float scale = getResources().getDisplayMetrics().density;
-                    int dpWidthInPx = (int) (72 * scale);
-                    int dpHeightInPx = (int) (72 * scale);
-                    int margins = (int) (4 * scale);
-                    RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) postImageView.getLayoutParams();
-                    layoutParams.width = dpWidthInPx;
-                    layoutParams.height = dpHeightInPx;
-                    layoutParams.setMargins(margins, margins, margins, margins);
-                    postImageView.setLayoutParams(layoutParams);
-                    postImageView.setImageBitmap(bitmap);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // File not found
-                }
+                final float scale = getResources().getDisplayMetrics().density;
+                int dpWidthInPx = (int) (72 * scale);
+                int dpHeightInPx = (int) (72 * scale);
+                int margins = (int) (4 * scale);
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) postImageView.getLayoutParams();
+                layoutParams.width = dpWidthInPx;
+                layoutParams.height = dpHeightInPx;
+                layoutParams.setMargins(margins, margins, margins, margins);
+                postImageView.setLayoutParams(layoutParams);
+                Picasso.with(Loudly.getContext()).load(data.getData())
+                        .resize(Utils.dpToPx(72), Utils.dpToPx(72))
+                        .into(postImageView);
             }
         }
     }

@@ -100,6 +100,33 @@ public class Utils {
         return BitmapFactory.decodeResource(Loudly.getContext().getResources(), resource);
     }
 
+    public static int getIconDrawbleByNetwork(int network) {
+        int resource;
+        switch(network) {
+            case Networks.FB:
+                resource = R.mipmap.ic_facebook_round;
+                break;
+            case Networks.TWITTER:
+                resource = R.mipmap.ic_twitter_round;
+                break;
+            case Networks.INSTAGRAM:
+                resource = R.mipmap.ic_instagram_round;
+                break;
+            case Networks.VK:
+                resource = R.mipmap.ic_vk_round;
+                break;
+            case Networks.OK:
+                resource = R.mipmap.ic_ok_round;
+                break;
+            case Networks.MAILRU:
+                resource = R.mipmap.ic_mail_ru_round;
+                break;
+            default:
+                resource = R.mipmap.ic_launcher_without;
+        }
+        return resource;
+    }
+
     public static Bitmap toGrayscale(Bitmap bmpOriginal)
     {
         int width, height;

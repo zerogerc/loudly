@@ -8,6 +8,9 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.Calendar;
 import java.util.List;
@@ -15,6 +18,7 @@ import java.util.List;
 import base.Post;
 import base.attachments.Image;
 import util.Utils;
+import util.picasso.CircleTransform;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private List<Post> posts;
@@ -23,12 +27,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.posts = posts;
     }
 
-    private void refreshFields(ViewHolder holder, Post post) {
+    private void refreshFields(final ViewHolder holder, final Post post) {
         holder.text.setText(post.getText());
 
         holder.data.setText(getDateFormatted(post.getDate()));
 
-        holder.socialIcon.setImageBitmap(Utils.getIconByNetwork(post.getMainNetwork()));
+        int resource = Utils.getIconDrawbleByNetwork(post.getMainNetwork());
+        Picasso.with(Loudly.getContext()).load("image")
+                .error(resource)
+                .placeholder(resource)
+                .into(holder.socialIcon);
 
         if (post.getTotalInfo() != null) {
             holder.commentsAmount.setText(Integer.toString(post.getTotalInfo().comment));
@@ -41,11 +49,31 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
 
         if (post.getAttachments().size() != 0) {
+            holder.postImageView.setImageBitmap(null);
+            post.setLoadedImage(false);
+            holder.progressBar.setVisibility(View.VISIBLE);
+
             Image image = (Image)post.getAttachments().get(0);
-            holder.postImageView.setImageBitmap(image.getBitmap());
+            Picasso.with(Loudly.getContext()).load(image.getUri()).
+                    resize(Utils.getDefaultScreenWidth(), Utils.getDefaultScreenHeight())
+                    .transform(new CircleTransform())
+                            .centerInside()
+                    .into(holder.postImageView, new com.squareup.picasso.Callback() {
+                        @Override
+                        public void onError() {
+                            Toast.makeText(Loudly.getContext(), "Error occured during image load", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onSuccess() {
+                            post.setLoadedImage(true);
+                            holder.progressBar.setVisibility(View.GONE);
+                        }
+                    });
         } else {
             holder.postImageView.setImageBitmap(null);
         }
+
         if (post.isLoadedImage()) {
             holder.progressBar.setVisibility(View.GONE);
         } else {

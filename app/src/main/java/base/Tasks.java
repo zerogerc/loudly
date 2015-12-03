@@ -2,8 +2,6 @@ package base;
 
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.net.Uri;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -15,7 +13,6 @@ import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
 import util.TimeInterval;
-import util.Utils;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -447,42 +444,6 @@ public class Tasks {
                     post.setLoadedImage(true);
                 } else {
                     post.setLoadedImage(false);
-                }
-            }
-
-            for (Post post : resultList) {
-                if (post.getAttachments().size() != 0) {
-                    final long postID = post.getLocalId();
-                    Image image = (Image) post.getAttachments().get(0);
-                    try {
-                        final long imageID = image.getLocalID();
-                        Bitmap bitmap;
-                        post.setLoadedImage(false);
-                        if (image.isLocal()) {
-                            Uri uri = Uri.parse(image.getExtra());
-                            bitmap = Utils.loadBitmap(uri,
-                                    Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
-                        } else {
-                            bitmap = Utils.downloadBitmap(image.getExtra(), new BackgroundAction() {
-                                        @Override
-                                        public void execute(Object... params) {
-                                            Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.IMAGE,
-                                                    postID);
-                                            message.putExtra(Broadcasts.IMAGE_FIELD, imageID);
-                                            message.putExtra(Broadcasts.PROGRESS, (int) params[0]);
-                                            publishProgress(message);
-                                        }
-                                    },
-                                    Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
-                        }
-                        image.setBitmap(bitmap);
-                        post.setLoadedImage(true);
-                        message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.IMAGE_FINISHED, postID);
-                        message.putExtra(Broadcasts.IMAGE_FIELD, imageID);
-                        publishProgress(message);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
 

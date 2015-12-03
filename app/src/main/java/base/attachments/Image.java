@@ -1,6 +1,5 @@
 package base.attachments;
 
-import android.graphics.Bitmap;
 import android.net.Uri;
 
 import java.io.IOException;
@@ -13,7 +12,6 @@ public class Image extends Attachment {
     protected String[] links;
     protected String internalLink;
     protected boolean local;
-    protected Bitmap bitmap;
     {
         localID = 0;
     }
@@ -34,14 +32,6 @@ public class Image extends Attachment {
         this.internalLink = internalLink.toString();
         this.links = new String[Networks.NETWORK_COUNT];
         this.local = true;
-    }
-
-    public void setBitmap(Bitmap bitmap) {
-        this.bitmap = bitmap;
-    }
-
-    public Bitmap getBitmap() {
-        return this.bitmap;
     }
 
     public Uri getUri() {
