@@ -76,7 +76,7 @@ public class FacebookWrap extends Wrap {
         query.addParameter("no_story", true);
 
         String response = Network.makePostRequest(query, progress, "source",
-                    image);
+                image);
 
         JSONObject parser;
         try {
@@ -84,6 +84,36 @@ public class FacebookWrap extends Wrap {
             image.setLink(networkID(), parser.getString("id"));
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void deletePost(Post post) throws IOException {
+        Query query = makeSignedAPICall(post.getLink(networkID()));
+
+        String response = Network.makeDeleteRequest(query);
+
+        JSONObject parser;
+        try {
+            parser = new JSONObject(response);
+            if (parser.getString("success").equals("true")) {
+                post.detachFromNetwork(NETWORK);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Query makeDeleteQuery(Post post) {
+        return new Query(MAIN_SERVER + post.getLink(NETWORK));
+    }
+
+    public void parseDeleteResponse(Post post, String response) {
+        try {
+            JSONObject parse = new JSONObject(response);
+
+        } catch (JSONException e) {
+            // ToDo: tell about fails
         }
     }
 
@@ -268,18 +298,5 @@ public class FacebookWrap extends Wrap {
         return result;
     }
 
-    public Query makeDeleteQuery(Post post) {
-        return new Query(MAIN_SERVER + post.getLink(NETWORK));
-    }
 
-    public void parseDeleteResponse(Post post, String response) {
-        try {
-            JSONObject parse = new JSONObject(response);
-            if (parse.getString("success").equals("true")) {
-                post.detachFromNetwork(NETWORK);
-            }
-        } catch (JSONException e) {
-            // ToDo: tell about fails
-        }
-    }
 }

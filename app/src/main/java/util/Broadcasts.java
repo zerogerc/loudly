@@ -18,6 +18,8 @@ public class Broadcasts {
 
     public static final String POST_GET_PERSONS = "person";
 
+    public static final String POST_DELETE = "delete";
+
     /** Fields in broadcasts **/
 
     public static final String ID_FIELD = "id";

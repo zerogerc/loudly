@@ -137,6 +137,19 @@ public class VKWrap extends Wrap {
     }
 
     @Override
+    public void deletePost(Post post) throws IOException {
+        Query query = makeSignedAPICall(DELETE_METHOD);
+        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
+        query.addParameter("owner_id", keys.getUserId());
+        query.addParameter("post_id", post.getLink(NETWORK));
+
+        String response = Network.makeGetRequest(query);
+
+        // todo: check for delete
+        post.detachFromNetwork(NETWORK);
+    }
+
+    @Override
     public void getPostsInfo(List<Post> posts) throws IOException {
         Query query = makeSignedAPICall(GET_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
@@ -329,17 +342,5 @@ public class VKWrap extends Wrap {
         return result;
     }
 
-    public Query makeDeleteQuery(Post post) {
-        Query query = makeSignedAPICall(DELETE_METHOD);
-        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
-        query.addParameter("owner_id", keys.getUserId());
-        query.addParameter("post_id", post.getLink(NETWORK));
-        return query;
-    }
 
-    public void parseDeleteResponse(Post post, String response) {
-        if (response.equals("1")) {
-            post.detachFromNetwork(NETWORK);
-        }
-    }
 }

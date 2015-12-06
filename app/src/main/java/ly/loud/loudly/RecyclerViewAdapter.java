@@ -1,5 +1,7 @@
 package ly.loud.loudly;
 
+import android.content.Context;
+import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,14 +15,17 @@ import java.util.Calendar;
 import java.util.List;
 
 import base.Post;
+import base.Tasks;
 import base.attachments.Image;
 import util.Utils;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private List<Post> posts;
+    private Context context;
 
-    RecyclerViewAdapter(List<Post> posts) {
+    RecyclerViewAdapter(Context context, List<Post> posts) {
         this.posts = posts;
+        this.context = context;
     }
 
     private void refreshFields(ViewHolder holder, Post post) {
@@ -41,7 +46,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
 
         if (post.getAttachments().size() != 0) {
-            Image image = (Image)post.getAttachments().get(0);
+            Image image = (Image) post.getAttachments().get(0);
             holder.postImageView.setImageBitmap(image.getBitmap());
         } else {
             holder.postImageView.setImageBitmap(null);
@@ -51,12 +56,26 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         } else {
             holder.progressBar.setVisibility(View.VISIBLE);
         }
+
+        holder.showMoreOptions.setOnClickListener(makeOptionsOnClickListener(post, context));
+    }
+
+    private View.OnClickListener makeOptionsOnClickListener(final Post post, final Context context) {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
+                        new MainActivity.PostDeleteReceiver(context);
+                new Tasks.PostDeleter(post, MainActivity.posts, Loudly.getContext().getWraps()).
+                        executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }
+        };
     }
 
     private String getDateFormatted(long date) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(date * 1000);
-        return cal.get(Calendar.DAY_OF_MONTH) + "." + + (cal.get(Calendar.MONTH) + 1) + "." + cal.get(Calendar.YEAR)
+        return cal.get(Calendar.DAY_OF_MONTH) + "." + +(cal.get(Calendar.MONTH) + 1) + "." + cal.get(Calendar.YEAR)
                 + " around " + cal.get(Calendar.HOUR_OF_DAY) + " hours";
     }
 
@@ -91,25 +110,27 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private ImageView repostsButton;
         private ImageView postImageView;
         private ProgressBar progressBar;
+        private ImageView showMoreOptions;
 
         public ViewHolder(View itemView, Post post) {
             super(itemView);
 
-            socialIcon = (ImageView)itemView.findViewById(R.id.post_view_social_network_icon);
-            text = (TextView)itemView.findViewById(R.id.post_view_post_text);
-            data = (TextView)itemView.findViewById(R.id.post_view_data_text);
-            geoData = (TextView)itemView.findViewById(R.id.post_view_geo_data_text);
-            commentsAmount = (TextView)itemView.findViewById(R.id.post_view_comments_amount);
-            commentsButton = (ImageView)itemView.findViewById(R.id.post_view_comments_button);
-            likesAmount = (TextView)itemView.findViewById(R.id.post_view_likes_amount);
-            likesButton = (ImageView)itemView.findViewById(R.id.post_view_likes_button);
-            repostsAmount = (TextView)itemView.findViewById(R.id.post_view_reposts_amount);
-            repostsButton = (ImageView)itemView.findViewById(R.id.post_view_reposts_button);
-            postImageView = (ImageView)itemView.findViewById(R.id.post_view_post_image);
-            progressBar = (ProgressBar)itemView.findViewById(R.id.post_view_progress);
+            socialIcon = (ImageView) itemView.findViewById(R.id.post_view_social_network_icon);
+            text = (TextView) itemView.findViewById(R.id.post_view_post_text);
+            data = (TextView) itemView.findViewById(R.id.post_view_data_text);
+            geoData = (TextView) itemView.findViewById(R.id.post_view_geo_data_text);
+            commentsAmount = (TextView) itemView.findViewById(R.id.post_view_comments_amount);
+            commentsButton = (ImageView) itemView.findViewById(R.id.post_view_comments_button);
+            likesAmount = (TextView) itemView.findViewById(R.id.post_view_likes_amount);
+            likesButton = (ImageView) itemView.findViewById(R.id.post_view_likes_button);
+            repostsAmount = (TextView) itemView.findViewById(R.id.post_view_reposts_amount);
+            repostsButton = (ImageView) itemView.findViewById(R.id.post_view_reposts_button);
+            postImageView = (ImageView) itemView.findViewById(R.id.post_view_post_image);
+            progressBar = (ProgressBar) itemView.findViewById(R.id.post_view_progress);
+            showMoreOptions = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
 
             geoData.setHeight(0);
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)geoData.getLayoutParams();
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) geoData.getLayoutParams();
             params.setMargins(0, 0, 0, 0);
             geoData.setLayoutParams(params);
             refreshFields(this, post);

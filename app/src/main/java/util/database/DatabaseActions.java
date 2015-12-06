@@ -175,18 +175,11 @@ public class DatabaseActions {
         LinkedList<Post> res = new LinkedList<>();
         Cursor cursor = null;
 
-//        String sinceIDQuery = (!ID.from.isEmpty()) ? PostEntry._ID + " > " + ID.from : "";
-//        String beforeIDQuery = (!ID.to.isEmpty()) ? PostEntry._ID + " < " + ID.to : "";
         String sinceTimeQuery = (time.from != -1) ? PostEntry.COLUMN_NAME_DATE + " > " + Long.toString(time.from) : "";
         String beforeTimeQuery = (time.to != -1) ? PostEntry.COLUMN_NAME_DATE + " < " + Long.toString(time.to) : "";
-//        String IDQuery = (sinceIDQuery.equals("") ? beforeIDQuery : sinceIDQuery) +
-//                (beforeIDQuery.equals("") ? "" : " AND " + beforeTimeQuery);
 
-        String timeQuery = (sinceTimeQuery.equals("") ? beforeTimeQuery : sinceTimeQuery) +
+        String select = (sinceTimeQuery.equals("") ? beforeTimeQuery : sinceTimeQuery) +
                 (beforeTimeQuery.equals("") ? "" : " AND " + beforeTimeQuery);
-
-//        String select = IDQuery.equals("") ? timeQuery : IDQuery + " AND " + timeQuery;
-        String select = timeQuery;
 
         try {
             cursor = db.query(
@@ -228,6 +221,8 @@ public class DatabaseActions {
             if (cursor.getCount() == 0) {
                 return;
             }
+
+            cursor.moveToFirst();
             long locId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LOCATION));
             long atId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_FIRST_ATTACHMENT));
             long linkId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LINKS));

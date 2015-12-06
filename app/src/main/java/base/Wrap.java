@@ -29,11 +29,14 @@ public abstract class Wrap {
 
     public abstract void uploadImage(Image image, BackgroundAction progress) throws IOException;
 
+    public abstract void deletePost(Post post) throws IOException;
+
     public abstract void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException;
 
     public abstract void getPostsInfo(List<Post> posts) throws IOException;
 
     public abstract LinkedList<Person> getPersons(int what, Post post) throws IOException;
+
 
     public static Wrap makeWrap(int network) {
         switch (network) {

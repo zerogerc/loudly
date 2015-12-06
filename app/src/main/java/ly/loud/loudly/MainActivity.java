@@ -37,12 +37,13 @@ public class MainActivity extends AppCompatActivity {
     View newPostFragmentView;
     Fragment newPostFragment;
 
-    private static final int LOAD_POSTS_RECEIVER = 0;
-    private static final int POST_UPLOAD_RECEIVER = 1;
-    private static final int GET_INFO_RECEIVER = 2;
-    private static final int RECEIVER_COUNT = 3;
+    static final int LOAD_POSTS_RECEIVER = 0;
+    static final int POST_UPLOAD_RECEIVER = 1;
+    static final int GET_INFO_RECEIVER = 2;
+    static final int POST_DELETE_RECEIVER = 3;
+    static final int RECEIVER_COUNT = 4;
 
-    private static AttachableReceiver[] receivers = null;
+    static AttachableReceiver[] receivers = null;
     private static Tasks.LoadPostsTask loadPosts = null;
 
     @Override
@@ -158,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setRecyclerView() {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        recyclerViewAdapter = new RecyclerViewAdapter(posts);
+        recyclerViewAdapter = new RecyclerViewAdapter(this, posts);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), Utils.getDefaultScreenHeight()) {
@@ -362,6 +363,36 @@ public class MainActivity extends AppCompatActivity {
                     t.show();
                     stop();
                     receivers[GET_INFO_RECEIVER] = null;
+                    break;
+            }
+        }
+    }
+
+    static class PostDeleteReceiver extends AttachableReceiver {
+        public PostDeleteReceiver(Context context) {
+            super(context, Broadcasts.POST_DELETE);
+        }
+
+        @Override
+        public void onMessageReceive(Context context, Intent message) {
+            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            Toast toast;
+            int id;
+            switch (status) {
+                case Broadcasts.PROGRESS:
+                    id = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    toast = Toast.makeText(context, "Deleted: " + id, Toast.LENGTH_SHORT);
+                    toast.show();
+                    break;
+                case Broadcasts.FINISHED:
+                    toast = Toast.makeText(context, "Deleted from all", Toast.LENGTH_SHORT);
+                    toast.show();
+                    MainActivity mainActivity = (MainActivity) context;
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    break;
+                case Broadcasts.ERROR:
+                    toast = Toast.makeText(context, "Error!!!", Toast.LENGTH_SHORT);
+                    toast.show();
                     break;
             }
         }

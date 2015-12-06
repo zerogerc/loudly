@@ -98,7 +98,7 @@ public class Utils {
                 resource = R.mipmap.ic_mail_ru_round;
                 break;
             default:
-                resource = R.mipmap.ic_launcher_without;
+                resource = R.mipmap.ic_launcher;
         }
         return BitmapFactory.decodeResource(Loudly.getContext().getResources(), resource);
     }

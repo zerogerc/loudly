@@ -59,8 +59,8 @@
             </RelativeLayout>
 
             <ImageButton
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:id="@+id/post_view_more_options_button"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
