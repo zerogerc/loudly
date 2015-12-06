@@ -3,37 +3,40 @@ package util;
 import android.content.Context;
 import android.os.AsyncTask;
 
+import java.lang.ref.WeakReference;
+
 /**
  * AttachableTask is AsyncTask, which can attach to current context.
  * @param <Params> Parameters, passed to doInBackground.
  * @param <Progress> Type of progress
- * @param <Result> Type of result, passed to ExecuteInUI
+ * @param <Result> Type of result, passed to executeInUI
  */
 
 public abstract class AttachableTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
-    protected Context context;
+    protected WeakReference<Context> context;
+    protected Result result;
 
     /**
      * @param context current context
      */
     public AttachableTask(Context context) {
         super();
-        this.context = context;
+        this.context = new WeakReference<>(context);
+        result = null;
     }
 
     /**
-     * Attach task to current context
+     * Attach task to current context. If task was finished when task wasn't attached,
+     * executeInUI will be called instead of attach
      * @param context link to current context. Don't forget to detach, if context was destroyed
      */
-    public void attachContext(Context context) {
-        this.context = context;
-    }
-
-    /**
-     * Detaches task from any context. Important to call in onDestroy
-     */
-    public void detachContext() {
-        context = null;
+    public void attach(Context context) {
+        if (result != null) {
+            executeInUI(context, result);
+            result = null;
+        } else {
+            this.context = new WeakReference<>(context);
+        }
     }
 
     /**
@@ -41,10 +44,14 @@ public abstract class AttachableTask<Params, Progress, Result> extends AsyncTask
      * @param context current context
      * @param result result of AttachableTask
      */
-    public abstract void ExecuteInUI(Context context, Result result);
+    public abstract void executeInUI(Context context, Result result);
 
     @Override
     protected void onPostExecute(Result result) {
-        ExecuteInUI(context, result);
+        if (context != null) {
+            executeInUI(context.get(), result);
+        } else {
+            this.result = result;
+        }
     }
 }

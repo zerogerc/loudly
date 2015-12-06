@@ -92,7 +92,7 @@ public class AuthActivity extends Fragment {
         }
     }
 
-    private static class FinishAuthorization extends BroadcastSendingTask<Object> {
+    private static class FinishAuthorization extends BroadcastSendingTask {
         @Override
         protected Intent doInBackground(Object... params) {
             Authorizer authorizer = (Authorizer) params[0];

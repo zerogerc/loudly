@@ -11,6 +11,7 @@ import java.util.LinkedList;
 
 import base.KeyKeeper;
 import base.Networks;
+import base.Person;
 import base.Post;
 import base.Tasks;
 import base.Wrap;
@@ -26,7 +27,7 @@ public class Loudly extends Application {
 
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
-    private LinkedList<Post> posts;
+
     private long postFromOtherNetworks = 0;
 
     private IDInterval[] loadedPosts;
@@ -60,18 +61,6 @@ public class Loudly extends Application {
      */
     public static Loudly getContext() {
         return context;
-    }
-
-    public void addPost(Post post) {
-        posts.add(0, post);
-    }
-
-    public void addPosts(LinkedList<Post> others) {
-        posts.addAll(others);
-    }
-
-    public LinkedList<Post> getPosts() {
-        return posts;
     }
 
     public Wrap[] getWraps() {
@@ -125,7 +114,6 @@ public class Loudly extends Application {
         super.onCreate();
         keyKeepers = new KeyKeeper[Networks.NETWORK_COUNT];
         context = this;
-        posts = new LinkedList<>();
         loadedPosts = new IDInterval[Networks.NETWORK_COUNT];
         offsets = new int[Networks.NETWORK_COUNT];
 

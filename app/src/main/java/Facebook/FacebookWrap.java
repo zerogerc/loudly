@@ -6,9 +6,12 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import base.Networks;
+import base.Person;
 import base.Post;
 import base.Tasks;
 import base.Wrap;
@@ -72,15 +75,8 @@ public class FacebookWrap extends Wrap {
         query.addParameter("published", true);
         query.addParameter("no_story", true);
 
-        InputStream content = null;
-        String response;
-        try {
-            content = image.getContent();
-            response = Network.makePostRequest(query, progress, "source",
-                    image.getMIMEType(), content);
-        } finally {
-            Utils.closeQuietly(content);
-        }
+        String response = Network.makePostRequest(query, progress, "source",
+                    image);
 
         JSONObject parser;
         try {
@@ -175,7 +171,7 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public void getPostsInfo(Post... posts) throws IOException {
+    public void getPostsInfo(List<Post> posts) throws IOException {
         Query query = makeSignedAPICall("");
         StringBuilder sb = new StringBuilder();
         for (Post post : posts) {
@@ -206,6 +202,70 @@ public class FacebookWrap extends Wrap {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public LinkedList<Person> getPersons(int what, Post post) throws IOException {
+        String node;
+        switch (what) {
+            case Tasks.LIKES:
+                node = "/likes";
+                break;
+            case Tasks.SHARES:
+                node = "/sharedposts";
+                break;
+            default:
+                node = "";
+                break;
+        }
+        Query query = makeSignedAPICall(post.getLink(networkID()) + node);
+        String response = Network.makeGetRequest(query);
+        JSONObject parser;
+
+        Query getPeopleQuery = makeSignedAPICall("");
+        StringBuilder sb = new StringBuilder();
+        ArrayList<String> ids = new ArrayList<>();
+
+        try {
+            parser = new JSONObject(response);
+            JSONArray likers = parser.getJSONArray("data");
+
+            if (likers.length() == 0) {
+                return new LinkedList<>();
+            }
+
+            for (int i = 0; i < likers.length(); i++) {
+                String id = likers.getString(i);
+                ids.add(id);
+                sb.append(id);
+                sb.append(',');
+            }
+            sb.delete(sb.length() - 1, sb.length());
+
+            getPeopleQuery.addParameter("ids", sb);
+            getPeopleQuery.addParameter("fields", "first_name,last_name,picture");
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        response = Network.makeGetRequest(query);
+
+        LinkedList<Person> result = new LinkedList<>();
+        try {
+            parser = new JSONObject(response);
+            for (String id :ids) {
+                JSONObject person = parser.getJSONObject(id);
+                String firstName = person.getString("first_name");
+                String lastName = person.getString("last_name");
+                String pictureUrl = person.getJSONObject("picture").getJSONObject("data").getString("url");
+                result.add(new Person(firstName, lastName, pictureUrl, networkID()));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return result;
     }
 
     public Query makeDeleteQuery(Post post) {

@@ -25,8 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
 
 import base.Networks;
+import base.Post;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.R;
 
@@ -236,6 +239,26 @@ public class Utils {
         }
     }
 
+    public static LinkedList<Post> merge(LinkedList<Post> oldPosts, LinkedList<Post> newPosts) {
+
+        LinkedList<Post> temp = new LinkedList<>();
+        while (oldPosts.size() != 0 || newPosts.size() != 0) {
+            if (oldPosts.size() == 0) {
+                temp.add(newPosts.removeFirst());
+                continue;
+            }
+            if (newPosts.size() == 0) {
+                temp.add(oldPosts.removeFirst());
+                continue;
+            }
+            if (oldPosts.getFirst().getDate() <= newPosts.getFirst().getDate()) {
+                temp.add(newPosts.removeFirst());
+            } else {
+                temp.add(oldPosts.removeFirst());
+            }
+        }
+        return temp;
+    }
 
     /**
      * Close instance of Closeable without throwing exception

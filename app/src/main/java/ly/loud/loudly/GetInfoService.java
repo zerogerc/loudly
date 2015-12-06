@@ -17,8 +17,10 @@ public class GetInfoService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        // TODO: 12/6/2015 This possible may produce leaks. Should be replaced soon
         LinkedList<Post> loudlyPosts = new LinkedList<>();
-        for (Post post : Loudly.getContext().getPosts()) {
+        for (Post post : MainActivity.posts) {
             if (post.getMainNetwork() == -1) {
                 loudlyPosts.add(post);
             }
@@ -27,44 +29,13 @@ public class GetInfoService extends Service {
             return;
         }
 
-        Tasks.InfoGetter getter = new Tasks.InfoGetter(Loudly.getContext().getWraps());
-        getter.execute(loudlyPosts.toArray(new Post[0]));
-        LoadAndGetInfo task = new LoadAndGetInfo(this);
-        task.execute();
+        Tasks.InfoGetter getter = new Tasks.InfoGetter(loudlyPosts, Loudly.getContext().getWraps());
+        getter.execute();
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    static class LoadAndGetInfo extends AsyncTask<Object, Void, Boolean> {
-        Service service;
-
-        public LoadAndGetInfo(Service service) {
-            this.service = service;
-        }
-
-        @Override
-        protected Boolean doInBackground(Object... params) {
-            try {
-                if (Loudly.getContext().getPosts().isEmpty()) {
-                    DatabaseActions.loadKeys();
-                    DatabaseActions.loadPosts(Loudly.getContext().getTimeInterval());
-                }
-            } catch (DatabaseException e) {
-                return Boolean.FALSE;
-            }
-            return Boolean.TRUE;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean o) {
-            if (o) {
-
-            }
-            service.stopSelf();
-        }
     }
 }

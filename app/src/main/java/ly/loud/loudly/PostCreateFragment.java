@@ -36,7 +36,6 @@ public class PostCreateFragment extends Fragment {
         getActivity().findViewById(R.id.new_post_send_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Tasks.PostUploader uploader = new Tasks.PostUploader(Loudly.getContext().getWraps());
 
                 String text = editText.getText().toString();
                 Post post = new Post(text);
@@ -44,6 +43,9 @@ public class PostCreateFragment extends Fragment {
                     post.addAttachment(postImage);
                     postImage = null;
                 }
+
+                Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
+                        Loudly.getContext().getWraps());
                 uploader.execute(post);
                 postImageView.setImageBitmap(null);
                 editText.setText(null);

@@ -1,13 +1,17 @@
 package base.attachments;
 
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.provider.OpenableColumns;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import base.Networks;
+import base.Person;
 import ly.loud.loudly.Loudly;
+import util.Utils;
 
 public class Image extends Attachment {
     protected String[] links;
@@ -54,6 +58,21 @@ public class Image extends Attachment {
 
     public InputStream getContent() throws IOException {
         return Loudly.getContext().getContentResolver().openInputStream(getUri());
+    }
+
+    public long getFileSize() throws IOException {
+        Cursor cursor = null;
+        try {
+            cursor = Loudly.getContext().getContentResolver().query(getUri(), null, null, null, null);
+            if (cursor == null) {
+                return 0;
+            }
+            cursor.moveToFirst();
+            return cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE));
+        } finally {
+            Utils.closeQuietly(cursor);
+        }
+
     }
 
     public void setLink(int network, String link) {

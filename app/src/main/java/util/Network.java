@@ -15,6 +15,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
+import base.attachments.Image;
+
 
 /**
  * Class that contains static methods for work with network
@@ -52,7 +54,7 @@ public class Network {
      * @throws IOException if any IO-error occurs
      */
     public static String makePostRequest(Query query) throws IOException {
-        return makePostRequest(query, null, null, null, null);
+        return makePostRequest(query, null, null, null);
     }
 
     /**
@@ -60,15 +62,14 @@ public class Network {
      * @param query request to server
      * @param onProgressUpdate is called during making request
      * @param tag - name of the photo field
-     * @param type - MIME-type of the file
-     * @param stream - InputStream with content of the file
+     * @param image - image that should be uploaded
      * @return response from server
      * @throws IOException if any IO-error occurs
      */
 
     public static String makePostRequest(Query query,
                                          BackgroundAction onProgressUpdate,
-                                         String tag, String type, InputStream stream) throws IOException {
+                                         String tag, Image image) throws IOException {
 
         String boundary = "===" + System.currentTimeMillis() + "===";
 
@@ -86,13 +87,13 @@ public class Network {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setDoInput(true);
-            String requestFormat = (stream == null) ? "application/x-www-form-urlencoded" : "multipart/form-data";
+            String requestFormat = (image == null) ? "application/x-www-form-urlencoded" : "multipart/form-data";
             conn.setRequestProperty("Content-type", requestFormat + "; boundary=" + boundary);
 
             outputStream = conn.getOutputStream();
             pw = new PrintWriter(outputStream);
 
-            if (stream == null) {
+            if (image == null) {
                 // If we should send only text
                 String request = query.getParameters().toString(); // Get parameters in proper format
                 pw.append(request);
@@ -103,6 +104,8 @@ public class Network {
                 for (Parameter p : query.getParameters().asList()) {
                     paramToPOST(pw, p, boundary);
                 }
+
+                String type = image.getMIMEType();
 
                 // Append file as sequence of bytes
                 // Appending file's info:
@@ -123,9 +126,24 @@ public class Network {
                 // Appending file's data
                 byte[] buffer = new byte[4096];
                 int bytesRead = -1;
-                while ((bytesRead = stream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                    // ToDo: And here publish
+
+                long size = image.getFileSize();
+                long uploaded = 0;
+                long progress = 0;
+                InputStream content = null;
+                try {
+                    content = image.getContent();
+                    while ((bytesRead = content.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                        uploaded += bytesRead;
+                        if (uploaded * 100 / size > progress + 2) {
+                            progress = uploaded * 100 / size;
+                            onProgressUpdate.execute((int)progress);
+                        }
+                        // ToDo: And here publish
+                    }
+                } finally {
+                    Utils.closeQuietly(content);
                 }
                 outputStream.flush();
                 pw.append(CRLF);

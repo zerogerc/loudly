@@ -4,17 +4,19 @@ public class Broadcasts {
     // TODO: 11/30/2015 Make them int
 
     /** Broadcast names **/
-    public static final String KEYS = "ly.loud.loudly.keys";
-    public static final String KEYS_SAVED = "ly.load.loudly.keys.saved";
-    public static final String KEYS_LOADED = "ly.loud.loudly.keys.loaded";
+    public static final String KEYS = "keys";
+    public static final String KEYS_SAVED = "keys.saved";
+    public static final String KEYS_LOADED = "keys.loaded";
 
-    public static final String AUTHORIZATION = "ly.loud.loudly.auth";
+    public static final String AUTHORIZATION = "auth";
 
-    public static final String POST_LOAD = "ly.loud.loudly.post.load";
+    public static final String POST_LOAD = "post.load";
 
-    public static final String POST_UPLOAD = "ly.loud.loudly.post.upload";
+    public static final String POST_UPLOAD = "post.upload";
 
-    public static final String POST_GET_INFO = "ly.loud.loudly.post.info";
+    public static final String POST_GET_INFO = "post.info";
+
+    public static final String POST_GET_PERSONS = "person";
 
     /** Fields in broadcasts **/
 
