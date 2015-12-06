@@ -5,14 +5,17 @@ import android.content.Intent;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 
 import base.attachments.Attachment;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
+import ly.loud.loudly.PeopleList.Item;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
 import util.TimeInterval;
+import util.Utils;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -20,18 +23,6 @@ import util.database.DatabaseException;
  * Class made for storing different asynchronous tasks
  */
 public class Tasks {
-    /**
-     * Main class for tasks that use wraps
-     */
-    public static abstract class SocialNetworkTask extends BroadcastSendingTask<Post> {
-        Wrap[] wraps;
-
-        public SocialNetworkTask(Wrap... wraps) {
-            this.wraps = wraps;
-        }
-    }
-
-
     /**
      * BroadcastReceivingTask for uploading post to network.
      * It sends Broadcasts.POST_UPLOAD broadcast with parameters:
@@ -60,7 +51,7 @@ public class Tasks {
      * <li>Broadcasts.NETWORK_ID = id of the network</li>
      * </ol>
      * </p>
-
+     * <p/>
      * After uploading post to some network:
      * <ol>
      * <li>Broadcasts.STATUS_FIELD = Broadcasts.PROGRESS</li>
@@ -84,14 +75,19 @@ public class Tasks {
      * </p>
      */
 
-    public static class PostUploader extends SocialNetworkTask {
-        public PostUploader(Wrap... wraps) {
-            super(wraps);
+    public static class PostUploader extends BroadcastSendingTask {
+        private Post post;
+        private Wrap[] wraps;
+        private LinkedList<Post> posts;
+
+        public PostUploader(Post post, LinkedList<Post> posts, Wrap... wraps) {
+            this.post = post;
+            this.posts = posts;
+            this.wraps = wraps;
         }
 
         @Override
-        protected Intent doInBackground(Post... params) {
-            final Post post = params[0];
+        protected Intent doInBackground(Object... params) {
             try {
                 DatabaseActions.savePost(post);
             } catch (DatabaseException e) {
@@ -99,12 +95,12 @@ public class Tasks {
                         e.getMessage());
             }
 
-            Loudly.getContext().addPost(post);
-            if (post.getAttachments().isEmpty()) {
-                post.setLoadedImage(true);
-            } else {
-                post.setLoadedImage(false);
+            if (post.getAttachments().size() != 0) {
+                Image image = (Image) post.getAttachments().get(0);
+                Utils.resolveImageSize(image);
             }
+
+            posts.add(0, post);
 
             publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED,
                     post.getLocalId()));
@@ -113,6 +109,7 @@ public class Tasks {
                 for (Wrap w : wraps) {
                     final int networkID = w.networkID();
                     for (final Attachment attachment : post.getAttachments()) {
+
                         w.uploadImage((Image) attachment, new BackgroundAction() {
                             @Override
                             public void execute(Object... params) {
@@ -174,13 +171,17 @@ public class Tasks {
      * </ol>
      * </p>
      */
-    public static class InfoGetter extends SocialNetworkTask {
-        public InfoGetter(Wrap... wraps) {
-            super(wraps);
+    public static class InfoGetter extends BroadcastSendingTask {
+        private LinkedList<Post> posts;
+        private Wrap[] wraps;
+
+        public InfoGetter(LinkedList<Post> posts, Wrap... wraps) {
+            this.posts = posts;
+            this.wraps = wraps;
         }
 
         @Override
-        protected Intent doInBackground(Post... posts) {
+        protected Intent doInBackground(Object... params) {
             try {
                 for (Wrap w : wraps) {
                     w.getPostsInfo(posts);
@@ -189,11 +190,52 @@ public class Tasks {
                     publishProgress(message);
                 }
             } catch (IOException e) {
-                publishProgress(makeError(Broadcasts.POST_GET_INFO, Broadcasts.NETWORK_FIELD,
+                publishProgress(makeError(Broadcasts.POST_GET_INFO, Broadcasts.NETWORK_ERROR,
                         e.getMessage()));
             }
 
             return makeSuccess(Broadcasts.POST_GET_INFO);
+        }
+    }
+
+    public static final int LIKES = 0;
+    public static final int SHARES = 1;
+
+    public static class PersonGetter extends BroadcastSendingTask {
+        private Post post;
+        private int what;
+        private List<Item> persons;
+        private Wrap[] wraps;
+
+        public PersonGetter(Post post, int what, List<Item> persons, Wrap... wraps) {
+            this.post = post;
+            this.what = what;
+            this.persons = persons;
+            this.wraps = wraps;
+        }
+
+        @Override
+        protected Intent doInBackground(Object... posts) {
+            for (Wrap w : wraps) {
+                try {
+                    if (post.getLink(w.networkID()) != null) {
+                        List<Person> got = w.getPersons(what, post);
+                        if (!got.isEmpty()) {
+                            persons.add(new NetworkDelimeter(w.networkID()));
+                            persons.addAll(w.getPersons(what, post));
+                        }
+
+                        Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);
+                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                        publishProgress(message);
+                    }
+
+                } catch (IOException e) {
+                    publishProgress(makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
+                            e.getMessage()));
+                }
+            }
+            return makeSuccess(Broadcasts.POST_GET_PERSONS);
         }
     }
 
@@ -216,7 +258,7 @@ public class Tasks {
      * </ol>
      * </p>
      */
-    public static class SaveKeysTask extends BroadcastSendingTask<Object> {
+    public static class SaveKeysTask extends BroadcastSendingTask {
         @Override
         protected Intent doInBackground(Object... params) {
             try {
@@ -249,7 +291,7 @@ public class Tasks {
      * </ol>
      * </p>
      */
-    public static class LoadKeysTask extends BroadcastSendingTask<Object> {
+    public static class LoadKeysTask extends BroadcastSendingTask {
         @Override
         protected Intent doInBackground(Object... params) {
             try {
@@ -292,7 +334,7 @@ public class Tasks {
      * <p>
      * After loading posts from every network as text:
      * <ol>
-     *     <li>Broadcasts.STATUS_FIELD = Broadcast.LOADED</li>
+     * <li>Broadcasts.STATUS_FIELD = Broadcast.LOADED</li>
      * </ol>
      * <p>
      * During loading image form some network:
@@ -309,7 +351,7 @@ public class Tasks {
      * <li>Broadcasts.POST_ID = localID of the post</li>
      * </ol>
      * </p>
-
+     * <p/>
      * When loading is successfully finished:
      * <ol>
      * <li>Broadcast.STATUS_FIELD = Broadcasts.FINISHED </li>
@@ -325,10 +367,13 @@ public class Tasks {
      * </p>
      */
 
-    public static class LoadPostsTask extends SocialNetworkTask implements LoadCallback {
+    public static class LoadPostsTask extends BroadcastSendingTask implements LoadCallback {
+        private LinkedList<Post> posts;
         private TimeInterval time;
+        private Wrap[] wraps;
         private LinkedList<Post> loudlyPosts;
         private LinkedList<Post> currentPosts;
+
 
         /**
          * Loads posts from every network
@@ -336,10 +381,10 @@ public class Tasks {
          * @param time  Load posts with date int interval
          * @param wraps Networks, from which load posts
          */
-        public LoadPostsTask(TimeInterval time,
-                             Wrap... wraps) {
-            super(wraps);
+        public LoadPostsTask(LinkedList<Post> posts, TimeInterval time, Wrap[] wraps) {
+            this.posts = posts;
             this.time = time;
+            this.wraps = wraps;
         }
 
         @Override
@@ -359,29 +404,8 @@ public class Tasks {
             currentPosts.add(post);
         }
 
-        private LinkedList<Post> merge(LinkedList<Post> oldPosts, LinkedList<Post> newPosts) {
-
-            LinkedList<Post> temp = new LinkedList<>();
-            while (oldPosts.size() != 0 || newPosts.size() != 0) {
-                if (oldPosts.size() == 0) {
-                    temp.add(newPosts.removeFirst());
-                    continue;
-                }
-                if (newPosts.size() == 0) {
-                    temp.add(oldPosts.removeFirst());
-                    continue;
-                }
-                if (oldPosts.getFirst().getDate() <= newPosts.getFirst().getDate()) {
-                    temp.add(newPosts.removeFirst());
-                } else {
-                    temp.add(oldPosts.removeFirst());
-                }
-            }
-            return temp;
-        }
-
         @Override
-        protected Intent doInBackground(Post... params) {
+        protected Intent doInBackground(Object... params) {
             LinkedList<Post> resultList = new LinkedList<>();
             //TODO: we could do it faster
             try {
@@ -400,7 +424,7 @@ public class Tasks {
                     currentPosts = new LinkedList<>();
                     w.loadPosts(time, this);
 
-                    resultList = merge(resultList, currentPosts);
+                    resultList = Utils.merge(resultList, currentPosts);
 
                     Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.PROGRESS);
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
@@ -433,8 +457,9 @@ public class Tasks {
 //                }
             }
 
-            resultList = merge(resultList, cleaned);
-            Loudly.getContext().addPosts(resultList);
+            resultList = Utils.merge(resultList, cleaned);
+
+            posts.addAll(resultList);
 
             Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.LOADED);
             publishProgress(message);
@@ -450,97 +475,4 @@ public class Tasks {
             return makeSuccess(Broadcasts.POST_LOAD);
         }
     }
-
-    /*
-    // Experimental features
-
-    public static class PostDeleter extends TaskWithProgress<Post, Integer> {
-        public PostDeleter(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
-            super(onProgressUpdate, onFinish, wraps);
-        }
-
-        @Override
-        protected UIAction doInBackground(Post... params) {
-            int k = 0;
-            final Post post = params[0];
-            try {
-                for (Wrap w : Loudly.getContext().getWraps()) {
-                    k++;
-                    Interactions.deletePost(w, post);
-                    publishProgress(k);
-                }
-            } catch (IOException e) {
-                return new UIAction() {
-                    @Override
-                    public void execute(Context context, Object... params) {
-                        onFinish.onFail(context, "IOException");
-                    }
-                };
-            }
-            boolean dead = true;
-            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                if (post.getLink(i) != null) {
-                    dead = false;
-                    break;
-                }
-            }
-            if (dead) {
-                try {
-                    DatabaseActions.deletePost(post);
-                } catch (final DatabaseException e) {
-                    return new UIAction() {
-                        @Override
-                        public void execute(Context context, Object... params) {
-                            onFinish.onFail(context, "Database error: " + e.getMessage());
-                        }
-                    };
-                }
-                Loudly.getContext().getPosts().remove(post);
-            }
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    onFinish.onSuccess(context, post);
-                }
-            };
-        }
-    }
-
-
-    public static class PostsLoader extends TaskWithProgress<Long, Integer> {
-        public PostsLoader(UIAction onProgressUpdate, ResultListener onFinish, Wrap... wraps) {
-            super(onProgressUpdate, onFinish, wraps);
-        }
-
-        @Override
-        protected UIAction doInBackground(Long... params) {
-            long since = params[0];
-            long before = params[1];
-            int k = 0;
-            try {
-                for (Wrap w : wraps) {
-                    k++;
-                    LinkedList<Post> posts = Interactions.loadPosts(w, since, before);
-                    // ToDo: Merge with posts in Loudly
-                    publishProgress(k);
-                }
-            } catch (final IOException e) {
-                return new UIAction() {
-                    @Override
-                    public void execute(Context context, Object... params) {
-                        onFinish.onFail(context, e.getMessage());
-                    }
-                };
-            }
-            return new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    onFinish.onSuccess(context, params);
-                }
-            };
-        }
-    }
-    */
-
-
 }

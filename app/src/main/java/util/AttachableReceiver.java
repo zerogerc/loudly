@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 
+import java.lang.ref.WeakReference;
+
 import ly.loud.loudly.Loudly;
 
 /**
@@ -21,8 +23,9 @@ import ly.loud.loudly.Loudly;
  */
 
 public abstract class AttachableReceiver extends BroadcastReceiver {
-    private Context context;
+    private WeakReference<Context> context;
     private Intent lastMessage;
+    private boolean stopped;
 
     public abstract void onMessageReceive(Context context, Intent message);
 
@@ -33,13 +36,14 @@ public abstract class AttachableReceiver extends BroadcastReceiver {
      */
     public AttachableReceiver(Context context, String... filters) {
         super();
-        this.context = context;
+        this.context = new WeakReference<>(context);
         IntentFilter intentFilter = new IntentFilter();
         for (String filter : filters) {
             intentFilter.addAction(filter);
         }
         lastMessage = null;
         LocalBroadcastManager.getInstance(Loudly.getContext()).registerReceiver(this, intentFilter);
+        stopped = false;
     }
 
     /**
@@ -48,26 +52,22 @@ public abstract class AttachableReceiver extends BroadcastReceiver {
      * @param context Current context
      */
     public void attach(Context context) {
-        this.context = context;
+        this.context = new WeakReference<>(context);
         if (lastMessage != null) {
             onMessageReceive(context, lastMessage);
             lastMessage = null;
         }
     }
 
-    /**
-     * Detaches receiver from activity
-     */
-    public void detach() {
-        this.context = null;
-    }
-
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (stopped) {
+            return;
+        }
         if (this.context == null) {
             lastMessage = intent;
         } else {
-            onMessageReceive(this.context, intent);
+            onMessageReceive(this.context.get(), intent);
         }
     }
 
@@ -76,5 +76,6 @@ public abstract class AttachableReceiver extends BroadcastReceiver {
      */
     public void stop() {
         LocalBroadcastManager.getInstance(Loudly.getContext()).unregisterReceiver(this);
+        stopped = true;
     }
 }

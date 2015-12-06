@@ -75,7 +75,7 @@ public class SettingsActivity extends AppCompatActivity {
                     toast.show();
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
                     activity.iconsHolder.setVisible(network);
-                    Loudly.getContext().getPosts().clear();
+                    MainActivity.posts.clear();
                     break;
                 case Broadcasts.ERROR:
                     String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
@@ -104,7 +104,7 @@ public class SettingsActivity extends AppCompatActivity {
     public void VKButtonClick() {
         startReceiver();
         Authorizer authorizer = new VKAuthorizer();
-        authorizer.createAsyncTask(this).execute();
+        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void FBButtonClick() {
@@ -116,7 +116,7 @@ public class SettingsActivity extends AppCompatActivity {
     public void MailRuButtonClick() {
         startReceiver();
         Authorizer authorizer = new MailRuAuthoriser();
-        authorizer.createAsyncTask(this).execute();
+        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void LogoutClick(final int network) {
@@ -167,9 +167,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (authReceiver != null) {
-            authReceiver.detach();
-        }
+
         if (isFinishing()) {
             if (authReceiver != null) {
                 authReceiver.stop();

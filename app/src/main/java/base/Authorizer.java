@@ -82,7 +82,7 @@ public abstract class Authorizer implements Parcelable {
         }
 
         @Override
-        public void ExecuteInUI(Context context, KeyKeeper result) {
+        public void executeInUI(Context context, KeyKeeper result) {
             if (result == null) {
                 return;
             }

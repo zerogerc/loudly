@@ -1,16 +1,15 @@
 package VK;
 
-import android.net.Uri;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.LinkedList;
 import java.util.List;
 
 import base.Networks;
+import base.Person;
 import base.Post;
 import base.Tasks;
 import base.Wrap;
@@ -21,7 +20,6 @@ import util.IDInterval;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
-import util.Utils;
 
 
 public class VKWrap extends Wrap {
@@ -86,7 +84,7 @@ public class VKWrap extends Wrap {
         int like = object.getJSONObject("likes").getInt("count");
         int repost = object.getJSONObject("reposts").getInt("count");
         int comments = object.getJSONObject("comments").getInt("count");
-        return  new Post.Info(like, repost, comments);
+        return new Post.Info(like, repost, comments);
     }
 
     @Override
@@ -110,14 +108,7 @@ public class VKWrap extends Wrap {
 
         Query imageUploadQuery = new Query(uploadURL);
 
-        InputStream photoContent = null;
-        try {
-            photoContent = image.getContent();
-            response = Network.makePostRequest(imageUploadQuery, progress,
-                    "photo", image.getMIMEType(), photoContent);
-        } finally {
-            Utils.closeQuietly(photoContent);
-        }
+        response = Network.makePostRequest(imageUploadQuery, progress, "photo", image);
 
         Query getPhotoId = makeSignedAPICall(SAVE_PHOTO_METHOD);
 
@@ -144,7 +135,7 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public void getPostsInfo(Post... posts) throws IOException {
+    public void getPostsInfo(List<Post> posts) throws IOException {
         Query query = makeSignedAPICall(GET_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         StringBuilder sb = new StringBuilder();
@@ -261,6 +252,79 @@ public class VKWrap extends Wrap {
             }
         } while (timeInterval.contains(earliestPost));
         Loudly.getContext().setOffset(networkID(), offset);
+    }
+
+    @Override
+    public LinkedList<Person> getPersons(int what, Post post) throws IOException {
+        Query query = makeSignedAPICall("likes.getList");
+        query.addParameter("type", "post");
+        VKKeyKeeper keys = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
+        query.addParameter("owner_id", keys.getUserId());
+        query.addParameter("item_id", post.getLink(networkID()));
+        String filter;
+        switch (what) {
+            case Tasks.LIKES:
+                filter = "likes";
+                break;
+            case Tasks.SHARES:
+                filter = "copies";
+                break;
+            default:
+                filter = "";
+                break;
+        }
+        query.addParameter("filter", filter);
+        query.addParameter("extended", 1);
+        // TODO: 12/3/2015 Add offset here
+
+        String response = Network.makeGetRequest(query);
+
+        Query getPeopleQuery = makeSignedAPICall("users.get");
+
+        JSONObject parser;
+        try {
+            parser = new JSONObject(response).getJSONObject("response");
+            JSONArray likers = parser.getJSONArray("items");
+
+            if (likers.length() == 0) {
+                return new LinkedList<>();
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < likers.length(); i++) {
+                long id = likers.getJSONObject(i).getLong("id");
+                sb.append(id);
+                sb.append(',');
+            }
+            sb.delete(sb.length() - 1, sb.length());
+
+            getPeopleQuery.addParameter("user_ids", sb);
+            getPeopleQuery.addParameter("fields", "photo_50");
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        response = Network.makeGetRequest(query);
+
+        LinkedList<Person> result = new LinkedList<>();
+
+        JSONArray people;
+        try {
+            people = new JSONObject(response).getJSONObject("response").getJSONArray("items");
+            for (int i = 0; i < people.length(); i++) {
+                JSONObject person = people.getJSONObject(i);
+                String firstName = person.getString("first_name");
+                String lastName = person.getString("last_name");
+                String photoURL = "";//person.getString("photo_50");
+                result.add(new Person(firstName, lastName, photoURL, networkID()));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return result;
     }
 
     public Query makeDeleteQuery(Post post) {

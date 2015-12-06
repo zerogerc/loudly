@@ -6,7 +6,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import ly.loud.loudly.Loudly;
 
-public abstract class BroadcastSendingTask<Param> extends AsyncTask<Param, Intent, Intent> {
+public abstract class BroadcastSendingTask extends AsyncTask<Object, Intent, Intent> {
     public static Intent makeMessage(String action, String status) {
         Intent message = new Intent(action);
         message.putExtra(Broadcasts.STATUS_FIELD, status);

@@ -1,11 +1,12 @@
 package ly.loud.loudly;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,15 +17,18 @@ import java.util.Calendar;
 import java.util.List;
 
 import base.Post;
+import base.Tasks;
 import base.attachments.Image;
+import util.AttachableTask;
 import util.Utils;
-import util.picasso.CircleTransform;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private List<Post> posts;
+    MainActivity activity;
 
-    RecyclerViewAdapter(List<Post> posts) {
+    RecyclerViewAdapter(List<Post> posts, MainActivity act) {
         this.posts = posts;
+        activity = act;
     }
 
     private void refreshFields(final ViewHolder holder, final Post post) {
@@ -32,7 +36,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.data.setText(getDateFormatted(post.getDate()));
 
-        int resource = Utils.getIconDrawbleByNetwork(post.getMainNetwork());
+        int resource = Utils.getResourceByNetwork(post.getMainNetwork());
+
         Picasso.with(Loudly.getContext()).load("image")
                 .error(resource)
                 .placeholder(resource)
@@ -51,13 +56,43 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         if (post.getAttachments().size() != 0) {
             holder.postImageView.setImageBitmap(null);
             post.setLoadedImage(false);
-            holder.progressBar.setVisibility(View.VISIBLE);
 
-            Image image = (Image)post.getAttachments().get(0);
+            final Image image = (Image)post.getAttachments().get(0);
+
+            if (image.getHeight() == 0 && image.getWidth() == 0) {
+                AttachableTask<Void, Void, Void> task = new AttachableTask<Void, Void, Void>(Loudly.getContext()) {
+                    @Override
+                    public void executeInUI(Context context, Void aVoid) {
+                        notifyDataSetChanged();
+                    }
+
+                    @Override
+                    protected Void doInBackground(Void... params) {
+                        image.setSize(Utils.resolveImageSize(image));
+                        return null;
+                    }
+                };
+
+                task.execute();
+            }
+
+            double width = image.getWidth();
+            double height = image.getHeight();
+
+            if (width != 0) {
+                double scale = (double)Utils.getDefaultScreenWidth() / width;
+
+                width = Utils.getDefaultScreenWidth();
+                height = height * scale;
+            }
+
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams((int)width, (int)height);
+            holder.postImageView.setLayoutParams(layoutParams);
+
             Picasso.with(Loudly.getContext()).load(image.getUri()).
                     resize(Utils.getDefaultScreenWidth(), Utils.getDefaultScreenHeight())
-                    .transform(new CircleTransform())
-                            .centerInside()
+                    .centerInside()
+                    .priority(Picasso.Priority.HIGH)
                     .into(holder.postImageView, new com.squareup.picasso.Callback() {
                         @Override
                         public void onError() {
@@ -67,18 +102,29 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         @Override
                         public void onSuccess() {
                             post.setLoadedImage(true);
-                            holder.progressBar.setVisibility(View.GONE);
                         }
                     });
         } else {
             holder.postImageView.setImageBitmap(null);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(0, 0);
+            holder.postImageView.setLayoutParams(layoutParams);
         }
 
-        if (post.isLoadedImage()) {
-            holder.progressBar.setVisibility(View.GONE);
-        } else {
-            holder.progressBar.setVisibility(View.VISIBLE);
-        }
+
+        holder.likesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.peopleListFragment.showPersons(post, Tasks.LIKES);
+            }
+        });
+
+        holder.repostsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.peopleListFragment.showPersons(post, Tasks.SHARES);
+            }
+        });
+
     }
 
     private String getDateFormatted(long date) {
@@ -106,6 +152,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return posts.size();
     }
 
+
+
     class ViewHolder extends RecyclerView.ViewHolder {
         private ImageView socialIcon;
         private TextView text;
@@ -118,9 +166,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private TextView repostsAmount;
         private ImageView repostsButton;
         private ImageView postImageView;
-        private ProgressBar progressBar;
 
-        public ViewHolder(View itemView, Post post) {
+        public ViewHolder(View itemView, final Post post) {
             super(itemView);
 
             socialIcon = (ImageView)itemView.findViewById(R.id.post_view_social_network_icon);
@@ -134,7 +181,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             repostsAmount = (TextView)itemView.findViewById(R.id.post_view_reposts_amount);
             repostsButton = (ImageView)itemView.findViewById(R.id.post_view_reposts_button);
             postImageView = (ImageView)itemView.findViewById(R.id.post_view_post_image);
-            progressBar = (ProgressBar)itemView.findViewById(R.id.post_view_progress);
 
             geoData.setHeight(0);
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)geoData.getLayoutParams();

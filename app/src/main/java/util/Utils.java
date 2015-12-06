@@ -25,8 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedList;
 
 import base.Networks;
+import base.Post;
+import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.R;
 
@@ -100,7 +103,7 @@ public class Utils {
         return BitmapFactory.decodeResource(Loudly.getContext().getResources(), resource);
     }
 
-    public static int getIconDrawbleByNetwork(int network) {
+    public static int getResourceByNetwork(int network) {
         int resource;
         switch(network) {
             case Networks.FB:
@@ -263,6 +266,35 @@ public class Utils {
         }
     }
 
+    public static LinkedList<Post> merge(LinkedList<Post> oldPosts, LinkedList<Post> newPosts) {
+
+        LinkedList<Post> temp = new LinkedList<>();
+        while (oldPosts.size() != 0 || newPosts.size() != 0) {
+            if (oldPosts.size() == 0) {
+                temp.add(newPosts.removeFirst());
+                continue;
+            }
+            if (newPosts.size() == 0) {
+                temp.add(oldPosts.removeFirst());
+                continue;
+            }
+            if (oldPosts.getFirst().getDate() <= newPosts.getFirst().getDate()) {
+                temp.add(newPosts.removeFirst());
+            } else {
+                temp.add(oldPosts.removeFirst());
+            }
+        }
+        return temp;
+    }
+
+    public static InputStream openStream(Image image) throws IOException {
+        if (image.isLocal()) {
+            return image.getContent();
+        } else {
+            HttpURLConnection conn = (HttpURLConnection) new URL(image.getExtra()).openConnection();
+            return conn.getInputStream();
+        }
+    }
 
     /**
      * Close instance of Closeable without throwing exception
@@ -275,5 +307,26 @@ public class Utils {
                 Log.e(TAG, "Exception while closing: " + e.getMessage());
             }
         }
+    }
+
+    public static Point resolveImageSize(Image image) {
+        InputStream inputStream = null;
+        int imageWidth = 0;
+        int imageHeight = 0;
+        try {
+            inputStream = Utils.openStream(image);
+            BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+            bitmapOptions.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(inputStream, null, bitmapOptions);
+            imageWidth = bitmapOptions.outWidth;
+            imageHeight = bitmapOptions.outHeight;
+        } catch (IOException ioe) {
+            Log.e("REC_VIEW", "IOException");;
+            // TODO
+        } finally {
+            Utils.closeQuietly(inputStream);
+        }
+
+        return new Point(imageWidth, imageHeight);
     }
 }

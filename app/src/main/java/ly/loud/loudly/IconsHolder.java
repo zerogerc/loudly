@@ -12,9 +12,6 @@ import android.view.View;
 import base.Networks;
 import util.Utils;
 
-/**
- * Created by ZeRoGerc on 29.11.15.
- */
 public class IconsHolder extends View {
     private SettingsActivity activity;
     private int iconWidth;
