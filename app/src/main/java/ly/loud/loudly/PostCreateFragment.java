@@ -12,9 +12,10 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 
 import base.says.LoudlyPost;
 import base.Tasks;
@@ -28,6 +29,7 @@ public class PostCreateFragment extends Fragment {
 
     private EditText editText;
     private ImageView postImageView;
+    private ImageView deleteImageButton;
     private View rootView;
     private static Image postImage;
 
@@ -70,7 +72,16 @@ public class PostCreateFragment extends Fragment {
 
         rootView = inflater.inflate(R.layout.activity_new_post, container, false);
         editText = (EditText)rootView.findViewById(R.id.new_post_edit_text);
-        postImageView = (ImageView)rootView.findViewById(R.id.new_post_post_image);
+        postImageView = (ImageView)rootView.findViewById(R.id.picture_with_cross_image);
+        deleteImageButton = (ImageView)rootView.findViewById(R.id.picture_with_cross_clear);
+        deleteImageButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        deleteImage();
+                    }
+                }
+        );
         postImage = null;
 
         return rootView;
@@ -103,6 +114,38 @@ public class PostCreateFragment extends Fragment {
         outState.putString(EDIT_TEXT, editText.getText().toString());
     }
 
+    private void deleteImage() {
+        if (postImage == null) {
+            return;
+        }
+
+        LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
+        layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
+
+        RelativeLayout layout = (RelativeLayout)rootView.findViewById(R.id.new_post_list_item);
+        layoutParams = (LinearLayout.LayoutParams) layout.getLayoutParams();
+        layoutParams.width = 0;
+        layoutParams.height = 0;
+        layoutParams.setMargins(0, 0, 0, 0);
+        layout.setLayoutParams(layoutParams);
+        postImageView.setImageBitmap(null);
+        postImage = null;
+    }
+
+    private void prepareImageView() {
+        final float scale = getResources().getDisplayMetrics().density;
+        int margins = (int) (16 * scale);
+
+        LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
+        layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+
+        RelativeLayout layout = (RelativeLayout)rootView.findViewById(R.id.new_post_list_item);
+        layoutParams = (LinearLayout.LayoutParams) layout.getLayoutParams();
+        layoutParams.width = postImageView.getLayoutParams().width;
+        layoutParams.height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+        layoutParams.setMargins(margins, margins, margins, margins);
+        layout.setLayoutParams(layoutParams);
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -112,18 +155,11 @@ public class PostCreateFragment extends Fragment {
                 Log.e("IMG_LOAD_TAG", "Data to received");
             } else {
                 postImage = new Image(data.getData());
-                final float scale = getResources().getDisplayMetrics().density;
-                int dpWidthInPx = (int) (72 * scale);
-                int dpHeightInPx = (int) (72 * scale);
-                int margins = (int) (4 * scale);
-                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) postImageView.getLayoutParams();
-                layoutParams.width = dpWidthInPx;
-                layoutParams.height = dpHeightInPx;
-                layoutParams.setMargins(margins, margins, margins, margins);
-                postImageView.setLayoutParams(layoutParams);
-                Picasso.with(Loudly.getContext()).load(data.getData())
-                        .resize(Utils.dpToPx(72), Utils.dpToPx(72))
+                prepareImageView();
+                Glide.with(Loudly.getContext()).load(data.getData())
+                        .fitCenter()
                         .into(postImageView);
+
             }
         }
     }

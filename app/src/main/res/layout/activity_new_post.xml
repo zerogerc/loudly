@@ -52,7 +52,6 @@
                 android:background="@color/light_grey_color"
                 android:layout_alignParentBottom="true"
                 android:orientation="horizontal"
-                android:layout_marginTop="4dp"
                 android:weightSum="3">
 
                 <ImageButton
@@ -83,28 +82,38 @@
                     android:tint="@color/grey_color"/>
             </LinearLayout>
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/new_post_post_image"
-                android:adjustViewBounds="true"
-                android:scaleType="centerInside"
-                android:layout_above="@id/new_post_footer"/>
-
-            <EditText
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:inputType="textMultiLine"
-                android:id="@+id/new_post_edit_text"
                 android:layout_below="@id/new_post_header"
-                android:layout_above="@id/new_post_post_image"
-                android:minLines="1"
-                android:padding="12dp"
-                android:textSize="17sp"
-                android:hint="What's on your mind?"
-                android:gravity="start"
-                android:background="@null" />
+                android:layout_above="@id/new_post_footer"
+                android:fillViewport="true">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:inputType="textMultiLine"
+                        android:id="@+id/new_post_edit_text"
+                        android:minLines="2"
+                        android:padding="12dp"
+                        android:textSize="17sp"
+                        android:hint="What's on your mind?"
+                        android:gravity="start"
+                        android:background="@null" />
+
+                    <include
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:id="@+id/new_post_list_item"
+                        layout="@layout/picture_with_cross"
+                        />
+                </LinearLayout>
+
+            </ScrollView>
 
 
         </RelativeLayout>

@@ -1,6 +1,7 @@
 package ly.loud.loudly;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -12,7 +13,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import java.util.Calendar;
 import java.util.List;
@@ -40,7 +44,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         int resource = Utils.getResourceByNetwork(post.getNetwork());
 
-        Picasso.with(Loudly.getContext()).load("image")
+        Glide.with(Loudly.getContext()).load("image")
                 .error(resource)
                 .placeholder(resource)
                 .into(holder.socialIcon);
@@ -90,20 +94,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams((int) width, (int) height);
             holder.postImageView.setLayoutParams(layoutParams);
 
-            Picasso.with(Loudly.getContext()).load(image.getUri()).
-                    resize(Utils.getDefaultScreenWidth(), Utils.getDefaultScreenHeight())
-                    .centerInside()
-                    .priority(Picasso.Priority.HIGH)
-                    .into(holder.postImageView, new com.squareup.picasso.Callback() {
+            Glide.with(Loudly.getContext()).load(image.getUri())
+                    .override(Utils.getDefaultScreenWidth(), Utils.getDefaultScreenHeight())
+                    .fitCenter()
+                    .listener(new RequestListener<Uri, GlideDrawable>() {
                         @Override
-                        public void onError() {
+                        public boolean onException(Exception e, Uri model, Target<GlideDrawable> target, boolean isFirstResource) {
                             Toast.makeText(Loudly.getContext(), "Error occured during image load", Toast.LENGTH_SHORT).show();
+                            return false;
                         }
 
                         @Override
-                        public void onSuccess() {
+                        public boolean onResourceReady(GlideDrawable resource, Uri model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                            return false;
                         }
-                    });
+                    })
+                    .into(holder.postImageView);
         } else {
             holder.postImageView.setImageBitmap(null);
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(0, 0);
@@ -179,7 +185,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private ImageView postImageView;
         private ImageView showMoreOptions;
 
-        public ViewHolder(View itemView, final LoudlyPost post) {
+        public ViewHolder(View itemView, final Post post) {
             super(itemView);
 
             socialIcon = (ImageView) itemView.findViewById(R.id.post_view_social_network_icon);

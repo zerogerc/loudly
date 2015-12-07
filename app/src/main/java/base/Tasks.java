@@ -228,13 +228,14 @@ public class Tasks {
         @Override
         protected Intent doInBackground(Object... params) {
             for (Wrap w : wraps) {
-                if (post.getLink(w.networkID()) != null) {
+                if (post.existsIn(w.networkID())) {
                     try {
                         w.deletePost(post);
                         Intent message = makeMessage(Broadcasts.POST_DELETE, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
                     } catch (IOException e) {
+                        e.printStackTrace();
                         publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.NETWORK_ERROR,
                                 e.getMessage()));
                     }
