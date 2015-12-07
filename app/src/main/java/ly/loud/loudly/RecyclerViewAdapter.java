@@ -111,6 +111,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             holder.postImageView.setLayoutParams(layoutParams);
         }
 
+        holder.showMoreOptions.setOnClickListener(makeOptionsOnClickListener(post, activity));
 
         holder.likesButton.setOnClickListener(new View.OnClickListener() {
             @Override
