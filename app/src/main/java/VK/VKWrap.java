@@ -10,10 +10,13 @@ import java.util.List;
 
 import base.Networks;
 import base.Person;
-import base.Post;
 import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
+import base.says.Info;
+import base.says.LoudlyPost;
+import base.says.Post;
+import base.says.SinglePost;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.IDInterval;
@@ -57,7 +60,7 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public void uploadPost(Post post) throws IOException {
+    public void uploadPost(LoudlyPost post) throws IOException {
         Query query = makeSignedAPICall(POST_METHOD);
         if (post.getText().length() > 0) {
             query.addParameter("message", post.getText());
@@ -80,11 +83,11 @@ public class VKWrap extends Wrap {
         }
     }
 
-    private Post.Info getInfo(JSONObject object) throws JSONException {
+    private Info getInfo(JSONObject object) throws JSONException {
         int like = object.getJSONObject("likes").getInt("count");
         int repost = object.getJSONObject("reposts").getInt("count");
         int comments = object.getJSONObject("comments").getInt("count");
-        return new Post.Info(like, repost, comments);
+        return new Info(like, repost, comments);
     }
 
     @Override
@@ -134,6 +137,7 @@ public class VKWrap extends Wrap {
         }
     }
 
+    @Override
     public void deletePost(Post post) throws IOException {
         Query query = makeSignedAPICall(DELETE_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
@@ -145,13 +149,14 @@ public class VKWrap extends Wrap {
         // todo: check for delete
         post.detachFromNetwork(NETWORK);
     }
+
     @Override
     public void getPostsInfo(List<Post> posts) throws IOException {
         Query query = makeSignedAPICall(GET_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         StringBuilder sb = new StringBuilder();
         for (Post post : posts) {
-            if (post.getLink(networkID()) != null) {
+            if (post.existsIn(networkID())) {
                 sb.append(keys.getUserId());
                 sb.append('_');
                 sb.append(post.getLink(networkID()));
@@ -170,9 +175,14 @@ public class VKWrap extends Wrap {
                     .getJSONArray("response");
             int k = 0;
             for (Post post : posts) {
-                if (post.getLink(networkID()) != null) {
+                if (post.existsIn(networkID())) {
                     JSONObject current = parser.getJSONObject(k++);
-                    post.setInfo(NETWORK, getInfo(current));
+                    Info info = getInfo(current);
+                    if (post instanceof SinglePost) {
+                        post.setInfo(info);
+                    } else {
+                        ((LoudlyPost) post).setInfo(NETWORK, getInfo(current));
+                    }
                 }
             }
         } catch (JSONException e) {
@@ -207,7 +217,7 @@ public class VKWrap extends Wrap {
                     JSONObject post = postJ.getJSONObject(i);
                     String id = post.getString("id");
 
-                    Post loudlyPost = callback.findLoudlyPost(id, networkID());
+                    LoudlyPost loudlyPost = callback.findLoudlyPost(id, networkID());
                     if (loudlyPost != null) {
                         loudlyPost.setInfo(networkID(), getInfo(post));
                         continue;
@@ -215,6 +225,7 @@ public class VKWrap extends Wrap {
 
                     long date = post.getLong("date");
 
+                    // TODO: 12/8/2015 move interval to wrap
                     if (Loudly.getContext().getPostInterval(networkID()) == null) {
                         Loudly.getContext().setPostInterval(networkID(), new IDInterval(id, id));
                     }
@@ -224,10 +235,7 @@ public class VKWrap extends Wrap {
 
                     if (timeInterval.contains(date)) {
                         String text = post.getString("text");
-
-                        Post res = new Post(text);
-                        res.setLink(NETWORK, id);
-                        res.setDate(date);
+                        SinglePost res = new SinglePost(text, date, null, networkID(), id);
 
                         if (post.has("attachments")) {
                             JSONArray attachments = post.getJSONArray("attachments");
@@ -250,7 +258,7 @@ public class VKWrap extends Wrap {
                             }
                         }
 
-                        res.setInfo(networkID(), getInfo(post));
+                        res.setInfo(getInfo(post));
 
                         callback.postLoaded(res);
                         offset++;
@@ -336,19 +344,5 @@ public class VKWrap extends Wrap {
         }
 
         return result;
-    }
-
-    public Query makeDeleteQuery(Post post) {
-        Query query = makeSignedAPICall(DELETE_METHOD);
-        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
-        query.addParameter("owner_id", keys.getUserId());
-        query.addParameter("post_id", post.getLink(NETWORK));
-        return query;
-    }
-
-    public void parseDeleteResponse(Post post, String response) {
-        if (response.equals("1")) {
-            post.detachFromNetwork(NETWORK);
-        }
     }
 }

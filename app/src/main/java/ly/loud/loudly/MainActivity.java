@@ -21,8 +21,9 @@ import android.widget.Toast;
 
 import java.util.LinkedList;
 
-import base.Post;
+import base.says.LoudlyPost;
 import base.Tasks;
+import base.says.Post;
 import ly.loud.loudly.PeopleList.PeopleListFragment;
 import util.AttachableReceiver;
 import util.Broadcasts;
@@ -274,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
                     mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.FINISHED:
-                    // Post uploaded
+                    // LoudlyPost uploaded
                     toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
                     toast.show();
                     receivers[POST_UPLOAD_RECEIVER].stop();

@@ -6,6 +6,9 @@ import java.util.List;
 import Facebook.FacebookWrap;
 import VK.VKWrap;
 import base.attachments.Image;
+import base.says.Comment;
+import base.says.LoudlyPost;
+import base.says.Post;
 import util.BackgroundAction;
 import util.Query;
 import util.TimeInterval;
@@ -24,7 +27,7 @@ public abstract class Wrap {
     protected abstract Query makeAPICall(String url);
     protected abstract Query makeSignedAPICall(String url);
 
-    public abstract void uploadPost(Post post) throws IOException;
+    public abstract void uploadPost(LoudlyPost post) throws IOException;
 
     public abstract void uploadImage(Image image, BackgroundAction progress) throws IOException;
 
@@ -35,6 +38,8 @@ public abstract class Wrap {
     public abstract void getPostsInfo(List<Post> posts) throws IOException;
 
     public abstract List<Person> getPersons(int what, Post post) throws IOException;
+
+    //public abstract List<Comment> getComments(Post post) throws IOException;
 
     public static Wrap makeWrap(int network) {
         switch (network) {

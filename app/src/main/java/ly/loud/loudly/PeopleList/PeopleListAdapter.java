@@ -11,7 +11,6 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-import base.NetworkDelimeter;
 import base.Person;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.R;

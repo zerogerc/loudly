@@ -17,9 +17,10 @@ import com.squareup.picasso.Picasso;
 import java.util.Calendar;
 import java.util.List;
 
-import base.Post;
+import base.says.LoudlyPost;
 import base.Tasks;
 import base.attachments.Image;
+import base.says.Post;
 import util.AttachableTask;
 import util.Utils;
 
@@ -37,17 +38,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.data.setText(getDateFormatted(post.getDate()));
 
-        int resource = Utils.getResourceByNetwork(post.getMainNetwork());
+        int resource = Utils.getResourceByNetwork(post.getNetwork());
 
         Picasso.with(Loudly.getContext()).load("image")
                 .error(resource)
                 .placeholder(resource)
                 .into(holder.socialIcon);
 
-        if (post.getTotalInfo() != null) {
-            holder.commentsAmount.setText(Integer.toString(post.getTotalInfo().comment));
-            holder.likesAmount.setText(Integer.toString(post.getTotalInfo().like));
-            holder.repostsAmount.setText(Integer.toString(post.getTotalInfo().repost));
+        if (post.getInfo() != null) {
+            holder.commentsAmount.setText(Integer.toString(post.getInfo().comment));
+            holder.likesAmount.setText(Integer.toString(post.getInfo().like));
+            holder.repostsAmount.setText(Integer.toString(post.getInfo().repost));
         } else {
             holder.commentsAmount.setText("0");
             holder.likesAmount.setText("0");
@@ -56,7 +57,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         if (post.getAttachments().size() != 0) {
             holder.postImageView.setImageBitmap(null);
-            post.setLoadedImage(false);
 
             final Image image = (Image) post.getAttachments().get(0);
 
@@ -102,7 +102,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
                         @Override
                         public void onSuccess() {
-                            post.setLoadedImage(true);
                         }
                     });
         } else {
@@ -151,7 +150,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.post_view, parent, false);
-        return new ViewHolder(v, new Post("Hello world!!!"));
+        return new ViewHolder(v, new LoudlyPost("Hello world!!!"));
     }
 
 
@@ -180,7 +179,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private ImageView postImageView;
         private ImageView showMoreOptions;
 
-        public ViewHolder(View itemView, final Post post) {
+        public ViewHolder(View itemView, final LoudlyPost post) {
             super(itemView);
 
             socialIcon = (ImageView) itemView.findViewById(R.id.post_view_social_network_icon);

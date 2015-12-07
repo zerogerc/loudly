@@ -1,4 +1,4 @@
-package base;
+package ly.loud.loudly.PeopleList;
 
 import ly.loud.loudly.PeopleList.Item;
 

@@ -10,12 +10,9 @@ import java.util.LinkedList;
 import base.KeyKeeper;
 import base.Location;
 import base.Networks;
-import base.Post;
+import base.says.LoudlyPost;
 import base.attachments.Attachment;
 import ly.loud.loudly.Loudly;
-import util.IDInterval;
-import util.Interval;
-import util.Network;
 import util.TimeInterval;
 import util.Utils;
 import util.database.AttachmentsContract.AttachmentsEntry;
@@ -28,10 +25,10 @@ public class DatabaseActions {
 
     /**
      * Function for saving post to Database
-     * @param post Post for saving
+     * @param post LoudlyPost for saving
      * @throws DatabaseException if anything went wrong with database
      */
-    public static void savePost(Post post) throws DatabaseException {
+    public static void savePost(LoudlyPost post) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
 
         db.beginTransaction();
@@ -107,11 +104,11 @@ public class DatabaseActions {
 
     /**
      * Updates post's link in DB according to current links in post
-     * @param network ID of network, that must be updated
-     * @param post Post, that should be updated
+     * @param networks IDs of networks that must be updated
+     * @param post LoudlyPost, that should be updated
      * @throws DatabaseException if anything went wrong with database
      */
-    public static void updatePostLinks(int network, Post post) throws DatabaseException {
+    public static void updatePostLinks(int[] networks, LoudlyPost post) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
 
         db.beginTransaction();
@@ -131,7 +128,9 @@ public class DatabaseActions {
             long atId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_FIRST_ATTACHMENT));
 
             ContentValues update = new ContentValues();
-            update.put(LinksEntry.LINK_COLUMNS[network], post.getLink(network));
+            for (int network : networks) {
+                update.put(LinksEntry.LINK_COLUMNS[network], post.getLink(network));
+            }
             if (db.update(LinksEntry.TABLE_NAME, update,
                     sqlEqual(LinksEntry._ID, linkTd), null) != 1) {
                 throw new DatabaseException("Failed updating links for post: " + post.getLocalId());
@@ -154,8 +153,10 @@ public class DatabaseActions {
                 linkTd = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_LINK));
 
                 update = new ContentValues();
-                update.put(LinksEntry.LINK_COLUMNS[network], post.getAttachments().get(ind++).getLink(network));
-
+                for (int network : networks) {
+                    update.put(LinksEntry.LINK_COLUMNS[network], post.getAttachments().get(ind).getLink(network));
+                }
+                ind++;
                 if (db.update(LinksEntry.TABLE_NAME,
                         update, sqlEqual(LinksEntry._ID, linkTd), null) != 1) {
                     throw new DatabaseException("Can't update links for attachment: " + atId);
@@ -168,11 +169,11 @@ public class DatabaseActions {
         }
     }
 
-    public static LinkedList<Post> loadPosts(TimeInterval time) throws DatabaseException {
+    public static LinkedList<LoudlyPost> loadPosts(TimeInterval time) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getReadableDatabase();
 
         String sortOrder = PostEntry.COLUMN_NAME_DATE + " DESC";
-        LinkedList<Post> res = new LinkedList<>();
+        LinkedList<LoudlyPost> res = new LinkedList<>();
         Cursor cursor = null;
 
         String sinceTimeQuery = (time.from != -1) ? PostEntry.COLUMN_NAME_DATE + " > " + Long.toString(time.from) : "";
@@ -201,7 +202,7 @@ public class DatabaseActions {
                 String[] links = readLinks(db, linksId);
                 ArrayList<Attachment> attachments = readAttachments(db, atId);
 
-                Post post = new Post(text, attachments, links, date, location, localId);
+                LoudlyPost post = new LoudlyPost(text, attachments, links, date, location, localId);
                 res.add(post);
 
                 cursor.moveToNext();
@@ -212,7 +213,7 @@ public class DatabaseActions {
         return res;
     }
 
-    public static void deletePost(Post post) throws DatabaseException {
+    public static void deletePost(LoudlyPost post) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getWritableDatabase();
         Cursor cursor = null;
         try {
@@ -246,6 +247,7 @@ public class DatabaseActions {
             db.setTransactionSuccessful();
         } finally {
             Utils.closeQuietly(cursor);
+            db.endTransaction();
         }
     }
 
@@ -386,7 +388,7 @@ public class DatabaseActions {
         return result;
     }
 
-    private static ContentValues createPostRow(Post post, long atId, long linkId, long locId) {
+    private static ContentValues createPostRow(LoudlyPost post, long atId, long linkId, long locId) {
         ContentValues values = new ContentValues();
         values.put(PostEntry.COLUMN_NAME_TEXT, post.getText());
         values.put(PostEntry.COLUMN_NAME_FIRST_ATTACHMENT, atId);

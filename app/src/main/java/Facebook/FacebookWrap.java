@@ -11,10 +11,13 @@ import java.util.List;
 
 import base.Networks;
 import base.Person;
-import base.Post;
+import base.says.Info;
+import base.says.LoudlyPost;
 import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
+import base.says.Post;
+import base.says.SinglePost;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.IDInterval;
@@ -48,7 +51,7 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public void uploadPost(Post post) throws IOException {
+    public void uploadPost(LoudlyPost post) throws IOException {
         Query query = makeSignedAPICall(POST_NODE);
         query.addParameter("message", post.getText());
         if (post.getAttachments().size() > 0) {
@@ -128,7 +131,7 @@ public class FacebookWrap extends Wrap {
             for (int i = 0; i < postsJ.length(); i++) {
                 JSONObject obj = postsJ.getJSONObject(i);
                 String id = obj.getString("id");
-                Post loudlyPost = callback.findLoudlyPost(id, networkID());
+                LoudlyPost loudlyPost = callback.findLoudlyPost(id, networkID());
 
                 if (loudlyPost != null) {
                     loudlyPost.setInfo(networkID(), getInfo(obj));
@@ -144,9 +147,8 @@ public class FacebookWrap extends Wrap {
                 Loudly.getContext().getPostInterval(networkID()).from = id;
 
                 String text = (obj.has("message")) ? obj.getString("message") : "";
-                Post post = new Post(text);
-                post.setLink(NETWORK, id);
-                post.setDate(postTime);
+
+                SinglePost post = new SinglePost(text, postTime, null, networkID(), id);
 
                 if (obj.has("attachments")) {
                     JSONObject attachment = obj.getJSONObject("attachments").
@@ -158,7 +160,7 @@ public class FacebookWrap extends Wrap {
 
                 }
 
-                post.setInfo(networkID(), getInfo(obj));
+                post.setInfo(getInfo(obj));
                 callback.postLoaded(post);
             }
 
@@ -167,7 +169,7 @@ public class FacebookWrap extends Wrap {
         }
     }
 
-    private Post.Info getInfo(JSONObject object) throws JSONException {
+    private Info getInfo(JSONObject object) throws JSONException {
         int likes = 0;
         if (object.has("likes")) {
             likes = object.getJSONObject("likes").getJSONObject("summary").getInt("total_count");
@@ -182,7 +184,7 @@ public class FacebookWrap extends Wrap {
             comments = object.getJSONObject("shares").getInt("count");
         }
 
-        return new Post.Info(likes, shares, comments);
+        return new Info(likes, shares, comments);
     }
 
     @Override
@@ -190,7 +192,7 @@ public class FacebookWrap extends Wrap {
         Query query = makeSignedAPICall("");
         StringBuilder sb = new StringBuilder();
         for (Post post : posts) {
-            if (post.getLink(networkID()) != null) {
+            if (post.existsIn(networkID())) {
                 sb.append(post.getLink(networkID()));
                 sb.append(',');
             }
@@ -208,10 +210,14 @@ public class FacebookWrap extends Wrap {
         try {
             parser = new JSONObject(response);
             for (Post post : posts) {
-                if (post.getLink(networkID()) != null) {
+                if (post.existsIn(networkID())) {
                     JSONObject p = parser.getJSONObject(post.getLink(networkID()));
-
-                    post.setInfo(NETWORK, getInfo(p));
+                    Info info = getInfo(p);
+                    if (post instanceof SinglePost) {
+                        post.setInfo(info);
+                    } else {
+                        ((LoudlyPost) post).setInfo(NETWORK, info);
+                    }
                 }
             }
         } catch (JSONException e) {
@@ -283,20 +289,5 @@ public class FacebookWrap extends Wrap {
             return null;
         }
         return result;
-    }
-
-    public Query makeDeleteQuery(Post post) {
-        return new Query(MAIN_SERVER + post.getLink(NETWORK));
-    }
-
-    public void parseDeleteResponse(Post post, String response) {
-        try {
-            JSONObject parse = new JSONObject(response);
-            if (parse.getString("success").equals("true")) {
-                post.detachFromNetwork(NETWORK);
-            }
-        } catch (JSONException e) {
-            // ToDo: tell about fails
-        }
     }
 }

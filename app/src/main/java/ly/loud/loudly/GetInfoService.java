@@ -2,16 +2,14 @@ package ly.loud.loudly;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
 import java.util.LinkedList;
 
-import base.Post;
+import base.says.LoudlyPost;
 import base.Tasks;
-import util.database.DatabaseActions;
-import util.database.DatabaseException;
+import base.says.Post;
 
 public class GetInfoService extends Service {
     @Override
@@ -21,7 +19,7 @@ public class GetInfoService extends Service {
         // TODO: 12/6/2015 This possible may produce leaks. Should be replaced soon
         LinkedList<Post> loudlyPosts = new LinkedList<>();
         for (Post post : MainActivity.posts) {
-            if (post.getMainNetwork() == -1) {
+            if (post.getNetwork() == -1) {
                 loudlyPosts.add(post);
             }
         }

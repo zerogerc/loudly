@@ -15,8 +15,9 @@ import android.view.ViewGroup;
 
 import java.util.LinkedList;
 
-import base.Post;
+import base.says.LoudlyPost;
 import base.Tasks;
+import base.says.Post;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.R;

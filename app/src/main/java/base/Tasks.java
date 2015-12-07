@@ -4,13 +4,17 @@ package base;
 import android.content.Intent;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import base.attachments.Attachment;
 import base.attachments.Image;
-import ly.loud.loudly.Loudly;
+import base.says.LoudlyPost;
+import base.says.Post;
+import base.says.SinglePost;
 import ly.loud.loudly.PeopleList.Item;
+import ly.loud.loudly.PeopleList.NetworkDelimeter;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
@@ -76,11 +80,11 @@ public class Tasks {
      */
 
     public static class PostUploader extends BroadcastSendingTask {
-        private Post post;
+        private LoudlyPost post;
         private Wrap[] wraps;
         private LinkedList<Post> posts;
 
-        public PostUploader(Post post, LinkedList<Post> posts, Wrap... wraps) {
+        public PostUploader(LoudlyPost post, LinkedList<Post> posts, Wrap... wraps) {
             this.post = post;
             this.posts = posts;
             this.wraps = wraps;
@@ -105,8 +109,8 @@ public class Tasks {
             publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED,
                     post.getLocalId()));
 
-            try {
-                for (Wrap w : wraps) {
+            for (Wrap w : wraps) {
+                try {
                     final int networkID = w.networkID();
                     for (final Attachment attachment : post.getAttachments()) {
 
@@ -126,21 +130,33 @@ public class Tasks {
                         message.putExtra(Broadcasts.IMAGE_FIELD, attachment.getLocalID());
                         message.putExtra(Broadcasts.NETWORK_FIELD, networkID);
                     }
+
                     w.uploadPost(post);
 
                     Intent message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.PROGRESS,
                             post.getLocalId());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-
-                    DatabaseActions.updatePostLinks(w.networkID(), post);
                     publishProgress(message);
+                } catch (IOException e) {
+
+                    publishProgress(makeError(Broadcasts.POST_UPLOAD, Broadcasts.NETWORK_ERROR,
+                            post.getLocalId(), e.getMessage()));
+                }
+            }
+
+            // Save posts links to DB
+            try {
+                int[] networks = new int[wraps.length];
+                for (int i = 0; i < wraps.length; i++) {
+                    networks[i] = wraps[i].networkID();
                 }
 
-            } catch (IOException e) {
-                return makeError(Broadcasts.POST_UPLOAD, Broadcasts.NETWORK_ERROR,
+                DatabaseActions.updatePostLinks(networks, post);
+            } catch (DatabaseException e) {
+                return makeError(Broadcasts.POST_UPLOAD, Broadcasts.DATABASE_ERROR,
                         post.getLocalId(), e.getMessage());
             }
-            post.setLoadedImage(true);
+
             return makeSuccess(Broadcasts.POST_UPLOAD, post.getLocalId());
         }
     }
@@ -215,15 +231,9 @@ public class Tasks {
                 if (post.getLink(w.networkID()) != null) {
                     try {
                         w.deletePost(post);
-                        if (post.getMainNetwork() == -1) {
-                            DatabaseActions.updatePostLinks(w.networkID(), post);
-                        }
                         Intent message = makeMessage(Broadcasts.POST_DELETE, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
-                    } catch (DatabaseException e) {
-                        publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
-                                e.getMessage()));
                     } catch (IOException e) {
                         publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.NETWORK_ERROR,
                                 e.getMessage()));
@@ -231,21 +241,38 @@ public class Tasks {
                 }
             }
 
-            boolean dead = true;
-            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                if (post.getLink(i) != null) {
-                    dead = false;
-                    break;
-                }
+            if (post instanceof SinglePost) {
+                posts.remove(post);
             }
 
-            if (dead) {
-                posts.remove(post);
-                if (post.getMainNetwork() == -1) {
+            if (post instanceof LoudlyPost) {
+                boolean dead = true;
+                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                    if (post.existsIn(i)) {
+                        dead = false;
+                        break;
+                    }
+                }
+
+                // If post is dead, delete it from DB. Otherwise, update its links
+                if (dead) {
+                    posts.remove(post);
                     try {
-                        DatabaseActions.deletePost(post);
+                        DatabaseActions.deletePost(((LoudlyPost) post));
                     } catch (DatabaseException e) {
                         e.printStackTrace();
+                        return makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
+                                e.getMessage());
+                    }
+                } else {
+                    int[] networks = new int[wraps.length];
+                    for (int i = 0; i < wraps.length; i++) {
+                        networks[i] = wraps[i].networkID();
+                    }
+
+                    try {
+                        DatabaseActions.updatePostLinks(networks, ((LoudlyPost) post));
+                    } catch (DatabaseException e) {
                         return makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
                                 e.getMessage());
                     }
@@ -277,7 +304,7 @@ public class Tasks {
         protected Intent doInBackground(Object... posts) {
             for (Wrap w : wraps) {
                 try {
-                    if (post.getLink(w.networkID()) != null) {
+                    if (post.existsIn(w.networkID())) {
                         List<Person> got = w.getPersons(what, post);
                         if (!got.isEmpty()) {
                             persons.add(new NetworkDelimeter(w.networkID()));
@@ -367,13 +394,13 @@ public class Tasks {
         /**
          * Is post stored in DB
          *
-         * @param postID  Post
+         * @param postID  LoudlyPost
          * @param network network
          * @return Link to post, if it exists, or null, if not
          */
-        Post findLoudlyPost(String postID, int network);
+        LoudlyPost findLoudlyPost(String postID, int network);
 
-        void postLoaded(Post post);
+        void postLoaded(SinglePost post);
     }
 
     /**
@@ -430,8 +457,10 @@ public class Tasks {
         private LinkedList<Post> posts;
         private TimeInterval time;
         private Wrap[] wraps;
-        private LinkedList<Post> loudlyPosts;
+        private LinkedList<LoudlyPost> loudlyPosts;
         private LinkedList<Post> currentPosts;
+
+        private boolean[] loudlyPostExists;
 
 
         /**
@@ -447,19 +476,20 @@ public class Tasks {
         }
 
         @Override
-        public Post findLoudlyPost(String postID, int network) {
-            for (Post lPost : loudlyPosts) {
-                if (lPost.getLink(network) != null && lPost.getLink(network).equals(postID)) {
-                    lPost.setExistence(network);
+        public LoudlyPost findLoudlyPost(String postID, int network) {
+            int ind = 0;
+            for (LoudlyPost lPost : loudlyPosts) {
+                if (lPost.existsIn(network) && lPost.getLink(network).equals(postID)) {
+                    loudlyPostExists[ind] = true;
                     return lPost;
                 }
+                ind++;
             }
             return null;
         }
 
         @Override
-        public void postLoaded(Post post) {
-            post.setLocalId(Loudly.getContext().makeLocalIDForOtherNetworks());
+        public void postLoaded(SinglePost post) {
             currentPosts.add(post);
         }
 
@@ -474,14 +504,23 @@ public class Tasks {
                 return makeError(Broadcasts.POST_LOAD, Broadcasts.DATABASE_ERROR, e.getMessage());
             }
 
+            loudlyPostExists = new boolean[loudlyPosts.size()];
+
             publishProgress(makeMessage(Broadcasts.POST_LOAD, Broadcasts.STARTED));
 
-            boolean[] successfulLoading = new boolean[Networks.NETWORK_COUNT];
 
             for (Wrap w : wraps) {
                 try {
                     currentPosts = new LinkedList<>();
                     w.loadPosts(time, this);
+
+                    int ind = 0;
+                    for (LoudlyPost loudlyPost : loudlyPosts) {
+                        if (!loudlyPostExists[ind++]) {
+                            loudlyPost.setLink(w.networkID(), null);
+                        }
+                    }
+                    Arrays.fill(loudlyPostExists, false);
 
                     resultList = Utils.merge(resultList, currentPosts);
 
@@ -489,31 +528,33 @@ public class Tasks {
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     publishProgress(message);
 
-                    successfulLoading[w.networkID()] = true;
                 } catch (IOException e) {
                     Intent message = makeError(Broadcasts.POST_LOAD, Broadcasts.NETWORK_ERROR,
                             e.getMessage());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     publishProgress(message);
-                    successfulLoading[w.networkID()] = false;
                 }
             }
 
             LinkedList<Post> cleaned = new LinkedList<>();
 
-            for (Post p : loudlyPosts) {
-                for (Wrap w : wraps) {
-                    if (successfulLoading[w.networkID()] && !p.existsIn(w.networkID())) {
-                        p.removeOutdatedLinks(w.networkID());
+            for (LoudlyPost p : loudlyPosts) {
+                boolean postAlive = false;
+                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                    if (p.existsIn(i)) {
+                        postAlive = true;
                     }
                 }
-                if (p.exists()) {
+                if (postAlive) {
                     cleaned.add(p);
+                } else {
+                    try {
+                        DatabaseActions.deletePost(p);
+                    } catch (DatabaseException e) {
+                        publishProgress(makeError(Broadcasts.POST_LOAD, Broadcasts.DATABASE_ERROR,
+                                e.getMessage()));
+                    }
                 }
-//                if (!p.exists()) {
-//                    loudlyPosts.remove(p);
-//                    // remove from DB here
-//                }
             }
 
             resultList = Utils.merge(resultList, cleaned);
@@ -522,14 +563,6 @@ public class Tasks {
 
             Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.LOADED);
             publishProgress(message);
-
-            for (Post post : resultList) {
-                if (post.getAttachments().isEmpty()) {
-                    post.setLoadedImage(true);
-                } else {
-                    post.setLoadedImage(false);
-                }
-            }
 
             return makeSuccess(Broadcasts.POST_LOAD);
         }

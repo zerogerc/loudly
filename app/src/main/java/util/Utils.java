@@ -28,8 +28,9 @@ import java.net.URL;
 import java.util.LinkedList;
 
 import base.Networks;
-import base.Post;
+import base.says.LoudlyPost;
 import base.attachments.Image;
+import base.says.Post;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.R;
 

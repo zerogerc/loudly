@@ -16,7 +16,7 @@ import android.widget.RelativeLayout;
 
 import com.squareup.picasso.Picasso;
 
-import base.Post;
+import base.says.LoudlyPost;
 import base.Tasks;
 import base.attachments.Image;
 import util.Utils;
@@ -37,7 +37,7 @@ public class PostCreateFragment extends Fragment {
             public void onClick(View v) {
 
                 String text = editText.getText().toString();
-                Post post = new Post(text);
+                LoudlyPost post = new LoudlyPost(text);
                 if (postImage != null) {
                     post.addAttachment(postImage);
                     postImage = null;
