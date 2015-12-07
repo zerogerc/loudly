@@ -2,7 +2,9 @@ package base;
 
 import android.graphics.Bitmap;
 
-public class Person {
+import ly.loud.loudly.PeopleList.Item;
+
+public class Person extends Item{
     private String firstName, lastName;
     private String photoUrl;
     private int network;

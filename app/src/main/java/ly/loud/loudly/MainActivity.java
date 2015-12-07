@@ -23,6 +23,7 @@ import java.util.LinkedList;
 
 import base.Post;
 import base.Tasks;
+import ly.loud.loudly.PeopleList.PeopleListFragment;
 import util.AttachableReceiver;
 import util.Broadcasts;
 import util.Utils;
@@ -33,9 +34,11 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
     RecyclerViewAdapter recyclerViewAdapter;
-    FloatingActionButton floatingActionButton;
-    View newPostFragmentView;
-    Fragment newPostFragment;
+    public FloatingActionButton floatingActionButton;
+    public View newPostFragmentView;
+    public Fragment newPostFragment;
+    public View peopleListFragmentView;
+    public PeopleListFragment peopleListFragment;
 
     static final int LOAD_POSTS_RECEIVER = 0;
     static final int POST_UPLOAD_RECEIVER = 1;
@@ -90,6 +93,15 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
+
+
+        peopleListFragment = (PeopleListFragment)manager.findFragmentById(R.id.people_list_fragment);
+        peopleListFragmentView = findViewById(R.id.people_list_fragment);
+        peopleListFragmentView.getBackground().setAlpha(100);
+        ft = getFragmentManager().beginTransaction();
+        ft.hide(peopleListFragment);
+        ft.commit();
+
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
@@ -159,7 +171,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void setRecyclerView() {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        recyclerViewAdapter = new RecyclerViewAdapter(this, posts);
+        recyclerViewAdapter = new RecyclerViewAdapter(posts, this);
+        recyclerView.setHasFixedSize(true); /// HERE
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), Utils.getDefaultScreenHeight()) {
@@ -207,6 +220,11 @@ public class MainActivity extends AppCompatActivity {
         if (newPostFragmentView.isShown()) {
             FragmentTransaction ft = getFragmentManager().beginTransaction();
             ft.hide(newPostFragment);
+            ft.commit();
+            floatingActionButton.show();
+        } else if (peopleListFragmentView.isShown()) {
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.hide(peopleListFragment);
             ft.commit();
             floatingActionButton.show();
         } else {

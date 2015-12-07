@@ -1,7 +1,6 @@
 package base;
 
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
 
 import Facebook.FacebookWrap;
@@ -35,8 +34,7 @@ public abstract class Wrap {
 
     public abstract void getPostsInfo(List<Post> posts) throws IOException;
 
-    public abstract LinkedList<Person> getPersons(int what, Post post) throws IOException;
-
+    public abstract List<Person> getPersons(int what, Post post) throws IOException;
 
     public static Wrap makeWrap(int network) {
         switch (network) {

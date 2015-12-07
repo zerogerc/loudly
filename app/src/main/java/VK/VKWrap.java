@@ -136,7 +136,6 @@ public class VKWrap extends Wrap {
         }
     }
 
-    @Override
     public void deletePost(Post post) throws IOException {
         Query query = makeSignedAPICall(DELETE_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
@@ -148,7 +147,6 @@ public class VKWrap extends Wrap {
         // todo: check for delete
         post.detachFromNetwork(NETWORK);
     }
-
     @Override
     public void getPostsInfo(List<Post> posts) throws IOException {
         Query query = makeSignedAPICall(GET_METHOD);
@@ -271,7 +269,7 @@ public class VKWrap extends Wrap {
 
     @Override
     public LinkedList<Person> getPersons(int what, Post post) throws IOException {
-        Query query = makeAPICall("like.getList");
+        Query query = makeSignedAPICall("likes.getList");
         query.addParameter("type", "post");
         VKKeyKeeper keys = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
         query.addParameter("owner_id", keys.getUserId());
@@ -294,7 +292,7 @@ public class VKWrap extends Wrap {
 
         String response = Network.makeGetRequest(query);
 
-        Query getPeopleQuery = makeAPICall("users.get");
+        Query getPeopleQuery = makeSignedAPICall("users.get");
 
         JSONObject parser;
         try {
@@ -307,7 +305,7 @@ public class VKWrap extends Wrap {
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < likers.length(); i++) {
-                long id = likers.getLong(i);
+                long id = likers.getJSONObject(i).getLong("id");
                 sb.append(id);
                 sb.append(',');
             }
@@ -326,12 +324,12 @@ public class VKWrap extends Wrap {
 
         JSONArray people;
         try {
-            people = new JSONObject(response).getJSONArray("response");
+            people = new JSONObject(response).getJSONObject("response").getJSONArray("items");
             for (int i = 0; i < people.length(); i++) {
                 JSONObject person = people.getJSONObject(i);
                 String firstName = person.getString("first_name");
                 String lastName = person.getString("last_name");
-                String photoURL = person.getString("photo_50");
+                String photoURL = "";//person.getString("photo_50");
                 result.add(new Person(firstName, lastName, photoURL, networkID()));
             }
         } catch (JSONException e) {
@@ -342,5 +340,17 @@ public class VKWrap extends Wrap {
         return result;
     }
 
+    public Query makeDeleteQuery(Post post) {
+        Query query = makeSignedAPICall(DELETE_METHOD);
+        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
+        query.addParameter("owner_id", keys.getUserId());
+        query.addParameter("post_id", post.getLink(NETWORK));
+        return query;
+    }
 
+    public void parseDeleteResponse(Post post, String response) {
+        if (response.equals("1")) {
+            post.detachFromNetwork(NETWORK);
+        }
+    }
 }

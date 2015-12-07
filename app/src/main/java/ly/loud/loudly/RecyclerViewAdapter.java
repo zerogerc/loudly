@@ -2,14 +2,19 @@ package ly.loud.loudly;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.Calendar;
 import java.util.List;
@@ -17,23 +22,29 @@ import java.util.List;
 import base.Post;
 import base.Tasks;
 import base.attachments.Image;
+import util.AttachableTask;
 import util.Utils;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private List<Post> posts;
-    private Context context;
+    MainActivity activity;
 
-    RecyclerViewAdapter(Context context, List<Post> posts) {
+    RecyclerViewAdapter(List<Post> posts, MainActivity act) {
         this.posts = posts;
-        this.context = context;
+        activity = act;
     }
 
-    private void refreshFields(ViewHolder holder, Post post) {
+    private void refreshFields(final ViewHolder holder, final Post post) {
         holder.text.setText(post.getText());
 
         holder.data.setText(getDateFormatted(post.getDate()));
 
-        holder.socialIcon.setImageBitmap(Utils.getIconByNetwork(post.getMainNetwork()));
+        int resource = Utils.getResourceByNetwork(post.getMainNetwork());
+
+        Picasso.with(Loudly.getContext()).load("image")
+                .error(resource)
+                .placeholder(resource)
+                .into(holder.socialIcon);
 
         if (post.getTotalInfo() != null) {
             holder.commentsAmount.setText(Integer.toString(post.getTotalInfo().comment));
@@ -46,18 +57,77 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
 
         if (post.getAttachments().size() != 0) {
-            Image image = (Image) post.getAttachments().get(0);
-            holder.postImageView.setImageBitmap(image.getBitmap());
+            holder.postImageView.setImageBitmap(null);
+            post.setLoadedImage(false);
+
+            final Image image = (Image)post.getAttachments().get(0);
+
+            if (image.getHeight() == 0 && image.getWidth() == 0) {
+                AttachableTask<Void, Void, Void> task = new AttachableTask<Void, Void, Void>(Loudly.getContext()) {
+                    @Override
+                    public void executeInUI(Context context, Void aVoid) {
+                        notifyDataSetChanged();
+                    }
+
+                    @Override
+                    protected Void doInBackground(Void... params) {
+                        image.setSize(Utils.resolveImageSize(image));
+                        return null;
+                    }
+                };
+
+                task.execute();
+            }
+
+            double width = image.getWidth();
+            double height = image.getHeight();
+
+            if (width != 0) {
+                double scale = (double)Utils.getDefaultScreenWidth() / width;
+
+                width = Utils.getDefaultScreenWidth();
+                height = height * scale;
+            }
+
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams((int)width, (int)height);
+            holder.postImageView.setLayoutParams(layoutParams);
+
+            Picasso.with(Loudly.getContext()).load(image.getUri()).
+                    resize(Utils.getDefaultScreenWidth(), Utils.getDefaultScreenHeight())
+                    .centerInside()
+                    .priority(Picasso.Priority.HIGH)
+                    .into(holder.postImageView, new com.squareup.picasso.Callback() {
+                        @Override
+                        public void onError() {
+                            Toast.makeText(Loudly.getContext(), "Error occured during image load", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onSuccess() {
+                            post.setLoadedImage(true);
+                        }
+                    });
         } else {
             holder.postImageView.setImageBitmap(null);
-        }
-        if (post.isLoadedImage()) {
-            holder.progressBar.setVisibility(View.GONE);
-        } else {
-            holder.progressBar.setVisibility(View.VISIBLE);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(0, 0);
+            holder.postImageView.setLayoutParams(layoutParams);
         }
 
-        holder.showMoreOptions.setOnClickListener(makeOptionsOnClickListener(post, context));
+
+        holder.likesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.peopleListFragment.showPersons(post, Tasks.LIKES);
+            }
+        });
+
+        holder.repostsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.peopleListFragment.showPersons(post, Tasks.SHARES);
+            }
+        });
+
     }
 
     private View.OnClickListener makeOptionsOnClickListener(final Post post, final Context context) {
@@ -112,7 +182,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private ProgressBar progressBar;
         private ImageView showMoreOptions;
 
-        public ViewHolder(View itemView, Post post) {
+        public ViewHolder(View itemView, final Post post) {
             super(itemView);
 
             socialIcon = (ImageView) itemView.findViewById(R.id.post_view_social_network_icon);
@@ -130,7 +200,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             showMoreOptions = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
 
             geoData.setHeight(0);
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) geoData.getLayoutParams();
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)geoData.getLayoutParams();
             params.setMargins(0, 0, 0, 0);
             geoData.setLayoutParams(params);
             refreshFields(this, post);

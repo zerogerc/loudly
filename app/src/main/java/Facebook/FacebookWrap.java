@@ -76,7 +76,7 @@ public class FacebookWrap extends Wrap {
         query.addParameter("no_story", true);
 
         String response = Network.makePostRequest(query, progress, "source",
-                image);
+                    image);
 
         JSONObject parser;
         try {
@@ -103,20 +103,7 @@ public class FacebookWrap extends Wrap {
             e.printStackTrace();
         }
     }
-
-    public Query makeDeleteQuery(Post post) {
-        return new Query(MAIN_SERVER + post.getLink(NETWORK));
-    }
-
-    public void parseDeleteResponse(Post post, String response) {
-        try {
-            JSONObject parse = new JSONObject(response);
-
-        } catch (JSONException e) {
-            // ToDo: tell about fails
-        }
-    }
-
+    
     @Override
     public void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException {
         Query query = makeSignedAPICall(POST_NODE);
@@ -158,7 +145,7 @@ public class FacebookWrap extends Wrap {
 
                 Loudly.getContext().getPostInterval(networkID()).from = id;
 
-                String text = obj.getString("message");
+                String text = (obj.has("message")) ? obj.getString("message") : "";
                 Post post = new Post(text);
                 post.setLink(NETWORK, id);
                 post.setDate(postTime);
@@ -265,7 +252,9 @@ public class FacebookWrap extends Wrap {
             }
 
             for (int i = 0; i < likers.length(); i++) {
-                String id = likers.getString(i);
+                String id = likers.getJSONObject(i).getString("id");
+
+                if (id.indexOf('_') != -1) id = id.substring(0, id.indexOf("_"));
                 ids.add(id);
                 sb.append(id);
                 sb.append(',');
@@ -279,7 +268,7 @@ public class FacebookWrap extends Wrap {
             return null;
         }
 
-        response = Network.makeGetRequest(query);
+        response = Network.makeGetRequest(getPeopleQuery);
 
         LinkedList<Person> result = new LinkedList<>();
         try {
@@ -298,5 +287,18 @@ public class FacebookWrap extends Wrap {
         return result;
     }
 
+    public Query makeDeleteQuery(Post post) {
+        return new Query(MAIN_SERVER + post.getLink(NETWORK));
+    }
 
+    public void parseDeleteResponse(Post post, String response) {
+        try {
+            JSONObject parse = new JSONObject(response);
+            if (parse.getString("success").equals("true")) {
+                post.detachFromNetwork(NETWORK);
+            }
+        } catch (JSONException e) {
+            // ToDo: tell about fails
+        }
+    }
 }

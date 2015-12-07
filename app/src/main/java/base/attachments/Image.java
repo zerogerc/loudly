@@ -2,6 +2,8 @@ package base.attachments;
 
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.database.Cursor;
+import android.graphics.Point;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 
@@ -16,9 +18,35 @@ import util.Utils;
 public class Image extends Attachment {
     protected String[] links;
     protected String internalLink;
+    protected Point size = new Point(0, 0);
     protected boolean local;
-    protected Bitmap bitmap;
+
+    public void setWidth(int width) {
+        size.x = width;
+    }
+
+    public void setHeight(int height) {
+        size.y = height;
+    }
+
+    public int getWidth() {
+        return size.x;
+    }
+
+    public int getHeight() {
+        return size.y;
+    }
+
+    public Point getSize() {
+        return size;
+    }
+
+    public void setSize(Point size) {
+        this.size = size;
+    }
+
     {
+
         localID = 0;
     }
 
@@ -38,14 +66,6 @@ public class Image extends Attachment {
         this.internalLink = internalLink.toString();
         this.links = new String[Networks.NETWORK_COUNT];
         this.local = true;
-    }
-
-    public void setBitmap(Bitmap bitmap) {
-        this.bitmap = bitmap;
-    }
-
-    public Bitmap getBitmap() {
-        return this.bitmap;
     }
 
     public Uri getUri() {

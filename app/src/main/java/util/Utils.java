@@ -30,6 +30,8 @@ import java.util.List;
 
 import base.Networks;
 import base.Post;
+import base.Post;
+import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.R;
 
@@ -101,6 +103,33 @@ public class Utils {
                 resource = R.mipmap.ic_launcher;
         }
         return BitmapFactory.decodeResource(Loudly.getContext().getResources(), resource);
+    }
+
+    public static int getResourceByNetwork(int network) {
+        int resource;
+        switch(network) {
+            case Networks.FB:
+                resource = R.mipmap.ic_facebook_round;
+                break;
+            case Networks.TWITTER:
+                resource = R.mipmap.ic_twitter_round;
+                break;
+            case Networks.INSTAGRAM:
+                resource = R.mipmap.ic_instagram_round;
+                break;
+            case Networks.VK:
+                resource = R.mipmap.ic_vk_round;
+                break;
+            case Networks.OK:
+                resource = R.mipmap.ic_ok_round;
+                break;
+            case Networks.MAILRU:
+                resource = R.mipmap.ic_mail_ru_round;
+                break;
+            default:
+                resource = R.mipmap.ic_launcher_without;
+        }
+        return resource;
     }
 
     public static Bitmap toGrayscale(Bitmap bmpOriginal)
@@ -271,5 +300,26 @@ public class Utils {
                 Log.e(TAG, "Exception while closing: " + e.getMessage());
             }
         }
+    }
+
+    public static Point resolveImageSize(Image image) {
+        InputStream inputStream = null;
+        int imageWidth = 0;
+        int imageHeight = 0;
+        try {
+            inputStream = Utils.openStream(image);
+            BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+            bitmapOptions.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(inputStream, null, bitmapOptions);
+            imageWidth = bitmapOptions.outWidth;
+            imageHeight = bitmapOptions.outHeight;
+        } catch (IOException ioe) {
+            Log.e("REC_VIEW", "IOException");;
+            // TODO
+        } finally {
+            Utils.closeQuietly(inputStream);
+        }
+
+        return new Point(imageWidth, imageHeight);
     }
 }

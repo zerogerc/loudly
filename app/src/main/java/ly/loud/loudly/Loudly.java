@@ -7,7 +7,6 @@ import android.content.Intent;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.LinkedList;
 
 import base.KeyKeeper;
 import base.Networks;

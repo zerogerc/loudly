@@ -4,15 +4,15 @@ package base;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.net.Uri;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 
 import base.attachments.Attachment;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
+import ly.loud.loudly.PeopleList.Item;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
@@ -97,12 +97,12 @@ public class Tasks {
                         e.getMessage());
             }
 
-            posts.add(0, post);
-            if (post.getAttachments().isEmpty()) {
-                post.setLoadedImage(true);
-            } else {
-                post.setLoadedImage(false);
+            if (post.getAttachments().size() != 0) {
+                Image image = (Image) post.getAttachments().get(0);
+                Utils.resolveImageSize(image);
             }
+
+            posts.add(0, post);
 
             publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED,
                     post.getLocalId()));
@@ -206,10 +206,10 @@ public class Tasks {
     public static class PersonGetter extends BroadcastSendingTask {
         private Post post;
         private int what;
-        private LinkedList<Person> persons;
+        private List<Item> persons;
         private Wrap[] wraps;
 
-        public PersonGetter(Post post, int what, LinkedList<Person> persons, Wrap... wraps) {
+        public PersonGetter(Post post, int what, List<Item> persons, Wrap... wraps) {
             this.post = post;
             this.what = what;
             this.persons = persons;
@@ -220,74 +220,24 @@ public class Tasks {
         protected Intent doInBackground(Object... posts) {
             for (Wrap w : wraps) {
                 try {
-                    persons.addAll(w.getPersons(what, post));
-                    Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);
-                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                    publishProgress(message);
+                    if (post.getLink(w.networkID()) != null) {
+                        List<Person> got = w.getPersons(what, post);
+                        if (!got.isEmpty()) {
+                            persons.add(new NetworkDelimeter(w.networkID()));
+                            persons.addAll(w.getPersons(what, post));
+                        }
+
+                        Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);
+                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                        publishProgress(message);
+                    }
+
                 } catch (IOException e) {
                     publishProgress(makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
                             e.getMessage()));
                 }
             }
             return makeSuccess(Broadcasts.POST_GET_PERSONS);
-        }
-    }
-
-    public static class PostDeleter extends BroadcastSendingTask {
-        private Post post;
-        LinkedList<Post> posts;
-        private Wrap[] wraps;
-
-        public PostDeleter(Post post, LinkedList<Post> posts, Wrap... wraps) {
-            this.post = post;
-            this.wraps = wraps;
-            this.posts = posts;
-        }
-
-        @Override
-        protected Intent doInBackground(Object... params) {
-            for (Wrap w : wraps) {
-                if (post.getLink(w.networkID()) != null) {
-                    try {
-                        w.deletePost(post);
-                        if (post.getMainNetwork() == -1) {
-                            DatabaseActions.updatePostLinks(w.networkID(), post);
-                        }
-                        Intent message = makeMessage(Broadcasts.POST_DELETE, Broadcasts.PROGRESS);
-                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        publishProgress(message);
-                    } catch (DatabaseException e) {
-                        publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
-                                e.getMessage()));
-                    } catch (IOException e) {
-                        publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.NETWORK_ERROR,
-                                e.getMessage()));
-                    }
-                }
-            }
-
-            boolean dead = true;
-            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                if (post.getLink(i) != null) {
-                    dead = false;
-                    break;
-                }
-            }
-
-            if (dead) {
-                posts.remove(post);
-                if (post.getMainNetwork() == -1) {
-                    try {
-                        DatabaseActions.deletePost(post);
-                    } catch (DatabaseException e) {
-                        e.printStackTrace();
-                        return makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
-                                e.getMessage());
-                    }
-                }
-            }
-
-            return makeSuccess(Broadcasts.POST_DELETE);
         }
     }
 
@@ -521,42 +471,6 @@ public class Tasks {
                     post.setLoadedImage(true);
                 } else {
                     post.setLoadedImage(false);
-                }
-            }
-
-            for (Post post : resultList) {
-                if (post.getAttachments().size() != 0) {
-                    final long postID = post.getLocalId();
-                    Image image = (Image) post.getAttachments().get(0);
-                    try {
-                        final long imageID = image.getLocalID();
-                        Bitmap bitmap;
-                        post.setLoadedImage(false);
-                        if (image.isLocal()) {
-                            Uri uri = Uri.parse(image.getExtra());
-                            bitmap = Utils.loadBitmap(uri,
-                                    Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
-                        } else {
-                            bitmap = Utils.downloadBitmap(image.getExtra(), new BackgroundAction() {
-                                        @Override
-                                        public void execute(Object... params) {
-                                            Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.IMAGE,
-                                                    postID);
-                                            message.putExtra(Broadcasts.IMAGE_FIELD, imageID);
-                                            message.putExtra(Broadcasts.PROGRESS, (int) params[0]);
-                                            publishProgress(message);
-                                        }
-                                    },
-                                    Utils.getDefaultScreenWidth(), Utils.getDefaultScreenWidth());
-                        }
-                        image.setBitmap(bitmap);
-                        post.setLoadedImage(true);
-                        message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.IMAGE_FINISHED, postID);
-                        message.putExtra(Broadcasts.IMAGE_FIELD, imageID);
-                        publishProgress(message);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
 

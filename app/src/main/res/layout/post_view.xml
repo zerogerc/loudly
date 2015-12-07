@@ -99,15 +99,7 @@
                     android:id="@+id/post_view_post_image"
                     android:adjustViewBounds="true"
                     android:scaleType="centerInside"
-                    android:background="@null"/>
-
-                <ProgressBar
-                    style="?android:attr/progressBarStyleLarge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/post_view_progress"
-                    android:visibility="visible"
-                    android:layout_gravity="center" />
+                    android:background="@color/light_grey_color"/>
             </FrameLayout>
         </RelativeLayout>
 
