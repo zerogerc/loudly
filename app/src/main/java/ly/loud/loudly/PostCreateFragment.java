@@ -14,7 +14,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
-import java.io.IOException;
 import com.squareup.picasso.Picasso;
 
 import base.Post;

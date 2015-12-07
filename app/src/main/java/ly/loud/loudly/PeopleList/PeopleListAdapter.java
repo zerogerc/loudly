@@ -26,8 +26,8 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     void refreshFields(final RecyclerView.ViewHolder viewHolder, final Item item) {
         if (item instanceof Person) {
-            ViewHolderPerson holder = (ViewHolderPerson)viewHolder;
-            Person person = (Person)item;
+            ViewHolderPerson holder = (ViewHolderPerson) viewHolder;
+            Person person = (Person) item;
             if (person.getPhotoUrl().length() != 0) {
                 Picasso.with(Loudly.getContext())
                         .load(person.getPhotoUrl())
@@ -37,7 +37,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                         .into(holder.icon);
             } else {
                 Picasso.with(Loudly.getContext())
-                        .load(R.mipmap.ic_launcher_without)
+                        .load(R.mipmap.ic_launcher)
                         .resize(Utils.dpToPx(48), Utils.dpToPx(48))
                         .centerInside()
                         .into(holder.icon);
@@ -75,7 +75,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         switch (viewType) {
             case Item.PERSON: {
                 View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_person, parent, false);
-                return new ViewHolderPerson(v, new Person("","","",-1));
+                return new ViewHolderPerson(v, new Person("", "", "", -1));
             }
             default: { //Item.DELIMETER
                 View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_delimeter, parent, false);
@@ -99,7 +99,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         public ViewHolderDelimeter(View itemView, Item item) {
             super(itemView);
-            icon = (ImageView)itemView.findViewById(R.id.people_list_delimeter_icon);
+            icon = (ImageView) itemView.findViewById(R.id.people_list_delimeter_icon);
             refreshFields(this, item);
         }
 
@@ -111,8 +111,8 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         public ViewHolderPerson(View itemView, Item item) {
             super(itemView);
-            icon = (ImageView)itemView.findViewById(R.id.people_list_person_avatar);
-            name = (TextView)itemView.findViewById(R.id.people_list_person_name);
+            icon = (ImageView) itemView.findViewById(R.id.people_list_person_avatar);
+            name = (TextView) itemView.findViewById(R.id.people_list_person_name);
             refreshFields(this, item);
         }
 

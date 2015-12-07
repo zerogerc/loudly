@@ -5,7 +5,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,7 +21,6 @@ import util.IDInterval;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
-import util.Utils;
 
 public class FacebookWrap extends Wrap {
     private static final int NETWORK = Networks.FB;
@@ -76,7 +74,7 @@ public class FacebookWrap extends Wrap {
         query.addParameter("no_story", true);
 
         String response = Network.makePostRequest(query, progress, "source",
-                    image);
+                image);
 
         JSONObject parser;
         try {
@@ -103,7 +101,7 @@ public class FacebookWrap extends Wrap {
             e.printStackTrace();
         }
     }
-    
+
     @Override
     public void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException {
         Query query = makeSignedAPICall(POST_NODE);

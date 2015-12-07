@@ -1,8 +1,6 @@
 package base;
 
 
-import android.content.ContentProvider;
-import android.content.ContentResolver;
 import android.content.Intent;
 
 import java.io.IOException;
@@ -26,7 +24,7 @@ import util.database.DatabaseException;
  */
 public class Tasks {
     /**
-     * BroadcastReceivingTask for uploading post to network.
+     * BroadcastReceivingTask for uploading ost to network.
      * It sends Broadcasts.POST_UPLOAD broadcast with parameters:
      * <p>
      * When post save to DB:
@@ -199,6 +197,65 @@ public class Tasks {
             return makeSuccess(Broadcasts.POST_GET_INFO);
         }
     }
+
+    public static class PostDeleter extends BroadcastSendingTask {
+        private Post post;
+        LinkedList<Post> posts;
+        private Wrap[] wraps;
+
+        public PostDeleter(Post post, LinkedList<Post> posts, Wrap... wraps) {
+            this.post = post;
+            this.wraps = wraps;
+            this.posts = posts;
+        }
+
+        @Override
+        protected Intent doInBackground(Object... params) {
+            for (Wrap w : wraps) {
+                if (post.getLink(w.networkID()) != null) {
+                    try {
+                        w.deletePost(post);
+                        if (post.getMainNetwork() == -1) {
+                            DatabaseActions.updatePostLinks(w.networkID(), post);
+                        }
+                        Intent message = makeMessage(Broadcasts.POST_DELETE, Broadcasts.PROGRESS);
+                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                        publishProgress(message);
+                    } catch (DatabaseException e) {
+                        publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
+                                e.getMessage()));
+                    } catch (IOException e) {
+                        publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.NETWORK_ERROR,
+                                e.getMessage()));
+                    }
+                }
+            }
+
+            boolean dead = true;
+            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                if (post.getLink(i) != null) {
+                    dead = false;
+                    break;
+                }
+            }
+
+            if (dead) {
+                posts.remove(post);
+                if (post.getMainNetwork() == -1) {
+                    try {
+                        DatabaseActions.deletePost(post);
+                    } catch (DatabaseException e) {
+                        e.printStackTrace();
+                        return makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
+                                e.getMessage());
+                    }
+                }
+            }
+
+            return makeSuccess(Broadcasts.POST_DELETE);
+        }
+    }
+
 
     public static final int LIKES = 0;
     public static final int SHARES = 1;

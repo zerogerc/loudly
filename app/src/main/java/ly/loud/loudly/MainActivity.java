@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         ft.commit();
 
 
-        peopleListFragment = (PeopleListFragment)manager.findFragmentById(R.id.people_list_fragment);
+        peopleListFragment = (PeopleListFragment) manager.findFragmentById(R.id.people_list_fragment);
         peopleListFragmentView = findViewById(R.id.people_list_fragment);
         peopleListFragmentView.getBackground().setAlpha(100);
         ft = getFragmentManager().beginTransaction();

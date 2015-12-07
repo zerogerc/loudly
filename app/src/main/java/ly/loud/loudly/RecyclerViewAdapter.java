@@ -2,14 +2,12 @@ package ly.loud.loudly;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,7 +58,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             holder.postImageView.setImageBitmap(null);
             post.setLoadedImage(false);
 
-            final Image image = (Image)post.getAttachments().get(0);
+            final Image image = (Image) post.getAttachments().get(0);
 
             if (image.getHeight() == 0 && image.getWidth() == 0) {
                 AttachableTask<Void, Void, Void> task = new AttachableTask<Void, Void, Void>(Loudly.getContext()) {
@@ -83,13 +81,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             double height = image.getHeight();
 
             if (width != 0) {
-                double scale = (double)Utils.getDefaultScreenWidth() / width;
+                double scale = (double) Utils.getDefaultScreenWidth() / width;
 
                 width = Utils.getDefaultScreenWidth();
                 height = height * scale;
             }
 
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams((int)width, (int)height);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams((int) width, (int) height);
             holder.postImageView.setLayoutParams(layoutParams);
 
             Picasso.with(Loudly.getContext()).load(image.getUri()).
@@ -179,7 +177,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private TextView repostsAmount;
         private ImageView repostsButton;
         private ImageView postImageView;
-        private ProgressBar progressBar;
         private ImageView showMoreOptions;
 
         public ViewHolder(View itemView, final Post post) {
@@ -196,11 +193,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             repostsAmount = (TextView) itemView.findViewById(R.id.post_view_reposts_amount);
             repostsButton = (ImageView) itemView.findViewById(R.id.post_view_reposts_button);
             postImageView = (ImageView) itemView.findViewById(R.id.post_view_post_image);
-            progressBar = (ProgressBar) itemView.findViewById(R.id.post_view_progress);
             showMoreOptions = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
 
             geoData.setHeight(0);
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)geoData.getLayoutParams();
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) geoData.getLayoutParams();
             params.setMargins(0, 0, 0, 0);
             geoData.setLayoutParams(params);
             refreshFields(this, post);

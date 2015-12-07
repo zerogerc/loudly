@@ -41,7 +41,7 @@ public class PeopleListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.people_list, container, false);
-        recyclerView = (RecyclerView)rootView.findViewById(R.id.people_list_recycler_view);
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
         recyclerViewAdapter = new PeopleListAdapter(persons);
         recyclerView.setHasFixedSize(true); /// HERE
         LinearLayoutManager layoutManager = new LinearLayoutManager(Loudly.getContext());
@@ -92,7 +92,7 @@ public class PeopleListFragment extends Fragment {
     public void showPersons(Post post, int type) {
         this.post = post;
         this.requestType = type;
-        ((MainActivity)getActivity()).floatingActionButton.hide();
+        ((MainActivity) getActivity()).floatingActionButton.hide();
         FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction();
         ft.show(this);
         ft.commit();

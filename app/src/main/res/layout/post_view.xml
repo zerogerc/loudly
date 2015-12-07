@@ -99,7 +99,7 @@
                     android:id="@+id/post_view_post_image"
                     android:adjustViewBounds="true"
                     android:scaleType="centerInside"
-                    android:background="@color/light_grey_color"/>
+                    android:background="@color/light_grey_color" />
             </FrameLayout>
         </RelativeLayout>
 

@@ -33,7 +33,8 @@
         android:layout_height="match_parent"
         tools:layout="@layout/activity_new_post" />
 
-    <fragment android:name="ly.loud.loudly.PeopleList.PeopleListFragment"
+    <fragment
+        android:name="ly.loud.loudly.PeopleList.PeopleListFragment"
         android:id="@+id/people_list_fragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

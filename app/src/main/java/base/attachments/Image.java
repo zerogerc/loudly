@@ -1,8 +1,6 @@
 package base.attachments;
 
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.database.Cursor;
 import android.graphics.Point;
 import android.net.Uri;
 import android.provider.OpenableColumns;
@@ -11,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import base.Networks;
-import base.Person;
 import ly.loud.loudly.Loudly;
 import util.Utils;
 

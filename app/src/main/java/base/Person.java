@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 
 import ly.loud.loudly.PeopleList.Item;
 
-public class Person extends Item{
+public class Person extends Item {
     private String firstName, lastName;
     private String photoUrl;
     private int network;

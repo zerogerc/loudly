@@ -5,7 +5,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,7 +20,6 @@ import util.IDInterval;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
-import util.Utils;
 
 
 public class VKWrap extends Wrap {

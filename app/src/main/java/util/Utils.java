@@ -26,10 +26,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.LinkedList;
-import java.util.List;
 
 import base.Networks;
-import base.Post;
 import base.Post;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
@@ -107,7 +105,7 @@ public class Utils {
 
     public static int getResourceByNetwork(int network) {
         int resource;
-        switch(network) {
+        switch (network) {
             case Networks.FB:
                 resource = R.mipmap.ic_facebook_round;
                 break;
@@ -127,7 +125,7 @@ public class Utils {
                 resource = R.mipmap.ic_mail_ru_round;
                 break;
             default:
-                resource = R.mipmap.ic_launcher_without;
+                resource = R.mipmap.ic_launcher;
         }
         return resource;
     }
@@ -289,6 +287,15 @@ public class Utils {
         return temp;
     }
 
+    public static InputStream openStream(Image image) throws IOException {
+        if (image.isLocal()) {
+            return image.getContent();
+        } else {
+            HttpURLConnection conn = (HttpURLConnection) new URL(image.getExtra()).openConnection();
+            return conn.getInputStream();
+        }
+    }
+
     /**
      * Close instance of Closeable without throwing exception
      */
@@ -314,7 +321,8 @@ public class Utils {
             imageWidth = bitmapOptions.outWidth;
             imageHeight = bitmapOptions.outHeight;
         } catch (IOException ioe) {
-            Log.e("REC_VIEW", "IOException");;
+            Log.e("REC_VIEW", "IOException");
+            ;
             // TODO
         } finally {
             Utils.closeQuietly(inputStream);
