@@ -2,20 +2,17 @@ package util;
 
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 
 import base.attachments.Image;
+import util.parsers.Parser;
+import util.parsers.StringParser;
 
 
 /**
@@ -26,29 +23,33 @@ public class Network {
     private static final String TAG = "REQUEST";
     private static final String CRLF = "\r\n";
 
-    /**
-     * Make GET-request
-     * @param query request to server
-     * @return response from server
-     * @throws IOException if any IO-error occurs
-     */
-    public static String makeGetRequest(Query query) throws IOException {
+    public static <T> T makeGetRequestAndParse(Query query, Parser<T> parser) throws IOException {
         HttpURLConnection conn = null;
-        String response = null;
         try {
             conn = (HttpURLConnection) new URL(query.toURL()).openConnection();
             conn.setRequestMethod("GET");
-            response = getResponse(conn);
+            return getResponse(conn, parser);
         } finally {
             if (conn != null) {
                 conn.disconnect();
             }
         }
-        return response;
+    }
+
+    /**
+     * Make GET-request
+     *
+     * @param query request to server
+     * @return response from server
+     * @throws IOException if any IO-error occurs
+     */
+    public static String makeGetRequest(Query query) throws IOException {
+        return makeGetRequestAndParse(query, new StringParser());
     }
 
     /**
      * Performs POST-request
+     *
      * @param query request to server
      * @return response from server
      * @throws IOException if any IO-error occurs
@@ -59,10 +60,11 @@ public class Network {
 
     /**
      * Performs POST-request
-     * @param query request to server
+     *
+     * @param query            request to server
      * @param onProgressUpdate is called during making request
-     * @param tag - name of the photo field
-     * @param image - image that should be uploaded
+     * @param tag              - name of the photo field
+     * @param image            - image that should be uploaded
      * @return response from server
      * @throws IOException if any IO-error occurs
      */
@@ -112,8 +114,7 @@ public class Network {
                 pw.append("--").append(boundary).append(CRLF);
                 pw.append("Content-Disposition: file; name=\"")
                         .append(tag)
-                        .append("\"; filename=\"")
-                        .append("source." + type.substring(type.indexOf('/') + 1))
+                        .append("\"; filename=\"").append("source.").append(type.substring(type.indexOf('/') + 1))
                         .append("\"")
                         .append(CRLF);
                 pw.append("Content-type: ")
@@ -138,7 +139,7 @@ public class Network {
                         uploaded += bytesRead;
                         if (uploaded * 100 / size > progress + 2) {
                             progress = uploaded * 100 / size;
-                            onProgressUpdate.execute((int)progress);
+                            onProgressUpdate.execute((int) progress);
                         }
                         // ToDo: And here publish
                     }
@@ -178,7 +179,7 @@ public class Network {
         return response;
     }
 
-    public static String makeDeleteRequest(Query query) throws IOException{
+    public static String makeDeleteRequest(Query query) throws IOException {
         HttpURLConnection conn = null;
         String response = null;
         try {
@@ -195,29 +196,28 @@ public class Network {
 
     /**
      * Get response from server after sending request
+     *
      * @param conn established connection to server
      * @return response from server
      * @throws IOException if getting response fails
      */
     private static String getResponse(HttpURLConnection conn) throws IOException {
-        StringBuilder response = new StringBuilder();
+        return getResponse(conn, new StringParser());
+    }
+
+    private static <T> T getResponse(HttpURLConnection conn, Parser<T> parser) throws IOException {
         int status = conn.getResponseCode();
         if (status == HttpURLConnection.HTTP_OK) {
-            BufferedReader reader = null;
+            InputStream stream = null;
             try {
-                reader = new BufferedReader(new InputStreamReader(
-                        conn.getInputStream()));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append('\n').append(line);
-                }
+                stream = conn.getInputStream();
+                return parser.parse(stream);
             } finally {
-                Utils.closeQuietly(reader);
+                Utils.closeQuietly(stream);
             }
         } else {
             throw new IOException("Server returned non-OK status: " + status);
         }
-        return response.toString();
     }
 
     /**

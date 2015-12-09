@@ -116,7 +116,7 @@ public class Loudly extends Application {
 
         // Load it from preferences
         Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.WEEK_OF_MONTH, -1);
+        cal.add(Calendar.WEEK_OF_MONTH, -2);
         timeInterval = new TimeInterval(cal.getTimeInMillis() / 1000, -1l);
 
         alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);

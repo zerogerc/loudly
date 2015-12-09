@@ -23,6 +23,8 @@ import util.IDInterval;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
+import util.parsers.json.ArrayParser;
+import util.parsers.json.ObjectParser;
 
 
 public class VKWrap extends Wrap {
@@ -83,12 +85,6 @@ public class VKWrap extends Wrap {
         }
     }
 
-    private Info getInfo(JSONObject object) throws JSONException {
-        int like = object.getJSONObject("likes").getInt("count");
-        int repost = object.getJSONObject("reposts").getInt("count");
-        int comments = object.getJSONObject("comments").getInt("count");
-        return new Info(like, repost, comments);
-    }
 
     @Override
     public void uploadImage(Image image, BackgroundAction progress) throws IOException {
@@ -190,9 +186,41 @@ public class VKWrap extends Wrap {
         }
     }
 
+    private Info getInfo(JSONObject object) throws JSONException {
+        int like = object.getJSONObject("likes").getInt("count");
+        int repost = object.getJSONObject("reposts").getInt("count");
+        int comments = object.getJSONObject("comments").getInt("count");
+        return new Info(like, repost, comments);
+    }
+
     @Override
     public void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException {
         int offset = Loudly.getContext().getOffset(networkID());
+
+        ObjectParser photoParser = new ObjectParser();
+        photoParser.parseString("id");
+        photoParser.parseString("photo_604");
+        photoParser.parseInt("width");
+        photoParser.parseInt("height");
+
+        ObjectParser attachmentParser = new ObjectParser();
+        attachmentParser.parseString("type");
+        attachmentParser.parseObject("photo", photoParser);
+
+        ObjectParser postParser = new ObjectParser();
+        postParser.parseString("id");
+        postParser.parseLong("date");
+        postParser.parseString("text");
+        postParser.parseObject("likes", new ObjectParser().parseInt("count"));
+        postParser.parseObject("reposts", new ObjectParser().parseInt("count"));
+        postParser.parseObject("comments", new ObjectParser().parseInt("count"));
+        postParser.parseArray("attachments", new ArrayParser(-1, attachmentParser));
+
+        ArrayParser itemsParser = new ArrayParser(-1, postParser);
+        ObjectParser responseParser = new ObjectParser().parseArray("items", itemsParser);
+
+        ObjectParser parser = new ObjectParser();
+        parser.parseObject("response", responseParser);
 
         long earliestPost = -1;
         do {
@@ -203,71 +231,58 @@ public class VKWrap extends Wrap {
             query.addParameter("count", "10");
             query.addParameter("offset", offset);
 
-            String response = Network.makeGetRequest(query);
+            ObjectParser response = Network.makeGetRequestAndParse(query, parser);
 
-            JSONObject parser;
-            try {
-                parser = new JSONObject(response);
-                JSONArray postJ = parser.getJSONObject("response").getJSONArray("items");
+            ArrayParser arrayParser = response.getObject().getArray();
+            for (int i = 0; i < arrayParser.size(); i++) {
+                postParser = arrayParser.getObject(i);
+                String id = postParser.getString();
+                long date = postParser.getLong();
+                String text = postParser.getString();
 
-                if (postJ.length() == 1) {
-                    break;
+                int likes = postParser.getObject().getInt();
+                int shares = postParser.getObject().getInt();
+                int comments = postParser.getObject().getInt();
+
+                ArrayParser attachments = postParser.getArray();
+
+                Info info = new Info(likes, shares, comments);
+
+                LoudlyPost loudlyPost = callback.findLoudlyPost(id, networkID());
+                if (loudlyPost != null) {
+                    loudlyPost.setInfo(networkID(), info);
+                    continue;
                 }
-                for (int i = 0; i < postJ.length(); i++) {
-                    JSONObject post = postJ.getJSONObject(i);
-                    String id = post.getString("id");
+                // TODO: 12/8/2015 move interval to wrap
+                if (Loudly.getContext().getPostInterval(networkID()) == null) {
+                    Loudly.getContext().setPostInterval(networkID(), new IDInterval(id, id));
+                }
 
-                    LoudlyPost loudlyPost = callback.findLoudlyPost(id, networkID());
-                    if (loudlyPost != null) {
-                        loudlyPost.setInfo(networkID(), getInfo(post));
-                        continue;
-                    }
+                if (timeInterval.contains(date)) {
+                    SinglePost res = new SinglePost(text, date, null, networkID(), id);
+                    res.setInfo(info);
 
-                    long date = post.getLong("date");
+                    for (int j = 0; j < attachments.size(); j++) {
+                        attachmentParser = attachments.getObject(j);
+                        String type = attachmentParser.getString();
+                        if (type.equals("photo") || type.equals("posted_photo")) {
+                            photoParser = attachmentParser.getObject();
+                            String photoId = photoParser.getString();
+                            String link = photoParser.getString();
+                            int width = photoParser.getInt();
+                            int height = photoParser.getInt();
 
-                    // TODO: 12/8/2015 move interval to wrap
-                    if (Loudly.getContext().getPostInterval(networkID()) == null) {
-                        Loudly.getContext().setPostInterval(networkID(), new IDInterval(id, id));
-                    }
-
-                    Loudly.getContext().getPostInterval(networkID()).from = id;
-                    earliestPost = date;
-
-                    if (timeInterval.contains(date)) {
-                        String text = post.getString("text");
-                        SinglePost res = new SinglePost(text, date, null, networkID(), id);
-
-                        if (post.has("attachments")) {
-                            JSONArray attachments = post.getJSONArray("attachments");
-                            for (int j = 0; j < attachments.length(); j++) {
-                                JSONObject obj = attachments.getJSONObject(j);
-                                String type = obj.getString("type");
-                                if (type.equals("photo") || type.equals("posted_photo")) {
-                                    JSONObject photo = obj.getJSONObject("photo");
-                                    String photoID = photo.getString("id");
-                                    String link;
-                                    if (photo.has("photo_604")) {
-                                        link = photo.getString("photo_604");
-                                    } else {
-                                        link = photo.getString("photo_130");
-                                    }
-                                    Image image = new Image(link, false);
-                                    image.setLink(networkID(), photoID);
-                                    res.addAttachment(image);
-                                }
-                            }
+                            Image image = new Image(link, false);
+                            image.setLink(networkID(), photoId);
+                            image.setWidth(width);
+                            image.setHeight(height);
+                            res.addAttachment(image);
                         }
-
-                        res.setInfo(getInfo(post));
-
-                        callback.postLoaded(res);
-                        offset++;
-                    } else {
-                        break;
                     }
+                    callback.postLoaded(res);
+                    offset++;
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
+
             }
         } while (timeInterval.contains(earliestPost));
         Loudly.getContext().setOffset(networkID(), offset);

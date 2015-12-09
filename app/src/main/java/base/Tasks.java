@@ -243,7 +243,9 @@ public class Tasks {
             }
 
             if (post instanceof SinglePost) {
-                posts.remove(post);
+                if (!post.existsIn(post.getNetwork())) {
+                    posts.remove(post);
+                }
             }
 
             if (post instanceof LoudlyPost) {
