@@ -11,6 +11,7 @@ import java.util.List;
 
 import base.Networks;
 import base.Person;
+import base.attachments.Attachment;
 import base.says.Comment;
 import base.says.Info;
 import base.says.LoudlyPost;
@@ -32,6 +33,11 @@ public class FacebookWrap extends Wrap {
     private static final String POST_NODE = "me/feed";
     private static final String PHOTO_NODE = "me/photos";
     private static final String ACCESS_TOKEN = "access_token";
+
+    @Override
+    public int shouldUploadImage() {
+        return Wrap.IMAGE_UPLOAD_OR_LINK;
+    }
 
     @Override
     public int networkID() {
@@ -56,7 +62,10 @@ public class FacebookWrap extends Wrap {
         Query query = makeSignedAPICall(POST_NODE);
         query.addParameter("message", post.getText());
         if (post.getAttachments().size() > 0) {
-            query.addParameter("object_attachment", post.getAttachments().get(0).getLink(networkID()));
+            for (Attachment attachment : post.getAttachments()) {
+                Image image = ((Image) attachment);
+                query.addParameter("object_attachment", image.getLink(networkID()));
+            }
         }
 
         String response = Network.makePostRequest(query);
@@ -77,13 +86,35 @@ public class FacebookWrap extends Wrap {
         query.addParameter("published", true);
         query.addParameter("no_story", true);
 
-        String response = Network.makePostRequest(query, progress, "source",
-                image);
+        String response;
+        if (image.isLocal()) {
+            response = Network.makePostRequest(query, progress, "source",
+                    image);
+        } else {
+            query.addParameter("url", image.getExternalLink());
+            response = Network.makePostRequest(query);
+        }
 
         JSONObject parser;
         try {
             parser = new JSONObject(response);
-            image.setLink(networkID(), parser.getString("id"));
+            String id = parser.getString("id");
+
+            image.setLink(networkID(), id);
+            if (image.isLocal()) {
+                Query getExternalLinkQuery = makeSignedAPICall(id);
+                getExternalLinkQuery.addParameter("fields", "link,width,height");
+
+                response = Network.makeGetRequest(getExternalLinkQuery);
+
+                parser = new JSONObject(response);
+                String link = parser.getString("link");
+                int height = parser.getInt("height");
+                int width = parser.getInt("width");
+                image.setExternalLink(link);
+                image.setHeight(height);
+                image.setWidth(width);
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }

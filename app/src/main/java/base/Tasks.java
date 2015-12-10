@@ -10,7 +10,6 @@ import java.util.List;
 
 import base.attachments.Attachment;
 import base.attachments.Image;
-import base.says.Comment;
 import base.says.LoudlyPost;
 import base.says.Post;
 import base.says.SinglePost;
@@ -89,6 +88,8 @@ public class Tasks {
             this.post = post;
             this.posts = posts;
             this.wraps = wraps;
+
+            Arrays.sort(this.wraps);
         }
 
         @Override
@@ -114,7 +115,6 @@ public class Tasks {
                 try {
                     final int networkID = w.networkID();
                     for (final Attachment attachment : post.getAttachments()) {
-
                         w.uploadImage((Image) attachment, new BackgroundAction() {
                             @Override
                             public void execute(Object... params) {
@@ -142,6 +142,16 @@ public class Tasks {
 
                     publishProgress(makeError(Broadcasts.POST_UPLOAD, Broadcasts.NETWORK_ERROR,
                             post.getLocalId(), e.getMessage()));
+                }
+            }
+
+            // Change image links to external
+            for (Attachment attachment : post.getAttachments()) {
+                if (attachment instanceof Image) {
+                    Image image = ((Image) attachment);
+                    if (!image.isLocal()) {
+                        image.setInternalLink(image.getExternalLink());
+                    }
                 }
             }
 

@@ -141,6 +141,14 @@ public class DatabaseActions {
 
             int ind = 0;
             while (atId != AttachmentsEntry.END_OF_LIST_VALUE) {
+                // Update internal link
+                update = new ContentValues();
+                update.put(AttachmentsEntry.COLUMN_NAME_EXTRA, post.getAttachments().get(ind).getExtra());
+                if (db.update(AttachmentsEntry.TABLE_NAME,
+                        update, sqlEqual(AttachmentsEntry._ID, atId), null) != 1) {
+                    throw new DatabaseException("Can't update extra for attachment: " + atId);
+                }
+
                 cursor = db.query(AttachmentsEntry.TABLE_NAME,
                         projection, sqlEqual(AttachmentsEntry._ID, atId),
                         null, null, null, null);
@@ -229,11 +237,11 @@ public class DatabaseActions {
             long linkId = cursor.getLong(cursor.getColumnIndex(PostEntry.COLUMN_NAME_LINKS));
 
             db.beginTransaction();
-            if (db.delete(LocationEntry.TABLE_NAME, sqlEqual(LocationEntry._ID, locId), null) != 1) {
+            if (locId != -1 && db.delete(LocationEntry.TABLE_NAME, sqlEqual(LocationEntry._ID, locId), null) != 1) {
                 throw new DatabaseException("Can't delete location: " + locId);
             }
 
-            if (db.delete(LinksEntry.TABLE_NAME, sqlEqual(LinksEntry._ID, linkId), null) != 1) {
+            if (linkId != -1 && db.delete(LinksEntry.TABLE_NAME, sqlEqual(LinksEntry._ID, linkId), null) != 1) {
                 throw new DatabaseException("Can't delete post's link: " + linkId);
             }
 
@@ -247,7 +255,9 @@ public class DatabaseActions {
             db.setTransactionSuccessful();
         } finally {
             Utils.closeQuietly(cursor);
-            db.endTransaction();
+            if (db.inTransaction()) {
+                db.endTransaction();
+            }
         }
     }
 

@@ -15,6 +15,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -262,8 +263,9 @@ public class MainActivity extends AppCompatActivity {
                     imageID = message.getLongExtra(Broadcasts.IMAGE_FIELD, 0);
                     postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
                     progress = message.getIntExtra(Broadcasts.PROGRESS, 0);
-                    toast = Toast.makeText(context, "image " + progress, Toast.LENGTH_SHORT);
-                    toast.show();
+//                    toast = Toast.makeText(context, "image " + progress, Toast.LENGTH_SHORT);
+//                    toast.show();
+                    Log.i("IMAGE_UPLOAD", progress + "");
                     break;
                 case Broadcasts.IMAGE_FINISHED:
                     // Image loaded

@@ -18,7 +18,30 @@ import util.TimeInterval;
  * Uses KeyKeepers, stored in Loudly Application
  */
 
-public abstract class Wrap {
+public abstract class Wrap implements Comparable<Wrap> {
+    public static final int IMAGE_ONLY_UPLOAD = 0;
+    public static final int IMAGE_UPLOAD_OR_LINK = 1;
+    public static final int IMAGE_ONLY_LINK = 2;
+
+    /**
+     * Proper flag from this class
+     */
+    public abstract int shouldUploadImage();
+
+    // Firstly upload photos to networks, that only allows
+    @Override
+    public int compareTo(Wrap another) {
+        int first = shouldUploadImage();
+        int second = another.shouldUploadImage();
+        if (first < second) {
+            return -1;
+        }
+        if (first == second) {
+            return 0;
+        }
+        return 1;
+    }
+
     /**
      * @return ID of the network (from Networks class)
      */

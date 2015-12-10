@@ -15,6 +15,7 @@ import util.Utils;
 public class Image extends Attachment {
     protected String[] links;
     protected String internalLink;
+    protected String externalLink;
     protected Point size = new Point(0, 0);
     protected boolean local;
 
@@ -43,8 +44,24 @@ public class Image extends Attachment {
     }
 
     {
-
         localID = 0;
+    }
+
+    public String getExternalLink() {
+        return externalLink;
+    }
+
+    public void setExternalLink(String externalLink) {
+        this.externalLink = externalLink;
+        local = false;
+    }
+
+    public String getInternalLink() {
+        return internalLink;
+    }
+
+    public void setInternalLink(String internalLink) {
+        this.internalLink = internalLink;
     }
 
     public Image(String internalLink, String[] links) {

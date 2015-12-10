@@ -289,12 +289,12 @@ public class Utils {
     }
 
     public static InputStream openStream(Image image) throws IOException {
-        if (image.isLocal()) {
-            return image.getContent();
-        } else {
+//        if (image.isLocal()) {
+//            return image.getContent();
+//        } else {
             HttpURLConnection conn = (HttpURLConnection) new URL(image.getExtra()).openConnection();
             return conn.getInputStream();
-        }
+//        }
     }
 
     /**

@@ -43,6 +43,11 @@ public class VKWrap extends Wrap {
     private static final String ACCESS_TOKEN = "access_token";
 
     @Override
+    public int shouldUploadImage() {
+        return Wrap.IMAGE_ONLY_UPLOAD;
+    }
+
+    @Override
     public int networkID() {
         return NETWORK;
     }
@@ -128,7 +133,15 @@ public class VKWrap extends Wrap {
         try {
             parser = new JSONObject(response).getJSONArray("response").getJSONObject(0);
             String id = parser.getString("id");
+            String url = parser.getString("photo_604");
+            if (image.isLocal()) {
+                image.setExternalLink(url);
+            }
+            int height = parser.getInt("height");
+            int width = parser.getInt("width");
             image.setLink(networkID(), id);
+            image.setHeight(height);
+            image.setWidth(width);
         } catch (JSONException e) {
             e.printStackTrace();
         }
