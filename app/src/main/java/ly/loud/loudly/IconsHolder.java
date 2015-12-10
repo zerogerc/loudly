@@ -14,7 +14,7 @@ import util.UIAction;
 import util.Utils;
 
 public class IconsHolder extends View {
-    private SettingsActivity activity;
+    private Context context;
     private int iconWidth;
     private int iconHeight;
     private int parentWidth;
@@ -29,7 +29,7 @@ public class IconsHolder extends View {
 
     public IconsHolder(Context context, AttributeSet attrs) {
         super(context, attrs);
-        activity = (SettingsActivity)context;
+        this.context = context;
 
         for (int network = 0; network < Networks.NETWORK_COUNT; network++) {
             if (Loudly.getContext().getKeyKeeper(network) != null) {
@@ -116,10 +116,10 @@ public class IconsHolder extends View {
         if (network != -1) {
             if (isVisible[network] && colorItemClick != null) {
                 setInvisible(network);
-                colorItemClick.execute(activity, network);
+                colorItemClick.execute(context, network);
             } else {
                 setVisible(network);
-                grayItemClick.execute(activity, network);
+                grayItemClick.execute(context, network);
             }
         }
 

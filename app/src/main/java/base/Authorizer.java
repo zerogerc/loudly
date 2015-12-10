@@ -58,14 +58,14 @@ public abstract class Authorizer implements Parcelable {
 
     /**
      * Check validity of response
-     * @param url URL, opened in AuthActivity
+     * @param url URL, opened in AuthFragment
      * @return true, if opened URL is valid response from server
      */
     public abstract boolean isResponse(String url);
 
     /**
      * Static Authorization class, which holds Authorizer.
-     * It performs initial steps of authorisation and opens AuthActivity to get authorisation tokens
+     * It performs initial steps of authorisation and opens AuthFragment to get authorisation tokens
      */
 
     private static class AuthorizationTask extends AttachableTask<Object, Void, KeyKeeper> {
@@ -96,8 +96,8 @@ public abstract class Authorizer implements Parcelable {
     }
 
     /**
-     * Creates AsyncTask, which performs initialisation and opens AuthActivity.
-     * In AuthActivity after receiving password starts another async task to parse response.
+     * Creates AsyncTask, which performs initialisation and opens AuthFragment.
+     * In AuthFragment after receiving password starts another async task to parse response.
      * @return AsyncTask, which authorises user in social network
      */
     public AsyncTask<Object, Void, KeyKeeper> createAsyncTask(Context context) {

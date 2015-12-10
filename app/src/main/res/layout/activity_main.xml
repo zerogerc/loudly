@@ -40,6 +40,13 @@
         android:layout_height="match_parent"
         tools:layout="@layout/people_list" />
 
+    <fragment android:name="ly.loud.loudly.NetworksChooseFragment"
+        android:id="@+id/networks_choose_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout="@layout/network_choose_fragment" />
+
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="56dp"

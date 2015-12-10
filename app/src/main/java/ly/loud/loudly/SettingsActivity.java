@@ -24,8 +24,10 @@ import util.database.DatabaseException;
 public class SettingsActivity extends AppCompatActivity {
     private static AttachableReceiver authReceiver = null;
     private IconsHolder iconsHolder;
+
     private Fragment webViewFragment;
     private View webViewFragmentView;
+    
     public static String webViewURL;
     public static Authorizer webViewAuthorizer;
     public static KeyKeeper webViewKeyKeeper;
@@ -53,6 +55,18 @@ public class SettingsActivity extends AppCompatActivity {
         iconsHolder.setColorItemsClick(action2);
     }
 
+    private void initFragment() {
+        FragmentManager manager = getFragmentManager();
+        webViewFragment = manager.findFragmentById(R.id.setting_web_view);
+
+
+        webViewFragmentView = findViewById(R.id.setting_web_view);
+        webViewFragmentView.getBackground().setAlpha(100);
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.hide(webViewFragment);
+        ft.commit();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,17 +78,10 @@ public class SettingsActivity extends AppCompatActivity {
         iconsHolder = (IconsHolder)findViewById(R.id.settings_icons_holder);
         setIconsClick();
 
+        initFragment();
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        FragmentManager manager = getFragmentManager();
-        webViewFragment = manager.findFragmentById(R.id.setting_web_view);
-
-
-        webViewFragmentView = findViewById(R.id.setting_web_view);
-        webViewFragmentView.getBackground().setAlpha(100);
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.hide(webViewFragment);
-        ft.commit();
 
         if (authReceiver != null) {
             authReceiver.attach(this);

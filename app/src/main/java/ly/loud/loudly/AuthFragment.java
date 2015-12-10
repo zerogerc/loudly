@@ -18,7 +18,7 @@ import util.BroadcastSendingTask;
 import util.Utils;
 import util.Broadcasts;
 
-public class AuthActivity extends Fragment {
+public class AuthFragment extends Fragment {
     private View rootView;
     private SettingsActivity activity;
     ProgressBar circle;
