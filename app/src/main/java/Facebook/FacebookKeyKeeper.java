@@ -7,7 +7,6 @@ import base.KeyKeeper;
 public class FacebookKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "443913362466352";
     private String accessToken = null;
-    private String userId = null;
 
     public FacebookKeyKeeper() {
         super();
@@ -25,23 +24,15 @@ public class FacebookKeyKeeper extends KeyKeeper {
         this.accessToken = accessToken;
     }
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
     @Override
     protected String[] toStrings() {
-        return new String[]{accessToken, userId};
+        return new String[]{accessToken, Long.toString(validThrough)};
     }
 
     @Override
     protected void fromStrings(String[] strings) {
         accessToken = strings[0];
-        userId = strings[1];
+        validThrough = Long.parseLong(strings[1]);
     }
 
     public static final Creator<FacebookKeyKeeper> CREATOR = new Creator<FacebookKeyKeeper>() {

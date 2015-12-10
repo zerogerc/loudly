@@ -1,7 +1,10 @@
 package base;
 
 
+import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -13,8 +16,11 @@ import base.attachments.Image;
 import base.says.LoudlyPost;
 import base.says.Post;
 import base.says.SinglePost;
+import ly.loud.loudly.Loudly;
 import ly.loud.loudly.PeopleList.Item;
 import ly.loud.loudly.PeopleList.NetworkDelimiter;
+import ly.loud.loudly.RecyclerViewAdapter;
+import util.AttachableTask;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
@@ -377,6 +383,52 @@ public class Tasks {
                 }
             }
             return makeSuccess(Broadcasts.POST_GET_PERSONS);
+        }
+    }
+
+    /**
+     * Fix image links in posts and notify that data set changed
+     */
+    public static class FixPostsLinks extends AsyncTask<Object, Object, Object> {
+        Post post;
+        RecyclerViewAdapter adapter;
+
+        public FixPostsLinks(Post post, RecyclerViewAdapter adapter) {
+            this.post = post;
+            this.adapter = adapter;
+        }
+
+        @Override
+        protected Object doInBackground(Object... params) {
+            Wrap[] wraps = Loudly.getContext().getWraps();
+            Arrays.sort(wraps);
+            boolean fixed = false;
+            for (Wrap w : wraps) {
+                try {
+                    if (post.existsIn(w.networkID())) {
+                        LinkedList<Image> images = new LinkedList<>();
+                        for (Attachment attachment : post.getAttachments()) {
+                            if (attachment instanceof Image) {
+                                images.add(((Image) attachment));
+                            }
+                        }
+                        w.getImageInfo(images);
+                        fixed = true;
+                        break;
+                    }
+                } catch (IOException e) {
+                    Log.e("IOEXCEPTION", e.getMessage());
+                }
+            }
+            if (!fixed) {
+                post.getAttachments().clear();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            adapter.notifyDataSetChanged();
         }
     }
 

@@ -39,7 +39,7 @@ public class MailRuAuthoriser extends Authorizer {
     }
 
     @Override
-    protected Query getAuthQuery() {
+    protected Query makeAuthQuery() {
         Query query = new Query(AUTHORIZE_URL);
         query.addParameter("client_id", MailRuKeyKeeper.CLIENT_ID);
         query.addParameter("response_type", "token");

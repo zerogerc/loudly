@@ -1,6 +1,7 @@
 package base.says;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import base.Location;
 import base.Networks;
@@ -39,7 +40,7 @@ public class LoudlyPost extends Post {
 
     public LoudlyPost(String text) {
         super(text, -1);
-        date = System.currentTimeMillis() / 1000;
+        date = Calendar.getInstance().getTimeInMillis() / 1000;
         links = new String[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
         localId = -1;

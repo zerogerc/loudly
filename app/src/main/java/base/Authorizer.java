@@ -53,7 +53,7 @@ public abstract class Authorizer implements Parcelable {
     /**
      * @return parameters that will be send to server in order to get proper tokens
      */
-    protected abstract Query getAuthQuery();
+    protected abstract Query makeAuthQuery();
 
     /**
      * Check validity of response
@@ -87,7 +87,7 @@ public abstract class Authorizer implements Parcelable {
                 return;
             }
             SettingsActivity activity = (SettingsActivity)context;
-            SettingsActivity.webViewURL = authorizer.getAuthQuery().toURL();
+            SettingsActivity.webViewURL = authorizer.makeAuthQuery().toURL();
             SettingsActivity.webViewKeyKeeper = result;
             SettingsActivity.webViewAuthorizer = authorizer;
             activity.startWebView();

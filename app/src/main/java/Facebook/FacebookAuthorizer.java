@@ -37,10 +37,12 @@ public class FacebookAuthorizer extends Authorizer {
     @Override
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
         ((FacebookKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
+        int expiration = Integer.parseInt(response.getParameter("expires_in"));
+        keys.expiresIn(expiration - 10 * 60);
     }
 
     @Override
-    protected Query getAuthQuery() {
+    protected Query makeAuthQuery() {
         Query query = new Query(AUTHORIZE_URL);
         query.addParameter("client_id", FacebookKeyKeeper.CLIENT_ID);
         query.addParameter("redirect_uri", RESPONSE_URL);

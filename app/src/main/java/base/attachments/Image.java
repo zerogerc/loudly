@@ -64,10 +64,18 @@ public class Image extends Attachment {
         this.internalLink = internalLink;
     }
 
+    public Image() {
+        links = new String[Networks.NETWORK_COUNT];
+    };
+
     public Image(String internalLink, String[] links) {
         this.internalLink = internalLink;
         this.links = links;
         this.local = true;
+    }
+
+    public void setLocal(boolean local) {
+        this.local = local;
     }
 
     public Image(String internalLink, boolean local) {
@@ -83,7 +91,11 @@ public class Image extends Attachment {
     }
 
     public Uri getUri() {
-        return Uri.parse(internalLink);
+        if (internalLink != null) {
+            return Uri.parse(internalLink);
+        } else {
+            return Uri.parse(externalLink);
+        }
     }
 
     public String getMIMEType() {

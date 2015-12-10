@@ -148,6 +148,35 @@ public class VKWrap extends Wrap {
     }
 
     @Override
+    public void getImageInfo(List<Image> images) throws IOException {
+        Query query = makeSignedAPICall("photos.getById");
+        StringBuilder sb = new StringBuilder();
+        VKKeyKeeper keyKeeper = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
+        for (Image image : images) {
+            sb.append(keyKeeper.getUserId());
+            sb.append('_');
+            sb.append(image.getLink(networkID()));
+        }
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+        }
+        query.addParameter("photos", sb);
+
+        ObjectParser photoParser = makePhotoParser();
+        ObjectParser parser = new ObjectParser()
+                .parseArray("response", new ArrayParser(-1, photoParser));
+
+        ArrayParser response = Network.makeGetRequestAndParse(query, parser).getArray();
+        if (response.size() != images.size()) {
+            throw new IOException("Can't find image in network " + networkID());
+        }
+        int ind = 0;
+        for (Image image : images) {
+            fillImageFromParser(image, response.getObject(ind++));
+        }
+    }
+
+    @Override
     public void deletePost(Post post) throws IOException {
         Query query = makeSignedAPICall(DELETE_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
@@ -207,28 +236,32 @@ public class VKWrap extends Wrap {
         return new Info(like, repost, comments);
     }
 
-    private Image getImageFromParser(ObjectParser photoParser) {
+    private ObjectParser makePhotoParser() {
+        return new ObjectParser()
+                .parseString("id")
+                .parseString("photo_604")
+                .parseInt("width")
+                .parseInt("height");
+    }
+
+    private void fillImageFromParser(Image image, ObjectParser photoParser) {
         String photoId = photoParser.getString();
         String link = photoParser.getString();
         int width = photoParser.getInt();
         int height = photoParser.getInt();
 
-        Image image = new Image(link, false);
+        image.setLocal(false);
+        image.setExternalLink(link);
         image.setLink(networkID(), photoId);
         image.setWidth(width);
         image.setHeight(height);
-        return image;
     }
 
     @Override
     public void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException {
         int offset = Loudly.getContext().getOffset(networkID());
 
-        ObjectParser photoParser = new ObjectParser()
-                .parseString("id")
-                .parseString("photo_604")
-                .parseInt("width")
-                .parseInt("height");
+        ObjectParser photoParser = makePhotoParser();
 
         ObjectParser attachmentParser = new ObjectParser()
                 .parseString("type")
@@ -294,7 +327,9 @@ public class VKWrap extends Wrap {
                         String type = attachmentParser.getString();
                         if (type.equals("photo") || type.equals("posted_photo")) {
                             photoParser = attachmentParser.getObject();
-                            res.addAttachment(getImageFromParser(photoParser));
+                            Image image = new Image();
+                            fillImageFromParser(image, photoParser);
+                            res.addAttachment(image);
                         }
                     }
                     callback.postLoaded(res);
@@ -355,7 +390,6 @@ public class VKWrap extends Wrap {
         ArrayParser posts = response.getArray();
         ArrayParser persons = response.getArray();
 
-
         LinkedList<Person> profiles = new LinkedList<>();
         for (int i = 0; i < persons.size(); i++) {
             ObjectParser person = persons.getObject(i);
@@ -392,7 +426,9 @@ public class VKWrap extends Wrap {
                 attachmentParser = attachments.getObject(i);
                 String type = attachmentParser.getString();
                 if (type.equals("photo")) {
-                    comment.addAttachment(getImageFromParser(attachmentParser.getObject()));
+                    Image image = new Image();
+                    fillImageFromParser(image, attachmentParser.getObject());
+                    comment.addAttachment(image);
                 }
             }
             comments.add(comment);
@@ -451,18 +487,18 @@ public class VKWrap extends Wrap {
             return null;
         }
 
-        response = Network.makeGetRequest(query);
+        response = Network.makeGetRequest(getPeopleQuery);
 
         LinkedList<Person> result = new LinkedList<>();
 
         JSONArray people;
         try {
-            people = new JSONObject(response).getJSONObject("response").getJSONArray("items");
+            people = new JSONObject(response).getJSONArray("response");
             for (int i = 0; i < people.length(); i++) {
                 JSONObject person = people.getJSONObject(i);
                 String firstName = person.getString("first_name");
                 String lastName = person.getString("last_name");
-                String photoURL = "";//person.getString("photo_50");
+                String photoURL = person.getString("photo_50");
                 result.add(new Person(firstName, lastName, photoURL, networkID()));
             }
         } catch (JSONException e) {

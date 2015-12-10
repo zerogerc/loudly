@@ -64,6 +64,8 @@ public abstract class Wrap implements Comparable<Wrap> {
 
     public abstract List<Comment> getComments(Post post) throws IOException;
 
+    public abstract void getImageInfo(List<Image> images) throws IOException;
+
     public static Wrap makeWrap(int network) {
         switch (network) {
             case Networks.FB:

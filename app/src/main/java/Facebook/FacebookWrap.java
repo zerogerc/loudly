@@ -120,6 +120,12 @@ public class FacebookWrap extends Wrap {
         }
     }
 
+    // TODO: 12/11/2015 it
+    @Override
+    public void getImageInfo(List<Image> images) throws IOException {
+
+    }
+
     @Override
     public void deletePost(Post post) throws IOException {
         Query query = makeSignedAPICall(post.getLink(networkID()));
@@ -261,6 +267,7 @@ public class FacebookWrap extends Wrap {
         }
     }
 
+    // TODO: 12/11/2015 and it
     @Override
     public List<Comment> getComments(Post post) throws IOException {
         return null;

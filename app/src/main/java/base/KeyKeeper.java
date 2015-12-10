@@ -3,6 +3,8 @@ package base;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Calendar;
+
 import Facebook.FacebookKeyKeeper;
 import MailRu.MailRuKeyKeeper;
 import VK.VKKeyKeeper;
@@ -11,8 +13,9 @@ import VK.VKKeyKeeper;
  * Store keys, that we need in order to interact with social network
  */
 public abstract class KeyKeeper implements Parcelable {
-    private static final char SEPARATOR = '&';
+    protected long validThrough;
 
+    private static final char SEPARATOR = '&';
     public KeyKeeper() {}
 
     /**
@@ -20,6 +23,14 @@ public abstract class KeyKeeper implements Parcelable {
      */
     protected abstract String[] toStrings();
     protected abstract void fromStrings(String[] strings);
+
+    public void expiresIn(long time) {
+        validThrough = Calendar.getInstance().getTimeInMillis() / 1000 + time;
+    }
+
+    public boolean isValid() {
+        return Calendar.getInstance().getTimeInMillis() / 1000 < validThrough;
+    }
 
     public String toStringBundle() {
         String[] strings = toStrings();

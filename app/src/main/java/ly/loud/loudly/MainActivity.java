@@ -319,13 +319,12 @@ public class MainActivity extends AppCompatActivity {
                     toast.show();
                     break;
                 case Broadcasts.LOADED:
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     ProgressBar progressBar = (ProgressBar) mainActivity.findViewById(R.id.main_activity_progress);
                     progressBar.setVisibility(View.GONE);
-
                     toast = Toast.makeText(context,
                             "Posts loaded", Toast.LENGTH_SHORT);
                     toast.show();
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.IMAGE:
                     // Here progress of loading images
