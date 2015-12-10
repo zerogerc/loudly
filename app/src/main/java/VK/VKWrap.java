@@ -13,6 +13,7 @@ import base.Person;
 import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
+import base.says.Comment;
 import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
@@ -193,35 +194,48 @@ public class VKWrap extends Wrap {
         return new Info(like, repost, comments);
     }
 
+    private Image getImageFromParser(ObjectParser photoParser) {
+        String photoId = photoParser.getString();
+        String link = photoParser.getString();
+        int width = photoParser.getInt();
+        int height = photoParser.getInt();
+
+        Image image = new Image(link, false);
+        image.setLink(networkID(), photoId);
+        image.setWidth(width);
+        image.setHeight(height);
+        return image;
+    }
+
     @Override
     public void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException {
         int offset = Loudly.getContext().getOffset(networkID());
 
-        ObjectParser photoParser = new ObjectParser();
-        photoParser.parseString("id");
-        photoParser.parseString("photo_604");
-        photoParser.parseInt("width");
-        photoParser.parseInt("height");
+        ObjectParser photoParser = new ObjectParser()
+                .parseString("id")
+                .parseString("photo_604")
+                .parseInt("width")
+                .parseInt("height");
 
-        ObjectParser attachmentParser = new ObjectParser();
-        attachmentParser.parseString("type");
-        attachmentParser.parseObject("photo", photoParser);
+        ObjectParser attachmentParser = new ObjectParser()
+                .parseString("type")
+                .parseObject("photo", photoParser);
 
-        ObjectParser postParser = new ObjectParser();
-        postParser.parseString("id");
-        postParser.parseLong("date");
-        postParser.parseString("text");
-        postParser.parseObject("likes", new ObjectParser().parseInt("count"));
-        postParser.parseObject("reposts", new ObjectParser().parseInt("count"));
-        postParser.parseObject("comments", new ObjectParser().parseInt("count"));
-        postParser.parseArray("attachments", new ArrayParser(-1, attachmentParser));
+        ObjectParser postParser = new ObjectParser()
+                .parseString("id")
+                .parseLong("date")
+                .parseString("text")
+                .parseObject("likes", new ObjectParser().parseInt("count"))
+                .parseObject("reposts", new ObjectParser().parseInt("count"))
+                .parseObject("comments", new ObjectParser().parseInt("count"))
+                .parseArray("attachments", new ArrayParser(-1, attachmentParser));
 
         ArrayParser itemsParser = new ArrayParser(-1, postParser);
-        ObjectParser responseParser = new ObjectParser().parseArray("items", itemsParser);
+        ObjectParser responseParser = new ObjectParser()
+                .parseArray("items", itemsParser);
 
-        ObjectParser parser = new ObjectParser();
-        parser.parseObject("response", responseParser);
-
+        ObjectParser parser = new ObjectParser()
+                .parseObject("response", responseParser);
         long earliestPost = -1;
         do {
             Query query = makeAPICall(LOAD_POSTS_METHOD);
@@ -267,16 +281,7 @@ public class VKWrap extends Wrap {
                         String type = attachmentParser.getString();
                         if (type.equals("photo") || type.equals("posted_photo")) {
                             photoParser = attachmentParser.getObject();
-                            String photoId = photoParser.getString();
-                            String link = photoParser.getString();
-                            int width = photoParser.getInt();
-                            int height = photoParser.getInt();
-
-                            Image image = new Image(link, false);
-                            image.setLink(networkID(), photoId);
-                            image.setWidth(width);
-                            image.setHeight(height);
-                            res.addAttachment(image);
+                            res.addAttachment(getImageFromParser(photoParser));
                         }
                     }
                     callback.postLoaded(res);
@@ -286,6 +291,100 @@ public class VKWrap extends Wrap {
             }
         } while (timeInterval.contains(earliestPost));
         Loudly.getContext().setOffset(networkID(), offset);
+    }
+
+    @Override
+    public List<Comment> getComments(Post post) throws IOException {
+        Query query = makeSignedAPICall("wall.getComments");
+        VKKeyKeeper keyKeeper = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
+
+        query.addParameter("owner_id", keyKeeper.getUserId());
+        query.addParameter("post_id", post.getLink(networkID()));
+        query.addParameter("need_likes", 1);
+        query.addParameter("count", 20);
+        query.addParameter("sort", "desc");
+        query.addParameter("preview_length", 0);
+        query.addParameter("extended", 1);
+
+        ObjectParser photoParser = new ObjectParser()
+                .parseString("id")
+                .parseString("photo_604")
+                .parseInt("width")
+                .parseInt("height");
+
+        ObjectParser attachmentParser = new ObjectParser()
+                .parseString("type")
+                .parseObject("photo", photoParser);
+
+        ObjectParser commentParser = new ObjectParser()
+                .parseString("from_id")
+                .parseLong("date")
+                .parseString("text")
+                .parseObject("likes", new ObjectParser().parseInt("count"))
+                .parseObject("reposts", new ObjectParser().parseInt("count"))
+                .parseObject("comments", new ObjectParser().parseInt("count"))
+                .parseArray("attachments", new ArrayParser(-1, attachmentParser));
+
+        ObjectParser personParser = new ObjectParser()
+                .parseString("id")
+                .parseString("first_name")
+                .parseString("last_name")
+                .parseString("photo_50");
+
+        ObjectParser parser = new ObjectParser()
+                .parseArray("items", new ArrayParser(-1, commentParser))
+                .parseArray("profiles", new ArrayParser(-1, personParser));
+
+        ObjectParser response = Network.makeGetRequestAndParse(query,
+                new ObjectParser().parseObject("response", parser))
+                .getObject();
+
+        ArrayParser posts = response.getArray();
+        ArrayParser persons = response.getArray();
+
+
+        LinkedList<Person> profiles = new LinkedList<>();
+        for (int i = 0; i < persons.size(); i++) {
+            ObjectParser person = persons.getObject(i);
+            String id = person.getString();
+            String firstName = person.getString();
+            String lastName = person.getString();
+            String photo = person.getString();
+            Person p = new Person(firstName, lastName, photo, networkID());
+            p.setId(id);
+            profiles.add(p);
+        }
+
+        LinkedList<Comment> comments = new LinkedList<>();
+
+        for (int i = 0; i < posts.size(); i++) {
+            commentParser = posts.getObject(i);
+            String userID = commentParser.getString();
+            Person author = null;
+            for (Person p : profiles) {
+                if (p.getId().equals(userID)) {
+                    author = p;
+                    break;
+                }
+            }
+
+            long date = commentParser.getLong();
+            String text = commentParser.getString();
+
+            int likes = commentParser.getObject().getInt();
+            ArrayParser attachments = commentParser.getArray();
+
+            Comment comment = new Comment(text, date, author, networkID());
+            for (int j = 0; j < attachments.size(); j++) {
+                attachmentParser = attachments.getObject(i);
+                String type = attachmentParser.getString();
+                if (type.equals("photo")) {
+                    comment.addAttachment(getImageFromParser(attachmentParser.getObject()));
+                }
+            }
+            comments.add(comment);
+        }
+        return comments;
     }
 
     @Override

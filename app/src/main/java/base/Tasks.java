@@ -10,11 +10,12 @@ import java.util.List;
 
 import base.attachments.Attachment;
 import base.attachments.Image;
+import base.says.Comment;
 import base.says.LoudlyPost;
 import base.says.Post;
 import base.says.SinglePost;
 import ly.loud.loudly.PeopleList.Item;
-import ly.loud.loudly.PeopleList.NetworkDelimeter;
+import ly.loud.loudly.PeopleList.NetworkDelimiter;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
@@ -310,8 +311,49 @@ public class Tasks {
                     if (post.existsIn(w.networkID())) {
                         List<Person> got = w.getPersons(what, post);
                         if (!got.isEmpty()) {
-                            persons.add(new NetworkDelimeter(w.networkID()));
+                            persons.add(new NetworkDelimiter(w.networkID()));
                             persons.addAll(w.getPersons(what, post));
+                        }
+
+                        Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);
+                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                        publishProgress(message);
+                    }
+
+                } catch (IOException e) {
+                    publishProgress(makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
+                            e.getMessage()));
+                }
+            }
+            return makeSuccess(Broadcasts.POST_GET_PERSONS);
+        }
+    }
+
+    /**
+     * Throws Broadcasts.POST_GET_PERSON as like as PersonGetter
+     */
+    public static class CommentsGetter extends BroadcastSendingTask {
+        private Post post;
+        private int what;
+        private List<Item> comments;
+        private Wrap[] wraps;
+
+        public CommentsGetter(Post post, int what, List<Item> comments, Wrap... wraps) {
+            this.post = post;
+            this.what = what;
+            this.comments = comments;
+            this.wraps = wraps;
+        }
+
+        @Override
+        protected Intent doInBackground(Object... posts) {
+            for (Wrap w : wraps) {
+                try {
+                    if (post.existsIn(w.networkID())) {
+                        List<Person> got = w.getPersons(what, post);
+                        if (!got.isEmpty()) {
+                            comments.add(new NetworkDelimiter(w.networkID()));
+                            comments.addAll(w.getComments(post));
                         }
 
                         Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);

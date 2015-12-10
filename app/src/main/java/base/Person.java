@@ -4,10 +4,11 @@ import android.graphics.Bitmap;
 
 import ly.loud.loudly.PeopleList.Item;
 
-public class Person extends Item {
+public class Person implements Item {
     private String firstName, lastName;
     private String photoUrl;
     private int network;
+    private String id;
 
     private Bitmap littlePhoto;
 
@@ -16,6 +17,14 @@ public class Person extends Item {
         this.lastName = lastName;
         this.photoUrl = photoUrl;
         this.network = network;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getFirstName() {

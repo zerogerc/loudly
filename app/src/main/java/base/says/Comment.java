@@ -1,8 +1,9 @@
 package base.says;
 
 import base.Person;
+import ly.loud.loudly.PeopleList.Item;
 
-public class Comment extends Say {
+public class Comment extends Say implements Item {
     Person person;
 
     public Comment() {

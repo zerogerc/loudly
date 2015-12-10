@@ -11,6 +11,7 @@ import java.util.List;
 
 import base.Networks;
 import base.Person;
+import base.says.Comment;
 import base.says.Info;
 import base.says.LoudlyPost;
 import base.Tasks;
@@ -155,7 +156,11 @@ public class FacebookWrap extends Wrap {
                             getJSONArray("data").
                             getJSONObject(0).getJSONObject("media").getJSONObject("image");
                     String link = attachment.getString("src");
+                    int height = attachment.getInt("height");
+                    int width = attachment.getInt("width");
                     Image image = new Image(link, false);
+                    image.setHeight(height);
+                    image.setWidth(width);
                     post.addAttachment(image);
 
                 }
@@ -223,6 +228,11 @@ public class FacebookWrap extends Wrap {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public List<Comment> getComments(Post post) throws IOException {
+        return null;
     }
 
     @Override

@@ -46,7 +46,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             holder.name.setText(text);
         } else {
             ViewHolderDelimeter holder = (ViewHolderDelimeter) viewHolder;
-            NetworkDelimeter delimeter = ((NetworkDelimeter) item);
+            NetworkDelimiter delimeter = ((NetworkDelimiter) item);
             Picasso.with(Loudly.getContext())
                     .load(Utils.getResourceByNetwork(delimeter.getNetwork()))
                     .resize(Utils.dpToPx(48), Utils.dpToPx(48))
@@ -65,7 +65,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         if (items.get(position) instanceof Person) {
             return Item.PERSON;
         } else {
-            return Item.DELIMETER;
+            return Item.DELIMITER;
         }
     }
 
@@ -76,9 +76,9 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_person, parent, false);
                 return new ViewHolderPerson(v, new Person("", "", "", -1));
             }
-            default: { //Item.DELIMETER
+            default: { //Item.DELIMITER
                 View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_delimeter, parent, false);
-                return new ViewHolderDelimeter(v, new NetworkDelimeter(-1));
+                return new ViewHolderDelimeter(v, new NetworkDelimiter(-1));
             }
         }
     }

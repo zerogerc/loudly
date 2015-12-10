@@ -39,7 +39,7 @@ public abstract class Wrap {
 
     public abstract List<Person> getPersons(int what, Post post) throws IOException;
 
-    //public abstract List<Comment> getComments(Post post) throws IOException;
+    public abstract List<Comment> getComments(Post post) throws IOException;
 
     public static Wrap makeWrap(int network) {
         switch (network) {

@@ -1,14 +1,12 @@
 package ly.loud.loudly.PeopleList;
 
-import ly.loud.loudly.PeopleList.Item;
-
 /**
  * Created by ZeRoGerc on 07.12.15.
  */
-public class NetworkDelimeter extends Item {
+public class NetworkDelimiter implements Item {
     private int network;
 
-    public NetworkDelimeter(int network) {
+    public NetworkDelimiter(int network) {
         this.network = network;
     }
 
