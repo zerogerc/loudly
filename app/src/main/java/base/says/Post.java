@@ -38,6 +38,4 @@ public abstract class Post extends Say {
     public void setLocation(Location location) {
         this.location = location;
     }
-
-
 }

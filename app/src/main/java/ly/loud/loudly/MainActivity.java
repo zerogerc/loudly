@@ -22,7 +22,6 @@ import android.widget.Toast;
 
 import java.util.LinkedList;
 
-import base.says.LoudlyPost;
 import base.Tasks;
 import base.says.Post;
 import ly.loud.loudly.PeopleList.PeopleListFragment;

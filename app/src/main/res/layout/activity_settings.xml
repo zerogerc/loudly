@@ -65,7 +65,7 @@
     </RelativeLayout>
 
 
-    <fragment android:name="ly.loud.loudly.AuthActivity"
+    <fragment android:name="ly.loud.loudly.AuthFragment"
     android:id="@+id/setting_web_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"

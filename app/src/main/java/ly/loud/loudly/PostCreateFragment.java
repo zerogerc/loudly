@@ -2,6 +2,8 @@ package ly.loud.loudly;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,15 +19,23 @@ import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
 
-import base.says.LoudlyPost;
+import java.util.ArrayList;
+
+import base.Networks;
 import base.Tasks;
+import base.Wrap;
 import base.attachments.Image;
+import base.says.LoudlyPost;
+import util.UIAction;
 import util.Utils;
 
 
 public class PostCreateFragment extends Fragment {
     private static String EDIT_TEXT = "EDIT_TEXT";
     private final static int PICK_PHOTO_FROM_GALLERY = 13;
+
+    private NetworksChooseFragment networksChooseFragment;
+    private View networksChooseFragmentView;
 
     private EditText editText;
     private ImageView postImageView;
@@ -37,21 +47,9 @@ public class PostCreateFragment extends Fragment {
         getActivity().findViewById(R.id.new_post_send_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                String text = editText.getText().toString();
-                LoudlyPost post = new LoudlyPost(text);
-                if (postImage != null) {
-                    post.addAttachment(postImage);
-                    postImage = null;
-                }
-
-                Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
-                        Loudly.getContext().getWraps());
-                uploader.execute(post);
-                postImageView.setImageBitmap(null);
-                editText.setText(null);
-                MainActivity activity = (MainActivity)getActivity();
-                activity.onPostCreated();
+                FragmentTransaction ft = getFragmentManager().beginTransaction();
+                ft.show(networksChooseFragment);
+                ft.commit();
             }
         });
 
@@ -64,6 +62,69 @@ public class PostCreateFragment extends Fragment {
                 startActivityForResult(intent, PICK_PHOTO_FROM_GALLERY);
             }
         });
+    }
+
+    private void setNetworksChooseListeners() {
+        UIAction grayAction = new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                int network = ((int) params[0]);
+                if (Loudly.getContext().getKeyKeeper(network) == null)
+                    return;
+                networksChooseFragment.setShouldPostTo(network, true);
+            }
+        };
+        UIAction colorAction = new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                int network = ((int) params[0]);
+                if (Loudly.getContext().getKeyKeeper(network) == null)
+                    return;
+                networksChooseFragment.setShouldPostTo(network, false);
+            }
+        };
+        UIAction buttonAction = new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                String text = editText.getText().toString();
+                LoudlyPost post = new LoudlyPost(text);
+                if (postImage != null) {
+                    post.addAttachment(postImage);
+                    postImage = null;
+                }
+
+                ArrayList<Wrap> wraps = new ArrayList<>();
+                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                    if (networksChooseFragment.shouldPostTo(i)) {
+                        wraps.add(Wrap.makeWrap(i));
+                    }
+                }
+                Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
+                        wraps.toArray(new Wrap[0]));
+                uploader.execute(post);
+                MainActivity activity = (MainActivity) getActivity();
+
+                networksChooseFragment.hide();
+                activity.onPostCreated();
+            }
+        };
+
+        networksChooseFragment.setGrayItemClick(grayAction);
+        networksChooseFragment.setColorItemsClick(colorAction);
+        networksChooseFragment.setPostButtonClick(buttonAction);
+    }
+
+    private void initFragment() {
+        FragmentManager manager = getActivity().getFragmentManager();
+        networksChooseFragment = ((NetworksChooseFragment) manager.findFragmentById(R.id.networks_choose_fragment));
+
+        networksChooseFragmentView = getActivity().findViewById(R.id.networks_choose_fragment);
+        networksChooseFragmentView.getBackground().setAlpha(100);
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.hide(networksChooseFragment);
+        ft.commit();
+
+        setNetworksChooseListeners();
     }
 
     @Override
@@ -82,6 +143,7 @@ public class PostCreateFragment extends Fragment {
                     }
                 }
         );
+
         postImage = null;
 
         return rootView;
@@ -94,6 +156,8 @@ public class PostCreateFragment extends Fragment {
         if (savedInstanceState != null) {
             editText.setText(savedInstanceState.getString(EDIT_TEXT));
         }
+
+        initFragment();
     }
 
     @Override
@@ -101,6 +165,9 @@ public class PostCreateFragment extends Fragment {
         super.onHiddenChanged(hidden);
         if (hidden) {
             Utils.hidePhoneKeyboard(getActivity());
+
+            postImageView.setImageBitmap(null);
+            editText.setText(null);
         } else {
             InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);

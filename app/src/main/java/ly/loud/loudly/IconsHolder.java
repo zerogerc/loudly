@@ -10,10 +10,11 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import base.Networks;
+import util.UIAction;
 import util.Utils;
 
 public class IconsHolder extends View {
-    private SettingsActivity activity;
+    private Context context;
     private int iconWidth;
     private int iconHeight;
     private int parentWidth;
@@ -22,10 +23,13 @@ public class IconsHolder extends View {
     private int margin = 0;
     private Rect[] zones = new Rect[Networks.NETWORK_COUNT];
     private boolean[] isVisible = new boolean[Networks.NETWORK_COUNT];
+    private UIAction colorItemClick = null;
+    private UIAction grayItemClick = null;
+
 
     public IconsHolder(Context context, AttributeSet attrs) {
         super(context, attrs);
-        activity = (SettingsActivity)context;
+        this.context = context;
 
         for (int network = 0; network < Networks.NETWORK_COUNT; network++) {
             if (Loudly.getContext().getKeyKeeper(network) != null) {
@@ -89,26 +93,33 @@ public class IconsHolder extends View {
         invalidate();
     }
 
+    public void setColorItemsClick(UIAction action) {
+        this.colorItemClick = action;
+    }
+
+    public void setGrayItemClick(UIAction action) {
+        this.grayItemClick = action;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int x = (int)event.getX();
         int y = (int)event.getY();
 
-        if (zones[Networks.FB].contains(x, y)) {
-            if (isVisible[Networks.FB]) {
-                activity.LogoutClick(Networks.FB);
-                setInvisible(Networks.FB);
-            } else {
-                activity.FBButtonClick();
+        int network = -1;
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (zones[i].contains(x,y)) {
+                network = i;
             }
         }
 
-        if (zones[Networks.VK].contains(x, y)) {
-            if (isVisible[Networks.VK]) {
-                activity.LogoutClick(Networks.VK);
-                setInvisible(Networks.VK);
+        if (network != -1) {
+            if (isVisible[network] && colorItemClick != null) {
+                setInvisible(network);
+                colorItemClick.execute(context, network);
             } else {
-                activity.VKButtonClick();
+                setVisible(network);
+                grayItemClick.execute(context, network);
             }
         }
 
