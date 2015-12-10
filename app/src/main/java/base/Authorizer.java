@@ -1,6 +1,5 @@
 package base;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -8,11 +7,13 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import Facebook.FacebookAuthorizer;
+import VK.VKAuthorizer;
 import ly.loud.loudly.Loudly;
-import util.BroadcastSendingTask;
-import util.Broadcasts;
 import ly.loud.loudly.SettingsActivity;
 import util.AttachableTask;
+import util.BroadcastSendingTask;
+import util.Broadcasts;
 import util.Query;
 
 /**
@@ -70,8 +71,8 @@ public abstract class Authorizer implements Parcelable {
     private static class AuthorizationTask extends AttachableTask<Object, Void, KeyKeeper> {
         private Authorizer authorizer;
 
-        public AuthorizationTask(Activity activity, Authorizer authorizer) {
-            super(activity);
+        public AuthorizationTask(Context context, Authorizer authorizer) {
+            super(context);
             this.authorizer = authorizer;
         }
 
@@ -99,8 +100,8 @@ public abstract class Authorizer implements Parcelable {
      * In AuthActivity after receiving password starts another async task to parse response.
      * @return AsyncTask, which authorises user in social network
      */
-    public AsyncTask<Object, Void, KeyKeeper> createAsyncTask(Activity activity) {
-        return new AuthorizationTask(activity, this);
+    public AsyncTask<Object, Void, KeyKeeper> createAsyncTask(Context context) {
+        return new AuthorizationTask(context, this);
     }
 
     /**
@@ -141,5 +142,15 @@ public abstract class Authorizer implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+    }
+
+    public static Authorizer getAuthorizer(int network) {
+        //TODO other networks
+        switch (network) {
+            case Networks.VK:
+                return new VKAuthorizer();
+            default:
+                return new FacebookAuthorizer();
+        }
     }
 }

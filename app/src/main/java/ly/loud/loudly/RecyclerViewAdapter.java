@@ -21,11 +21,10 @@ import com.bumptech.glide.request.target.Target;
 import java.util.Calendar;
 import java.util.List;
 
-import base.says.LoudlyPost;
 import base.Tasks;
 import base.attachments.Image;
+import base.says.LoudlyPost;
 import base.says.Post;
-import util.AttachableTask;
 import util.Utils;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
@@ -35,6 +34,40 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     RecyclerViewAdapter(List<Post> posts, MainActivity act) {
         this.posts = posts;
         activity = act;
+    }
+
+    private void setViewSizesForImageSizes(final ViewHolder holder, final int width, final int height) {
+        int imageWidth = Utils.getDefaultScreenWidth() - 2 * holder.getMargin();
+        float scale = ((float) imageWidth) / ((float) width);
+        int imageHeight = (int)(height * scale);
+        holder.postImageView.getLayoutParams().width = imageWidth;
+        holder.postImageView.getLayoutParams().height = imageHeight;
+        holder.postImageView.requestLayout();
+    }
+
+    private void resizeImageView(final ViewHolder holder, final Post post) {
+        if (post.getAttachments().size() != 0) {
+            if (post.getAttachments().get(0) instanceof Image) {
+                Image image = ((Image) post.getAttachments().get(0));
+                int width = image.getWidth();
+                int height = image.getHeight();
+
+                if (width != 0 && height != 0) {
+                    setViewSizesForImageSizes(holder, image.getWidth(), image.getHeight());
+                } else {
+                    holder.postImageView.setImageBitmap(null);
+                    FrameLayout.LayoutParams lp = ((FrameLayout.LayoutParams) holder.postImageView.getLayoutParams());
+                    lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
+                    lp.width = FrameLayout.LayoutParams.WRAP_CONTENT;
+                    holder.postImageView.setLayoutParams(lp);
+                }
+            }
+        } else {
+            holder.postImageView.setImageBitmap(null);
+            holder.postImageView.getLayoutParams().width = 0;
+            holder.postImageView.getLayoutParams().height = 0;
+            holder.postImageView.requestLayout();
+        }
     }
 
     private void refreshFields(final ViewHolder holder, final Post post) {
@@ -63,36 +96,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             holder.postImageView.setImageBitmap(null);
 
             final Image image = (Image) post.getAttachments().get(0);
-
-            if (image.getHeight() == 0 && image.getWidth() == 0) {
-                AttachableTask<Void, Void, Void> task = new AttachableTask<Void, Void, Void>(Loudly.getContext()) {
-                    @Override
-                    public void executeInUI(Context context, Void aVoid) {
-                        notifyDataSetChanged();
-                    }
-
-                    @Override
-                    protected Void doInBackground(Void... params) {
-                        image.setSize(Utils.resolveImageSize(image));
-                        return null;
-                    }
-                };
-
-                task.execute();
-            }
-
-            double width = image.getWidth();
-            double height = image.getHeight();
-
-            if (width != 0) {
-                double scale = (double) Utils.getDefaultScreenWidth() / width;
-
-                width = Utils.getDefaultScreenWidth();
-                height = height * scale;
-            }
-
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams((int) width, (int) height);
-            holder.postImageView.setLayoutParams(layoutParams);
+            resizeImageView(holder, post);
 
             Glide.with(Loudly.getContext()).load(image.getUri())
                     .override(Utils.getDefaultScreenWidth(), Utils.getDefaultScreenHeight())
@@ -106,6 +110,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
                         @Override
                         public boolean onResourceReady(GlideDrawable resource, Uri model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                            image.setWidth(resource.getIntrinsicWidth());
+                            image.setHeight(resource.getIntrinsicHeight());
                             return false;
                         }
                     })
@@ -172,6 +178,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
+        private View root;
         private ImageView socialIcon;
         private TextView text;
         private TextView data;
@@ -185,21 +192,26 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private ImageView postImageView;
         private ImageView showMoreOptions;
 
+        public int getMargin() {
+            return Utils.dpToPx(12);
+        }
+
         public ViewHolder(View itemView, final Post post) {
             super(itemView);
 
-            socialIcon = (ImageView) itemView.findViewById(R.id.post_view_social_network_icon);
-            text = (TextView) itemView.findViewById(R.id.post_view_post_text);
-            data = (TextView) itemView.findViewById(R.id.post_view_data_text);
-            geoData = (TextView) itemView.findViewById(R.id.post_view_geo_data_text);
-            commentsAmount = (TextView) itemView.findViewById(R.id.post_view_comments_amount);
-            commentsButton = (ImageView) itemView.findViewById(R.id.post_view_comments_button);
-            likesAmount = (TextView) itemView.findViewById(R.id.post_view_likes_amount);
-            likesButton = (ImageView) itemView.findViewById(R.id.post_view_likes_button);
-            repostsAmount = (TextView) itemView.findViewById(R.id.post_view_reposts_amount);
-            repostsButton = (ImageView) itemView.findViewById(R.id.post_view_reposts_button);
-            postImageView = (ImageView) itemView.findViewById(R.id.post_view_post_image);
-            showMoreOptions = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
+            root = itemView;
+            socialIcon = (ImageView) root.findViewById(R.id.post_view_social_network_icon);
+            text = (TextView) root.findViewById(R.id.post_view_post_text);
+            data = (TextView) root.findViewById(R.id.post_view_data_text);
+            geoData = (TextView) root.findViewById(R.id.post_view_geo_data_text);
+            commentsAmount = (TextView) root.findViewById(R.id.post_view_comments_amount);
+            commentsButton = (ImageView) root.findViewById(R.id.post_view_comments_button);
+            likesAmount = (TextView) root.findViewById(R.id.post_view_likes_amount);
+            likesButton = (ImageView) root.findViewById(R.id.post_view_likes_button);
+            repostsAmount = (TextView) root.findViewById(R.id.post_view_reposts_amount);
+            repostsButton = (ImageView) root.findViewById(R.id.post_view_reposts_button);
+            postImageView = (ImageView) root.findViewById(R.id.post_view_post_image);
+            showMoreOptions = (ImageView) root.findViewById(R.id.post_view_more_options_button);
 
             geoData.setHeight(0);
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) geoData.getLayoutParams();

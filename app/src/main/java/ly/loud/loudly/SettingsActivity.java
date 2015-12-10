@@ -12,14 +12,12 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
-import Facebook.FacebookAuthorizer;
-import MailRu.MailRuAuthoriser;
-import VK.VKAuthorizer;
 import base.Authorizer;
 import base.KeyKeeper;
 import base.Tasks;
 import util.AttachableReceiver;
 import util.Broadcasts;
+import util.UIAction;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -32,6 +30,29 @@ public class SettingsActivity extends AppCompatActivity {
     public static Authorizer webViewAuthorizer;
     public static KeyKeeper webViewKeyKeeper;
 
+    public void setIconsClick() {
+        UIAction action1 = new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                int network = ((int) params[0]);
+                startReceiver();
+                Authorizer authorizer = Authorizer.getAuthorizer(network);
+                authorizer.createAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+            }
+        };
+        iconsHolder.setGrayItemClick(action1);
+
+
+        UIAction action2 = new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                LogoutClick(((int) params[0]));
+            }
+        };
+        iconsHolder.setColorItemsClick(action2);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +62,7 @@ public class SettingsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         iconsHolder = (IconsHolder)findViewById(R.id.settings_icons_holder);
+        setIconsClick();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -74,7 +96,6 @@ public class SettingsActivity extends AppCompatActivity {
                     toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
                     toast.show();
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    activity.iconsHolder.setVisible(network);
                     MainActivity.posts.clear();
                     break;
                 case Broadcasts.ERROR:
@@ -100,24 +121,24 @@ public class SettingsActivity extends AppCompatActivity {
         ft.show(webViewFragment);
         ft.commit();
     }
-
-    public void VKButtonClick() {
-        startReceiver();
-        Authorizer authorizer = new VKAuthorizer();
-        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
-
-    public void FBButtonClick() {
-        startReceiver();
-        Authorizer authorizer = new FacebookAuthorizer();
-        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
-
-    public void MailRuButtonClick() {
-        startReceiver();
-        Authorizer authorizer = new MailRuAuthoriser();
-        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
+//
+//    public void VKButtonClick() {
+//        startReceiver();
+//        Authorizer authorizer = new VKAuthorizer();
+//        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//    }
+//
+//    public void FBButtonClick() {
+//        startReceiver();
+//        Authorizer authorizer = new FacebookAuthorizer();
+//        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//    }
+//
+//    public void MailRuButtonClick() {
+//        startReceiver();
+//        Authorizer authorizer = new MailRuAuthoriser();
+//        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//    }
 
     public void LogoutClick(final int network) {
         AsyncTask<Object, Void, Object> task = new AsyncTask<Object, Void, Object>() {
