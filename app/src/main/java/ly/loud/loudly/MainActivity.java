@@ -27,6 +27,7 @@ import base.says.Post;
 import ly.loud.loudly.PeopleList.PeopleListFragment;
 import util.AttachableReceiver;
 import util.Broadcasts;
+import util.UIAction;
 import util.Utils;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     static public LinkedList<Post> posts = new LinkedList<>();
 
     RecyclerView recyclerView;
-    RecyclerViewAdapter recyclerViewAdapter;
+    public RecyclerViewAdapter recyclerViewAdapter;
     public FloatingActionButton floatingActionButton;
     public View newPostFragmentView;
     public Fragment newPostFragment;
@@ -50,6 +51,18 @@ public class MainActivity extends AppCompatActivity {
     static AttachableReceiver[] receivers = null;
     private static Tasks.LoadPostsTask loadPosts = null;
 
+    private static MainActivity self;
+    public static void executeOnMain(final UIAction action) {
+        if (self != null) {
+            self.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    action.execute(self);
+                }
+            });
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -62,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
             receivers[LOAD_POSTS_RECEIVER] = new PostLoadReceiver(this);
 
-            loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
+            loadPosts = new Tasks.LoadPostsTask(posts, recyclerViewAdapter, Loudly.getContext().getTimeInterval(),
                     Loudly.getContext().getWraps());
             loadPosts.execute();
         }
@@ -71,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        self = this;
         setContentView(R.layout.activity_main);
 
         if (receivers == null) {
@@ -201,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        self = null;
         if (isFinishing()) {
             if (receivers[GET_INFO_RECEIVER] != null) {
                 receivers[GET_INFO_RECEIVER].stop();

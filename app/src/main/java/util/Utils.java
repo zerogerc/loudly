@@ -267,27 +267,6 @@ public class Utils {
         }
     }
 
-    public static LinkedList<Post> merge(LinkedList<Post> oldPosts, LinkedList<Post> newPosts) {
-
-        LinkedList<Post> temp = new LinkedList<>();
-        while (oldPosts.size() != 0 || newPosts.size() != 0) {
-            if (oldPosts.size() == 0) {
-                temp.add(newPosts.removeFirst());
-                continue;
-            }
-            if (newPosts.size() == 0) {
-                temp.add(oldPosts.removeFirst());
-                continue;
-            }
-            if (oldPosts.getFirst().getDate() <= newPosts.getFirst().getDate()) {
-                temp.add(newPosts.removeFirst());
-            } else {
-                temp.add(oldPosts.removeFirst());
-            }
-        }
-        return temp;
-    }
-
     public static InputStream openStream(Image image) throws IOException {
 //        if (image.isLocal()) {
 //            return image.getContent();

@@ -36,6 +36,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         activity = act;
     }
 
+    public void deleteAtPosition(int pos) {
+        notifyItemRemoved(pos);
+        notifyItemRangeChanged(pos, posts.size());
+    }
+
     private void setViewSizesForImageSizes(final ViewHolder holder, final int width, final int height) {
         int imageWidth = Utils.getDefaultScreenWidth() - 2 * holder.getMargin();
         float scale = ((float) imageWidth) / ((float) width);

@@ -17,14 +17,15 @@ import base.says.LoudlyPost;
 import base.says.Post;
 import base.says.SinglePost;
 import ly.loud.loudly.Loudly;
+import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.PeopleList.Item;
 import ly.loud.loudly.PeopleList.NetworkDelimiter;
 import ly.loud.loudly.RecyclerViewAdapter;
-import util.AttachableTask;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
 import util.TimeInterval;
+import util.UIAction;
 import util.Utils;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
@@ -231,6 +232,7 @@ public class Tasks {
         }
     }
 
+
     public static class PostDeleter extends BroadcastSendingTask {
         private Post post;
         LinkedList<Post> posts;
@@ -240,6 +242,26 @@ public class Tasks {
             this.post = post;
             this.wraps = wraps;
             this.posts = posts;
+        }
+
+        private void beautifulDelete(Post post) {
+            int i = 0;
+            for (Post p : posts) {
+                if (p.equals(post)) {
+                    break;
+                }
+                i++;
+            }
+            posts.remove(i);
+            final int fixed = i;
+            MainActivity.executeOnMain(new UIAction() {
+                @Override
+                public void execute(Context context, Object... params) {
+                    MainActivity mainActivity = (MainActivity) context;
+                    mainActivity.recyclerViewAdapter.deleteAtPosition(fixed);
+                }
+            });
+
         }
 
         @Override
@@ -261,7 +283,7 @@ public class Tasks {
 
             if (post instanceof SinglePost) {
                 if (!post.existsIn(post.getNetwork())) {
-                    posts.remove(post);
+                    beautifulDelete(post);
                 }
             }
 
@@ -276,7 +298,7 @@ public class Tasks {
 
                 // If post is dead, delete it from DB. Otherwise, update its links
                 if (dead) {
-                    posts.remove(post);
+                    beautifulDelete(post);
                     try {
                         DatabaseActions.deletePost(((LoudlyPost) post));
                     } catch (DatabaseException e) {
@@ -562,6 +584,7 @@ public class Tasks {
 
     public static class LoadPostsTask extends BroadcastSendingTask implements LoadCallback {
         private LinkedList<Post> posts;
+        private RecyclerViewAdapter adapter;
         private TimeInterval time;
         private Wrap[] wraps;
         private LinkedList<LoudlyPost> loudlyPosts;
@@ -576,10 +599,70 @@ public class Tasks {
          * @param time  Load posts with date int interval
          * @param wraps Networks, from which load posts
          */
-        public LoadPostsTask(LinkedList<Post> posts, TimeInterval time, Wrap[] wraps) {
+        public LoadPostsTask(LinkedList<Post> posts, RecyclerViewAdapter adapter,
+                             TimeInterval time, Wrap... wraps) {
             this.posts = posts;
             this.time = time;
             this.wraps = wraps;
+            this.adapter = adapter;
+        }
+
+        private void merge(LinkedList<? extends Post> newPosts) {
+            Log.e("TASKS", "merging");
+            int i = 0, j = 0;
+            // TODO: 12/11/2015 Make quicker with arrayLists
+            while (j < newPosts.size()) {
+                // while date of ith old post is greater than date of jth post in newPosts, i++
+                while (i < posts.size()) {
+                    Post post = posts.get(i);
+
+                    // Notify that likes in LoudlyPost have changed
+                    if (post instanceof LoudlyPost) {
+                        final int postPosition = i;
+                        MainActivity.executeOnMain(new UIAction() {
+                            @Override
+                            public void execute(Context context, Object... params) {
+                                MainActivity mainActivity = (MainActivity) context;
+                                mainActivity.recyclerViewAdapter.notifyItemChanged(postPosition);
+                            }
+                        });
+                    }
+                    if (post.getDate() < newPosts.get(j).getDate()) {
+                        break;
+                    }
+                    i++;
+                }
+                int oldJ = j;
+                while (j < newPosts.size() &&
+                        (i == posts.size() || newPosts.get(j).getDate() > posts.get(i).getDate())) {
+                    j++;
+                }
+                posts.addAll(i, newPosts.subList(oldJ, j));
+                Log.e("TASKS", posts.size() + "");
+
+                // Crutch
+                int newI = i + j - oldJ;
+                if (newI == posts.size()) {
+                    MainActivity.executeOnMain(new UIAction() {
+                        @Override
+                        public void execute(Context context, Object... params) {
+                            MainActivity mainActivity = ((MainActivity) context);
+                            mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                        }
+                    });
+                } else {
+                    final int fixedI = i;
+                    final int fixedLength = j - oldJ;
+                    MainActivity.executeOnMain(new UIAction() {
+                        @Override
+                        public void execute(Context context, Object... params) {
+                            MainActivity mainActivity = (MainActivity) context;
+                            mainActivity.recyclerViewAdapter.notifyItemRangeInserted(fixedI, fixedLength);
+                        }
+                    });
+                }
+                i = newI;
+            }
         }
 
         @Override
@@ -602,8 +685,6 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
-            LinkedList<Post> resultList = new LinkedList<>();
-            //TODO: we could do it faster
             try {
                 loudlyPosts = DatabaseActions.loadPosts(time);
             } catch (DatabaseException e) {
@@ -615,6 +696,7 @@ public class Tasks {
 
             publishProgress(makeMessage(Broadcasts.POST_LOAD, Broadcasts.STARTED));
 
+            merge(loudlyPosts);
 
             for (Wrap w : wraps) {
                 try {
@@ -629,7 +711,7 @@ public class Tasks {
                     }
                     Arrays.fill(loudlyPostExists, false);
 
-                    resultList = Utils.merge(resultList, currentPosts);
+                    merge(currentPosts);
 
                     Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.PROGRESS);
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
@@ -643,8 +725,6 @@ public class Tasks {
                 }
             }
 
-            LinkedList<Post> cleaned = new LinkedList<>();
-
             for (LoudlyPost p : loudlyPosts) {
                 boolean postAlive = false;
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -652,21 +732,37 @@ public class Tasks {
                         postAlive = true;
                     }
                 }
-                if (postAlive) {
-                    cleaned.add(p);
-                } else {
+                if (!postAlive) {
                     try {
                         DatabaseActions.deletePost(p);
+                        int ind = 0;
+                        for (Post post : posts) {
+                            if (post instanceof LoudlyPost) {
+                                if (((LoudlyPost) post).getLocalId() == p.getLocalId()) {
+                                    posts.remove(ind);
+                                    final int fixedInd = ind;
+                                    final int postSize = posts.size();
+                                    MainActivity.executeOnMain(new UIAction() {
+                                        @Override
+                                        public void execute(Context context, Object... params) {
+                                            MainActivity mainActivity = (MainActivity) context;
+                                            mainActivity.recyclerViewAdapter.
+                                                    notifyItemRemoved(fixedInd);
+                                            mainActivity.recyclerViewAdapter.
+                                                    notifyItemRangeChanged(fixedInd, postSize);
+                                        }
+                                    });
+                                    break;
+                                }
+                            }
+                            ind++;
+                        }
                     } catch (DatabaseException e) {
                         publishProgress(makeError(Broadcasts.POST_LOAD, Broadcasts.DATABASE_ERROR,
                                 e.getMessage()));
                     }
                 }
             }
-
-            resultList = Utils.merge(resultList, cleaned);
-
-            posts.addAll(resultList);
 
             Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.LOADED);
             publishProgress(message);
