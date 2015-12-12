@@ -1,11 +1,3 @@
-//<fragment
-//android:name="ly.loud.loudly.PeopleList.PeopleListFragment"
-//        android:id="@+id/people_list_fragment"
-//        android:layout_width="match_parent"
-//        android:layout_height="match_parent"
-//        tools:layout="@layout/people_list" />
-
-
 package ly.loud.loudly;
 
 import android.animation.Animator;
@@ -24,6 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -46,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     public FloatingActionButton floatingActionButton;
     public PostCreateFragment newPostFragment;
     public PeopleListFragment peopleListFragment;
+
+    private FrameLayout background;
 
     static final int LOAD_POSTS_RECEIVER = 0;
     static final int POST_UPLOAD_RECEIVER = 1;
@@ -107,6 +102,14 @@ public class MainActivity extends AppCompatActivity {
                 int count = getFragmentManager().getBackStackEntryCount();
                 if (count > 0) {
                     floatingActionButton.hide();
+                    background.setAlpha(1);
+                    background.getBackground().setAlpha(100);
+                    background.setClickable(true);
+                }
+                if (count == 0) {
+                    floatingActionButton.show();
+                    background.setAlpha(0);
+                    background.setClickable(false);
                 }
             }
         });
@@ -125,8 +128,12 @@ public class MainActivity extends AppCompatActivity {
         getFragmentManager().beginTransaction().add(R.id.fragment_container, peopleListFragment).commit();
         getFragmentManager().beginTransaction().hide(peopleListFragment).commit();
 
+        background = ((FrameLayout) findViewById(R.id.main_background));
+        background.setAlpha(0);
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
+
+
 
         setRecyclerView();
     }
@@ -245,9 +252,6 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
             return;
         }
-        if (count == 1) {
-            floatingActionButton.show();
-        }
         getFragmentManager().popBackStack();
     }
 
@@ -299,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
                     toast.show();
                     receivers[POST_UPLOAD_RECEIVER].stop();
                     receivers[POST_UPLOAD_RECEIVER] = null;
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    mainActivity.recyclerViewAdapter.notifyItemInserted(0);
                     break;
                 case Broadcasts.ERROR:
                     // Got an error

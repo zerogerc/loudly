@@ -32,25 +32,66 @@ public class PeopleListFragment extends Fragment {
 
     private int requestType = Tasks.LIKES;
     private Post post;
+    private int paddingTopInitial;
+    private int distanceTop = 0;
+    private boolean hasListener = false;
 
     private LinkedList<Item> items = new LinkedList<>();
     RecyclerView recyclerView;
     PeopleListAdapter recyclerViewAdapter;
+    LinearLayoutManager layoutManager;
+//    CustomRecyclerViewListener scrollListener;
 
     static AttachableReceiver getPersonReceiver;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.people_list, container,false);
+        rootView = inflater.inflate(R.layout.people_list, container, false);
+        paddingTopInitial = rootView.getPaddingTop();
         recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
         recyclerViewAdapter = new PeopleListAdapter(items, getActivity());
-        recyclerView.setHasFixedSize(true); /// HERE
-        LinearLayoutManager layoutManager = new LinearLayoutManager(Loudly.getContext());
+//        recyclerView.setHasFixedSize(true); /// HERE
+        layoutManager = new LinearLayoutManager(Loudly.getContext());
+
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
+//        scrollListener = new CustomRecyclerViewListener(this);
+//        recyclerView.addOnScrollListener(scrollListener);
+
+//        final PeopleListFragment fragment = this;
+//        recyclerView.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                if (event.getAction() != MotionEvent.ACTION_MOVE || event.getHistorySize() == 0)
+//                    return false;
+//
+//
+//                int previousY = ((int) event.getHistoricalY(0));
+//                int dy = ((int) event.getY()) - previousY;
+//                Log.d("TAG", Integer.toString(dy));
+//
+//                if (distanceTop == 0) {
+//                    if (!hasListener) {
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//
+//                }
+//
+//                if (distanceTop > 0 && dy < 0) {
+//                    distanceTop = Math.max(0, distanceTop + dy);
+//                    rootView.setPadding(rootView.getPaddingLeft(), distanceTop,
+//                            rootView.getPaddingRight(), rootView.getPaddingBottom());
+//                    return true;
+//                }
+//
+//                return false;
+//            }
+//        });
         return rootView;
     }
 
@@ -64,6 +105,8 @@ public class PeopleListFragment extends Fragment {
         super.onHiddenChanged(hidden);
         if (!hidden) {
             items.clear();
+            hasListener = false;
+
             getPersonReceiver = new GetPersonReceiver(getActivity());
 
             if (requestType == COMMENTS) {
@@ -75,8 +118,45 @@ public class PeopleListFragment extends Fragment {
                 task.execute();
             }
         } else {
+            rootView.setPadding(rootView.getPaddingLeft(), paddingTopInitial, rootView.getPaddingRight(), rootView.getPaddingBottom());
+            distanceTop = paddingTopInitial;
             items.clear();
             recyclerViewAdapter.notifyDataSetChanged();
+        }
+    }
+
+    static class CustomLayoutManager extends LinearLayoutManager {
+        private boolean isScrollEnabled = true;
+
+        public CustomLayoutManager(Context context) {
+            super(context);
+        }
+
+        public void setScrollEnabled(boolean flag) {
+            this.isScrollEnabled = flag;
+        }
+
+        @Override
+        public boolean canScrollVertically() {
+            return isScrollEnabled && super.canScrollVertically();
+        }
+    }
+
+    static class CustomRecyclerViewListener extends RecyclerView.OnScrollListener {
+        private PeopleListFragment fragment;
+
+        public CustomRecyclerViewListener(PeopleListFragment fragment) {
+            this.fragment = fragment;
+        }
+
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+        }
+
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
         }
     }
 
@@ -103,20 +183,29 @@ public class PeopleListFragment extends Fragment {
 
     public void show() {
         FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction();
-        ft.show(this);
         ft.addToBackStack(null);
+        ft.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_bottom);
+        ft.show(this);
         ft.commit();
     }
 
-    public void showPersons(Post post, int type) {
+    public void fillPersons(Post post, int type) {
         this.post = post;
         this.requestType = type;
+    }
+
+    public void fillComments(Post post) {
+        this.post = post;
+        this.requestType = COMMENTS;
+    }
+
+    public void showPersons(Post post, int type) {
+        fillPersons(post, type);
         show();
     }
 
     public void showComments(Post post) {
-        this.post = post;
-        this.requestType = COMMENTS;
+        fillComments(post);
         show();
     }
 

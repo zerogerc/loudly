@@ -40,7 +40,6 @@ public class SettingsActivity extends AppCompatActivity {
                 startReceiver();
                 Authorizer authorizer = Authorizer.getAuthorizer(network);
                 authorizer.createAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
             }
         };
         iconsHolder.setGrayItemClick(action1);
@@ -50,6 +49,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void execute(Context context, Object... params) {
                 LogoutClick(((int) params[0]));
+                iconsHolder.setInvisible(((int) params[0]));
             }
         };
         iconsHolder.setColorItemsClick(action2);
@@ -58,7 +58,6 @@ public class SettingsActivity extends AppCompatActivity {
     private void initFragment() {
         FragmentManager manager = getFragmentManager();
         webViewFragment = manager.findFragmentById(R.id.setting_web_view);
-
 
         webViewFragmentView = findViewById(R.id.setting_web_view);
         webViewFragmentView.getBackground().setAlpha(100);
@@ -89,24 +88,33 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private static class AuthReceiver extends AttachableReceiver {
-        public AuthReceiver(Context context) {
+        private IconsHolder iconsHolder;
+        private SettingsActivity activity;
+
+        public AuthReceiver(SettingsActivity context, IconsHolder iconHolder) {
             super(context, Broadcasts.AUTHORIZATION);
+            this.iconsHolder = iconHolder;
+            this.activity = ((SettingsActivity) context);
         }
 
         @Override
         public void onMessageReceive(Context context, Intent message) {
             String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
-            SettingsActivity activity = (SettingsActivity)context;
+//            SettingsActivity activity = (SettingsActivity)context;
             Toast toast;
             switch (status) {
                 case Broadcasts.FINISHED:
                     toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
                     toast.show();
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    iconsHolder.setVisible(network);
+                    activity.finishWebView();
                     MainActivity.posts.clear();
                     break;
                 case Broadcasts.ERROR:
                     String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
+                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    activity.finishWebView();
                     toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
                     toast.show();
                     break;
@@ -118,7 +126,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     // That's here because of 3 different click listeners
     private void startReceiver() {
-        authReceiver = new AuthReceiver(this);
+        authReceiver = new AuthReceiver(this, iconsHolder);
     }
 
     // ToDo: make buttons onclickable during authorization
@@ -128,6 +136,13 @@ public class SettingsActivity extends AppCompatActivity {
         ft.show(webViewFragment);
         ft.addToBackStack(null);
         ft.commit();
+    }
+
+    public void finishWebView() {
+        getFragmentManager().popBackStack();
+//        FragmentTransaction ft = getFragmentManager().beginTransaction();
+//        ft.hide(webViewFragment);
+//        ft.commit();
     }
 
     public void LogoutClick(final int network) {

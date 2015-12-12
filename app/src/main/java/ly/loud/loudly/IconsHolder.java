@@ -115,10 +115,8 @@ public class IconsHolder extends View {
 
         if (network != -1) {
             if (isVisible[network] && colorItemClick != null) {
-                setInvisible(network);
                 colorItemClick.execute(context, network);
             } else {
-                setVisible(network);
                 grayItemClick.execute(context, network);
             }
         }

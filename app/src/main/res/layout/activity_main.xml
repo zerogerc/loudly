@@ -27,6 +27,14 @@
 
     </RelativeLayout>
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/main_background"
+        android:background="@color/black_color"
+        android:clickable="false">
+    </FrameLayout>
+
     <fragment android:name="ly.loud.loudly.PostCreateFragment"
         android:id="@+id/new_post_fragment"
         android:layout_width="match_parent"
@@ -45,6 +53,15 @@
         android:id="@+id/fragment_container">
     </FrameLayout>
 
+    <ProgressBar
+        style="?android:attr/progressBarStyleLarge"
+        android:id="@+id/main_activity_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminate="false"
+        android:visibility="gone"
+        />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -58,16 +75,5 @@
         app:layout_anchor="@id/main_content"
         app:layout_anchorGravity="bottom|right|end"
         android:onClick="callPostCreate" />
-
-
-    <ProgressBar
-        style="?android:attr/progressBarStyleLarge"
-        android:id="@+id/main_activity_progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:indeterminate="false"
-        android:visibility="gone"
-        />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -100,6 +100,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     Fragment newFragment = new PeopleListFragment();
                     FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
                     transaction.addToBackStack(null);
+                    transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom);
                     transaction.replace(R.id.fragment_container, newFragment);
                     transaction.commit();
                 }

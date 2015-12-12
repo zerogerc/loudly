@@ -48,6 +48,11 @@ public class NetworksChooseFragment extends Fragment {
     }
 
     public void setShouldPostTo(int network, boolean state) {
+        if (state) {
+            iconsHolder.setVisible(network);
+        } else {
+            iconsHolder.setInvisible(network);
+        }
         shouldPost[network] = state;
     }
 
@@ -73,6 +78,14 @@ public class NetworksChooseFragment extends Fragment {
                 }
             }
         }
+    }
+
+    public void setVisible(int network) {
+        iconsHolder.setVisible(network);
+    }
+
+    public void setInvisible(int network) {
+        iconsHolder.setInvisible(network);
     }
 
     public void setColorItemsClick(UIAction action) {
