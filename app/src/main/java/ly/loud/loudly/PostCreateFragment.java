@@ -49,6 +49,7 @@ public class PostCreateFragment extends Fragment {
             public void onClick(View v) {
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
                 ft.show(networksChooseFragment);
+                ft.addToBackStack(null);
                 ft.commit();
             }
         });

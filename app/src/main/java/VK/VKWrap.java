@@ -424,13 +424,15 @@ public class VKWrap extends Wrap {
             ArrayParser attachments = commentParser.getArray();
 
             Comment comment = new Comment(text, date, author, networkID(), id);
-            for (int j = 0; j < attachments.size(); j++) {
-                attachmentParser = attachments.getObject(i);
-                String type = attachmentParser.getString("");
-                if (type.equals("photo")) {
-                    Image image = new Image();
-                    fillImageFromParser(image, attachmentParser.getObject());
-                    comment.addAttachment(image);
+            if (attachments != null) {
+                for (int j = 0; j < attachments.size(); j++) {
+                    attachmentParser = attachments.getObject(i);
+                    String type = attachmentParser.getString("");
+                    if (type.equals("photo")) {
+                        Image image = new Image();
+                        fillImageFromParser(image, attachmentParser.getObject());
+                        comment.addAttachment(image);
+                    }
                 }
             }
             comment.setInfo(new Info(likes, 0, 0));

@@ -23,7 +23,6 @@ import base.says.Post;
 import base.says.SinglePost;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
-import util.IDInterval;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
@@ -321,6 +320,7 @@ public class FacebookWrap extends Wrap {
     @Override
     public List<Comment> getComments(Post post) throws IOException {
         Query query = makeSignedAPICall(post.getLink(networkID()) + "/comments");
+        query.addParameter("date_format", "U");
         query.addParameter("fields", "message,from{id},created_time,id,comment_count,like_count,attachment");
 
         ObjectParser photoParser = makePhotoParser();
@@ -348,7 +348,7 @@ public class FacebookWrap extends Wrap {
         ArrayList<String> ownerIds = new ArrayList<>();
         TreeSet<String> owners = new TreeSet<>();
 
-        for (int i = 0; i < comments.size(); i++) {
+        for (int i = 0; i < response.size(); i++) {
             commentParser = response.getObject(i);
             String id = commentParser.getString("");
             String owner_id = commentParser.getObject().getString("");
