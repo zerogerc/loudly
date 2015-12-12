@@ -37,8 +37,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     public RecyclerViewAdapter recyclerViewAdapter;
     public FloatingActionButton floatingActionButton;
-    public PostCreateFragment newPostFragment;
-    public PeopleListFragment peopleListFragment;
+    private PostCreateFragment newPostFragment;
 
     private FrameLayout background;
 
@@ -124,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         ft.hide(newPostFragment);
         ft.commit();
 
-        peopleListFragment = new PeopleListFragment();
+        PeopleListFragment peopleListFragment = new PeopleListFragment();
         getFragmentManager().beginTransaction().add(R.id.fragment_container, peopleListFragment).commit();
         getFragmentManager().beginTransaction().hide(peopleListFragment).commit();
 

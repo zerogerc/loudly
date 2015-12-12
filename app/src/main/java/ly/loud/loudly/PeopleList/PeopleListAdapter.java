@@ -2,7 +2,6 @@ package ly.loud.loudly.PeopleList;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.graphics.Bitmap;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
@@ -98,13 +97,13 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             holder.likesButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Fragment newFragment = new PeopleListFragment();
-                    ((PeopleListFragment) newFragment).fillPersons((Comment) item, Tasks.LIKES);
-                    FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
-                    transaction.addToBackStack(null);
-                    transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom);
-                    transaction.replace(R.id.fragment_container, newFragment);
-                    transaction.commit();
+                    Fragment newFragment = PeopleListFragment.showPersons(activity, (Comment) item, Tasks.LIKES);
+//                            ((PeopleListFragment) newFragment).fillPersons((Comment) item, Tasks.LIKES);
+//                    FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
+//                    transaction.addToBackStack(null);
+//                    transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom);
+//                    transaction.replace(R.id.fragment_container, newFragment);
+//                    transaction.commit();
                 }
             });
 

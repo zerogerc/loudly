@@ -1,5 +1,6 @@
 package ly.loud.loudly.PeopleList;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
@@ -213,6 +214,32 @@ public class PeopleListFragment extends Fragment {
     public void showComments(SingleNetwork element) {
         fillComments(element);
         show();
+    }
+
+    private static void show(Activity activity, PeopleListFragment fragment) {
+        FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
+        transaction.addToBackStack(null);
+        transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom);
+        transaction.replace(R.id.fragment_container, fragment);
+        transaction.commit();
+    }
+
+    public static PeopleListFragment showPersons(Activity activity, SingleNetwork element, int type) {
+        PeopleListFragment newFragment = new PeopleListFragment();
+        newFragment.element = element;
+        newFragment.requestType = type;
+
+        show(activity, newFragment);
+        return newFragment;
+    }
+
+    public static PeopleListFragment showComments(Activity activity, SingleNetwork element) {
+        PeopleListFragment newFragment = new PeopleListFragment();
+        newFragment.element = element;
+        newFragment.requestType = COMMENTS;
+
+        show(activity, newFragment);
+        return newFragment;
     }
 
     public LinkedList<Item> getItems() {
