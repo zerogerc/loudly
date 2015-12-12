@@ -6,6 +6,10 @@ package ly.loud.loudly.PeopleList;
 public class NetworkDelimiter implements Item {
     private int network;
 
+    public NetworkDelimiter() {
+        this.network = -1;
+    }
+
     public NetworkDelimiter(int network) {
         this.network = network;
     }

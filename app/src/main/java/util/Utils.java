@@ -25,17 +25,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.LinkedList;
+import java.util.Calendar;
 
 import base.Networks;
-import base.says.LoudlyPost;
 import base.attachments.Image;
-import base.says.Post;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.R;
 
 public class Utils {
     private static final String TAG = "UTIL_TAG";
+
+    public static String getDateFormatted(long date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(date * 1000);
+        return cal.get(Calendar.DAY_OF_MONTH) + "." + +(cal.get(Calendar.MONTH) + 1) + "." + cal.get(Calendar.YEAR)
+                + " around " + cal.get(Calendar.HOUR_OF_DAY) + " hours";
+    }
 
     public static int getDefaultScreenHeight() {
         WindowManager windowManager = (WindowManager) Loudly.getContext().getSystemService(Context.WINDOW_SERVICE);

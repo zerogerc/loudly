@@ -16,7 +16,7 @@ public abstract class Say implements Comparable<Say> {
     protected Info info;
 
     public Say() {
-        text = "";
+        text = null;
         attachments = new ArrayList<>();
         date = -1;
         info = new Info();

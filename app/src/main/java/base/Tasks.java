@@ -13,6 +13,7 @@ import java.util.List;
 
 import base.attachments.Attachment;
 import base.attachments.Image;
+import base.says.Comment;
 import base.says.LoudlyPost;
 import base.says.Post;
 import base.says.SinglePost;
@@ -372,13 +373,11 @@ public class Tasks {
      */
     public static class CommentsGetter extends BroadcastSendingTask {
         private Post post;
-        private int what;
         private List<Item> comments;
         private Wrap[] wraps;
 
-        public CommentsGetter(Post post, int what, List<Item> comments, Wrap... wraps) {
+        public CommentsGetter(Post post, List<Item> comments, Wrap... wraps) {
             this.post = post;
-            this.what = what;
             this.comments = comments;
             this.wraps = wraps;
         }
@@ -388,7 +387,7 @@ public class Tasks {
             for (Wrap w : wraps) {
                 try {
                     if (post.existsIn(w.networkID())) {
-                        List<Person> got = w.getPersons(what, post);
+                        List<Comment> got = w.getComments(post);
                         if (!got.isEmpty()) {
                             comments.add(new NetworkDelimiter(w.networkID()));
                             comments.addAll(w.getComments(post));

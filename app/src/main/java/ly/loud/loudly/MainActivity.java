@@ -1,9 +1,16 @@
+//<fragment
+//android:name="ly.loud.loudly.PeopleList.PeopleListFragment"
+//        android:id="@+id/people_list_fragment"
+//        android:layout_width="match_parent"
+//        android:layout_height="match_parent"
+//        tools:layout="@layout/people_list" />
+
+
 package ly.loud.loudly;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
-import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
@@ -37,9 +44,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     public RecyclerViewAdapter recyclerViewAdapter;
     public FloatingActionButton floatingActionButton;
-    public View newPostFragmentView;
-    public Fragment newPostFragment;
-    public View peopleListFragmentView;
+    public PostCreateFragment newPostFragment;
     public PeopleListFragment peopleListFragment;
 
     static final int LOAD_POSTS_RECEIVER = 0;
@@ -96,26 +101,29 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+            @Override
+            public void onBackStackChanged() {
+                int count = getFragmentManager().getBackStackEntryCount();
+                if (count > 0) {
+                    floatingActionButton.hide();
+                }
+            }
+        });
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
         setSupportActionBar(toolbar);
 
         FragmentManager manager = getFragmentManager();
-        newPostFragment = manager.findFragmentById(R.id.new_post_fragment);
-        ((PostCreateFragment) newPostFragment).setListeners();
-
-        newPostFragmentView = findViewById(R.id.new_post_fragment);
-        newPostFragmentView.getBackground().setAlpha(100);
+        newPostFragment = ((PostCreateFragment) manager.findFragmentById(R.id.new_post_fragment));
+        findViewById(R.id.new_post_fragment).getBackground().setAlpha(100);
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
 
-
-        peopleListFragment = (PeopleListFragment) manager.findFragmentById(R.id.people_list_fragment);
-        peopleListFragmentView = findViewById(R.id.people_list_fragment);
-        peopleListFragmentView.getBackground().setAlpha(100);
-        ft = getFragmentManager().beginTransaction();
-        ft.hide(peopleListFragment);
-        ft.commit();
+        peopleListFragment = new PeopleListFragment();
+        getFragmentManager().beginTransaction().add(R.id.fragment_container, peopleListFragment).commit();
+        getFragmentManager().beginTransaction().hide(peopleListFragment).commit();
 
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
@@ -206,9 +214,7 @@ public class MainActivity extends AppCompatActivity {
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
             receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.show(newPostFragment);
-        ft.commit();
+        newPostFragment.show();
         floatingActionButton.setVisibility(View.GONE);
     }
 
@@ -233,19 +239,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (newPostFragmentView.isShown()) {
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.hide(newPostFragment);
-            ft.commit();
-            floatingActionButton.show();
-        } else if (peopleListFragmentView.isShown()) {
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.hide(peopleListFragment);
-            ft.commit();
-            floatingActionButton.show();
-        } else {
+        int count = getFragmentManager().getBackStackEntryCount();
+
+        if (count == 0) {
             super.onBackPressed();
+            return;
         }
+        if (count == 1) {
+            floatingActionButton.show();
+        }
+        getFragmentManager().popBackStack();
     }
 
     static class PostUploaderReceiver extends AttachableReceiver {

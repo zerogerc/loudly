@@ -33,18 +33,17 @@
         android:layout_height="match_parent"
         tools:layout="@layout/activity_new_post" />
 
-    <fragment
-        android:name="ly.loud.loudly.PeopleList.PeopleListFragment"
-        android:id="@+id/people_list_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:layout="@layout/people_list" />
-
     <fragment android:name="ly.loud.loudly.NetworksChooseFragment"
         android:id="@+id/networks_choose_fragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:layout="@layout/network_choose_fragment" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/fragment_container">
+    </FrameLayout>
 
 
     <android.support.design.widget.FloatingActionButton

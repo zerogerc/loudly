@@ -9,7 +9,7 @@ public class Comment extends Say implements Item {
 
     public Comment() {
         super();
-        person = new Person("","","",-1);
+        person = new Person();
     }
 
     public Comment(String text, Person person, int network, String link) {

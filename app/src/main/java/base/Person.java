@@ -12,6 +12,13 @@ public class Person implements Item {
 
     private Bitmap littlePhoto;
 
+    public Person() {
+        this.firstName = null;
+        this.lastName = null;
+        this.photoUrl = null;
+        this.network = -1;
+    }
+
     public Person(String firstName, String lastName, String photoUrl, int network) {
         this.firstName = firstName;
         this.lastName = lastName;

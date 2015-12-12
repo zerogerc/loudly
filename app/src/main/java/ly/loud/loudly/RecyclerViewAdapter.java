@@ -18,7 +18,6 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 
-import java.util.Calendar;
 import java.util.List;
 
 import base.Tasks;
@@ -78,7 +77,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private void refreshFields(final ViewHolder holder, final Post post) {
         holder.text.setText(post.getText());
 
-        holder.data.setText(getDateFormatted(post.getDate()));
+        holder.data.setText(Utils.getDateFormatted(post.getDate()));
 
         int resource = Utils.getResourceByNetwork(post.getNetwork());
 
@@ -129,6 +128,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.showMoreOptions.setOnClickListener(makeOptionsOnClickListener(post, activity));
 
+        holder.commentsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.peopleListFragment.showComments(post);
+            }
+        });
+
         holder.likesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -155,13 +161,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         };
-    }
-
-    private String getDateFormatted(long date) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(date * 1000);
-        return cal.get(Calendar.DAY_OF_MONTH) + "." + +(cal.get(Calendar.MONTH) + 1) + "." + cal.get(Calendar.YEAR)
-                + " around " + cal.get(Calendar.HOUR_OF_DAY) + " hours";
     }
 
     @Override
@@ -198,7 +197,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private ImageView showMoreOptions;
 
         public int getMargin() {
-            return Utils.dpToPx(12);
+            return Utils.dpToPx(8);
         }
 
         public ViewHolder(View itemView, final Post post) {

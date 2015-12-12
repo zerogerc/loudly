@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 
 import java.util.LinkedList;
 
-import base.says.LoudlyPost;
 import base.Tasks;
 import base.says.Post;
 import ly.loud.loudly.Loudly;
@@ -28,22 +27,24 @@ import util.Broadcasts;
  * Created by ZeRoGerc on 06.12.15.
  */
 public class PeopleListFragment extends Fragment {
+    private static final int COMMENTS = -1;
     private View rootView;
-    private int requestType = Tasks.LIKES;
 
+    private int requestType = Tasks.LIKES;
     private Post post;
-    static public LinkedList<Item> persons = new LinkedList<>();
+
+    private LinkedList<Item> items = new LinkedList<>();
     RecyclerView recyclerView;
     PeopleListAdapter recyclerViewAdapter;
-    static AttachableReceiver getPersonReceiver;
 
+    static AttachableReceiver getPersonReceiver;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.people_list, container, false);
+        rootView = inflater.inflate(R.layout.people_list, container,false);
         recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
-        recyclerViewAdapter = new PeopleListAdapter(persons);
+        recyclerViewAdapter = new PeopleListAdapter(items, getActivity());
         recyclerView.setHasFixedSize(true); /// HERE
         LinearLayoutManager layoutManager = new LinearLayoutManager(Loudly.getContext());
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
@@ -54,17 +55,27 @@ public class PeopleListFragment extends Fragment {
     }
 
     @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (!hidden) {
-            persons.clear();
+            items.clear();
             getPersonReceiver = new GetPersonReceiver(getActivity());
 
-            Tasks.PersonGetter task = new Tasks.PersonGetter(post, requestType, persons,
-                    Loudly.getContext().getWraps());
-            task.execute();
+            if (requestType == COMMENTS) {
+                Tasks.CommentsGetter task = new Tasks.CommentsGetter(post, items, Loudly.getContext().getWraps());
+                task.execute();
+            } else {
+                Tasks.PersonGetter task = new Tasks.PersonGetter(post, requestType, items,
+                        Loudly.getContext().getWraps());
+                task.execute();
+            }
         } else {
-            persons.clear();
+            items.clear();
             recyclerViewAdapter.notifyDataSetChanged();
         }
     }
@@ -90,12 +101,30 @@ public class PeopleListFragment extends Fragment {
         }
     }
 
+    public void show() {
+        FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction();
+        ft.show(this);
+        ft.addToBackStack(null);
+        ft.commit();
+    }
+
     public void showPersons(Post post, int type) {
         this.post = post;
         this.requestType = type;
-        ((MainActivity) getActivity()).floatingActionButton.hide();
-        FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction();
-        ft.show(this);
-        ft.commit();
+        show();
+    }
+
+    public void showComments(Post post) {
+        this.post = post;
+        this.requestType = COMMENTS;
+        show();
+    }
+
+    public LinkedList<Item> getItems() {
+        return items;
+    }
+
+    public void setItems(LinkedList<Item> items) {
+        this.items = items;
     }
 }

@@ -6,5 +6,6 @@ package ly.loud.loudly.PeopleList;
 public interface Item {
     public static final int DELIMITER = 243;
     public static final int PERSON = 2032;
+    public static final int COMMENT = 12125;
 }
 

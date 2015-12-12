@@ -433,6 +433,7 @@ public class VKWrap extends Wrap {
                     comment.addAttachment(image);
                 }
             }
+            comment.setInfo(new Info(likes, 0, 0));
             comments.add(comment);
         }
         return comments;

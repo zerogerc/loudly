@@ -62,7 +62,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         webViewFragmentView = findViewById(R.id.setting_web_view);
         webViewFragmentView.getBackground().setAlpha(100);
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        FragmentTransaction ft = manager.beginTransaction();
         ft.hide(webViewFragment);
         ft.commit();
     }
@@ -126,26 +126,9 @@ public class SettingsActivity extends AppCompatActivity {
     public void startWebView() {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.show(webViewFragment);
+        ft.addToBackStack(null);
         ft.commit();
     }
-//
-//    public void VKButtonClick() {
-//        startReceiver();
-//        Authorizer authorizer = new VKAuthorizer();
-//        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//    }
-//
-//    public void FBButtonClick() {
-//        startReceiver();
-//        Authorizer authorizer = new FacebookAuthorizer();
-//        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//    }
-//
-//    public void MailRuButtonClick() {
-//        startReceiver();
-//        Authorizer authorizer = new MailRuAuthoriser();
-//        authorizer.createAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//    }
 
     public void LogoutClick(final int network) {
         AsyncTask<Object, Void, Object> task = new AsyncTask<Object, Void, Object>() {
@@ -180,13 +163,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (webViewFragmentView.isShown()) {
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.hide(webViewFragment);
-            ft.commit();
-        } else {
+        int count = getFragmentManager().getBackStackEntryCount();
+
+        if (count == 0) {
             super.onBackPressed();
+            return;
         }
+        getFragmentManager().popBackStack();
     }
 
     /**

@@ -120,7 +120,7 @@ public class PostCreateFragment extends Fragment {
 
         networksChooseFragmentView = getActivity().findViewById(R.id.networks_choose_fragment);
         networksChooseFragmentView.getBackground().setAlpha(100);
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        FragmentTransaction ft = manager.beginTransaction();
         ft.hide(networksChooseFragment);
         ft.commit();
 
@@ -157,7 +157,9 @@ public class PostCreateFragment extends Fragment {
             editText.setText(savedInstanceState.getString(EDIT_TEXT));
         }
 
+        setListeners();
         initFragment();
+        getFragmentManager().popBackStack();
     }
 
     @Override
@@ -229,5 +231,12 @@ public class PostCreateFragment extends Fragment {
 
             }
         }
+    }
+
+    public void show() {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.show(this);
+        ft.addToBackStack(null);
+        ft.commit();
     }
 }
