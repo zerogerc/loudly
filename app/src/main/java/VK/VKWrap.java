@@ -10,17 +10,19 @@ import java.util.List;
 
 import base.Networks;
 import base.Person;
+import base.SingleNetwork;
 import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
+import base.attachments.LoudlyImage;
 import base.says.Comment;
 import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
-import base.says.SinglePost;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.IDInterval;
+import util.InvalidTokenException;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
@@ -60,9 +62,12 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    protected Query makeSignedAPICall(String method) {
+    protected Query makeSignedAPICall(String method) throws InvalidTokenException {
         Query query = makeAPICall(method);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
+        if (!keys.isValid()) {
+            throw new InvalidTokenException();
+        }
         query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
         return query;
     }
@@ -76,7 +81,7 @@ public class VKWrap extends Wrap {
         if (post.getAttachments().size() > 0) {
             Image image = (Image) post.getAttachments().get(0);
             String userID = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID())).getUserId();
-            query.addParameter("attachments", "photo" + userID + "_" + image.getLink(networkID()));
+            query.addParameter("attachments", "photo" + userID + "_" + image.getId());
         }
 
         String response = Network.makePostRequest(query);
@@ -85,7 +90,7 @@ public class VKWrap extends Wrap {
         try {
             parser = new JSONObject(response);
             String id = parser.getJSONObject("response").getString("post_id");
-            post.setLink(networkID(), id);
+            post.setId(id);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -93,7 +98,7 @@ public class VKWrap extends Wrap {
 
 
     @Override
-    public void uploadImage(Image image, BackgroundAction progress) throws IOException {
+    public void uploadImage(LoudlyImage image, BackgroundAction progress) throws IOException {
         Query getUploadServerAddress = makeSignedAPICall(PHOTO_UPLOAD_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         getUploadServerAddress.addParameter("user_id", keys.getUserId());
@@ -134,12 +139,12 @@ public class VKWrap extends Wrap {
             parser = new JSONObject(response).getJSONArray("response").getJSONObject(0);
             String id = parser.getString("id");
             String url = parser.getString("photo_604");
-            if (image.isLocal()) {
+            if (image.getExternalLink() == null) {
                 image.setExternalLink(url);
             }
             int height = parser.getInt("height");
             int width = parser.getInt("width");
-            image.setLink(networkID(), id);
+            image.setId(id);
             image.setHeight(height);
             image.setWidth(width);
         } catch (JSONException e) {
@@ -155,7 +160,7 @@ public class VKWrap extends Wrap {
         for (Image image : images) {
             sb.append(keyKeeper.getUserId());
             sb.append('_');
-            sb.append(image.getLink(networkID()));
+            sb.append(image.getId());
         }
         if (sb.length() > 0) {
             sb.delete(sb.length() - 1, sb.length());
@@ -181,12 +186,12 @@ public class VKWrap extends Wrap {
         Query query = makeSignedAPICall(DELETE_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter("owner_id", keys.getUserId());
-        query.addParameter("post_id", post.getLink(NETWORK));
+        query.addParameter("post_id", post.getId());
 
         String response = Network.makeGetRequest(query);
 
         // todo: check for delete
-        post.detachFromNetwork(NETWORK);
+        post.cleanIds();
     }
 
     @Override
@@ -198,7 +203,7 @@ public class VKWrap extends Wrap {
             if (post.existsIn(networkID())) {
                 sb.append(keys.getUserId());
                 sb.append('_');
-                sb.append(post.getLink(networkID()));
+                sb.append(post.getId());
                 sb.append(',');
             }
         }
@@ -216,12 +221,7 @@ public class VKWrap extends Wrap {
             for (Post post : posts) {
                 if (post.existsIn(networkID())) {
                     JSONObject current = parser.getJSONObject(k++);
-                    Info info = getInfo(current);
-                    if (post instanceof SinglePost) {
-                        post.setInfo(info);
-                    } else {
-                        ((LoudlyPost) post).setInfo(NETWORK, getInfo(current));
-                    }
+                    post.setInfo(getInfo(current));
                 }
             }
         } catch (JSONException e) {
@@ -250,9 +250,8 @@ public class VKWrap extends Wrap {
         int width = photoParser.getInt(0);
         int height = photoParser.getInt(0);
 
-        image.setLocal(false);
         image.setExternalLink(link);
-        image.setLink(networkID(), photoId);
+        image.setId(photoId);
         image.setWidth(width);
         image.setHeight(height);
     }
@@ -308,18 +307,18 @@ public class VKWrap extends Wrap {
 
                 Info info = new Info(likes, shares, comments);
 
-                LoudlyPost loudlyPost = callback.findLoudlyPost(id, networkID());
-                if (loudlyPost != null) {
-                    loudlyPost.setInfo(networkID(), info);
+                boolean updated = callback.updateLoudlyPostInfo(id, networkID(), info);
+                if (updated) {
                     continue;
                 }
+
                 // TODO: 12/8/2015 move interval to wrap
                 if (Loudly.getContext().getPostInterval(networkID()) == null) {
                     Loudly.getContext().setPostInterval(networkID(), new IDInterval(id, id));
                 }
 
                 if (timeInterval.contains(date)) {
-                    SinglePost res = new SinglePost(text, date, null, networkID(), id);
+                    Post res = new Post(text, date, null, networkID(), id);
                     res.setInfo(info);
 
                     for (int j = 0; j < attachments.size(); j++) {
@@ -342,12 +341,15 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public List<Comment> getComments(Post post) throws IOException {
+    public List<Comment> getComments(SingleNetwork element) throws IOException {
+        if (!(element instanceof Post)) {
+            return new LinkedList<>(); // TODO: 12/12/2015  
+        }
         Query query = makeSignedAPICall("wall.getComments");
         VKKeyKeeper keyKeeper = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
 
         query.addParameter("owner_id", keyKeeper.getUserId());
-        query.addParameter("post_id", post.getLink(networkID()));
+        query.addParameter("post_id", element.getId());
         query.addParameter("need_likes", 1);
         query.addParameter("count", 20);
         query.addParameter("sort", "desc");
@@ -442,12 +444,23 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public LinkedList<Person> getPersons(int what, Post post) throws IOException {
+    public LinkedList<Person> getPersons(int what, SingleNetwork element) throws IOException {
         Query query = makeSignedAPICall("likes.getList");
-        query.addParameter("type", "post");
+        String type;
+        if (element instanceof Post) {
+            type = "post";
+        } else if (element instanceof Image) {
+            type = "photo";
+        } else if (element instanceof Comment) {
+            type = "comment";
+        } else {
+            return new LinkedList<>();
+        }
+
+        query.addParameter("type", type);
         VKKeyKeeper keys = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
         query.addParameter("owner_id", keys.getUserId());
-        query.addParameter("item_id", post.getLink(networkID()));
+        query.addParameter("item_id", element.getId());
         String filter;
         switch (what) {
             case Tasks.LIKES:

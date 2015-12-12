@@ -6,10 +6,12 @@ import java.util.List;
 import Facebook.FacebookWrap;
 import VK.VKWrap;
 import base.attachments.Image;
+import base.attachments.LoudlyImage;
 import base.says.Comment;
 import base.says.LoudlyPost;
 import base.says.Post;
 import util.BackgroundAction;
+import util.InvalidTokenException;
 import util.Query;
 import util.TimeInterval;
 
@@ -28,7 +30,7 @@ public abstract class Wrap implements Comparable<Wrap> {
      */
     public abstract int shouldUploadImage();
 
-    // Firstly upload photos to networks, that only allows
+    // Firstly upload photos to networks, that allows only upload photos
     @Override
     public int compareTo(Wrap another) {
         int first = shouldUploadImage();
@@ -47,12 +49,13 @@ public abstract class Wrap implements Comparable<Wrap> {
      */
     public abstract int networkID();
 
+
     protected abstract Query makeAPICall(String url);
-    protected abstract Query makeSignedAPICall(String url);
+    protected abstract Query makeSignedAPICall(String url) throws InvalidTokenException;
 
     public abstract void uploadPost(LoudlyPost post) throws IOException;
 
-    public abstract void uploadImage(Image image, BackgroundAction progress) throws IOException;
+    public abstract void uploadImage(LoudlyImage image, BackgroundAction progress) throws IOException;
 
     public abstract void deletePost(Post post) throws IOException;
 
@@ -60,9 +63,9 @@ public abstract class Wrap implements Comparable<Wrap> {
 
     public abstract void getPostsInfo(List<Post> posts) throws IOException;
 
-    public abstract List<Person> getPersons(int what, Post post) throws IOException;
+    public abstract List<Person> getPersons(int what, SingleNetwork element) throws IOException;
 
-    public abstract List<Comment> getComments(Post post) throws IOException;
+    public abstract List<Comment> getComments(SingleNetwork element) throws IOException;
 
     public abstract void getImageInfo(List<Image> images) throws IOException;
 

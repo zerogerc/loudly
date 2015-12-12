@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
             receivers[LOAD_POSTS_RECEIVER] = new PostLoadReceiver(this);
 
-            loadPosts = new Tasks.LoadPostsTask(posts, recyclerViewAdapter, Loudly.getContext().getTimeInterval(),
+            loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
                     Loudly.getContext().getWraps());
             loadPosts.execute();
         }
@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onMessageReceive(Context context, Intent message) {
-            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
             Toast toast;
             long postID, imageID;
             int progress;
@@ -283,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
                     // Image is loading
                     imageID = message.getLongExtra(Broadcasts.IMAGE_FIELD, 0);
                     postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
-                    progress = message.getIntExtra(Broadcasts.PROGRESS, 0);
+                    progress = message.getIntExtra(Broadcasts.PROGRESS_FIELD, 0);
 //                    toast = Toast.makeText(context, "image " + progress, Toast.LENGTH_SHORT);
 //                    toast.show();
                     Log.i("IMAGE_UPLOAD", progress + "");
@@ -325,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onMessageReceive(Context context, Intent message) {
-            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, -1);
 
             Toast toast;
             MainActivity mainActivity = (MainActivity) context;
@@ -366,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
                     Loudly.getContext().startGetInfoService(); // Let's get info about posts
                     break;
                 case Broadcasts.ERROR:
-                    String error = message.getStringExtra(Broadcasts.ERROR);
+                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
                     toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
                     toast.show();
                     stop();
@@ -383,7 +383,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onMessageReceive(Context context, Intent message) {
-            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
             Toast t;
             switch (status) {
                 case Broadcasts.PROGRESS:
@@ -416,7 +416,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onMessageReceive(Context context, Intent message) {
-            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
             Toast toast;
             int id;
             switch (status) {

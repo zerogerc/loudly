@@ -4,15 +4,21 @@ import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 
+import base.SingleNetwork;
 import base.attachments.Attachment;
 import base.attachments.Image;
 
-public abstract class Say implements Comparable<Say> {
+public class Say implements SingleNetwork, Comparable<Say> {
+    // Main part
     protected String text;
     protected ArrayList<Attachment> attachments;
     protected long date;
-    protected int network;
 
+    // Links part
+    protected int network;
+    protected String id;
+
+    // Likes, shares, comments
     protected Info info;
 
     public Say() {
@@ -21,27 +27,61 @@ public abstract class Say implements Comparable<Say> {
         date = -1;
         info = new Info();
         network = -1;
+        id = "";
     }
 
-    public Say(String text, int network) {
+    public Say(String text, int network, String id) {
         this();
         this.text = text;
         this.network = network;
+        this.id = id;
     }
 
-    public Say(String text, long date, int network) {
+    public Say(String text, long date, int network, String id) {
         this.text = text;
         this.date = date;
         this.network = network;
         this.attachments = new ArrayList<>();
+        this.id = id;
     }
 
-    public Say(String text, ArrayList<Attachment> attachments, long date, int network) {
+    public Say(String text, ArrayList<Attachment> attachments, long date, int network, String id) {
         this.text = text;
         this.attachments = attachments;
         this.date = date;
         this.network = network;
         this.info = new Info();
+        this.id = id;
+    }
+
+    // Methods from SingleNetwork
+    @Override
+    public boolean existsIn(int network) {
+        return this.network == network;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public int getNetwork() {
+        return network;
+    }
+
+    @Override
+    public void setNetwork(int network) {
+        this.network = network;
+    }
+
+    public ArrayList<Attachment> getAttachments() {
+        return attachments;
     }
 
     public void addAttachment(Attachment attachment) {
@@ -83,18 +123,6 @@ public abstract class Say implements Comparable<Say> {
 
     public void setDate(long date) {
         this.date = date;
-    }
-
-    public int getNetwork() {
-        return network;
-    }
-
-    public void setNetwork(int network) {
-        this.network = network;
-    }
-
-    public ArrayList<Attachment> getAttachments() {
-        return attachments;
     }
 
     @Override

@@ -25,6 +25,7 @@ import base.Networks;
 import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
+import base.attachments.LoudlyImage;
 import base.says.LoudlyPost;
 import util.UIAction;
 import util.Utils;
@@ -224,7 +225,7 @@ public class PostCreateFragment extends Fragment {
             if (data == null) {
                 Log.e("IMG_LOAD_TAG", "Data to received");
             } else {
-                postImage = new Image(data.getData());
+                postImage = new LoudlyImage(data.getData());
                 prepareImageView();
                 Glide.with(Loudly.getContext()).load(data.getData())
                         .fitCenter()

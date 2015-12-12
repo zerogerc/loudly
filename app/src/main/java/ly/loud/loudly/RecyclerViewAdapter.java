@@ -79,7 +79,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.data.setText(Utils.getDateFormatted(post.getDate()));
 
-        int resource = Utils.getResourceByNetwork(post.getNetwork());
+        int resource = Utils.getResourceByNetwork(post instanceof LoudlyPost ? -1 : post.getNetwork());
 
         Glide.with(Loudly.getContext()).load("image")
                 .error(resource)

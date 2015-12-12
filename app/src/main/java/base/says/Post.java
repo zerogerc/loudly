@@ -3,31 +3,39 @@ package base.says;
 import java.util.ArrayList;
 
 import base.Location;
+import base.SingleNetwork;
 import base.attachments.Attachment;
+import base.attachments.Image;
+import base.attachments.LoudlyImage;
 
-public abstract class Post extends Say {
+public class Post extends Say {
     protected Location location;
 
-    public abstract String getLink(int network);
-    public abstract void detachFromNetwork(int network);
-    public abstract boolean existsIn(int network);
+    public void cleanIds() {
+        id = null;
+        for (Attachment attachment : attachments) {
+            attachment.setId(null);
+        }
+    }
 
     public Post() {
         super();
     }
 
-    public Post(String text, int network) {
-        super(text, network);
+    public Post(String text, int network, String id) {
+        super(text, network, id);
         location = null;
     }
 
-    public Post(String text, long date, Location location, int network) {
-        super(text, date, network);
+    public Post(String text, long date, Location location, int network, String id) {
+        super(text, date, network, id);
         this.location = location;
+
     }
 
-    public Post(String text, ArrayList<Attachment> attachments, long date, Location location, int network) {
-        super(text, attachments, date, network);
+    public Post(String text, ArrayList<Attachment> attachments,
+                long date, Location location, int network, String id) {
+        super(text, attachments, date, network, id);
         this.location = location;
     }
 

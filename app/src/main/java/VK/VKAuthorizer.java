@@ -39,7 +39,7 @@ public class VKAuthorizer extends Authorizer {
         ((VKKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
         ((VKKeyKeeper) keys).setUserId(response.getParameter(USER_ID));
         int expiration = Integer.parseInt(response.getParameter("expires_in"));
-        keys.expiresIn(expiration - 10 * 60);
+        keys.expiresIn(expiration);
     }
 
     @Override

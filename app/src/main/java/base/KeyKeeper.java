@@ -25,7 +25,14 @@ public abstract class KeyKeeper implements Parcelable {
     protected abstract void fromStrings(String[] strings);
 
     public void expiresIn(long time) {
-        validThrough = Calendar.getInstance().getTimeInMillis() / 1000 + time;
+        validThrough = Calendar.getInstance().getTimeInMillis() / 1000 + time - 60 * 5;
+    }
+
+    /**
+     * May the token expire in hour?
+     */
+    public boolean mayExpire() {
+        return validThrough - Calendar.getInstance().getTimeInMillis() / 1000 < 60 * 60;
     }
 
     public boolean isValid() {

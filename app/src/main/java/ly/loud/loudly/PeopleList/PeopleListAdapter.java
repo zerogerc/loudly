@@ -19,6 +19,7 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import java.util.List;
 
 import base.Person;
+import base.Tasks;
 import base.says.Comment;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.R;
@@ -98,6 +99,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 @Override
                 public void onClick(View v) {
                     Fragment newFragment = new PeopleListFragment();
+                    ((PeopleListFragment) newFragment).fillPersons((Comment) item, Tasks.LIKES);
                     FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
                     transaction.addToBackStack(null);
                     transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom);

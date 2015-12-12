@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import base.attachments.Image;
+import base.attachments.LoudlyImage;
 import util.parsers.Parser;
 import util.parsers.StringParser;
 
@@ -71,7 +72,7 @@ public class Network {
 
     public static String makePostRequest(Query query,
                                          BackgroundAction onProgressUpdate,
-                                         String tag, Image image) throws IOException {
+                                         String tag, LoudlyImage image) throws IOException {
 
         String boundary = "===" + System.currentTimeMillis() + "===";
 

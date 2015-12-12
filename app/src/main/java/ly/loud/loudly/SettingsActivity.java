@@ -99,8 +99,8 @@ public class SettingsActivity extends AppCompatActivity {
 
         @Override
         public void onMessageReceive(Context context, Intent message) {
-            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
-//            SettingsActivity activity = (SettingsActivity)context;
+            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
+            SettingsActivity activity = (SettingsActivity)context;
             Toast toast;
             switch (status) {
                 case Broadcasts.FINISHED:

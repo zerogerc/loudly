@@ -9,7 +9,9 @@ import java.util.LinkedList;
 
 import base.KeyKeeper;
 import base.Location;
+import base.MultipleNetwork;
 import base.Networks;
+import base.attachments.LoudlyImage;
 import base.says.LoudlyPost;
 import base.attachments.Attachment;
 import ly.loud.loudly.Loudly;
@@ -36,7 +38,7 @@ public class DatabaseActions {
 
             // Insert post's links (Facebook as nullColumn)
             long linksId = db.insert(LinksEntry.TABLE_NAME, LinksEntry.COLUMN_NAME_FB,
-                    createLinkRow(post.getLinks()));
+                    createLinkRow(post.getIds()));
             if (linksId == -1) {
                 throw new DatabaseException("Can't insert links");
             }
@@ -52,10 +54,11 @@ public class DatabaseActions {
 
             long prevId = AttachmentsEntry.END_OF_LIST_VALUE;
             long firstId = AttachmentsEntry.END_OF_LIST_VALUE;
-            for (Attachment attachment : post.getAttachments()) {
+            for (Attachment att : post.getAttachments()) {
                 // Insert attachment's links
+                MultipleNetwork attachment = (MultipleNetwork) att;
                 long atLinkId = db.insert(LinksEntry.TABLE_NAME, LinksEntry.COLUMN_NAME_FB,
-                        createLinkRow(attachment.getLinks()));
+                        createLinkRow(attachment.getIds()));
 
                 if (atLinkId == -1) {
                     throw new DatabaseException("Can't insert links for an attachment");
@@ -63,7 +66,7 @@ public class DatabaseActions {
 
                 // Insert attachment
                 long curId = db.insert(AttachmentsEntry.TABLE_NAME, null,
-                        createAttachmentsRow(attachment, prevId, atLinkId));
+                        createAttachmentsRow(att, prevId, atLinkId));
                 if (curId == -1) {
                     throw new DatabaseException("Can't insert attachment");
                 }
@@ -129,7 +132,7 @@ public class DatabaseActions {
 
             ContentValues update = new ContentValues();
             for (int network : networks) {
-                update.put(LinksEntry.LINK_COLUMNS[network], post.getLink(network));
+                update.put(LinksEntry.LINK_COLUMNS[network], post.getId(network));
             }
             if (db.update(LinksEntry.TABLE_NAME, update,
                     sqlEqual(LinksEntry._ID, linkTd), null) != 1) {
@@ -162,7 +165,8 @@ public class DatabaseActions {
 
                 update = new ContentValues();
                 for (int network : networks) {
-                    update.put(LinksEntry.LINK_COLUMNS[network], post.getAttachments().get(ind).getLink(network));
+                    MultipleNetwork attachment = (MultipleNetwork) post.getAttachments().get(ind);
+                    update.put(LinksEntry.LINK_COLUMNS[network], attachment.getId(network));
                 }
                 ind++;
                 if (db.update(LinksEntry.TABLE_NAME,
@@ -479,12 +483,21 @@ public class DatabaseActions {
                 long linkId = cursor.getLong(cursor.getColumnIndex(AttachmentsEntry.COLUMN_NAME_LINK));
 
                 String[] links = readLinks(db, linkId);
-                list.add(Attachment.makeAttachment(type, extra, links));
+                list.add(makeAttachment(type, extra, links));
             }
         } finally {
             Utils.closeQuietly(cursor);
         }
         return list;
+    }
+
+    private static Attachment makeAttachment(int type, String extra, String[] links) {
+        switch (type) {
+            case Attachment.IMAGE:
+                return new LoudlyImage(extra, links);
+            default:
+                return null;
+        }
     }
 
     private static long deleteAttachment(SQLiteDatabase db, long atId) throws DatabaseException {

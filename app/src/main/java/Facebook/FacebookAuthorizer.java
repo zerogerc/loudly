@@ -38,7 +38,7 @@ public class FacebookAuthorizer extends Authorizer {
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
         ((FacebookKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
         int expiration = Integer.parseInt(response.getParameter("expires_in"));
-        keys.expiresIn(expiration - 10 * 60);
+        keys.expiresIn(expiration);
     }
 
     @Override

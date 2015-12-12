@@ -13,10 +13,11 @@ import java.util.List;
 
 import base.attachments.Attachment;
 import base.attachments.Image;
+import base.attachments.LoudlyImage;
 import base.says.Comment;
+import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
-import base.says.SinglePost;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.PeopleList.Item;
@@ -25,6 +26,7 @@ import ly.loud.loudly.RecyclerViewAdapter;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
+import util.InvalidTokenException;
 import util.TimeInterval;
 import util.UIAction;
 import util.Utils;
@@ -111,6 +113,7 @@ public class Tasks {
 
             if (post.getAttachments().size() != 0) {
                 Image image = (Image) post.getAttachments().get(0);
+                // todo why do I do it?
                 Utils.resolveImageSize(image);
             }
 
@@ -122,13 +125,18 @@ public class Tasks {
             for (Wrap w : wraps) {
                 try {
                     final int networkID = w.networkID();
-                    for (final Attachment attachment : post.getAttachments()) {
-                        w.uploadImage((Image) attachment, new BackgroundAction() {
+                    post.setNetwork(networkID);
+
+                    for (Attachment attachment : post.getAttachments()) {
+                        // // TODO: 12/12/2015 set network too
+                        final LoudlyImage image = (LoudlyImage) attachment;
+                        image.setNetwork(w.networkID());
+                        w.uploadImage((LoudlyImage) attachment, new BackgroundAction() {
                             @Override
                             public void execute(Object... params) {
                                 Intent message = makeMessage(Broadcasts.POST_UPLOAD,
                                         Broadcasts.IMAGE, post.getLocalId());
-                                message.putExtra(Broadcasts.IMAGE_FIELD, attachment.getLocalID());
+                                message.putExtra(Broadcasts.IMAGE_FIELD, image.getLocalId());
                                 message.putExtra(Broadcasts.PROGRESS_FIELD, (int) params[0]);
                                 message.putExtra(Broadcasts.NETWORK_FIELD, networkID);
                                 publishProgress(message);
@@ -136,7 +144,7 @@ public class Tasks {
                         });
                         Intent message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.IMAGE_FINISHED,
                                 post.getLocalId());
-                        message.putExtra(Broadcasts.IMAGE_FIELD, attachment.getLocalID());
+                        message.putExtra(Broadcasts.IMAGE_FIELD, image.getLocalId());
                         message.putExtra(Broadcasts.NETWORK_FIELD, networkID);
                     }
 
@@ -146,20 +154,24 @@ public class Tasks {
                             post.getLocalId());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     publishProgress(message);
+                } catch (InvalidTokenException e) {
+                    Intent message = makeError(Broadcasts.POST_UPLOAD, Broadcasts.INVALID_TOKEN,
+                            post.getLocalId(), e.getMessage());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                 } catch (IOException e) {
-
-                    publishProgress(makeError(Broadcasts.POST_UPLOAD, Broadcasts.NETWORK_ERROR,
-                            post.getLocalId(), e.getMessage()));
+                    Intent message = makeError(Broadcasts.POST_UPLOAD, Broadcasts.NETWORK_ERROR,
+                            post.getLocalId(), e.getMessage());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                 }
             }
 
             // Change image links to external
             for (Attachment attachment : post.getAttachments()) {
-                if (attachment instanceof Image) {
-                    Image image = ((Image) attachment);
-                    if (!image.isLocal()) {
-                        image.setInternalLink(image.getExternalLink());
-                    }
+                if (attachment instanceof LoudlyImage) {
+                    LoudlyImage image = ((LoudlyImage) attachment);
+                    image.deleteInternalLink();
                 }
             }
 
@@ -217,16 +229,32 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
-            try {
-                for (Wrap w : wraps) {
-                    w.getPostsInfo(posts);
+            LinkedList<Post> currentPosts = new LinkedList<>();
+            for (Wrap w : wraps) {
+                try {
+                    currentPosts.clear();
+                    // Select posts only from current network
+                    for (Post post : posts) {
+                        if (post.existsIn(w.networkID())) {
+                            if (post instanceof LoudlyPost) {
+                                post.setNetwork(w.networkID());
+                            }
+                            currentPosts.add(post);
+                        }
+                    }
+                    w.getPostsInfo(currentPosts);
+
                     Intent message = makeMessage(Broadcasts.POST_GET_INFO, Broadcasts.PROGRESS);
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     publishProgress(message);
+                } catch (InvalidTokenException e) {
+                    Intent message = makeError(Broadcasts.POST_GET_INFO, Broadcasts.INVALID_TOKEN, e.getMessage());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
+                } catch (IOException e) {
+                    publishProgress(makeError(Broadcasts.POST_GET_INFO, Broadcasts.NETWORK_ERROR,
+                            e.getMessage()));
                 }
-            } catch (IOException e) {
-                publishProgress(makeError(Broadcasts.POST_GET_INFO, Broadcasts.NETWORK_ERROR,
-                        e.getMessage()));
             }
 
             return makeSuccess(Broadcasts.POST_GET_INFO);
@@ -267,11 +295,20 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
+            boolean multipleNetworks = post instanceof LoudlyPost;
+
             for (Wrap w : wraps) {
                 if (post.existsIn(w.networkID())) {
                     try {
+                        if (multipleNetworks) {
+                            post.setNetwork(w.networkID());
+                        }
                         w.deletePost(post);
                         Intent message = makeMessage(Broadcasts.POST_DELETE, Broadcasts.PROGRESS);
+                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                        publishProgress(message);
+                    } catch (InvalidTokenException e) {
+                        Intent message = makeError(Broadcasts.POST_DELETE, Broadcasts.INVALID_TOKEN, e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
                     } catch (IOException e) {
@@ -282,12 +319,7 @@ public class Tasks {
                 }
             }
 
-            if (post instanceof SinglePost) {
-                if (!post.existsIn(post.getNetwork())) {
-                    beautifulDelete(post);
-                }
-            }
-
+            // TODO: 12/12/2015 abstractify
             if (post instanceof LoudlyPost) {
                 boolean dead = true;
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -298,27 +330,24 @@ public class Tasks {
                 }
 
                 // If post is dead, delete it from DB. Otherwise, update its links
-                if (dead) {
-                    beautifulDelete(post);
-                    try {
+                try {
+                    if (dead) {
+                        beautifulDelete(post);
                         DatabaseActions.deletePost(((LoudlyPost) post));
-                    } catch (DatabaseException e) {
-                        e.printStackTrace();
-                        return makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
-                                e.getMessage());
-                    }
-                } else {
-                    int[] networks = new int[wraps.length];
-                    for (int i = 0; i < wraps.length; i++) {
-                        networks[i] = wraps[i].networkID();
-                    }
-
-                    try {
+                    } else {
+                        int[] networks = new int[wraps.length];
+                        for (int i = 0; i < wraps.length; i++) {
+                            networks[i] = wraps[i].networkID();
+                        }
                         DatabaseActions.updatePostLinks(networks, ((LoudlyPost) post));
-                    } catch (DatabaseException e) {
-                        return makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
-                                e.getMessage());
                     }
+                } catch (DatabaseException e) {
+                    return makeError(Broadcasts.POST_DELETE, Broadcasts.DATABASE_ERROR,
+                            e.getMessage());
+                }
+            } else {
+                if (!post.existsIn(post.getNetwork())) {
+                    beautifulDelete(post);
                 }
             }
 
@@ -331,27 +360,30 @@ public class Tasks {
     public static final int SHARES = 1;
 
     public static class PersonGetter extends BroadcastSendingTask {
-        private Post post;
+        private SingleNetwork element;
         private int what;
         private List<Item> persons;
         private Wrap[] wraps;
 
-        public PersonGetter(Post post, int what, List<Item> persons, Wrap... wraps) {
-            this.post = post;
+        public PersonGetter(SingleNetwork element, int what, List<Item> persons, Wrap... wraps) {
+            this.element = element;
             this.what = what;
             this.persons = persons;
             this.wraps = wraps;
         }
 
+        // todo: Maybe callback?
         @Override
         protected Intent doInBackground(Object... posts) {
             for (Wrap w : wraps) {
                 try {
-                    if (post.existsIn(w.networkID())) {
-                        List<Person> got = w.getPersons(what, post);
+                    if (element.existsIn(w.networkID())) {
+                        element.setNetwork(w.networkID()); // for LoudlyPosts
+
+                        List<Person> got = w.getPersons(what, element);
                         if (!got.isEmpty()) {
                             persons.add(new NetworkDelimiter(w.networkID()));
-                            persons.addAll(w.getPersons(what, post));
+                            persons.addAll(got);
                         }
 
                         Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);
@@ -359,9 +391,16 @@ public class Tasks {
                         publishProgress(message);
                     }
 
+                } catch (InvalidTokenException e) {
+                    Intent message = makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.INVALID_TOKEN,
+                            e.getMessage());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                 } catch (IOException e) {
-                    publishProgress(makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
-                            e.getMessage()));
+                    Intent message = makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
+                            e.getMessage());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                 }
             }
             return makeSuccess(Broadcasts.POST_GET_PERSONS);
@@ -372,12 +411,12 @@ public class Tasks {
      * Throws Broadcasts.POST_GET_PERSON as like as PersonGetter
      */
     public static class CommentsGetter extends BroadcastSendingTask {
-        private Post post;
+        private SingleNetwork element;
         private List<Item> comments;
         private Wrap[] wraps;
 
-        public CommentsGetter(Post post, List<Item> comments, Wrap... wraps) {
-            this.post = post;
+        public CommentsGetter(SingleNetwork element, List<Item> comments, Wrap... wraps) {
+            this.element = element;
             this.comments = comments;
             this.wraps = wraps;
         }
@@ -386,11 +425,13 @@ public class Tasks {
         protected Intent doInBackground(Object... posts) {
             for (Wrap w : wraps) {
                 try {
-                    if (post.existsIn(w.networkID())) {
-                        List<Comment> got = w.getComments(post);
+                    if (element.existsIn(w.networkID())) {
+                        element.setNetwork(w.networkID());
+
+                        List<Comment> got = w.getComments(element);
                         if (!got.isEmpty()) {
                             comments.add(new NetworkDelimiter(w.networkID()));
-                            comments.addAll(w.getComments(post));
+                            comments.addAll(got);
                         }
 
                         Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);
@@ -398,9 +439,16 @@ public class Tasks {
                         publishProgress(message);
                     }
 
+                } catch (InvalidTokenException e) {
+                    Intent message = makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.INVALID_TOKEN,
+                            e.getMessage());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                 } catch (IOException e) {
-                    publishProgress(makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
-                            e.getMessage()));
+                    Intent message = makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
+                            e.getMessage());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                 }
             }
             return makeSuccess(Broadcasts.POST_GET_PERSONS);
@@ -410,11 +458,11 @@ public class Tasks {
     /**
      * Fix image links in posts and notify that data set changed
      */
-    public static class FixPostsLinks extends AsyncTask<Object, Object, Object> {
+    public static class FixAttachmentsLinks extends AsyncTask<Object, Object, Object> {
         Post post;
         RecyclerViewAdapter adapter;
 
-        public FixPostsLinks(Post post, RecyclerViewAdapter adapter) {
+        public FixAttachmentsLinks(Post post, RecyclerViewAdapter adapter) {
             this.post = post;
             this.adapter = adapter;
         }
@@ -427,6 +475,9 @@ public class Tasks {
             for (Wrap w : wraps) {
                 try {
                     if (post.existsIn(w.networkID())) {
+                        post.setNetwork(w.networkID());
+
+                        // TODO: 12/12/2015 set image network too
                         LinkedList<Image> images = new LinkedList<>();
                         for (Attachment attachment : post.getAttachments()) {
                             if (attachment instanceof Image) {
@@ -524,11 +575,12 @@ public class Tasks {
          *
          * @param postID  LoudlyPost
          * @param network network
+         * @param info
          * @return Link to post, if it exists, or null, if not
          */
-        LoudlyPost findLoudlyPost(String postID, int network);
+        boolean updateLoudlyPostInfo(String postID, int network, Info info);
 
-        void postLoaded(SinglePost post);
+        void postLoaded(Post post);
     }
 
     /**
@@ -583,7 +635,6 @@ public class Tasks {
 
     public static class LoadPostsTask extends BroadcastSendingTask implements LoadCallback {
         private LinkedList<Post> posts;
-        private RecyclerViewAdapter adapter;
         private TimeInterval time;
         private Wrap[] wraps;
         private LinkedList<LoudlyPost> loudlyPosts;
@@ -598,12 +649,11 @@ public class Tasks {
          * @param time  Load posts with date int interval
          * @param wraps Networks, from which load posts
          */
-        public LoadPostsTask(LinkedList<Post> posts, RecyclerViewAdapter adapter,
+        public LoadPostsTask(LinkedList<Post> posts,
                              TimeInterval time, Wrap... wraps) {
             this.posts = posts;
             this.time = time;
             this.wraps = wraps;
-            this.adapter = adapter;
         }
 
         private void merge(LinkedList<? extends Post> newPosts) {
@@ -663,20 +713,21 @@ public class Tasks {
         }
 
         @Override
-        public LoudlyPost findLoudlyPost(String postID, int network) {
+        public boolean updateLoudlyPostInfo(String postID, int network, Info info) {
             int ind = 0;
             for (LoudlyPost lPost : loudlyPosts) {
-                if (lPost.existsIn(network) && lPost.getLink(network).equals(postID)) {
+                if (lPost.existsIn(network) && lPost.getId(network).equals(postID)) {
                     loudlyPostExists[ind] = true;
-                    return lPost;
+                    lPost.setInfo(network, info);
+                    return true;
                 }
                 ind++;
             }
-            return null;
+            return false;
         }
 
         @Override
-        public void postLoaded(SinglePost post) {
+        public void postLoaded(Post post) {
             currentPosts.add(post);
         }
 
@@ -703,7 +754,7 @@ public class Tasks {
                     int ind = 0;
                     for (LoudlyPost loudlyPost : loudlyPosts) {
                         if (!loudlyPostExists[ind++]) {
-                            loudlyPost.setLink(w.networkID(), null);
+                            loudlyPost.setId(w.networkID(), null);
                         }
                     }
                     Arrays.fill(loudlyPostExists, false);
@@ -714,6 +765,11 @@ public class Tasks {
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     publishProgress(message);
 
+                } catch (InvalidTokenException e) {
+                    Intent message = makeError(Broadcasts.POST_LOAD, Broadcasts.INVALID_TOKEN,
+                            e.getMessage());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                 } catch (IOException e) {
                     Intent message = makeError(Broadcasts.POST_LOAD, Broadcasts.NETWORK_ERROR,
                             e.getMessage());
@@ -738,15 +794,11 @@ public class Tasks {
                                 if (((LoudlyPost) post).getLocalId() == p.getLocalId()) {
                                     posts.remove(ind);
                                     final int fixedInd = ind;
-                                    final int postSize = posts.size();
                                     MainActivity.executeOnMain(new UIAction() {
                                         @Override
                                         public void execute(Context context, Object... params) {
                                             MainActivity mainActivity = (MainActivity) context;
-                                            mainActivity.recyclerViewAdapter.
-                                                    notifyItemRemoved(fixedInd);
-                                            mainActivity.recyclerViewAdapter.
-                                                    notifyItemRangeChanged(fixedInd, postSize);
+                                            mainActivity.recyclerViewAdapter.deleteAtPosition(fixedInd);
                                         }
                                     });
                                     break;

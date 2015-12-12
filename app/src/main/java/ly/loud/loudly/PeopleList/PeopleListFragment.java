@@ -12,11 +12,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.LinkedList;
 
+import base.SingleNetwork;
 import base.Tasks;
-import base.says.Post;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.R;
@@ -31,7 +32,7 @@ public class PeopleListFragment extends Fragment {
     private View rootView;
 
     private int requestType = Tasks.LIKES;
-    private Post post;
+    private SingleNetwork element;
     private int paddingTopInitial;
     private int distanceTop = 0;
     private boolean hasListener = false;
@@ -110,10 +111,10 @@ public class PeopleListFragment extends Fragment {
             getPersonReceiver = new GetPersonReceiver(getActivity());
 
             if (requestType == COMMENTS) {
-                Tasks.CommentsGetter task = new Tasks.CommentsGetter(post, items, Loudly.getContext().getWraps());
+                Tasks.CommentsGetter task = new Tasks.CommentsGetter(element, items, Loudly.getContext().getWraps());
                 task.execute();
             } else {
-                Tasks.PersonGetter task = new Tasks.PersonGetter(post, requestType, items,
+                Tasks.PersonGetter task = new Tasks.PersonGetter(element, requestType, items,
                         Loudly.getContext().getWraps());
                 task.execute();
             }
@@ -167,11 +168,16 @@ public class PeopleListFragment extends Fragment {
 
         @Override
         public void onMessageReceive(Context context, Intent message) {
-            String status = message.getStringExtra(Broadcasts.STATUS_FIELD);
+            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
             final MainActivity activity = ((MainActivity) context);
             switch (status) {
                 case Broadcasts.PROGRESS:
                     activity.peopleListFragment.recyclerViewAdapter.notifyDataSetChanged();
+                    break;
+                case Broadcasts.ERROR:
+                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
+                    stop();
                     break;
                 case Broadcasts.FINISHED:
                     activity.peopleListFragment.recyclerViewAdapter.notifyDataSetChanged();
@@ -189,23 +195,23 @@ public class PeopleListFragment extends Fragment {
         ft.commit();
     }
 
-    public void fillPersons(Post post, int type) {
-        this.post = post;
+    public void fillPersons(SingleNetwork element, int type) {
+        this.element = element;
         this.requestType = type;
     }
 
-    public void fillComments(Post post) {
-        this.post = post;
+    public void fillComments(SingleNetwork element) {
+        this.element = element;
         this.requestType = COMMENTS;
     }
 
-    public void showPersons(Post post, int type) {
-        fillPersons(post, type);
+    public void showPersons(SingleNetwork element, int type) {
+        fillPersons(element, type);
         show();
     }
 
-    public void showComments(Post post) {
-        fillComments(post);
+    public void showComments(SingleNetwork element) {
+        fillComments(element);
         show();
     }
 

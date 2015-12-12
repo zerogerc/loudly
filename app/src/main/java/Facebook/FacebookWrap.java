@@ -12,17 +12,19 @@ import java.util.TreeSet;
 
 import base.Networks;
 import base.Person;
+import base.SingleNetwork;
 import base.Tasks;
 import base.Wrap;
 import base.attachments.Attachment;
 import base.attachments.Image;
+import base.attachments.LoudlyImage;
 import base.says.Comment;
 import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
-import base.says.SinglePost;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
+import util.InvalidTokenException;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
@@ -51,9 +53,12 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    protected Query makeSignedAPICall(String node) {
+    protected Query makeSignedAPICall(String node) throws InvalidTokenException {
         Query query = makeAPICall(node);
         FacebookKeyKeeper keys = (FacebookKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
+        if (!keys.isValid()) {
+            throw new InvalidTokenException();
+        }
         query.addParameter("access_token", keys.getAccessToken());
         return query;
     }
@@ -64,8 +69,8 @@ public class FacebookWrap extends Wrap {
         query.addParameter("message", post.getText());
         if (post.getAttachments().size() > 0) {
             for (Attachment attachment : post.getAttachments()) {
-                Image image = ((Image) attachment);
-                query.addParameter("object_attachment", image.getLink(networkID()));
+                LoudlyImage image = ((LoudlyImage) attachment);
+                query.addParameter("object_attachment", image.getId());
             }
         }
 
@@ -75,20 +80,20 @@ public class FacebookWrap extends Wrap {
         try {
             parser = new JSONObject(response);
             String id = parser.getString("id");
-            post.setLink(NETWORK, id);
+            post.setId(NETWORK, id);
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void uploadImage(Image image, BackgroundAction progress) throws IOException {
+    public void uploadImage(LoudlyImage image, BackgroundAction progress) throws IOException {
         Query query = makeSignedAPICall(PHOTO_NODE);
         query.addParameter("published", true);
         query.addParameter("no_story", true);
 
         String response;
-        if (image.isLocal()) {
+        if (image.getExternalLink() == null) {
             response = Network.makePostRequest(query, progress, "source",
                     image);
         } else {
@@ -101,7 +106,7 @@ public class FacebookWrap extends Wrap {
             parser = new JSONObject(response);
             String id = parser.getString("id");
 
-            image.setLink(networkID(), id);
+            image.setId(id);
             if (image.isLocal()) {
                 ArrayList<Image> temp = new ArrayList<>();
                 temp.add(image);
@@ -142,10 +147,10 @@ public class FacebookWrap extends Wrap {
         StringBuilder sb = new StringBuilder();
         for (Image image : images) {
             if (image.existsIn(networkID())) {
-                sb.append(image.getLink(networkID()));
+                sb.append(image.getId());
                 sb.append(',');
-                responseParser.parseObject(image.getLink(networkID()),
-                        (ObjectParser)photoParser.copyStructure());
+                responseParser.parseObject(image.getId(),
+                        (ObjectParser) photoParser.copyStructure());
             }
         }
         if (sb.length() > 0) {
@@ -164,7 +169,7 @@ public class FacebookWrap extends Wrap {
 
     @Override
     public void deletePost(Post post) throws IOException {
-        Query query = makeSignedAPICall(post.getLink(networkID()));
+        Query query = makeSignedAPICall(post.getId());
 
         String response = Network.makeDeleteRequest(query);
 
@@ -172,7 +177,7 @@ public class FacebookWrap extends Wrap {
         try {
             parser = new JSONObject(response);
             if (parser.getString("success").equals("true")) {
-                post.detachFromNetwork(NETWORK);
+                post.cleanIds();
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -219,7 +224,7 @@ public class FacebookWrap extends Wrap {
                 .parseObject("likes", makeLikesOrCommentParser())
                 .parseObject("comments", makeLikesOrCommentParser())
                 .parseObject("attachments", new ObjectParser()
-                    .parseArray("data", attachmentsParser));
+                        .parseArray("data", attachmentsParser));
 
         ObjectParser responseParser = new ObjectParser()
                 .parseArray("data", new ArrayParser(-1, postParser));
@@ -239,13 +244,12 @@ public class FacebookWrap extends Wrap {
 
             Info info = new Info(likes, shares, comments);
 
-            LoudlyPost loudlyPost = callback.findLoudlyPost(id, networkID());
-            if (loudlyPost != null) {
-                loudlyPost.setInfo(networkID(), info);
+            boolean updated = callback.updateLoudlyPostInfo(id, networkID(), info);
+            if (updated) {
                 continue;
             }
 
-            SinglePost post = new SinglePost(text, date, null, networkID(), id);
+            Post post = new Post(text, date, null, networkID(), id);
             post.setInfo(info);
 
             if (attachmentsParser != null) {
@@ -284,7 +288,7 @@ public class FacebookWrap extends Wrap {
         StringBuilder sb = new StringBuilder();
         for (Post post : posts) {
             if (post.existsIn(networkID())) {
-                sb.append(post.getLink(networkID()));
+                sb.append(post.getId());
                 sb.append(',');
             }
         }
@@ -302,13 +306,10 @@ public class FacebookWrap extends Wrap {
             parser = new JSONObject(response);
             for (Post post : posts) {
                 if (post.existsIn(networkID())) {
-                    JSONObject p = parser.getJSONObject(post.getLink(networkID()));
+                    JSONObject p = parser.getJSONObject(post.getId());
                     Info info = getInfo(p);
-                    if (post instanceof SinglePost) {
-                        post.setInfo(info);
-                    } else {
-                        ((LoudlyPost) post).setInfo(NETWORK, info);
-                    }
+                    // TODO: 12/12/2015 make more abstract
+                    post.setInfo(info);
                 }
             }
         } catch (JSONException e) {
@@ -318,8 +319,9 @@ public class FacebookWrap extends Wrap {
 
     // TODO: 12/11/2015 and it
     @Override
-    public List<Comment> getComments(Post post) throws IOException {
-        Query query = makeSignedAPICall(post.getLink(networkID()) + "/comments");
+    public List<Comment> getComments(SingleNetwork element) throws IOException {
+        // todo Check for other types of elements
+        Query query = makeSignedAPICall(element.getId() + "/comments");
         query.addParameter("date_format", "U");
         query.addParameter("fields", "message,from{id},created_time,id,comment_count,like_count,attachment");
 
@@ -407,7 +409,7 @@ public class FacebookWrap extends Wrap {
             if (id.indexOf('_') != -1) id = id.substring(0, id.indexOf("_"));
             sb.append(id);
             sb.append(',');
-            responseParser.parseObject(id, (ObjectParser)personParser.copyStructure());
+            responseParser.parseObject(id, (ObjectParser) personParser.copyStructure());
         }
         sb.delete(sb.length() - 1, sb.length());
 
@@ -417,7 +419,7 @@ public class FacebookWrap extends Wrap {
         ObjectParser response = Network.makeGetRequestAndParse(query, responseParser);
 
         LinkedList<Person> result = new LinkedList<>();
-        for (String string : personsID) {
+        for (int i = 0; i < personsID.length; i++) {
             ObjectParser pParser = response.getObject();
             String id = pParser.getString("");
             String firstName = pParser.getString("");
@@ -433,7 +435,7 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public LinkedList<Person> getPersons(int what, Post post) throws IOException {
+    public LinkedList<Person> getPersons(int what, SingleNetwork element) throws IOException {
         String node;
         switch (what) {
             case Tasks.LIKES:
@@ -446,7 +448,7 @@ public class FacebookWrap extends Wrap {
                 node = "";
                 break;
         }
-        Query query = makeSignedAPICall(post.getLink(networkID()) + node);
+        Query query = makeSignedAPICall(element.getId() + node);
         String response = Network.makeGetRequest(query);
         JSONObject parser;
 

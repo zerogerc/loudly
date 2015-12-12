@@ -4,82 +4,62 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import base.Location;
+import base.MultipleNetwork;
 import base.Networks;
 import base.attachments.Attachment;
-import util.Network;
 
 /**
  * Сlass that stores text and attachments to post.
  */
-public class LoudlyPost extends Post {
-    private String[] links;
+public class LoudlyPost extends Post implements MultipleNetwork {
+    private String[] ids;
     private Info[] infos;
 
-    private long localId;
+    private long localId;       // Convert to string for sameness
 
     public LoudlyPost(
             String text,
             ArrayList<Attachment> attachments,
-            String[] links,
+            String[] ids,
             long date,
             Location location,
             long localId) {
 
-        super(text, attachments, date, location, -1);
-        this.links = links;
+        super(text, attachments, date, location, -1, "");
+        this.ids = ids;
         this.localId = localId;
         infos = new Info[Networks.NETWORK_COUNT];
     }
 
     public LoudlyPost() {
         super();
-        links = new String[Networks.NETWORK_COUNT];
+        ids = new String[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
         localId = -1;
     }
 
     public LoudlyPost(String text) {
-        super(text, -1);
+        super(text, -1, "");
         date = Calendar.getInstance().getTimeInMillis() / 1000;
-        links = new String[Networks.NETWORK_COUNT];
+        ids = new String[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
         localId = -1;
     }
 
     public LoudlyPost(String text, long date, Location location) {
-        super(text, date, location, -1);
-    }
-
-    public String[] getLinks() {
-        return links;
+        super(text, date, location, -1, "");
     }
 
     @Override
-    public String getLink(int network) {
-        return links[network];
-    }
-
-    public void setLink(int network, String link) {
-        links[network] = link;
-    }
-
-    @Override
-    public boolean existsIn(int network) {
-        return links[network] != null;
-    }
-
-    public void setInfo(int network, Info info) {
-        infos[network] = info;
-        this.info = new Info();
-        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            if (infos[i] != null) {
-                this.info.add(infos[i]);
+    public void cleanIds() {
+        ids[network] = null;
+        for (Attachment attachment : attachments) {
+            if (attachment instanceof MultipleNetwork) {
+                ((MultipleNetwork) attachment).setId(network, null);
+            } else {
+                attachment.setId(null);
             }
         }
-    }
-
-    public Info getInfo(int network) {
-        return infos[network];
     }
 
     public long getLocalId() {
@@ -90,13 +70,51 @@ public class LoudlyPost extends Post {
         this.localId = localId;
     }
 
+    public String[] getIds() {
+        return ids;
+    }
+
     @Override
-    public void detachFromNetwork(int network) {
-        links[network] = null;
-        for (Attachment attachment : attachments) {
-            attachment.setLink(network, null);
+    public String getId(int network) {
+        return ids[network];
+    }
+
+    @Override
+    public void setId(int network, String link) {
+        ids[network] = link;
+    }
+
+    @Override
+    public String getId() {
+        return ids[network];
+    }
+
+    @Override
+    public void setId(String id) {
+        ids[network] = id;
+    }
+
+    @Override
+    public void setInfo(int network, Info info) {
+        infos[network] = info;
+        this.info = new Info();
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (infos[i] != null) {
+                this.info.add(infos[i]);
+            }
         }
     }
+
+    @Override
+    public Info getInfo(int network) {
+        return infos[network];
+    }
+
+    @Override
+    public boolean existsIn(int network) {
+        return ids[network] != null;
+    }
+
 
     @Override
     public boolean equals(Object o) {

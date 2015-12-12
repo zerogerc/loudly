@@ -7,19 +7,19 @@ import android.support.v4.content.LocalBroadcastManager;
 import ly.loud.loudly.Loudly;
 
 public abstract class BroadcastSendingTask extends AsyncTask<Object, Intent, Intent> {
-    public static Intent makeMessage(String action, String status) {
+    public static Intent makeMessage(String action, int status) {
         Intent message = new Intent(action);
         message.putExtra(Broadcasts.STATUS_FIELD, status);
         return message;
     }
 
-    public static Intent makeMessage(String action, String status, long id) {
+    public static Intent makeMessage(String action, int status, long id) {
         Intent message = makeMessage(action, status);
         message.putExtra(Broadcasts.ID_FIELD, id);
         return message;
     }
 
-    public static Intent makeError(String action, String errorKind, String error) {
+    public static Intent makeError(String action, int errorKind, String error) {
         Intent message = new Intent(action);
         message.putExtra(Broadcasts.STATUS_FIELD, Broadcasts.ERROR);
         message.putExtra(Broadcasts.ERROR_KIND, errorKind);
@@ -27,15 +27,14 @@ public abstract class BroadcastSendingTask extends AsyncTask<Object, Intent, Int
         return message;
     }
 
-    public static Intent makeError(String action, String errorKind, long id, String error) {
+    public static Intent makeError(String action, int errorKind, long id, String error) {
         Intent message = makeError(action, errorKind, error);
         message.putExtra(Broadcasts.ID_FIELD, id);
         return message;
     }
 
     public static Intent makeSuccess(String action) {
-        Intent message = makeMessage(action, Broadcasts.FINISHED);
-        return message;
+        return makeMessage(action, Broadcasts.FINISHED);
     }
 
     public static Intent makeSuccess(String action, long id) {

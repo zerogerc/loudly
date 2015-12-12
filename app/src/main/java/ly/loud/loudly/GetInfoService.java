@@ -16,18 +16,18 @@ public class GetInfoService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        // TODO: 12/6/2015 This possible may produce leaks. Should be replaced soon
-        LinkedList<Post> loudlyPosts = new LinkedList<>();
-        for (Post post : MainActivity.posts) {
-            if (post.getNetwork() == -1) {
-                loudlyPosts.add(post);
-            }
-        }
-        if (loudlyPosts.isEmpty()) {
+//        // TODO: 12/6/2015 This possible may produce leaks. Should be replaced soon
+//        LinkedList<Post> loudlyPosts = new LinkedList<>();
+//        for (Post post : MainActivity.posts) {
+//            if (post.getNetwork() == -1) {
+//                loudlyPosts.add(post);
+//            }
+//        }
+        if (MainActivity.posts.isEmpty()) {
             return;
         }
 
-        Tasks.InfoGetter getter = new Tasks.InfoGetter(loudlyPosts, Loudly.getContext().getWraps());
+        Tasks.InfoGetter getter = new Tasks.InfoGetter(MainActivity.posts, Loudly.getContext().getWraps());
         getter.execute();
     }
 
