@@ -52,11 +52,14 @@ public class FieldParser implements Parser<FieldParser>, JsonParser {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(int type) {
+    public <T> T get(int type, T defaultValue) {
         if (type == this.type) {
+            if (value == null) {
+                return defaultValue;
+            }
             return ((T) value);
         }
-        return null;
+        return defaultValue;
     }
 
     @Override

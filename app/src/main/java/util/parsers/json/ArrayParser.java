@@ -74,12 +74,12 @@ public class ArrayParser implements Parser<ArrayParser>, JsonParser {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(int type, int i) {
+    public <T> T get(int type, int i, T defaultValue) {
         JsonParser parser = get(i);
         if (parser instanceof FieldParser) {
-            return ((FieldParser) parser).get(type);
+            return ((FieldParser) parser).get(type, defaultValue);
         }
-        return null;
+        return defaultValue;
     }
 
     public int size() {
@@ -90,24 +90,25 @@ public class ArrayParser implements Parser<ArrayParser>, JsonParser {
         return size() == 0;
     }
 
-    public String getString(int i) {
-        return get(STRING, i);
+    public String getString(int i, String defaultValue) {
+        return get(STRING, i, defaultValue);
     }
 
-    public Integer getInt(int i) {
-        return get(INT, i);
+    // Make more safe
+    public Integer getInt(int i, Integer defaultValue) {
+        return get(INT, i, defaultValue);
     }
 
-    public Long getLong(int i) {
-        return get(LONG, i);
+    public Long getLong(int i, Long defaultValue) {
+        return get(LONG, i, defaultValue);
     }
 
-    public Double getDouble(int i) {
-        return get(DOUBLE, i);
+    public Double getDouble(int i, Double defaultValue) {
+        return get(DOUBLE, i, defaultValue);
     }
 
-    public Boolean getBoolean(int i) {
-        return get(BOOLEAN, i);
+    public Boolean getBoolean(int i, Boolean defaultValue) {
+        return get(BOOLEAN, i, defaultValue);
     }
 
     public ObjectParser getObject(int i) {

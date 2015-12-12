@@ -245,10 +245,10 @@ public class VKWrap extends Wrap {
     }
 
     private void fillImageFromParser(Image image, ObjectParser photoParser) {
-        String photoId = photoParser.getString();
-        String link = photoParser.getString();
-        int width = photoParser.getInt();
-        int height = photoParser.getInt();
+        String photoId = photoParser.getString("");
+        String link = photoParser.getString("");
+        int width = photoParser.getInt(0);
+        int height = photoParser.getInt(0);
 
         image.setLocal(false);
         image.setExternalLink(link);
@@ -296,13 +296,13 @@ public class VKWrap extends Wrap {
             ArrayParser arrayParser = response.getObject().getArray();
             for (int i = 0; i < arrayParser.size(); i++) {
                 postParser = arrayParser.getObject(i);
-                String id = postParser.getString();
-                long date = postParser.getLong();
-                String text = postParser.getString();
+                String id = postParser.getString("");
+                long date = postParser.getLong(0l);
+                String text = postParser.getString("");
 
-                int likes = postParser.getObject().getInt();
-                int shares = postParser.getObject().getInt();
-                int comments = postParser.getObject().getInt();
+                int likes = postParser.getObject().getInt(0);
+                int shares = postParser.getObject().getInt(0);
+                int comments = postParser.getObject().getInt(0);
 
                 ArrayParser attachments = postParser.getArray();
 
@@ -324,7 +324,7 @@ public class VKWrap extends Wrap {
 
                     for (int j = 0; j < attachments.size(); j++) {
                         attachmentParser = attachments.getObject(j);
-                        String type = attachmentParser.getString();
+                        String type = attachmentParser.getString("");
                         if (type.equals("photo") || type.equals("posted_photo")) {
                             photoParser = attachmentParser.getObject();
                             Image image = new Image();
@@ -365,6 +365,7 @@ public class VKWrap extends Wrap {
                 .parseObject("photo", photoParser);
 
         ObjectParser commentParser = new ObjectParser()
+                .parseString("id")
                 .parseString("from_id")
                 .parseLong("date")
                 .parseString("text")
@@ -393,10 +394,10 @@ public class VKWrap extends Wrap {
         LinkedList<Person> profiles = new LinkedList<>();
         for (int i = 0; i < persons.size(); i++) {
             ObjectParser person = persons.getObject(i);
-            String id = person.getString();
-            String firstName = person.getString();
-            String lastName = person.getString();
-            String photo = person.getString();
+            String id = person.getString("");
+            String firstName = person.getString("");
+            String lastName = person.getString("");
+            String photo = person.getString("");
             Person p = new Person(firstName, lastName, photo, networkID());
             p.setId(id);
             profiles.add(p);
@@ -406,7 +407,8 @@ public class VKWrap extends Wrap {
 
         for (int i = 0; i < posts.size(); i++) {
             commentParser = posts.getObject(i);
-            String userID = commentParser.getString();
+            String id = commentParser.getString("");
+            String userID = commentParser.getString("");
             Person author = null;
             for (Person p : profiles) {
                 if (p.getId().equals(userID)) {
@@ -415,16 +417,16 @@ public class VKWrap extends Wrap {
                 }
             }
 
-            long date = commentParser.getLong();
-            String text = commentParser.getString();
+            long date = commentParser.getLong(0l);
+            String text = commentParser.getString("");
 
-            int likes = commentParser.getObject().getInt();
+            int likes = commentParser.getObject().getInt(0);
             ArrayParser attachments = commentParser.getArray();
 
-            Comment comment = new Comment(text, date, author, networkID());
+            Comment comment = new Comment(text, date, author, networkID(), id);
             for (int j = 0; j < attachments.size(); j++) {
                 attachmentParser = attachments.getObject(i);
-                String type = attachmentParser.getString();
+                String type = attachmentParser.getString("");
                 if (type.equals("photo")) {
                     Image image = new Image();
                     fillImageFromParser(image, attachmentParser.getObject());
@@ -496,10 +498,14 @@ public class VKWrap extends Wrap {
             people = new JSONObject(response).getJSONArray("response");
             for (int i = 0; i < people.length(); i++) {
                 JSONObject person = people.getJSONObject(i);
+                String id = person.getString("id");
                 String firstName = person.getString("first_name");
                 String lastName = person.getString("last_name");
                 String photoURL = person.getString("photo_50");
-                result.add(new Person(firstName, lastName, photoURL, networkID()));
+
+                Person person1 = new Person(firstName, lastName, photoURL, networkID());
+                person1.setId(id);
+                result.add(person1);
             }
         } catch (JSONException e) {
             e.printStackTrace();

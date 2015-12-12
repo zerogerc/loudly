@@ -19,6 +19,9 @@ public class Image extends Attachment {
     protected Point size = new Point(0, 0);
     protected boolean local;
 
+    public boolean existsIn(int network) {
+        return links[network] != null;
+    }
     public void setWidth(int width) {
         size.x = width;
     }

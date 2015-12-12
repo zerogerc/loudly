@@ -638,8 +638,6 @@ public class Tasks {
                     j++;
                 }
                 posts.addAll(i, newPosts.subList(oldJ, j));
-                Log.e("TASKS", posts.size() + "");
-
                 // Crutch
                 int newI = i + j - oldJ;
                 if (newI == posts.size()) {

@@ -8,16 +8,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeSet;
 
 import base.Networks;
 import base.Person;
+import base.Tasks;
+import base.Wrap;
 import base.attachments.Attachment;
+import base.attachments.Image;
 import base.says.Comment;
 import base.says.Info;
 import base.says.LoudlyPost;
-import base.Tasks;
-import base.Wrap;
-import base.attachments.Image;
 import base.says.Post;
 import base.says.SinglePost;
 import ly.loud.loudly.Loudly;
@@ -26,13 +27,14 @@ import util.IDInterval;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
+import util.parsers.json.ArrayParser;
+import util.parsers.json.ObjectParser;
 
 public class FacebookWrap extends Wrap {
     private static final int NETWORK = Networks.FB;
     private static final String MAIN_SERVER = "https://graph.facebook.com/v2.5/";
     private static final String POST_NODE = "me/feed";
     private static final String PHOTO_NODE = "me/photos";
-    private static final String ACCESS_TOKEN = "access_token";
 
     @Override
     public int shouldUploadImage() {
@@ -102,28 +104,63 @@ public class FacebookWrap extends Wrap {
 
             image.setLink(networkID(), id);
             if (image.isLocal()) {
-                Query getExternalLinkQuery = makeSignedAPICall(id);
-                getExternalLinkQuery.addParameter("fields", "link,width,height");
-
-                response = Network.makeGetRequest(getExternalLinkQuery);
-
-                parser = new JSONObject(response);
-                String link = parser.getString("link");
-                int height = parser.getInt("height");
-                int width = parser.getInt("width");
-                image.setExternalLink(link);
-                image.setHeight(height);
-                image.setWidth(width);
+                ArrayList<Image> temp = new ArrayList<>();
+                temp.add(image);
+                getImageInfo(temp);
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    // TODO: 12/11/2015 it
+    private ObjectParser makePhotoParser() {
+        return new ObjectParser()
+                .parseString("src")
+                .parseInt("width")
+                .parseInt("height");
+    }
+
+    private void fillImageFromParser(Image image, ObjectParser photoParser) {
+        String link = photoParser.getString("");
+        int width = photoParser.getInt(0);
+        int height = photoParser.getInt(0);
+        image.setExternalLink(link);
+        image.setWidth(width);
+        image.setHeight(height);
+    }
+
     @Override
     public void getImageInfo(List<Image> images) throws IOException {
+        Query query = makeSignedAPICall("");
 
+        ObjectParser photoParser = new ObjectParser()
+                .parseString("link")
+                .parseInt("width")
+                .parseInt("height");
+
+        ObjectParser responseParser = new ObjectParser();
+
+        StringBuilder sb = new StringBuilder();
+        for (Image image : images) {
+            if (image.existsIn(networkID())) {
+                sb.append(image.getLink(networkID()));
+                sb.append(',');
+                responseParser.parseObject(image.getLink(networkID()),
+                        (ObjectParser)photoParser.copyStructure());
+            }
+        }
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+        }
+        query.addParameter("ids", sb);
+        query.addParameter("fields", "link,width,height");
+
+        ObjectParser response = Network.makeGetRequestAndParse(query, responseParser);
+        for (Image image : images) {
+            if (image.existsIn(networkID())) {
+                fillImageFromParser(image, response.getObject());
+            }
+        }
     }
 
     @Override
@@ -143,6 +180,17 @@ public class FacebookWrap extends Wrap {
         }
     }
 
+    private ObjectParser makeSharesParser() {
+        return new ObjectParser()
+                .parseInt("count");
+    }
+
+    private ObjectParser makeLikesOrCommentParser() {
+        return new ObjectParser()
+                .parseObject("summary", new ObjectParser()
+                        .parseInt("total_count"));
+    }
+
     @Override
     public void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException {
         Query query = makeSignedAPICall(POST_NODE);
@@ -154,60 +202,62 @@ public class FacebookWrap extends Wrap {
         }
         query.addParameter("date_format", "U");
         query.addParameter("fields",
-                "message,created_time,id,likes.limit(0).summary(true),shares,comments.limit(0).summary(true),attachments");
+                "message,created_time,id,likes.limit(0).summary(true),shares," +
+                        "comments.limit(0).summary(true),attachments{media}");
 
-        String response = Network.makeGetRequest(query);
+        ObjectParser imageParser = makePhotoParser();
 
-        JSONObject parser;
-        try {
-            parser = new JSONObject(response);
-            JSONArray postsJ = parser.getJSONArray("data");
-            if (postsJ.length() == 0) {
-                return;
+        ArrayParser attachmentsParser = new ArrayParser(-1,
+                new ObjectParser()
+                        .parseObject("media",
+                                new ObjectParser().parseObject("image", imageParser)));
+
+        ObjectParser postParser = new ObjectParser()
+                .parseString("message")
+                .parseInt("created_time")
+                .parseString("id")
+                .parseObject("shares", makeSharesParser())
+                .parseObject("likes", makeLikesOrCommentParser())
+                .parseObject("comments", makeLikesOrCommentParser())
+                .parseObject("attachments", new ObjectParser()
+                    .parseArray("data", attachmentsParser));
+
+        ObjectParser responseParser = new ObjectParser()
+                .parseArray("data", new ArrayParser(-1, postParser));
+
+        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
+                .getArray();
+
+        for (int i = 0; i < response.size(); i++) {
+            postParser = response.getObject(i);
+            String text = postParser.getString("");
+            int date = postParser.getInt(0);
+            String id = postParser.getString("");
+            int shares = postParser.getObject().getInt(0);
+            int likes = postParser.getObject().getObject().getInt(0);
+            int comments = postParser.getObject().getObject().getInt(0);
+            attachmentsParser = postParser.getObject().getArray();
+
+            Info info = new Info(likes, shares, comments);
+
+            LoudlyPost loudlyPost = callback.findLoudlyPost(id, networkID());
+            if (loudlyPost != null) {
+                loudlyPost.setInfo(networkID(), info);
+                continue;
             }
 
-            for (int i = 0; i < postsJ.length(); i++) {
-                JSONObject obj = postsJ.getJSONObject(i);
-                String id = obj.getString("id");
-                LoudlyPost loudlyPost = callback.findLoudlyPost(id, networkID());
+            SinglePost post = new SinglePost(text, date, null, networkID(), id);
+            post.setInfo(info);
 
-                if (loudlyPost != null) {
-                    loudlyPost.setInfo(networkID(), getInfo(obj));
-                    continue;
-                }
-
-                long postTime = obj.getLong("created_time");
-
-                if (Loudly.getContext().getPostInterval(networkID()) == null) {
-                    Loudly.getContext().setPostInterval(networkID(), new IDInterval(id, id));
-                }
-
-                Loudly.getContext().getPostInterval(networkID()).from = id;
-
-                String text = (obj.has("message")) ? obj.getString("message") : "";
-
-                SinglePost post = new SinglePost(text, postTime, null, networkID(), id);
-
-                if (obj.has("attachments")) {
-                    JSONObject attachment = obj.getJSONObject("attachments").
-                            getJSONArray("data").
-                            getJSONObject(0).getJSONObject("media").getJSONObject("image");
-                    String link = attachment.getString("src");
-                    int height = attachment.getInt("height");
-                    int width = attachment.getInt("width");
-                    Image image = new Image(link, false);
-                    image.setHeight(height);
-                    image.setWidth(width);
+            if (attachmentsParser != null) {
+                for (int j = 0; j < attachmentsParser.size(); j++) {
+                    imageParser = attachmentsParser.getObject(j).getObject().getObject();
+                    Image image = new Image();
+                    fillImageFromParser(image, imageParser);
                     post.addAttachment(image);
-
                 }
-
-                post.setInfo(getInfo(obj));
-                callback.postLoaded(post);
             }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
+            callback.postLoaded(post);
         }
     }
 
@@ -270,7 +320,116 @@ public class FacebookWrap extends Wrap {
     // TODO: 12/11/2015 and it
     @Override
     public List<Comment> getComments(Post post) throws IOException {
-        return null;
+        Query query = makeSignedAPICall(post.getLink(networkID()) + "/comments");
+        query.addParameter("fields", "message,from{id},created_time,id,comment_count,like_count,attachment");
+
+        ObjectParser photoParser = makePhotoParser();
+        ObjectParser attachmentParser = new ObjectParser()
+                .parseString("type")
+                .parseObject("media", new ObjectParser()
+                        .parseObject("image", photoParser));
+        ObjectParser commentParser = new ObjectParser()
+                .parseString("id")
+                .parseObject("from", new ObjectParser().parseString("id"))
+                .parseString("message")
+                .parseInt("created_time")
+                .parseInt("comment_count")
+                .parseInt("like_count")
+                .parseObject("attachment", attachmentParser);
+
+        ObjectParser responseParser = new ObjectParser()
+                .parseArray("data", new ArrayParser(-1, commentParser));
+
+        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
+                .getArray();
+
+        LinkedList<Comment> comments = new LinkedList<>();
+        LinkedList<Person> persons;
+        ArrayList<String> ownerIds = new ArrayList<>();
+        TreeSet<String> owners = new TreeSet<>();
+
+        for (int i = 0; i < comments.size(); i++) {
+            commentParser = response.getObject(i);
+            String id = commentParser.getString("");
+            String owner_id = commentParser.getObject().getString("");
+            owners.add(owner_id);
+            ownerIds.add(owner_id);
+            String text = commentParser.getString("");
+            int created = commentParser.getInt(0);
+            int coms = commentParser.getInt(0);
+            int like = commentParser.getInt(0);
+            attachmentParser = commentParser.getObject();
+
+            Comment comment = new Comment(text, created, null, networkID(), id);
+            comment.setInfo(new Info(like, 0, coms));
+            if (attachmentParser != null) {
+                String type = attachmentParser.getString("");
+                if (type.equals("photo")) {
+                    photoParser = attachmentParser.getObject().getObject();
+                    Image image = new Image();
+                    fillImageFromParser(image, photoParser);
+                    comment.addAttachment(image);
+                }
+            }
+            comments.add(comment);
+        }
+        persons = getPersonsInfo(owners.toArray(new String[0]));
+        int ind = 0;
+        for (Comment comment : comments) {
+            for (Person person : persons) {
+                if (ownerIds.get(ind).equals(person.getId())) {
+                    comment.setPerson(person);
+                    break;
+                }
+            }
+            ind++;
+        }
+        return comments;
+    }
+
+    private LinkedList<Person> getPersonsInfo(String... personsID) throws IOException {
+        if (personsID.length == 0) {
+            return new LinkedList<>();
+        }
+
+        Query query = makeSignedAPICall("");
+        StringBuilder sb = new StringBuilder();
+        ObjectParser personParser = new ObjectParser()
+                .parseString("id")
+                .parseString("first_name")
+                .parseString("last_name")
+                .parseObject("picture", new ObjectParser()
+                        .parseObject("data", new ObjectParser()
+                                .parseString("url")));
+
+        ObjectParser responseParser = new ObjectParser();
+        for (String id : personsID) {
+            if (id.indexOf('_') != -1) id = id.substring(0, id.indexOf("_"));
+            sb.append(id);
+            sb.append(',');
+            responseParser.parseObject(id, (ObjectParser)personParser.copyStructure());
+        }
+        sb.delete(sb.length() - 1, sb.length());
+
+        query.addParameter("ids", sb);
+        query.addParameter("fields", "first_name,last_name,picture");
+
+        ObjectParser response = Network.makeGetRequestAndParse(query, responseParser);
+
+        LinkedList<Person> result = new LinkedList<>();
+        for (String string : personsID) {
+            ObjectParser pParser = response.getObject();
+            String id = pParser.getString("");
+            String firstName = pParser.getString("");
+            String lastName = pParser.getString("");
+            String picture = pParser.getObject().getObject().getString("");
+
+            Person person = new Person(firstName, lastName, picture, networkID());
+            person.setId(id);
+            result.add(person);
+        }
+
+        return result;
     }
 
     @Override
@@ -291,10 +450,6 @@ public class FacebookWrap extends Wrap {
         String response = Network.makeGetRequest(query);
         JSONObject parser;
 
-        Query getPeopleQuery = makeSignedAPICall("");
-        StringBuilder sb = new StringBuilder();
-        ArrayList<String> ids = new ArrayList<>();
-
         try {
             parser = new JSONObject(response);
             JSONArray likers = parser.getJSONArray("data");
@@ -303,39 +458,15 @@ public class FacebookWrap extends Wrap {
                 return new LinkedList<>();
             }
 
+            String[] ids = new String[likers.length()];
             for (int i = 0; i < likers.length(); i++) {
                 String id = likers.getJSONObject(i).getString("id");
-
-                if (id.indexOf('_') != -1) id = id.substring(0, id.indexOf("_"));
-                ids.add(id);
-                sb.append(id);
-                sb.append(',');
+                ids[i] = id;
             }
-            sb.delete(sb.length() - 1, sb.length());
-
-            getPeopleQuery.addParameter("ids", sb);
-            getPeopleQuery.addParameter("fields", "first_name,last_name,picture");
+            return getPersonsInfo(ids);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
         }
-
-        response = Network.makeGetRequest(getPeopleQuery);
-
-        LinkedList<Person> result = new LinkedList<>();
-        try {
-            parser = new JSONObject(response);
-            for (String id :ids) {
-                JSONObject person = parser.getJSONObject(id);
-                String firstName = person.getString("first_name");
-                String lastName = person.getString("last_name");
-                String pictureUrl = person.getJSONObject("picture").getJSONObject("data").getString("url");
-                result.add(new Person(firstName, lastName, pictureUrl, networkID()));
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
-        }
-        return result;
     }
 }

@@ -20,7 +20,7 @@ public class ObjectParser implements Parser<ObjectParser>, JsonParser {
 
     public ObjectParser() {
         fields = new ArrayList<>();
-        index = -1;
+        index = 0;
     }
 
     @Override
@@ -90,29 +90,33 @@ public class ObjectParser implements Parser<ObjectParser>, JsonParser {
         return this;
     }
 
-    private <T> T get(int type) {
+    private <T> T get(int type, T defaultValue) {
         Field field = fields.get(index);
         if (field.parser instanceof FieldParser) {
             index++;
-            return ((FieldParser) field.parser).get(type);
+            return ((FieldParser) field.parser).get(type, defaultValue);
         }
-        return null;
+        return defaultValue;
     }
 
-    public String getString() {
-        return get(STRING);
+    public String getString(String defaultValue) {
+        return get(STRING, defaultValue);
     }
 
-    public Integer getInt() {
-        return get(INT);
+    public Integer getInt(Integer defaultValue) {
+        return get(INT, defaultValue);
     }
 
-    public Long getLong() {
-        return get(LONG);
+    public Long getLong(Long defaultValue) {
+        return get(LONG, defaultValue);
     }
 
-    public Double getDouble() {
-        return get(DOUBLE);
+    public Double getDouble(Double defaultValue) {
+        return get(LONG, defaultValue);
+    }
+
+    public Boolean getBoolean(Boolean defaultValue) {
+        return get(BOOLEAN, defaultValue);
     }
 
     public ObjectParser getObject() {
