@@ -10,11 +10,13 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.LinkedList;
 
 import base.SingleNetwork;
@@ -22,6 +24,7 @@ import base.Tasks;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.R;
+import ly.loud.loudly.RecyclerViewAdapter;
 import util.AttachableReceiver;
 import util.Broadcasts;
 
@@ -30,21 +33,22 @@ import util.Broadcasts;
  */
 public class PeopleListFragment extends Fragment {
     private static final int COMMENTS = -1;
+    private static int depth = 0;
+    static GetPersonReceiver getPersonReceiver;
+
     private View rootView;
 
     private int requestType = Tasks.LIKES;
     private SingleNetwork element;
     private int paddingTopInitial;
     private int distanceTop = 0;
-    private boolean hasListener = false;
 
-    private LinkedList<Item> items = new LinkedList<>();
+    LinkedList<Item> items = new LinkedList<>();
     RecyclerView recyclerView;
     PeopleListAdapter recyclerViewAdapter;
     LinearLayoutManager layoutManager;
 //    CustomRecyclerViewListener scrollListener;
 
-    static AttachableReceiver getPersonReceiver;
 
     @Nullable
     @Override
@@ -60,40 +64,7 @@ public class PeopleListFragment extends Fragment {
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
-//        scrollListener = new CustomRecyclerViewListener(this);
-//        recyclerView.addOnScrollListener(scrollListener);
 
-//        final PeopleListFragment fragment = this;
-//        recyclerView.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                if (event.getAction() != MotionEvent.ACTION_MOVE || event.getHistorySize() == 0)
-//                    return false;
-//
-//
-//                int previousY = ((int) event.getHistoricalY(0));
-//                int dy = ((int) event.getY()) - previousY;
-//                Log.d("TAG", Integer.toString(dy));
-//
-//                if (distanceTop == 0) {
-//                    if (!hasListener) {
-//                        return true;
-//                    } else {
-//                        return false;
-//                    }
-//
-//                }
-//
-//                if (distanceTop > 0 && dy < 0) {
-//                    distanceTop = Math.max(0, distanceTop + dy);
-//                    rootView.setPadding(rootView.getPaddingLeft(), distanceTop,
-//                            rootView.getPaddingRight(), rootView.getPaddingBottom());
-//                    return true;
-//                }
-//
-//                return false;
-//            }
-//        });
         return rootView;
     }
 
@@ -105,26 +76,35 @@ public class PeopleListFragment extends Fragment {
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
-        if (!hidden) {
-            items.clear();
-            hasListener = false;
-
-            getPersonReceiver = new GetPersonReceiver(getActivity());
-
-            if (requestType == COMMENTS) {
-                Tasks.CommentsGetter task = new Tasks.CommentsGetter(element, items, Loudly.getContext().getWraps());
-                task.execute();
-            } else {
-                Tasks.PersonGetter task = new Tasks.PersonGetter(element, requestType, items,
-                        Loudly.getContext().getWraps());
-                task.execute();
-            }
-        } else {
+        if (hidden) {
             rootView.setPadding(rootView.getPaddingLeft(), paddingTopInitial, rootView.getPaddingRight(), rootView.getPaddingBottom());
             distanceTop = paddingTopInitial;
             items.clear();
             recyclerViewAdapter.notifyDataSetChanged();
         }
+    }
+
+    private static final String TAG = "FRAGMENT";
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getPersonReceiver != null) {
+            getPersonReceiver.attachAdapter(recyclerViewAdapter);
+        }
+        Log.e(TAG, "resume: " + depth);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public void onDetach() {
+        depth--;
+        Log.e(TAG, "onDetach: " + depth);
+        super.onDetach();
     }
 
     static class CustomLayoutManager extends LinearLayoutManager {
@@ -162,27 +142,38 @@ public class PeopleListFragment extends Fragment {
         }
     }
 
-    static class GetPersonReceiver extends AttachableReceiver {
+    private static class GetPersonReceiver extends AttachableReceiver {
+        WeakReference<PeopleListAdapter> adapter;
         public GetPersonReceiver(Context context) {
             super(context, Broadcasts.POST_GET_PERSONS);
+        }
+
+        public void attachAdapter(PeopleListAdapter adapter) {
+            this.adapter = new WeakReference<>(adapter);
         }
 
         @Override
         public void onMessageReceive(Context context, Intent message) {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            final MainActivity activity = ((MainActivity) context);
+            int broadcastDepth = message.getIntExtra(Broadcasts.ID_FIELD, depth);
+            if (broadcastDepth != depth) {
+                return;
+            }
+            PeopleListAdapter recyclerViewAdapter = adapter.get();
             switch (status) {
                 case Broadcasts.PROGRESS:
-                    activity.peopleListFragment.recyclerViewAdapter.notifyDataSetChanged();
+                    recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.ERROR:
                     String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
                     Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
-                    stop();
                     break;
                 case Broadcasts.FINISHED:
-                    activity.peopleListFragment.recyclerViewAdapter.notifyDataSetChanged();
-                    stop();
+                    recyclerViewAdapter.notifyDataSetChanged();
+                    if (depth == 0) {
+                        stop();
+                        getPersonReceiver = null;
+                    }
                     break;
             }
         }
@@ -206,17 +197,21 @@ public class PeopleListFragment extends Fragment {
         this.requestType = COMMENTS;
     }
 
-    public void showPersons(SingleNetwork element, int type) {
-        fillPersons(element, type);
-        show();
-    }
-
-    public void showComments(SingleNetwork element) {
-        fillComments(element);
-        show();
-    }
-
     private static void show(Activity activity, PeopleListFragment fragment) {
+        depth++;
+        if (getPersonReceiver == null){
+            getPersonReceiver = new GetPersonReceiver(activity);
+        }
+        if (fragment.requestType == COMMENTS) {
+            Tasks.CommentsGetter task = new Tasks.CommentsGetter(depth, fragment.element,
+                    fragment.items, Loudly.getContext().getWraps());
+            task.execute();
+        } else {
+            Tasks.PersonGetter task = new Tasks.PersonGetter(depth, fragment.element,
+                    fragment.requestType, fragment.items, Loudly.getContext().getWraps());
+            task.execute();
+        }
+
         FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
         transaction.addToBackStack(null);
         transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom);

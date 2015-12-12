@@ -24,6 +24,7 @@ import base.Tasks;
 import base.attachments.Image;
 import base.says.LoudlyPost;
 import base.says.Post;
+import ly.loud.loudly.PeopleList.PeopleListFragment;
 import util.Utils;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
@@ -131,21 +132,21 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.commentsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.peopleListFragment.showComments(post);
+                PeopleListFragment.showComments(activity, post);
             }
         });
 
         holder.likesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.peopleListFragment.showPersons(post, Tasks.LIKES);
+                PeopleListFragment.showPersons(activity, post, Tasks.LIKES);
             }
         });
 
         holder.repostsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.peopleListFragment.showPersons(post, Tasks.SHARES);
+                PeopleListFragment.showPersons(activity, post, Tasks.SHARES);
             }
         });
 
