@@ -25,6 +25,10 @@ public class Info {
         return new Info(info.like - like, info.repost - repost, info.comment - comment);
     }
 
+    public boolean hasPositiveChanges() {
+        return like > 0 || repost > 0 || comment > 0;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || !(o instanceof Info)) {

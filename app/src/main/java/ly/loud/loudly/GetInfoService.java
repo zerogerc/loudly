@@ -25,6 +25,7 @@ import util.UIAction;
 
 public class GetInfoService extends IntentService implements Tasks.GetInfoCallback {
     private static final String NAME = "GetInfoService";
+    private NotificationManager notificationManager;
     private static final int NOTIFICATION_ID = 0;
     private static volatile boolean stopped;
     private Info summary;
@@ -71,6 +72,9 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        if (notificationManager == null) {
+            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        }
         stopped = false;
         if (MainActivity.posts.isEmpty()) {
             return;
@@ -111,7 +115,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
             }
         }
         Loudly.sendLocalBroadcast(BroadcastSendingTask.makeSuccess(Broadcasts.POST_GET_INFO));
-        if (!summary.equals(new Info())) {
+        if (summary.hasPositiveChanges()) {
             String message = "New";
             String longMessage = "You've got";
             if (summary.like > 0) {
@@ -155,12 +159,9 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
                             PendingIntent.FLAG_UPDATE_CURRENT
                     );
             notificationCompat.setContentIntent(resultPendingIntent);
-            NotificationManager mNotificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             // mId allows you to update the notification later on.
-            mNotificationManager.notify(NOTIFICATION_ID, notificationCompat.build());
+            notificationManager.notify(NOTIFICATION_ID, notificationCompat.build());
         }
-
 
         Loudly.getContext().startGetInfoService();  // Restarting
     }

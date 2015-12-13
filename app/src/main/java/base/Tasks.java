@@ -593,7 +593,6 @@ public class Tasks {
         }
 
         private void merge(LinkedList<? extends Post> newPosts) {
-            Log.e("TASKS", "merging");
             int i = 0, j = 0;
             // TODO: 12/11/2015 Make quicker with arrayLists
             while (j < newPosts.size()) {

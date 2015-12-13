@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -29,6 +30,7 @@ import base.Wrap;
 import base.says.Post;
 import util.AttachableReceiver;
 import util.Broadcasts;
+import util.Network;
 import util.UIAction;
 import util.Utils;
 
@@ -90,9 +92,6 @@ public class MainActivity extends AppCompatActivity {
             }
             // Loading posts
             if (loadFrom.size() > 0 || !dbLoaded) {
-                ProgressBar progressBar = (ProgressBar) findViewById(R.id.main_activity_progress);
-                progressBar.setVisibility(View.VISIBLE);
-
                 receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(this);
 
                 loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
@@ -354,21 +353,19 @@ public class MainActivity extends AppCompatActivity {
             switch (status) {
                 case Broadcasts.STARTED:
                     dbLoaded = true;
-                    toast = Toast.makeText(context, "DB loaded", Toast.LENGTH_SHORT);
-                    toast.show();
                     break;
                 case Broadcasts.PROGRESS:
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    toast = Toast.makeText(context,
-                            "" + network, Toast.LENGTH_SHORT);
-                    toast.show();
+
+                    Snackbar.make(mainActivity.findViewById(R.id.main_content),
+                            "Loading posts from " + Networks.nameOfNetwork(network), Snackbar.LENGTH_INDEFINITE)
+                            .show();
                     loadedNetworks[network] = true;
                     break;
                 case Broadcasts.FINISHED:
-                    ProgressBar progressBar = (ProgressBar) mainActivity.findViewById(R.id.main_activity_progress);
-                    progressBar.setVisibility(View.GONE);
-                    toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
-                    toast.show();
+                    Snackbar.make(mainActivity.findViewById(R.id.main_content),
+                            "Loaded", Snackbar.LENGTH_SHORT)
+                            .show();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
                     loadPosts = null; // Posts loaded
