@@ -73,6 +73,17 @@ public class VKWrap extends Wrap {
     }
 
     @Override
+    public String checkPost(LoudlyPost post) {
+        if (post.getText().isEmpty() && post.getAttachments().isEmpty()) {
+            return "Either text or image should be on post";
+        }
+        if (post.getAttachments().size() > 1) {
+            return "Sorry, we can upload only 1 image";
+        }
+        return null;
+    }
+
+    @Override
     public void uploadPost(LoudlyPost post) throws IOException {
         Query query = makeSignedAPICall(POST_METHOD);
         if (post.getText().length() > 0) {

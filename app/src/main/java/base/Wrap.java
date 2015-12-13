@@ -10,6 +10,7 @@ import base.attachments.LoudlyImage;
 import base.says.Comment;
 import base.says.LoudlyPost;
 import base.says.Post;
+import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.InvalidTokenException;
 import util.Query;
@@ -68,6 +69,8 @@ public abstract class Wrap implements Comparable<Wrap> {
     public abstract List<Comment> getComments(SingleNetwork element) throws IOException;
 
     public abstract void getImageInfo(List<Image> images) throws IOException;
+
+    public abstract String checkPost(LoudlyPost post);
 
     public static Wrap makeWrap(int network) {
         switch (network) {

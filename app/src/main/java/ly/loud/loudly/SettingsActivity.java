@@ -148,7 +148,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public void LogoutClick(final int network) {
-        GetInfoService.stop();
+        Loudly.getContext().stopGetInfoService();
         if (MainActivity.loadPosts != null) {
             MainActivity.loadPosts.stop();
         }

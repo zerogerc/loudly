@@ -537,32 +537,17 @@ public class Tasks {
      * <li>Broadcasts.STATUS_FIELD = Broadcasts.Started </li>
      * </ol>
      * </p>
+     * Before loading posts from some network:
+     * <ol>
+     *     <li>Broadcasts.STATUS_FIELD = Broadcasts.PROGRESS</li>
+     *     <li>Broadcasts.NETWORK_FIELD = id of the network</li>
+     * </ol>
      * After loading posts from some network:
      * <ol>
-     * <li>Broadcasts.STATUS_FIELD = Broadcasts.PROGRESS</li>
-     * <li>Broadcasts.NETWORK_ID = id of the network</li>
+     * <li>Broadcasts.STATUS_FIELD = Broadcasts.LOADED</li>
+     * <li>Broadcasts.NETWORK_FIELD = id of the network</li>
      * </ol>
      * <p>
-     * After loading posts from every network as text:
-     * <ol>
-     * <li>Broadcasts.STATUS_FIELD = Broadcast.LOADED</li>
-     * </ol>
-     * <p>
-     * During loading image form some network:
-     * <ol>
-     * <li>Broadcasts.STATUS_FIELD = Broadcasts.IMAGE</li>
-     * <li>Broadcasts.ID_FIELD = localID of the post</li>
-     * <li>Broadcasts.IMAGE_FIELD = localID of the image</li>
-     * <li>Broadcasts.PROGRESS_FIELD = progress</li>
-     * </ol>
-     * After loading image from network of DB:
-     * <ol>
-     * <li>Broadcasts.STATUS_FIELD = Broadcasts.IMAGE_FINISHED</li>
-     * <li>Broadcasts.IMAGE_FIELD = localID of an image</li>
-     * <li>Broadcasts.POST_ID = localID of the post</li>
-     * </ol>
-     * </p>
-     * <p/>
      * When loading is successfully finished:
      * <ol>
      * <li>Broadcast.STATUS_FIELD = Broadcasts.FINISHED </li>
@@ -710,6 +695,9 @@ public class Tasks {
                 try {
                     if (stopped) throw new ThreadStopped();
 
+                    Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.PROGRESS);
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
                     currentPosts = new LinkedList<>();
                     w.loadPosts(time, this);
 
@@ -723,7 +711,7 @@ public class Tasks {
 
                     merge(currentPosts);
 
-                    Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.PROGRESS);
+                    message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.LOADED);
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     publishProgress(message);
 

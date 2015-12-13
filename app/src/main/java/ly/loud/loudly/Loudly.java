@@ -26,8 +26,6 @@ public class Loudly extends Application {
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
 
-    private long postFromOtherNetworks = 0;
-
     private IDInterval[] loadedPosts;
     private int[] offsets;
     private TimeInterval timeInterval;
@@ -88,10 +86,6 @@ public class Loudly extends Application {
         loadedPosts[network] = interval;
     }
 
-    public long makeLocalIDForOtherNetworks() {
-        return -(++postFromOtherNetworks);
-    }
-
     public int getOffset(int network) {
         return offsets[network];
     }
@@ -101,18 +95,19 @@ public class Loudly extends Application {
     }
 
     public void startGetInfoService() {
-        if (getInfoService == null) {
-            Intent runService = new Intent(context, GetInfoService.class);
-            getInfoService = PendingIntent.getService(context, 0, runService, PendingIntent.FLAG_CANCEL_CURRENT);
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.SECOND, GET_INFO_INTERVAL);
-            alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), getInfoService);
+        if (getInfoService != null) {
+            stopGetInfoService();
         }
+        Intent runService = new Intent(context, GetInfoService.class);
+        getInfoService = PendingIntent.getService(context, 0, runService, PendingIntent.FLAG_CANCEL_CURRENT);
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.SECOND, GET_INFO_INTERVAL);
+        alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), getInfoService);
     }
 
     public void stopGetInfoService() {
+        GetInfoService.stop();
         alarmManager.cancel(getInfoService);
-        getInfoService = null;
     }
 
     @Override
@@ -128,8 +123,16 @@ public class Loudly extends Application {
         cal.add(Calendar.WEEK_OF_MONTH, -2);
         timeInterval = new TimeInterval(cal.getTimeInMillis() / 1000, -1l);
 
-        alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         Tasks.LoadKeysTask loadKeys = new Tasks.LoadKeysTask();
         loadKeys.execute();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        stopGetInfoService();
+        MainActivity.posts.clear();
+        MainActivity.dbLoaded = false;
     }
 }

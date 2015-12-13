@@ -36,7 +36,6 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
 
     public static void stop() {
         stopped = true;
-        Loudly.getContext().stopGetInfoService();
     }
 
     @Override
@@ -72,7 +71,6 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Loudly.getContext().getInfoService = null;  // Show that we started
         stopped = false;
         if (MainActivity.posts.isEmpty()) {
             return;
@@ -135,9 +133,10 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
             message = message.substring(0, message.length() - 1);
 
             NotificationCompat.Builder notificationCompat = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle(message)
-                    .setContentText(longMessage);
+                    .setContentText(longMessage)
+                    .setAutoCancel(true);
             // Creates an explicit intent for an Activity in your app
             Intent resultIntent = new Intent(this, MainActivity.class);
 

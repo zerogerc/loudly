@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     static LinkedList<Post> posts = new LinkedList<>();
     static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
     static boolean dbLoaded = false;
+    private static int aliveCopy = 0;
 
     RecyclerView recyclerView;
     public RecyclerViewAdapter recyclerViewAdapter;
@@ -113,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         self = this;
+        aliveCopy++;
         setContentView(R.layout.activity_main);
 
 
@@ -243,11 +245,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         self = null;
-        if (isFinishing()) {
+        aliveCopy--;
+        if (isFinishing() && aliveCopy == 0) {
             if (receivers[GET_INFO_RECEIVER] != null) {
                 receivers[GET_INFO_RECEIVER].stop();
             }
-            Loudly.getContext().stopGetInfoService();
         }
     }
 
