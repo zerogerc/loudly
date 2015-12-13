@@ -6,20 +6,29 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import base.Networks;
 import base.Tasks;
@@ -34,21 +43,75 @@ import util.Utils;
 public class PostCreateFragment extends Fragment {
     private static String EDIT_TEXT = "EDIT_TEXT";
     private final static int PICK_PHOTO_FROM_GALLERY = 13;
+    private final static int REQUEST_PHOTO_FROM_CAMERA = 52;
 
     private NetworksChooseFragment networksChooseFragment;
-    private View networksChooseFragmentView;
 
     private EditText editText;
     private ImageView postImageView;
     private ImageView deleteImageButton;
     private View rootView;
+    private FrameLayout background;
     private static Image postImage;
+
+    private Uri currentImageUri;
+
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, currentImageUri);
+        getActivity().sendBroadcast(mediaScanIntent);
+    }
+
+    String mCurrentPhotoPath;
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                Log.e("POST_CREATE", "COULDN'T CREATE FILE PATH", ex);
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                currentImageUri = Uri.fromFile(photoFile);
+                galleryAddPic();
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        currentImageUri);
+                startActivityForResult(takePictureIntent, REQUEST_PHOTO_FROM_CAMERA);
+            }
+        }
+    }
 
     public void setListeners() {
         getActivity().findViewById(R.id.new_post_send_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+                Utils.hidePhoneKeyboard(getActivity());
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
+                ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,
+                        R.anim.slide_in_left, R.anim.slide_out_right);
                 ft.show(networksChooseFragment);
                 ft.addToBackStack(null);
                 ft.commit();
@@ -62,6 +125,13 @@ public class PostCreateFragment extends Fragment {
                 intent.setType("image/*");
                 Utils.hidePhoneKeyboard(getActivity());
                 startActivityForResult(intent, PICK_PHOTO_FROM_GALLERY);
+            }
+        });
+
+        getActivity().findViewById(R.id.new_post_camera_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dispatchTakePictureIntent();
             }
         });
     }
@@ -104,10 +174,8 @@ public class PostCreateFragment extends Fragment {
                 Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
                         wraps.toArray(new Wrap[0]));
                 uploader.execute(post);
-                MainActivity activity = (MainActivity) getActivity();
 
-                networksChooseFragment.hide();
-                activity.onPostCreated();
+                getActivity().getFragmentManager().popBackStack();
             }
         };
 
@@ -120,8 +188,25 @@ public class PostCreateFragment extends Fragment {
         FragmentManager manager = getActivity().getFragmentManager();
         networksChooseFragment = ((NetworksChooseFragment) manager.findFragmentById(R.id.networks_choose_fragment));
 
-        networksChooseFragmentView = getActivity().findViewById(R.id.networks_choose_fragment);
-        networksChooseFragmentView.getBackground().setAlpha(100);
+        networksChooseFragment.setHideAction(new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+                editText.setFocusableInTouchMode(true);
+                editText.setFocusable(true);
+                setOverShadow(false);
+            }
+        });
+
+        networksChooseFragment.setShowAction(new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                editText.setFocusableInTouchMode(false);
+                editText.setFocusable(false);
+                setOverShadow(true);
+            }
+        });
+
         FragmentTransaction ft = manager.beginTransaction();
         ft.hide(networksChooseFragment);
         ft.commit();
@@ -147,6 +232,8 @@ public class PostCreateFragment extends Fragment {
         );
 
         postImage = null;
+        background = ((FrameLayout) rootView.findViewById(R.id.new_post_background));
+        setOverShadow(false);
 
         return rootView;
     }
@@ -172,10 +259,13 @@ public class PostCreateFragment extends Fragment {
 
             postImageView.setImageBitmap(null);
             editText.setText(null);
+            setOverShadow(true);
         } else {
             InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
             editText.requestFocus();
+
+            setOverShadow(false);
         }
     }
 
@@ -233,12 +323,32 @@ public class PostCreateFragment extends Fragment {
 
             }
         }
+        getActivity();
+        if (requestCode == REQUEST_PHOTO_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
+            postImage = new LoudlyImage(currentImageUri);
+            prepareImageView();
+            Glide.with(Loudly.getContext()).load(currentImageUri)
+                    .fitCenter()
+                    .into(postImageView);
+
+        }
+    }
+
+    public void setOverShadow(boolean flag) {
+        if (flag) {
+            background.setAlpha(1);
+            background.getBackground().setAlpha(100);
+            background.setClickable(true);
+        } else {
+            background.setAlpha(0);
+            background.setClickable(false);
+        }
     }
 
     public void show() {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.show(this);
         ft.addToBackStack(null);
+        ft.show(this);
         ft.commit();
     }
 }

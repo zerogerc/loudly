@@ -1,7 +1,6 @@
 package ly.loud.loudly.PeopleList;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
@@ -87,23 +86,26 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             }
 
             if (comment.getInfo() != null) {
-                holder.likesAmount.setText(Integer.toString(comment.getInfo().like));
+                if (comment.getInfo().like == 0) {
+                    holder.likesButton.setVisibility(View.GONE);
+                    holder.likesAmount.setVisibility(View.GONE);
+                } else {
+                    holder.likesButton.setVisibility(View.VISIBLE);
+                    holder.likesAmount.setVisibility(View.VISIBLE);
+                    holder.likesAmount.setText(Integer.toString(comment.getInfo().like));
+                }
+
+                holder.commentTime.setVisibility(View.VISIBLE);
                 holder.commentTime.setText(Utils.getDateFormatted(comment.getDate()));
             } else {
-                holder.likesAmount.setText("0");
-                holder.commentTime.setText("");
+                holder.likesAmount.setVisibility(View.GONE);
+                holder.commentTime.setVisibility(View.GONE);
             }
 
             holder.likesButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Fragment newFragment = PeopleListFragment.showPersons(activity, (Comment) item, Tasks.LIKES);
-//                            ((PeopleListFragment) newFragment).fillPersons((Comment) item, Tasks.LIKES);
-//                    FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
-//                    transaction.addToBackStack(null);
-//                    transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom);
-//                    transaction.replace(R.id.fragment_container, newFragment);
-//                    transaction.commit();
+                    PeopleListFragment.showPersons(activity, (Comment) item, Tasks.LIKES);
                 }
             });
 

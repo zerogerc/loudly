@@ -22,9 +22,7 @@ import java.util.LinkedList;
 import base.SingleNetwork;
 import base.Tasks;
 import ly.loud.loudly.Loudly;
-import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.R;
-import ly.loud.loudly.RecyclerViewAdapter;
 import util.AttachableReceiver;
 import util.Broadcasts;
 
@@ -40,21 +38,17 @@ public class PeopleListFragment extends Fragment {
 
     private int requestType = Tasks.LIKES;
     private SingleNetwork element;
-    private int paddingTopInitial;
-    private int distanceTop = 0;
 
     LinkedList<Item> items = new LinkedList<>();
     RecyclerView recyclerView;
     PeopleListAdapter recyclerViewAdapter;
     LinearLayoutManager layoutManager;
-//    CustomRecyclerViewListener scrollListener;
-
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.people_list, container, false);
-        paddingTopInitial = rootView.getPaddingTop();
+
         recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
         recyclerViewAdapter = new PeopleListAdapter(items, getActivity());
 //        recyclerView.setHasFixedSize(true); /// HERE
@@ -77,8 +71,6 @@ public class PeopleListFragment extends Fragment {
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (hidden) {
-            rootView.setPadding(rootView.getPaddingLeft(), paddingTopInitial, rootView.getPaddingRight(), rootView.getPaddingBottom());
-            distanceTop = paddingTopInitial;
             items.clear();
             recyclerViewAdapter.notifyDataSetChanged();
         }
@@ -214,7 +206,7 @@ public class PeopleListFragment extends Fragment {
 
         FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
         transaction.addToBackStack(null);
-        transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom);
+        transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_bottom);
         transaction.replace(R.id.fragment_container, fragment);
         transaction.commit();
     }

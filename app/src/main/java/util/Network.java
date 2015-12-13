@@ -10,7 +10,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import base.attachments.Image;
 import base.attachments.LoudlyImage;
 import util.parsers.Parser;
 import util.parsers.StringParser;
@@ -81,7 +80,7 @@ public class Network {
         OutputStream outputStream = null;
         PrintWriter pw = null;
 
-        String response = null;
+        String response = "";
         try {
             URL reqUrl = new URL(query.getServerURL());
 
@@ -130,6 +129,7 @@ public class Network {
                 int bytesRead = -1;
 
                 long size = image.getFileSize();
+                size = size == 0 ? Long.MAX_VALUE : size;
                 long uploaded = 0;
                 long progress = 0;
                 InputStream content = null;

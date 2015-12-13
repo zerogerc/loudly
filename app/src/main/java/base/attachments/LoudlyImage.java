@@ -4,8 +4,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 
 import base.MultipleNetwork;
 import base.Networks;
@@ -109,11 +112,21 @@ public class LoudlyImage extends Image implements MultipleNetwork {
     }
 
     public String getMIMEType() {
-        return Loudly.getContext().getContentResolver().getType(internalLink);
+        String type = Loudly.getContext().getContentResolver().getType(internalLink);
+        if (type == null) {
+            File file = new File(internalLink.toString());
+            type = URLConnection.guessContentTypeFromName(file.getName());
+        }
+        return type;
     }
 
     public InputStream getContent() throws IOException {
-        return Loudly.getContext().getContentResolver().openInputStream(internalLink);
+        InputStream stream  = Loudly.getContext().getContentResolver().openInputStream(internalLink);
+        if (stream == null) {
+            File file = new File(internalLink.toString());
+            stream = new FileInputStream(file);
+        }
+        return stream;
     }
 
     public long getFileSize() throws IOException {
@@ -121,7 +134,7 @@ public class LoudlyImage extends Image implements MultipleNetwork {
         try {
             cursor = Loudly.getContext().getContentResolver().query(internalLink, null, null, null, null);
             if (cursor == null) {
-                return 0;
+                return new File(internalLink.toString()).length();
             }
             cursor.moveToFirst();
             return cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE));

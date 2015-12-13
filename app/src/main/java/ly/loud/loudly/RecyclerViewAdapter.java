@@ -1,12 +1,15 @@
 package ly.loud.loudly;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -29,6 +32,7 @@ import util.Utils;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private List<Post> posts;
+    private int lastPosition = -1;
     MainActivity activity;
 
     RecyclerViewAdapter(List<Post> posts, MainActivity act) {
@@ -175,6 +179,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
         Post post = posts.get(position);
         refreshFields(holder, post);
+        setAnimation(holder.root, position);
     }
 
     @Override
@@ -223,6 +228,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             params.setMargins(0, 0, 0, 0);
             geoData.setLayoutParams(params);
             refreshFields(this, post);
+        }
+    }
+
+    private void setAnimation(View viewToAnimate, int position)
+    {
+        // If the bound view wasn't previously displayed on screen, it's animated
+        if (position > lastPosition)
+        {
+            ObjectAnimator animator = ObjectAnimator.ofFloat(viewToAnimate, "translationY", Utils.getDefaultScreenHeight(), 0);
+            animator.setDuration(400);
+            animator.setInterpolator(new DecelerateInterpolator());
+//            Animation animation = AnimationUtils.loadAnimation(activity, android.R.anim.slide_in_left);
+//            viewToAnimate.startAnimation(animation);
+            animator.start();
+            lastPosition = position;
+            Log.e("POS", Integer.toString(lastPosition));
         }
     }
 }

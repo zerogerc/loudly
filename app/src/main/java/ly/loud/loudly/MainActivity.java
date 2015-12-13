@@ -27,7 +27,6 @@ import base.Networks;
 import base.Tasks;
 import base.Wrap;
 import base.says.Post;
-import ly.loud.loudly.PeopleList.PeopleListFragment;
 import util.AttachableReceiver;
 import util.Broadcasts;
 import util.UIAction;
@@ -105,6 +104,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void finish() {
+        super.finish();
+        Utils.hidePhoneKeyboard(this);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         self = this;
@@ -135,14 +140,10 @@ public class MainActivity extends AppCompatActivity {
 
         FragmentManager manager = getFragmentManager();
         newPostFragment = ((PostCreateFragment) manager.findFragmentById(R.id.new_post_fragment));
-        findViewById(R.id.new_post_fragment).getBackground().setAlpha(100);
+
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
-
-        PeopleListFragment peopleListFragment = new PeopleListFragment();
-        getFragmentManager().beginTransaction().add(R.id.fragment_container, peopleListFragment).commit();
-        getFragmentManager().beginTransaction().hide(peopleListFragment).commit();
 
         background = ((FrameLayout) findViewById(R.id.main_background));
         background.setAlpha(0);
@@ -163,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         public CustomRecyclerViewListener(FloatingActionButton fab, int screenHeight) {
             this.fab = fab;
             this.fabAnimSlideDown = ObjectAnimator.ofFloat(fab, "translationY", 0, screenHeight / 4).setDuration(animDuration);
-            fabAnimSlideUp = ObjectAnimator.ofFloat(fab, "translationY", screenHeight / 4, 0).setDuration(animDuration);
+            this.fabAnimSlideUp = ObjectAnimator.ofFloat(fab, "translationY", screenHeight / 4, 0).setDuration(animDuration);
         }
 
         @Override
@@ -236,7 +237,6 @@ public class MainActivity extends AppCompatActivity {
             receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
         newPostFragment.show();
-        floatingActionButton.setVisibility(View.GONE);
     }
 
     @Override
@@ -255,6 +255,8 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
         ft.commit();
+        background.setClickable(false);
+        background.getBackground().setAlpha(0);
         floatingActionButton.show();
     }
 
@@ -265,6 +267,10 @@ public class MainActivity extends AppCompatActivity {
         if (count == 0) {
             super.onBackPressed();
             return;
+        }
+        if (count == 1) {
+            background.setClickable(false);
+            background.getBackground().setAlpha(0);
         }
         getFragmentManager().popBackStack();
     }
@@ -317,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
                     toast.show();
                     receivers[POST_UPLOAD_RECEIVER].stop();
                     receivers[POST_UPLOAD_RECEIVER] = null;
-                    mainActivity.recyclerViewAdapter.notifyItemInserted(0);
+                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.ERROR:
                     // Got an error

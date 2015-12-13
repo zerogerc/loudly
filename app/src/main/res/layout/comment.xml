@@ -49,8 +49,9 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/comment_text"
                 android:layout_below="@id/comment_name"
-                android:layout_marginTop="8dp"
                 android:text="It’s a tremendous honor to grace the cover of ‪‎NBA2K16‬! Focused and read. It's almost that time again! KT TAPE"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
                 android:textSize="14sp"
                 android:textColor="@color/black_color"/>
 
