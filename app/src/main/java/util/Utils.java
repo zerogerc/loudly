@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
@@ -34,6 +35,17 @@ import ly.loud.loudly.R;
 
 public class Utils {
     private static final String TAG = "UTIL_TAG";
+
+    public static int dipToPixels(float dipValue) {
+        DisplayMetrics metrics = Loudly.getContext().getResources().getDisplayMetrics();
+        return ((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, metrics));
+    }
+
+    public static int pixelsToDip(float pixel)
+    {
+        float scale = Loudly.getContext().getResources().getDisplayMetrics().density;
+        return ((int)(pixel * scale + 0.5f));
+    }
 
     public static String getDateFormatted(long date) {
         Calendar cal = Calendar.getInstance();

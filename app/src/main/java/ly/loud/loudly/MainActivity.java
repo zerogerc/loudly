@@ -18,7 +18,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -30,7 +29,6 @@ import base.Wrap;
 import base.says.Post;
 import util.AttachableReceiver;
 import util.Broadcasts;
-import util.Network;
 import util.UIAction;
 import util.Utils;
 
@@ -58,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
     static Tasks.LoadPostsTask loadPosts = null;
 
     private static MainActivity self;
+
+    public void justText(View v) {
+        Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show();
+    }
 
     public static void executeOnMain(final UIAction action) {
         if (self != null) {
@@ -242,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Utils.hidePhoneKeyboard(this);
         super.onDestroy();
         self = null;
         aliveCopy--;
@@ -250,15 +253,6 @@ public class MainActivity extends AppCompatActivity {
                 receivers[GET_INFO_RECEIVER].stop();
             }
         }
-    }
-
-    public void onPostCreated() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.hide(newPostFragment);
-        ft.commit();
-        background.setClickable(false);
-        background.getBackground().setAlpha(0);
-        floatingActionButton.show();
     }
 
     @Override

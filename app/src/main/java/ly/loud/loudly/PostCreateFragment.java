@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -61,9 +62,9 @@ public class PostCreateFragment extends Fragment {
         getActivity().sendBroadcast(mediaScanIntent);
     }
 
-    String mCurrentPhotoPath;
-
     private File createImageFile() throws IOException {
+        String mCurrentPhotoPath;
+
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
@@ -95,7 +96,6 @@ public class PostCreateFragment extends Fragment {
             // Continue only if the File was successfully created
             if (photoFile != null) {
                 currentImageUri = Uri.fromFile(photoFile);
-                galleryAddPic();
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
                         currentImageUri);
                 startActivityForResult(takePictureIntent, REQUEST_PHOTO_FROM_CAMERA);
@@ -128,9 +128,36 @@ public class PostCreateFragment extends Fragment {
             }
         });
 
+//        rootView.findViewById(R.id.new_post_gallery_button).setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//
+//                switch (event.getAction()) {
+//                    case MotionEvent.ACTION_DOWN: {
+//                        ImageView view = (ImageView) v;
+//                        //overlay is black with transparency of 0x77 (119)
+//                        view.getDrawable().setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP);
+//                        view.invalidate();
+//                        break;
+//                    }
+//                    case MotionEvent.ACTION_UP:
+//                    case MotionEvent.ACTION_CANCEL: {
+//                        ImageView view = (ImageView) v;
+//                        //clear the overlay
+//                        view.getDrawable().clearColorFilter();
+//                        view.invalidate();
+//                        break;
+//                    }
+//                }
+//                return false;
+//            }
+//        });
+
+
         getActivity().findViewById(R.id.new_post_camera_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Utils.hidePhoneKeyboard(getActivity());
                 dispatchTakePictureIntent();
             }
         });
@@ -235,6 +262,14 @@ public class PostCreateFragment extends Fragment {
         background = ((FrameLayout) rootView.findViewById(R.id.new_post_background));
         setOverShadow(false);
 
+        ((CustomButton) rootView.findViewById(R.id.new_post_camera_button))
+                .setButtonIcon(ContextCompat.getDrawable(Loudly.getContext(), R.drawable.ic_camera));
+
+        ((CustomButton) rootView.findViewById(R.id.new_post_gallery_button))
+                .setButtonIcon(ContextCompat.getDrawable(Loudly.getContext(), R.drawable.ic_collections));
+
+        ((CustomButton) rootView.findViewById(R.id.new_post_geo_data_button))
+                .setButtonIcon(ContextCompat.getDrawable(Loudly.getContext(), R.drawable.ic_location));
         return rootView;
     }
 
@@ -326,6 +361,7 @@ public class PostCreateFragment extends Fragment {
         getActivity();
         if (requestCode == REQUEST_PHOTO_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
             postImage = new LoudlyImage(currentImageUri);
+            galleryAddPic();
             prepareImageView();
             Glide.with(Loudly.getContext()).load(currentImageUri)
                     .fitCenter()

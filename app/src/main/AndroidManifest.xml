@@ -20,7 +20,8 @@
         android:theme="@style/AppTheme"
         android:fullBackupContent="true">
 
-        <activity android:name=".MainActivity" >
+        <activity android:name=".MainActivity"
+            android:windowSoftInputMode="stateHidden">
             <!--android:screenOrientation="portrait"-->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,7 +30,8 @@
         </activity>
 
         <activity android:name=".SettingsActivity"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="stateHidden">
             <!--android:screenOrientation="portrait"-->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
