@@ -192,76 +192,6 @@ public class Tasks {
         }
     }
 
-    /**
-     * BroadcastReceivingTask for getting post's likes, shares and comments number. It sends
-     * Broadcasts.POST_GET_INFO with parameters:
-     * <p>
-     * When info got
-     * <ol>
-     * <li>Broadcasts.STATUS_FIELD = Broadcasts.PROGRESS </li>
-     * <li>BroadcastSendingTask.NETWORK_FIELD = id of the network</li>
-     * </ol>
-     * </p>
-     * <p>
-     * When getting ifo is successfully finished:
-     * <ol>
-     * <li>Broadcast.STATUS_FIELD = Broadcasts.FINISHED </li>
-     * </ol>
-     * </p>
-     * <p>
-     * <p>
-     * If an error occurred:
-     * <ol>
-     * <li>Broadcasts.STATUS = Broadcasts.ERROR</li>
-     * <li>Broadcasts.ERROR_KIND = kind of an error</li>
-     * <li>Broadcasts.ERROR_FIELD = description of an error</li>
-     * </ol>
-     * </p>
-     */
-    public static class InfoGetter extends BroadcastSendingTask {
-        private LinkedList<Post> posts;
-        private Wrap[] wraps;
-
-        public InfoGetter(LinkedList<Post> posts, Wrap... wraps) {
-            this.posts = posts;
-            this.wraps = wraps;
-        }
-
-        @Override
-        protected Intent doInBackground(Object... params) {
-            LinkedList<Post> currentPosts = new LinkedList<>();
-            for (Wrap w : wraps) {
-                try {
-                    currentPosts.clear();
-                    // Select posts only from current network
-                    for (Post post : posts) {
-                        if (post.existsIn(w.networkID())) {
-                            if (post instanceof LoudlyPost) {
-                                post.setNetwork(w.networkID());
-                            }
-                            currentPosts.add(post);
-                        }
-                    }
-                    w.getPostsInfo(currentPosts);
-
-                    Intent message = makeMessage(Broadcasts.POST_GET_INFO, Broadcasts.PROGRESS);
-                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                    publishProgress(message);
-                } catch (InvalidTokenException e) {
-                    Intent message = makeError(Broadcasts.POST_GET_INFO, Broadcasts.INVALID_TOKEN, e.getMessage());
-                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                    publishProgress(message);
-                } catch (IOException e) {
-                    publishProgress(makeError(Broadcasts.POST_GET_INFO, Broadcasts.NETWORK_ERROR,
-                            e.getMessage()));
-                }
-            }
-
-            return makeSuccess(Broadcasts.POST_GET_INFO);
-        }
-    }
-
-
     public static class PostDeleter extends BroadcastSendingTask {
         private Post post;
         LinkedList<Post> posts;
@@ -591,6 +521,10 @@ public class Tasks {
         boolean updateLoudlyPostInfo(String postID, int network, Info info);
 
         void postLoaded(Post post);
+    }
+
+    public interface GetInfoCallback {
+        void infoLoaded(Post post, Info info);
     }
 
     /**

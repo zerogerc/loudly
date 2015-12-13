@@ -5,6 +5,7 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,7 +50,7 @@ public class AuthFragment extends Fragment {
         if (hidden) {
             Utils.hidePhoneKeyboard(getActivity());
             if (!gotResponse) {
-                LocalBroadcastManager.getInstance(Loudly.getContext()).sendBroadcast(
+                Loudly.sendLocalBroadcast(
                         BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION,
                                 Broadcasts.AUTH_FAIL, "User declined authorization")
                 );
@@ -66,6 +67,7 @@ public class AuthFragment extends Fragment {
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    Log.i("AUTH_FRAGMENT", url);
                     if (authorizer.isResponse(url)) {
                         view.setVisibility(View.VISIBLE);
 
@@ -85,7 +87,11 @@ public class AuthFragment extends Fragment {
                         webView.setVisibility(View.VISIBLE);
                     }
                     return false;
+                }
 
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
                 }
             });
 

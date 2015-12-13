@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,6 +59,11 @@ public class Loudly extends Application {
      */
     public static Loudly getContext() {
         return context;
+    }
+
+
+    public static void sendLocalBroadcast(Intent message) {
+        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(message);
     }
 
     public Wrap[] getWraps() {

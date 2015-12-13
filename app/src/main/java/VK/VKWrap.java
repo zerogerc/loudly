@@ -195,7 +195,7 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public void getPostsInfo(List<Post> posts) throws IOException {
+    public void getPostsInfo(List<Post> posts, Tasks.GetInfoCallback callback) throws IOException {
         Query query = makeSignedAPICall(GET_METHOD);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         StringBuilder sb = new StringBuilder();
@@ -221,7 +221,7 @@ public class VKWrap extends Wrap {
             for (Post post : posts) {
                 if (post.existsIn(networkID())) {
                     JSONObject current = parser.getJSONObject(k++);
-                    post.setInfo(getInfo(current));
+                    callback.infoLoaded(post, getInfo(current));
                 }
             }
         } catch (JSONException e) {

@@ -61,7 +61,7 @@ public abstract class Wrap implements Comparable<Wrap> {
 
     public abstract void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException;
 
-    public abstract void getPostsInfo(List<Post> posts) throws IOException;
+    public abstract void getPostsInfo(List<Post> posts, Tasks.GetInfoCallback callback) throws IOException;
 
     public abstract List<Person> getPersons(int what, SingleNetwork element) throws IOException;
 

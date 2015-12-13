@@ -283,7 +283,7 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
-    public void getPostsInfo(List<Post> posts) throws IOException {
+    public void getPostsInfo(List<Post> posts, Tasks.GetInfoCallback callback) throws IOException {
         Query query = makeSignedAPICall("");
         StringBuilder sb = new StringBuilder();
         for (Post post : posts) {
@@ -308,8 +308,7 @@ public class FacebookWrap extends Wrap {
                 if (post.existsIn(networkID())) {
                     JSONObject p = parser.getJSONObject(post.getId());
                     Info info = getInfo(p);
-                    // TODO: 12/12/2015 make more abstract
-                    post.setInfo(info);
+                    callback.infoLoaded(post, info);
                 }
             }
         } catch (JSONException e) {

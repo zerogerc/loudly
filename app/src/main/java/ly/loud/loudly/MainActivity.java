@@ -391,11 +391,8 @@ public class MainActivity extends AppCompatActivity {
                     t.show();
                     break;
                 case Broadcasts.FINISHED:
-                    MainActivity mainActivity = (MainActivity) context;
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     t = Toast.makeText(context, "Info got", Toast.LENGTH_SHORT);
                     t.show();
-                    Loudly.getContext().startGetInfoService();
                     break;
                 case Broadcasts.ERROR:
                     String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
