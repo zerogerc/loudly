@@ -57,7 +57,7 @@ public class Say implements SingleNetwork, Comparable<Say> {
     // Methods from SingleNetwork
     @Override
     public boolean existsIn(int network) {
-        return this.network == network;
+        return this.network == network && id != null;
     }
 
     @Override

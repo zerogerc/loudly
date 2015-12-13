@@ -36,7 +36,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         activity = act;
     }
 
-    public void deleteAtPosition(int pos) {
+    public void notifyDeletedAtPosition(int pos) {
         notifyItemRemoved(pos);
         notifyItemRangeChanged(pos, posts.size());
     }

@@ -20,9 +20,12 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
+import base.Networks;
 import base.Tasks;
+import base.Wrap;
 import base.says.Post;
 import ly.loud.loudly.PeopleList.PeopleListFragment;
 import util.AttachableReceiver;
@@ -32,7 +35,9 @@ import util.Utils;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
-    static public LinkedList<Post> posts = new LinkedList<>();
+    static LinkedList<Post> posts = new LinkedList<>();
+    static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
+    static boolean dbLoaded = false;
 
     RecyclerView recyclerView;
     public RecyclerViewAdapter recyclerViewAdapter;
@@ -48,9 +53,10 @@ public class MainActivity extends AppCompatActivity {
     static final int RECEIVER_COUNT = 4;
 
     static AttachableReceiver[] receivers = null;
-    private static Tasks.LoadPostsTask loadPosts = null;
+    static Tasks.LoadPostsTask loadPosts = null;
 
     private static MainActivity self;
+
     public static void executeOnMain(final UIAction action) {
         if (self != null) {
             self.runOnUiThread(new Runnable() {
@@ -66,17 +72,35 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (posts.isEmpty() && loadPosts == null) {
+        if (receivers == null) {
+            receivers = new AttachableReceiver[RECEIVER_COUNT];
+        }
+        for (AttachableReceiver receiver : receivers) {
+            if (receiver != null) {
+                receiver.attach(this);
+            }
+        }
+
+        if (loadPosts == null) {
+            ArrayList<Wrap> loadFrom = new ArrayList<>();
+            for (Wrap w : Loudly.getContext().getWraps()) {
+                if (!loadedNetworks[w.networkID()]) {
+                    loadFrom.add(w);
+                }
+            }
             // Loading posts
+            if (loadFrom.size() > 0 || !dbLoaded) {
+                ProgressBar progressBar = (ProgressBar) findViewById(R.id.main_activity_progress);
+                progressBar.setVisibility(View.VISIBLE);
 
-            ProgressBar progressBar = (ProgressBar) findViewById(R.id.main_activity_progress);
-            progressBar.setVisibility(View.VISIBLE);
+                receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(this);
 
-            receivers[LOAD_POSTS_RECEIVER] = new PostLoadReceiver(this);
-
-            loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
-                    Loudly.getContext().getWraps());
-            loadPosts.execute();
+                loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
+                        loadFrom.toArray(new Wrap[loadFrom.size()]));
+                loadPosts.execute();
+            } else {
+                Loudly.getContext().startGetInfoService();
+            }
         }
     }
 
@@ -86,14 +110,7 @@ public class MainActivity extends AppCompatActivity {
         self = this;
         setContentView(R.layout.activity_main);
 
-        if (receivers == null) {
-            receivers = new AttachableReceiver[RECEIVER_COUNT];
-        }
-        for (AttachableReceiver receiver : receivers) {
-            if (receiver != null) {
-                receiver.attach(this);
-            }
-        }
+
 
         getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
@@ -131,8 +148,6 @@ public class MainActivity extends AppCompatActivity {
         background.setAlpha(0);
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
-
-
 
         setRecyclerView();
     }
@@ -317,8 +332,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    static class PostLoadReceiver extends AttachableReceiver {
-        public PostLoadReceiver(Context context) {
+    static class LoadPostsReceiver extends AttachableReceiver {
+        public LoadPostsReceiver(Context context) {
             super(context, Broadcasts.POST_LOAD);
         }
 
@@ -330,31 +345,20 @@ public class MainActivity extends AppCompatActivity {
             MainActivity mainActivity = (MainActivity) context;
             switch (status) {
                 case Broadcasts.STARTED:
+                    dbLoaded = true;
                     toast = Toast.makeText(context, "DB loaded", Toast.LENGTH_SHORT);
                     toast.show();
                     break;
                 case Broadcasts.PROGRESS:
+                    int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
                     toast = Toast.makeText(context,
-                            "" + message.getIntExtra(Broadcasts.NETWORK_FIELD, -1), Toast.LENGTH_SHORT);
+                            "" + network, Toast.LENGTH_SHORT);
                     toast.show();
-                    break;
-                case Broadcasts.LOADED:
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
-                    ProgressBar progressBar = (ProgressBar) mainActivity.findViewById(R.id.main_activity_progress);
-                    progressBar.setVisibility(View.GONE);
-                    toast = Toast.makeText(context,
-                            "Posts loaded", Toast.LENGTH_SHORT);
-                    toast.show();
-                    break;
-                case Broadcasts.IMAGE:
-                    // Here progress of loading images
-                    break;
-                case Broadcasts.IMAGE_FINISHED:
-                    // Image loaded, show it
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    loadedNetworks[network] = true;
                     break;
                 case Broadcasts.FINISHED:
-
+                    ProgressBar progressBar = (ProgressBar) mainActivity.findViewById(R.id.main_activity_progress);
+                    progressBar.setVisibility(View.GONE);
                     toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
                     toast.show();
                     stop();
@@ -424,6 +428,7 @@ public class MainActivity extends AppCompatActivity {
                 case Broadcasts.FINISHED:
                     toast = Toast.makeText(context, "Deleted from all", Toast.LENGTH_SHORT);
                     toast.show();
+                    //// TODO: 12/13/2015 remove it
                     MainActivity mainActivity = (MainActivity) context;
                     mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;

@@ -14,7 +14,10 @@ import android.widget.Toast;
 
 import base.Authorizer;
 import base.KeyKeeper;
+import base.Networks;
 import base.Tasks;
+import base.says.LoudlyPost;
+import base.says.Post;
 import util.AttachableReceiver;
 import util.Broadcasts;
 import util.UIAction;
@@ -109,7 +112,6 @@ public class SettingsActivity extends AppCompatActivity {
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
                     iconsHolder.setVisible(network);
                     activity.finishWebView();
-                    MainActivity.posts.clear();
                     break;
                 case Broadcasts.ERROR:
                     String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
@@ -146,6 +148,10 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public void LogoutClick(final int network) {
+        GetInfoService.stop();
+        if (MainActivity.loadPosts != null) {
+            MainActivity.loadPosts.stop();
+        }
         AsyncTask<Object, Void, Object> task = new AsyncTask<Object, Void, Object>() {
             @Override
             protected Object doInBackground(Object... params) {
@@ -162,6 +168,43 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(Object o) {
+                // Clean posts from this network
+                for (int i = 0; i < MainActivity.posts.size(); i++) {
+                    Post post = MainActivity.posts.get(i);
+                    if (post.existsIn(network)) {
+                        if (post instanceof LoudlyPost) {
+                            boolean visible = false;
+                            for (int j = 0; j < Networks.NETWORK_COUNT; j++) {
+                                if (post.existsIn(j)) {
+                                    visible = true;
+                                    break;
+                                }
+                            }
+                            if (!visible) {
+                                MainActivity.posts.remove(i);
+                                final int fixed = i;
+                                i -= 1;
+                                MainActivity.executeOnMain(new UIAction() {
+                                    @Override
+                                    public void execute(Context context, Object... params) {
+                                        ((MainActivity) context).recyclerViewAdapter.notifyDeletedAtPosition(fixed);
+                                    }
+                                });
+                            }
+                        } else {
+                            final int fixed = i;
+                            MainActivity.posts.remove(i);
+                            i -= 1;
+                            MainActivity.executeOnMain(new UIAction() {
+                                @Override
+                                public void execute(Context context, Object... params) {
+                                    ((MainActivity) context).recyclerViewAdapter.notifyDeletedAtPosition(fixed);
+                                }
+                            });
+                        }
+                    }
+                }
+                MainActivity.loadedNetworks[network] = false;
                 Toast toast = Toast.makeText(Loudly.getContext(), "Deleted", Toast.LENGTH_SHORT);
                 toast.show();
             }

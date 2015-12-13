@@ -82,9 +82,6 @@ public class AuthFragment extends Fragment {
                         ft.commit();
                         return true;
 
-                    } else {
-                        circle.setVisibility(View.INVISIBLE);
-                        webView.setVisibility(View.VISIBLE);
                     }
                     return false;
                 }
@@ -92,6 +89,8 @@ public class AuthFragment extends Fragment {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
+                        circle.setVisibility(View.INVISIBLE);
+                        webView.setVisibility(View.VISIBLE);
                 }
             });
 

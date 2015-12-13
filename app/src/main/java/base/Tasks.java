@@ -27,6 +27,7 @@ import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
 import util.InvalidTokenException;
+import util.ThreadStopped;
 import util.TimeInterval;
 import util.UIAction;
 import util.Utils;
@@ -211,13 +212,16 @@ public class Tasks {
                 }
                 i++;
             }
+            if (i == posts.size()) {
+                return;
+            }
             posts.remove(i);
             final int fixed = i;
             MainActivity.executeOnMain(new UIAction() {
                 @Override
                 public void execute(Context context, Object... params) {
                     MainActivity mainActivity = (MainActivity) context;
-                    mainActivity.recyclerViewAdapter.deleteAtPosition(fixed);
+                    mainActivity.recyclerViewAdapter.notifyDeletedAtPosition(fixed);
                 }
             });
 
@@ -225,14 +229,12 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
-            boolean multipleNetworks = post instanceof LoudlyPost;
 
             for (Wrap w : wraps) {
                 if (post.existsIn(w.networkID())) {
                     try {
-                        if (multipleNetworks) {
                             post.setNetwork(w.networkID());
-                        }
+
                         w.deletePost(post);
                         Intent message = makeMessage(Broadcasts.POST_DELETE, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
@@ -249,7 +251,6 @@ public class Tasks {
                 }
             }
 
-            // TODO: 12/12/2015 abstractify
             if (post instanceof LoudlyPost) {
                 boolean dead = true;
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -578,6 +579,7 @@ public class Tasks {
      */
 
     public static class LoadPostsTask extends BroadcastSendingTask implements LoadCallback {
+        private volatile boolean stopped;
         private LinkedList<Post> posts;
         private TimeInterval time;
         private Wrap[] wraps;
@@ -598,6 +600,11 @@ public class Tasks {
             this.posts = posts;
             this.time = time;
             this.wraps = wraps;
+            stopped = false;
+        }
+
+        public void stop() {
+            stopped = true;
         }
 
         private void merge(LinkedList<? extends Post> newPosts) {
@@ -605,22 +612,18 @@ public class Tasks {
             int i = 0, j = 0;
             // TODO: 12/11/2015 Make quicker with arrayLists
             while (j < newPosts.size()) {
+                if (stopped) throw new ThreadStopped();
                 // while date of ith old post is greater than date of jth post in newPosts, i++
-                while (i < posts.size()) {
+                Post right = newPosts.get(j);
+                while (i < posts.size() && j < newPosts.size()) {
                     Post post = posts.get(i);
 
-                    // Notify that likes in LoudlyPost have changed
-                    if (post instanceof LoudlyPost) {
-                        final int postPosition = i;
-                        MainActivity.executeOnMain(new UIAction() {
-                            @Override
-                            public void execute(Context context, Object... params) {
-                                MainActivity mainActivity = (MainActivity) context;
-                                mainActivity.recyclerViewAdapter.notifyItemChanged(postPosition);
-                            }
-                        });
+                    if (post.getDate() == right.getDate()) {
+                        // Skip existing post (especially for Loudly posts)
+                        j++;
+                        continue;
                     }
-                    if (post.getDate() < newPosts.get(j).getDate()) {
+                    if (post.getDate() < right.getDate()) {
                         break;
                     }
                     i++;
@@ -630,6 +633,8 @@ public class Tasks {
                         (i == posts.size() || newPosts.get(j).getDate() > posts.get(i).getDate())) {
                     j++;
                 }
+                if (stopped) throw new ThreadStopped();
+
                 posts.addAll(i, newPosts.subList(oldJ, j));
                 // Crutch
                 int newI = i + j - oldJ;
@@ -660,9 +665,19 @@ public class Tasks {
         public boolean updateLoudlyPostInfo(String postID, int network, Info info) {
             int ind = 0;
             for (LoudlyPost lPost : loudlyPosts) {
+                if (stopped) throw new ThreadStopped();
+
                 if (lPost.existsIn(network) && lPost.getId(network).equals(postID)) {
                     loudlyPostExists[ind] = true;
                     lPost.setInfo(network, info);
+                    final int postPosition = ind;
+                    MainActivity.executeOnMain(new UIAction() {
+                        @Override
+                        public void execute(Context context, Object... params) {
+                            MainActivity mainActivity = (MainActivity) context;
+                            mainActivity.recyclerViewAdapter.notifyItemChanged(postPosition);
+                        }
+                    });
                     return true;
                 }
                 ind++;
@@ -672,6 +687,7 @@ public class Tasks {
 
         @Override
         public void postLoaded(Post post) {
+            if (stopped) throw new ThreadStopped();
             currentPosts.add(post);
         }
 
@@ -692,6 +708,8 @@ public class Tasks {
 
             for (Wrap w : wraps) {
                 try {
+                    if (stopped) throw new ThreadStopped();
+
                     currentPosts = new LinkedList<>();
                     w.loadPosts(time, this);
 
@@ -719,6 +737,8 @@ public class Tasks {
                             e.getMessage());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     publishProgress(message);
+                } catch (ThreadStopped e) {
+                    return makeSuccess(Broadcasts.POST_LOAD);
                 }
             }
 
@@ -742,7 +762,7 @@ public class Tasks {
                                         @Override
                                         public void execute(Context context, Object... params) {
                                             MainActivity mainActivity = (MainActivity) context;
-                                            mainActivity.recyclerViewAdapter.deleteAtPosition(fixedInd);
+                                            mainActivity.recyclerViewAdapter.notifyDeletedAtPosition(fixedInd);
                                         }
                                     });
                                     break;
@@ -756,9 +776,6 @@ public class Tasks {
                     }
                 }
             }
-
-            Intent message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.LOADED);
-            publishProgress(message);
 
             return makeSuccess(Broadcasts.POST_LOAD);
         }

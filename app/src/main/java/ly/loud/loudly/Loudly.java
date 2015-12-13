@@ -33,7 +33,7 @@ public class Loudly extends Application {
     private TimeInterval timeInterval;
 
     private AlarmManager alarmManager;
-    private PendingIntent getInfoService;
+    PendingIntent getInfoService;
 
     /**
      * @param network ID of the network
@@ -73,7 +73,7 @@ public class Loudly extends Application {
                 list.add(Wrap.makeWrap(i));
             }
         }
-        return list.toArray(new Wrap[]{});
+        return list.toArray(new Wrap[list.size()]);
     }
 
     public TimeInterval getTimeInterval() {
@@ -101,15 +101,18 @@ public class Loudly extends Application {
     }
 
     public void startGetInfoService() {
-        Intent runService = new Intent(context, GetInfoService.class);
-        getInfoService = PendingIntent.getService(context, 0, runService, PendingIntent.FLAG_CANCEL_CURRENT);
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.SECOND, GET_INFO_INTERVAL);
-        alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), getInfoService);
+        if (getInfoService == null) {
+            Intent runService = new Intent(context, GetInfoService.class);
+            getInfoService = PendingIntent.getService(context, 0, runService, PendingIntent.FLAG_CANCEL_CURRENT);
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.SECOND, GET_INFO_INTERVAL);
+            alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), getInfoService);
+        }
     }
 
     public void stopGetInfoService() {
         alarmManager.cancel(getInfoService);
+        getInfoService = null;
     }
 
     @Override

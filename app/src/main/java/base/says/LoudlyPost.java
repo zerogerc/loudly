@@ -35,6 +35,9 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         super();
         ids = new String[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            infos[i] = new Info();
+        }
         localId = -1;
     }
 

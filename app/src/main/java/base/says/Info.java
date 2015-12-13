@@ -20,4 +20,18 @@ public class Info {
         repost += info.repost;
         comment += info.comment;
     }
+
+    public Info difference(Info info) {
+        return new Info(info.like - like, info.repost - repost, info.comment - comment);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Info)) {
+            return false;
+        }
+        Info second = (Info) o;
+        return like == second.like && repost == second.repost && comment == second.comment;
+    }
+
 }
