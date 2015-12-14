@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,8 +67,8 @@ public class PostCreateFragment extends Fragment {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
+        File storageDir = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        Log.d("IMAGE", storageDir + imageFileName + ".jpg");
         File image = File.createTempFile(
                 imageFileName,  /* prefix */
                 ".jpg",         /* suffix */
@@ -262,14 +261,6 @@ public class PostCreateFragment extends Fragment {
         background = ((FrameLayout) rootView.findViewById(R.id.new_post_background));
         setOverShadow(false);
 
-        ((CustomButton) rootView.findViewById(R.id.new_post_camera_button))
-                .setButtonIcon(ContextCompat.getDrawable(Loudly.getContext(), R.drawable.ic_camera));
-
-        ((CustomButton) rootView.findViewById(R.id.new_post_gallery_button))
-                .setButtonIcon(ContextCompat.getDrawable(Loudly.getContext(), R.drawable.ic_collections));
-
-        ((CustomButton) rootView.findViewById(R.id.new_post_geo_data_button))
-                .setButtonIcon(ContextCompat.getDrawable(Loudly.getContext(), R.drawable.ic_location));
         return rootView;
     }
 
@@ -296,8 +287,13 @@ public class PostCreateFragment extends Fragment {
             editText.setText(null);
             setOverShadow(true);
         } else {
+            clearImageView();
+
             InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+
+            LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
+            layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
             editText.requestFocus();
 
             setOverShadow(false);
@@ -326,6 +322,15 @@ public class PostCreateFragment extends Fragment {
         layout.setLayoutParams(layoutParams);
         postImageView.setImageBitmap(null);
         postImage = null;
+    }
+
+    private void clearImageView() {
+        RelativeLayout layout = (RelativeLayout)rootView.findViewById(R.id.new_post_list_item);
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) layout.getLayoutParams();
+        layoutParams.width = 0;
+        layoutParams.height = 0;
+        layoutParams.setMargins(0, 0, 0, 0);
+        layout.setLayoutParams(layoutParams);
     }
 
     private void prepareImageView() {

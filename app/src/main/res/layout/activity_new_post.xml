@@ -57,27 +57,62 @@
                     android:orientation="horizontal"
                     android:weightSum="3">
 
-                    <ly.loud.loudly.CustomButton
+                    <FrameLayout
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:id="@+id/new_post_geo_data_button"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:backgroundTint="@color/light_grey_color"/>
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
 
-                    <ly.loud.loudly.CustomButton
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:id="@+id/new_post_camera_button"
-                        android:background="?android:attr/selectableItemBackground" />
+                        <Button
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:id="@+id/new_post_geo_data"
+                            android:background="?android:attr/selectableItemBackground"/>
 
-                    <ly.loud.loudly.CustomButton
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_location"
+                            android:tint="@color/grey_color"/>
+                    </FrameLayout>
+
+                    <FrameLayout
                         android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="match_parent"
-                        android:id="@+id/new_post_gallery_button"
-                        android:background="?android:attr/selectableItemBackground"/>
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
+
+                        <Button
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:id="@+id/new_post_camera_button"
+                            android:background="?android:attr/selectableItemBackground"/>
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_camera"
+                            android:tint="@color/grey_color"/>
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
+
+                        <Button
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:id="@+id/new_post_gallery_button"
+                            android:background="?android:attr/selectableItemBackground"/>
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_collections"
+                            android:tint="@color/grey_color"/>
+                    </FrameLayout>
                 </LinearLayout>
 
                 <ScrollView
@@ -115,6 +150,7 @@
             </RelativeLayout>
         </android.support.v7.widget.CardView>
     </RelativeLayout>
+
 
     <FrameLayout
         android:layout_width="match_parent"

@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -79,10 +80,24 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
     }
 
+    private void setOverShadowFooterComponent(ImageView image, TextView text, boolean flag) {
+        if (flag) {
+            text.setVisibility(View.VISIBLE);
+            image.setColorFilter(ContextCompat.getColor(Loudly.getContext(), R.color.colorAccent));
+        } else {
+            text.setVisibility(View.INVISIBLE);
+            image.setColorFilter(Loudly.getContext().getResources().getColor(R.color.light_grey_color));
+        }
+    }
+
     private void refreshFields(final ViewHolder holder, final Post post) {
         holder.text.setText(post.getText());
 
         holder.data.setText(Utils.getDateFormatted(post.getDate()));
+
+        setOverShadowFooterComponent(holder.commentsButton, holder.commentsAmount, true);
+        setOverShadowFooterComponent(holder.likesButton, holder.likesAmount, true);
+        setOverShadowFooterComponent(holder.repostsButton, holder.repostsAmount, true);
 
         int resource = Utils.getResourceByNetwork(post instanceof LoudlyPost ? -1 : post.getNetwork());
 
@@ -133,26 +148,38 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.showMoreOptions.setOnClickListener(makeOptionsOnClickListener(post, activity));
 
-        holder.commentsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PeopleListFragment.showComments(activity, post);
-            }
-        });
+        if (post.getInfo().comment != 0) {
+            holder.commentsButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    PeopleListFragment.showComments(activity, post);
+                }
+            });
+        } else {
+            setOverShadowFooterComponent(holder.commentsButton, holder.commentsAmount, false);
+        }
 
-        holder.likesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PeopleListFragment.showPersons(activity, post, Tasks.LIKES);
-            }
-        });
+        if (post.getInfo().like != 0) {
+            holder.likesButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    PeopleListFragment.showPersons(activity, post, Tasks.LIKES);
+                }
+            });
+        } else {
+            setOverShadowFooterComponent(holder.likesButton, holder.likesAmount, false);
+        }
 
-        holder.repostsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PeopleListFragment.showPersons(activity, post, Tasks.SHARES);
-            }
-        });
+        if (post.getInfo().repost != 0) {
+            holder.repostsButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    PeopleListFragment.showPersons(activity, post, Tasks.SHARES);
+                }
+            });
+        } else {
+            setOverShadowFooterComponent(holder.repostsButton, holder.repostsAmount, false);
+        }
 
     }
 

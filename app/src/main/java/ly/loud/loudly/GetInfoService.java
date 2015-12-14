@@ -130,7 +130,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
             }
             if (summary.comment > 0) {
                 message += " comments,";
-                longMessage += " " + summary.comment + " new comment" +
+                longMessage += " " + summary.comment + " new people_list_comment" +
                         ((summary.comment > 1) ? "s" : "") + ",";
             }
             longMessage = longMessage.substring(0, longMessage.length() - 1);

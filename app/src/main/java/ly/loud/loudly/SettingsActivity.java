@@ -1,11 +1,11 @@
 package ly.loud.loudly;
 
-import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -28,7 +28,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static AttachableReceiver authReceiver = null;
     private IconsHolder iconsHolder;
 
-    private Fragment webViewFragment;
+    private AuthFragment webViewFragment;
     private View webViewFragmentView;
     
     public static String webViewURL;
@@ -36,31 +36,34 @@ public class SettingsActivity extends AppCompatActivity {
     public static KeyKeeper webViewKeyKeeper;
 
     public void setIconsClick() {
-        UIAction action1 = new UIAction() {
+        UIAction grayItemClick = new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
                 int network = ((int) params[0]);
-                startReceiver();
-                Authorizer authorizer = Authorizer.getAuthorizer(network);
-                authorizer.createAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                //TODO remove when all networks will have been implemented
+                if (network == Networks.VK || network == Networks.FB) {
+                    startReceiver();
+                    Authorizer authorizer = Authorizer.getAuthorizer(network);
+                    authorizer.createAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                }
             }
         };
-        iconsHolder.setGrayItemClick(action1);
+        iconsHolder.setGrayItemClick(grayItemClick);
 
 
-        UIAction action2 = new UIAction() {
+        UIAction colorItemClick = new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
                 LogoutClick(((int) params[0]));
                 iconsHolder.setInvisible(((int) params[0]));
             }
         };
-        iconsHolder.setColorItemsClick(action2);
+        iconsHolder.setColorItemsClick(colorItemClick);
     }
 
     private void initFragment() {
         FragmentManager manager = getFragmentManager();
-        webViewFragment = manager.findFragmentById(R.id.setting_web_view);
+        webViewFragment = ((AuthFragment) manager.findFragmentById(R.id.setting_web_view));
 
         webViewFragmentView = findViewById(R.id.setting_web_view);
         webViewFragmentView.getBackground().setAlpha(100);
@@ -68,6 +71,8 @@ public class SettingsActivity extends AppCompatActivity {
         ft.hide(webViewFragment);
         ft.commit();
     }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +89,22 @@ public class SettingsActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+            @Override
+            public void onBackStackChanged() {
+                int count = getFragmentManager().getBackStackEntryCount();
+                if (count > 0) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        getSupportActionBar().hide();
+                    }
+                }
+                if (count == 0) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        getSupportActionBar().show();
+                    }
+                }
+            }
+        });
 
         if (authReceiver != null) {
             authReceiver.attach(this);
@@ -103,7 +124,7 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onMessageReceive(Context context, Intent message) {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            SettingsActivity activity = (SettingsActivity)context;
+            final SettingsActivity activity = (SettingsActivity)context;
             Toast toast;
             switch (status) {
                 case Broadcasts.FINISHED:
@@ -141,10 +162,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public void finishWebView() {
+        webViewFragment.clearWebView();
         getFragmentManager().popBackStack();
-//        FragmentTransaction ft = getFragmentManager().beginTransaction();
-//        ft.hide(webViewFragment);
-//        ft.commit();
     }
 
     public void LogoutClick(final int network) {

@@ -146,7 +146,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 View personView = LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_person, parent, false);
                 return new ViewHolderPerson(personView, new Person());
             case Item.COMMENT:
-                View commentView = LayoutInflater.from(parent.getContext()).inflate(R.layout.comment, parent, false);
+                View commentView = LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_comment, parent, false);
                 return new ViewHolderComment(commentView, new Comment());
             default:  //Item.DELIMITER
                 View delimiterView = LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_delimeter, parent, false);

@@ -7,6 +7,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -16,6 +17,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.Toast;
@@ -44,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     public FloatingActionButton floatingActionButton;
     private PostCreateFragment newPostFragment;
 
+    private Toolbar toolbar;
+
     private FrameLayout background;
 
     static final int LOAD_POSTS_RECEIVER = 0;
@@ -59,6 +64,36 @@ public class MainActivity extends AppCompatActivity {
 
     public void justText(View v) {
         Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show();
+    }
+
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.main_toolbar, menu);
+//        return super.onCreateOptionsMenu(menu);
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        callSettingsActivity();
+//        return super.onOptionsItemSelected(item);
+//    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.main_call_settings) {
+            callSettingsActivity();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     public static void executeOnMain(final UIAction action) {
@@ -118,28 +153,33 @@ public class MainActivity extends AppCompatActivity {
         aliveCopy++;
         setContentView(R.layout.activity_main);
 
-
+        toolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setShowHideAnimationEnabled(true);
 
         getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
                 int count = getFragmentManager().getBackStackEntryCount();
                 if (count > 0) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        getSupportActionBar().hide();
+                    }
                     floatingActionButton.hide();
                     background.setAlpha(1);
                     background.getBackground().setAlpha(100);
                     background.setClickable(true);
                 }
                 if (count == 0) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        getSupportActionBar().show();
+                    }
                     floatingActionButton.show();
                     background.setAlpha(0);
                     background.setClickable(false);
                 }
             }
         });
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar); // Attaching the layout to the main_toolbar object
-        setSupportActionBar(toolbar);
 
         FragmentManager manager = getFragmentManager();
         newPostFragment = ((PostCreateFragment) manager.findFragmentById(R.id.new_post_fragment));
@@ -230,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setItemAnimator(itemAnimator);
     }
 
-    public void callInitialAuth(View v) {
+    public void callSettingsActivity() {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
     }
@@ -351,13 +391,13 @@ public class MainActivity extends AppCompatActivity {
                 case Broadcasts.PROGRESS:
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
 
-                    Snackbar.make(mainActivity.findViewById(R.id.main_content),
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
                             "Loading posts from " + Networks.nameOfNetwork(network), Snackbar.LENGTH_INDEFINITE)
                             .show();
                     loadedNetworks[network] = true;
                     break;
                 case Broadcasts.FINISHED:
-                    Snackbar.make(mainActivity.findViewById(R.id.main_content),
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
                             "Loaded", Snackbar.LENGTH_SHORT)
                             .show();
                     stop();

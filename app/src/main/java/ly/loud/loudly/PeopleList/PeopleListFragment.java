@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
@@ -59,6 +60,21 @@ public class PeopleListFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
 
+        String text;
+        switch (requestType) {
+            //TODO decode from string resource
+            case Tasks.LIKES:
+                text = "People who like it";
+                break;
+            case Tasks.SHARES:
+                text = "People who shared it";
+                break;
+            default:
+                text = "Comments";
+                break;
+        }
+        ((TextView) rootView.findViewById(R.id.people_list_title)).setText(text);
+
         return rootView;
     }
 
@@ -95,6 +111,10 @@ public class PeopleListFragment extends Fragment {
     @Override
     public void onDetach() {
         depth--;
+        if (depth == 0) {
+            getPersonReceiver.stop();
+            getPersonReceiver = null;
+        }
         Log.e(TAG, "onDetach: " + depth);
         super.onDetach();
     }

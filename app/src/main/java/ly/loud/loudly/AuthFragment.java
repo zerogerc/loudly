@@ -4,7 +4,6 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,8 +15,8 @@ import android.widget.ProgressBar;
 import base.Authorizer;
 import base.KeyKeeper;
 import util.BroadcastSendingTask;
-import util.Utils;
 import util.Broadcasts;
+import util.Utils;
 
 public class AuthFragment extends Fragment {
     private View rootView;
@@ -95,6 +94,10 @@ public class AuthFragment extends Fragment {
             });
 
         }
+    }
+
+    public void clearWebView() {
+        this.webView.loadUrl("about:blank");
     }
 
     private static class FinishAuthorization extends BroadcastSendingTask {

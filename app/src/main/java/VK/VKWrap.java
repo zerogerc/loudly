@@ -463,7 +463,7 @@ public class VKWrap extends Wrap {
         } else if (element instanceof Image) {
             type = "photo";
         } else if (element instanceof Comment) {
-            type = "comment";
+            type = "people_list_comment";
         } else {
             return new LinkedList<>();
         }
