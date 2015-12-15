@@ -101,8 +101,6 @@ public class Loudly extends Application {
         timeInterval = new TimeInterval(cal.getTimeInMillis() / 1000, -1l);
 
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        Tasks.LoadKeysTask loadKeys = new Tasks.LoadKeysTask();
-        loadKeys.execute();
     }
 
     @Override

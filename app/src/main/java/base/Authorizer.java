@@ -15,6 +15,7 @@ import util.AttachableTask;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
 import util.Query;
+import util.UIAction;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -56,7 +57,7 @@ public abstract class Authorizer implements Parcelable {
     /**
      * @return parameters that will be send to server in order to get proper tokens
      */
-    protected abstract Query makeAuthQuery();
+    public abstract Query makeAuthQuery();
 
     /**
      * Check validity of response
@@ -66,16 +67,18 @@ public abstract class Authorizer implements Parcelable {
     public abstract boolean isResponse(String url);
 
     /**
-     * Static Authorization class, which holds Authorizer.
+     * Static Authorization task, which holds Authorizer.
      * It performs initial steps of authorisation and opens AuthFragment to get authorisation tokens
      */
 
-    private static class AuthorizationTask extends AttachableTask<Object, Void, KeyKeeper> {
+    private static class AbstractAuthorizationTask extends AttachableTask<Object, Void, KeyKeeper> {
         private Authorizer authorizer;
+        private UIAction doInUI;
 
-        public AuthorizationTask(Context context, Authorizer authorizer) {
+        public AbstractAuthorizationTask(Context context, Authorizer authorizer, UIAction doInUI) {
             super(context);
             this.authorizer = authorizer;
+            this.doInUI = doInUI;
         }
 
         @Override
@@ -89,11 +92,9 @@ public abstract class Authorizer implements Parcelable {
             if (result == null) {
                 return;
             }
-            SettingsActivity activity = (SettingsActivity)context;
-            SettingsActivity.webViewURL = authorizer.makeAuthQuery().toURL();
-            SettingsActivity.webViewKeyKeeper = result;
-            SettingsActivity.webViewAuthorizer = authorizer;
-            activity.startWebView();
+            doInUI.execute(context, authorizer, result);
+
+
         }
     }
 
@@ -103,7 +104,22 @@ public abstract class Authorizer implements Parcelable {
      * @return AsyncTask, which authorises user in social network
      */
     public AsyncTask<Object, Void, KeyKeeper> createAsyncTask(Context context) {
-        return new AuthorizationTask(context, this);
+        return new AbstractAuthorizationTask(context, this, new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                Authorizer authorizer = (Authorizer) params[0];
+                KeyKeeper result = (KeyKeeper) params[1];
+                SettingsActivity activity = (SettingsActivity)context;
+                SettingsActivity.webViewURL = authorizer.makeAuthQuery().toURL();
+                SettingsActivity.webViewKeyKeeper = result;
+                SettingsActivity.webViewAuthorizer = authorizer;
+                activity.startWebView();
+            }
+        });
+    }
+
+    public AsyncTask<Object, Void, KeyKeeper> createAsyncTask(Context context, UIAction doInUI) {
+        return new AbstractAuthorizationTask(context, this, doInUI);
     }
 
     /**

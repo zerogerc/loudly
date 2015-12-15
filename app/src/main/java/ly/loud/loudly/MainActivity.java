@@ -21,7 +21,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -38,6 +37,7 @@ import util.Utils;
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MAIN";
     static LinkedList<Post> posts = new LinkedList<>();
+    static boolean keysLoaded = false;
     static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
     static boolean dbLoaded = false;
     static int aliveCopy = 0;
@@ -159,22 +159,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        if (loadPosts == null) {
-            ArrayList<Wrap> loadFrom = new ArrayList<>();
-            for (Wrap w : Loudly.getContext().getWraps()) {
-                if (!loadedNetworks[w.networkID()]) {
-                    loadFrom.add(w);
-                }
-            }
-            // Loading posts
-            if (loadFrom.size() > 0 || !dbLoaded) {
-                receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(this);
-                loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
-                        loadFrom.toArray(new Wrap[loadFrom.size()]));
-                loadPosts.execute();
-            } else {
-                Loudly.getContext().startGetInfoService();
-            }
+        if (keysLoaded && loadPosts == null) {
+            loadPosts();
         }
     }
 
@@ -204,6 +190,24 @@ public class MainActivity extends AppCompatActivity {
             background.getBackground().setAlpha(0);
         }
         getFragmentManager().popBackStack();
+    }
+
+    static void loadPosts() {
+        ArrayList<Wrap> loadFrom = new ArrayList<>();
+        for (Wrap w : Loudly.getContext().getWraps()) {
+            if (!loadedNetworks[w.networkID()]) {
+                loadFrom.add(w);
+            }
+        }
+        // Loading posts
+        if (loadFrom.size() > 0 || !dbLoaded) {
+            receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(self);
+            loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
+                    loadFrom.toArray(new Wrap[loadFrom.size()]));
+            loadPosts.execute();
+        } else {
+            Loudly.getContext().startGetInfoService();
+        }
     }
 
     static class CustomRecyclerViewListener extends RecyclerView.OnScrollListener {

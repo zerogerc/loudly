@@ -43,7 +43,7 @@ public class VKAuthorizer extends Authorizer {
     }
 
     @Override
-    protected Query makeAuthQuery() {
+    public Query makeAuthQuery() {
         Query query = new Query(AUTHORIZE_URL);
         query.addParameter("client_id", VKKeyKeeper.CLIENT_ID);
         query.addParameter("redirect_uri", RESPONSE_URL);

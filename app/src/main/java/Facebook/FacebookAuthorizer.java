@@ -42,7 +42,7 @@ public class FacebookAuthorizer extends Authorizer {
     }
 
     @Override
-    protected Query makeAuthQuery() {
+    public Query makeAuthQuery() {
         Query query = new Query(AUTHORIZE_URL);
         query.addParameter("client_id", FacebookKeyKeeper.CLIENT_ID);
         query.addParameter("redirect_uri", REDIRECT_URL);
