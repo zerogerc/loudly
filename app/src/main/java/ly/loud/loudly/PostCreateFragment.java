@@ -121,8 +121,8 @@ public class PostCreateFragment extends Fragment {
                     Utils.hidePhoneKeyboard(getActivity());
                     networksChooseFragment.getIconsHolder().prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
                     FragmentTransaction ft = getFragmentManager().beginTransaction();
-                    ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,
-                            R.anim.slide_in_left, R.anim.slide_out_right);
+                    ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_left,
+                            R.anim.slide_in_left, R.anim.slide_out_left);
                     ft.show(networksChooseFragment);
                     ft.addToBackStack(null);
                     ft.commit();
@@ -219,7 +219,13 @@ public class PostCreateFragment extends Fragment {
                         wraps.toArray(new Wrap[0]));
                 uploader.execute(post);
 
-                getActivity().getFragmentManager().popBackStack();
+                FragmentTransaction ft = getFragmentManager().beginTransaction();
+                ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,
+                        R.anim.slide_in_left, R.anim.slide_out_right);
+                ft.hide(networksChooseFragment);
+                ft.commit();
+                getFragmentManager().popBackStack();
+                getFragmentManager().popBackStack();
             }
         };
 
@@ -381,7 +387,6 @@ public class PostCreateFragment extends Fragment {
 
             }
         }
-        getActivity();
         if (requestCode == REQUEST_PHOTO_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
             postImage = new LoudlyImage(currentImageUri);
             galleryAddPic();

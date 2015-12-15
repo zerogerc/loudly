@@ -69,25 +69,29 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="8dp">
+                    <EditText
+                        android:id="@+id/settings_loaded_days_number"
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:ems="10"
+                        android:inputType="number" />
 
                     <TextView
                         android:id="@+id/settings_loaded_days_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
                         android:layout_alignParentLeft="true"
                         android:layout_alignParentStart="true"
+                        android:layout_toLeftOf="@id/settings_loaded_days_number"
+                        android:layout_toStartOf="@id/settings_loaded_days_number"
                         android:text="Load post for last (days):"
                         android:textColor="@color/grey_color"
                         android:textSize="17sp" />
 
-                    <EditText
-                        android:id="@+id/settings_loaded_days_number"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_alignParentRight="true"
-                        android:ems="10"
-                        android:inputType="number" />
                 </RelativeLayout>
 
                 <RelativeLayout
@@ -97,24 +101,29 @@
                     android:layout_below="@id/settings_first_item"
                     android:padding="8dp">
 
+                    <EditText
+                        android:id="@+id/settings_check_interval_number"
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:ems="10"
+                        android:inputType="number" />
+
+
                     <TextView
                         android:id="@+id/settings_check_interval_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentLeft="true"
                         android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_toLeftOf="@id/settings_check_interval_number"
+                        android:layout_toStartOf="@id/settings_check_interval_number"
                         android:text="Check every (seconds):"
                         android:textColor="@color/grey_color"
                         android:textSize="17sp" />
-
-                    <EditText
-                        android:id="@+id/settings_check_interval_number"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_alignParentRight="true"
-                        android:ems="10"
-                        android:inputType="number" />
 
                 </RelativeLayout>
             </RelativeLayout>

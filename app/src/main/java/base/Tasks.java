@@ -235,7 +235,7 @@ public class Tasks {
                     }
                 }
             }
-
+            // TODO: 15.12.15 removing without wraps
             if (post instanceof LoudlyPost) {
                 boolean dead = true;
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -673,6 +673,7 @@ public class Tasks {
                 return makeError(Broadcasts.POST_LOAD, Broadcasts.DATABASE_ERROR, e.getMessage());
             }
 
+            publishProgress(makeMessage(Broadcasts.POST_LOAD, Broadcasts.LOADED));
             loudlyPostExists = new boolean[loudlyPosts.size()];
 
 

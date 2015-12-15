@@ -149,6 +149,9 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         self = this;
+        if (authReceiver != null) {
+            authReceiver.attach(this);
+        }
     }
 
     @Override
@@ -165,6 +168,9 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        if (authReceiver != null) {
+            authReceiver.detach();
+        }
         self = null;
     }
 
@@ -256,7 +262,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     public void finishWebView() {
         webViewFragment.clearWebView();
-        getFragmentManager().popBackStack();
     }
 
 

@@ -79,6 +79,7 @@ public class AuthFragment extends Fragment {
                         FragmentTransaction ft = getFragmentManager().beginTransaction();
                         ft.hide(fragment);
                         ft.commit();
+                        getFragmentManager().popBackStack();
                         return true;
 
                     }

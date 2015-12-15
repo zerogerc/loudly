@@ -2,7 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
     <item android:id="@+id/main_call_settings"
-        android:icon="@drawable/ic_settings"
+        android:icon="@drawable/ic_action_ic_settings_white_48dp"
         android:title="settings"
         app:showAsAction="ifRoom"/>
 </menu>

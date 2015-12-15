@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -107,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setShowHideAnimationEnabled(true);
 
+        final AppBarLayout.LayoutParams customParams = (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+
         getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
@@ -115,6 +118,9 @@ public class MainActivity extends AppCompatActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         getSupportActionBar().hide();
                     }
+                    AppBarLayout.LayoutParams params =
+                            (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+                    params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED);
                     floatingActionButton.hide();
                     background.setAlpha(1);
                     background.getBackground().setAlpha(100);
@@ -123,7 +129,10 @@ public class MainActivity extends AppCompatActivity {
                 if (count == 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         getSupportActionBar().show();
-                    }
+                    };
+                    AppBarLayout.LayoutParams params =
+                            (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+                    params.setScrollFlags(customParams.getScrollFlags());
                     floatingActionButton.show();
                     background.setAlpha(0);
                     background.setClickable(false);
@@ -243,6 +252,7 @@ public class MainActivity extends AppCompatActivity {
                         super.onAnimationStart(animation);
                         nowAnimating = true;
                         isShowFab = false;
+
                     }
 
                     @Override
@@ -281,7 +291,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true); /// HERE
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.addOnScrollListener(new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), Utils.getDefaultScreenHeight()) {
+        recyclerView.addOnScrollListener(
+                new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), Utils.getDefaultScreenHeight()) {
         });
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
@@ -334,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
                     int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
                     String msg = "Uploading post to " + Networks.nameOfNetwork(networkID) + "...";
                     Snackbar.make(mainActivity.findViewById(R.id.main_layout),
-                            msg, Snackbar.LENGTH_SHORT)
+                            msg, Snackbar.LENGTH_INDEFINITE)
                             .show();
                     break;
                 case Broadcasts.IMAGE:
@@ -407,11 +418,27 @@ public class MainActivity extends AppCompatActivity {
             int network;
             switch (status) {
                 case Broadcasts.STARTED:
-                    dbLoaded = true;
                     Snackbar.make(mainActivity.findViewById(R.id.main_layout),
                             "Loading Loudly posts...",
                             Snackbar.LENGTH_INDEFINITE)
                             .show();
+                    break;
+                case Broadcasts.LOADED:
+                    dbLoaded = true;
+                    if (posts.size() == 0) {
+                        Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                                "You haven't upload any post yet",
+                                Snackbar.LENGTH_SHORT)
+                                .show();
+                        stop();
+                        receivers[LOAD_POSTS_RECEIVER] = null;
+                        loadPosts = null;
+                    } else {
+                        Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                                "Loudly posts loaded",
+                                Snackbar.LENGTH_INDEFINITE)
+                                .show();
+                    }
                     break;
                 case Broadcasts.PROGRESS:
                     network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);

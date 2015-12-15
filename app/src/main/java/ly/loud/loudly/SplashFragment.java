@@ -62,7 +62,6 @@ public class SplashFragment extends Fragment {
                 return false;
             }
         });
-
         return rootView;
     }
 
@@ -85,6 +84,7 @@ public class SplashFragment extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        hide();
     }
 
     public void show() {
@@ -108,11 +108,9 @@ public class SplashFragment extends Fragment {
     }
 
     public void hide() {
-        MainActivity.loadPosts();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(this);
         ft.commit();
-        getFragmentManager().popBackStack();
     }
 
     private void run() {
@@ -136,6 +134,7 @@ public class SplashFragment extends Fragment {
         }
         if (fragment.refreshTokens.size() == 0) {
             fragment.hide();
+            MainActivity.loadPosts();
             return;
         }
 
@@ -199,6 +198,7 @@ public class SplashFragment extends Fragment {
 
                     if (fragment.refreshIndex == fragment.refreshTokens.size()) {
                         fragment.hide();
+                        MainActivity.loadPosts();
                     }
                     fragment.splashInfo.setText("Login into " + Networks.nameOfNetwork(network));
 

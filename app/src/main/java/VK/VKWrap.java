@@ -22,7 +22,6 @@ import base.says.LoudlyPost;
 import base.says.Post;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
-import util.IDInterval;
 import util.InvalidTokenException;
 import util.Network;
 import util.Query;
@@ -254,7 +253,7 @@ public class VKWrap extends Wrap {
             int comments = postParser.getObject().getInt(0);
             int shares = postParser.getObject().getInt(0);
 
-            do {
+            while (iterator.hasNext()) {
                 Post post = iterator.next();
                 if (post.getId().equals(id)) {
                     Info info = new Info(likes, shares, comments);
@@ -263,7 +262,7 @@ public class VKWrap extends Wrap {
                 } else {
                     callback.foundDeletedPost(post);
                 }
-            } while (iterator.hasNext());
+            }
         }
     }
 
@@ -378,7 +377,7 @@ public class VKWrap extends Wrap {
         query.addParameter("post_id", element.getId());
         query.addParameter("need_likes", 1);
         query.addParameter("count", 20);
-        query.addParameter("sort", "desc");
+        query.addParameter("sort", "asc");
         query.addParameter("preview_length", 0);
         query.addParameter("extended", 1);
 
@@ -478,7 +477,7 @@ public class VKWrap extends Wrap {
         } else if (element instanceof Image) {
             type = "photo";
         } else if (element instanceof Comment) {
-            type = "people_list_comment";
+            type = "comment";
         } else {
             return new LinkedList<>();
         }
@@ -528,7 +527,7 @@ public class VKWrap extends Wrap {
             getPeopleQuery.addParameter("fields", "photo_50");
         } catch (JSONException e) {
             e.printStackTrace();
-            return null;
+            return new LinkedList<>();
         }
 
         response = Network.makeGetRequest(getPeopleQuery);
@@ -551,7 +550,7 @@ public class VKWrap extends Wrap {
             }
         } catch (JSONException e) {
             e.printStackTrace();
-            return null;
+            return new LinkedList<>();
         }
 
         return result;

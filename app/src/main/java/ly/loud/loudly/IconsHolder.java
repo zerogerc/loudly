@@ -52,6 +52,7 @@ public class IconsHolder extends View {
                 availeableAmount++;
             }
         }
+        invalidate();
     }
 
     public void prepareView(int mode) {
@@ -79,6 +80,8 @@ public class IconsHolder extends View {
                 availeableAmount++;
             }
         }
+        requestLayout();
+        invalidate();
     }
 
     public IconsHolder(Context context, AttributeSet attrs) {
@@ -87,8 +90,10 @@ public class IconsHolder extends View {
 
         for (int network = 0; network < Networks.NETWORK_COUNT; network++) {
             if (Loudly.getContext().getKeyKeeper(network) != null) {
+                available[network] = true;
                 isVisible[network] = true;
             } else {
+                available[network] = false;
                 isVisible[network] = false;
             }
         }
@@ -96,6 +101,8 @@ public class IconsHolder extends View {
         Bitmap bitmap = Utils.getIconByNetwork(Networks.FB);
         iconHeight = bitmap.getHeight();
         iconWidth = bitmap.getWidth();
+        requestLayout();
+        invalidate();
     }
 
     @Override
@@ -137,7 +144,7 @@ public class IconsHolder extends View {
             canvas.drawBitmap(bitmap, cur_w, cur_h, null);
 
             cur_w += iconWidth + margin;
-            if ((network + 1) % columns == 0) {
+            if ((columns != 0) && ((network + 1) % columns == 0)) {
                 cur_h += iconHeight + margin;
                 cur_w = margin;
             }
@@ -178,7 +185,7 @@ public class IconsHolder extends View {
         if (network != -1 && available[network]) {
             if (isVisible[network] && colorItemClick != null) {
                 colorItemClick.execute(context, network);
-            } else {
+            } else if (grayItemClick != null){
                 grayItemClick.execute(context, network);
             }
         }
