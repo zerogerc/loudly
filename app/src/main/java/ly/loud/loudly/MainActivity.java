@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -168,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
             // Loading posts
             if (loadFrom.size() > 0 || !dbLoaded) {
                 receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(this);
-
                 loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
                         loadFrom.toArray(new Wrap[loadFrom.size()]));
                 loadPosts.execute();
@@ -312,7 +312,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onMessageReceive(Context context, Intent message) {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            Toast toast;
             long postID, imageID;
             int progress;
             MainActivity mainActivity = (MainActivity) context;
@@ -320,12 +319,15 @@ public class MainActivity extends AppCompatActivity {
                 case Broadcasts.STARTED:
                     // Saved to DB. Make place for the post
                     mainActivity.recyclerViewAdapter.notifyItemInserted(0);
+                    Loudly.getContext().stopGetInfoService();
                     break;
                 case Broadcasts.PROGRESS:
                     // Uploaded to network
                     int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
-                    toast = Toast.makeText(context, "" + networkID, Toast.LENGTH_SHORT);
-                    toast.show();
+                    String msg = "Uploading post to " + Networks.nameOfNetwork(networkID) + "...";
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            msg, Snackbar.LENGTH_SHORT)
+                            .show();
                     break;
                 case Broadcasts.IMAGE:
                     // Image is loading
@@ -339,8 +341,6 @@ public class MainActivity extends AppCompatActivity {
                     imageID = message.getLongExtra(Broadcasts.IMAGE_FIELD, 0);
                     postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
                     networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
-                    toast = Toast.makeText(context, "Image " + imageID + " uploaded to " + networkID, Toast.LENGTH_SHORT);
-                    toast.show();
                     break;
                 case Broadcasts.FINISHED:
                     // LoudlyPost uploaded
@@ -349,17 +349,38 @@ public class MainActivity extends AppCompatActivity {
                             Snackbar.LENGTH_LONG)
                             .show();
 
+                    Loudly.getContext().startGetInfoService();
                     receivers[POST_UPLOAD_RECEIVER].stop();
                     receivers[POST_UPLOAD_RECEIVER] = null;
+                    mainActivity.floatingActionButton.show();
                     break;
                 case Broadcasts.ERROR:
                     // Got an error
-                    String errorKind = message.getStringExtra(Broadcasts.ERROR_KIND);
-                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
-                    toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
-                    toast.show();
-                    receivers[POST_UPLOAD_RECEIVER].stop();
-                    receivers[POST_UPLOAD_RECEIVER] = null;
+                    int errorKind = message.getIntExtra(Broadcasts.ERROR_KIND, -1);
+                    int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    String error = "Can't upload post to " + Networks.nameOfNetwork(network) + ": ";
+                    switch (errorKind) {
+                        case Broadcasts.NETWORK_ERROR:
+                            error += "no internet connection";
+                            break;
+                        case Broadcasts.INVALID_TOKEN:
+                            error += "lost connection to network";
+                            break;
+                        default:
+                            // Database fail
+                            error = "Can't upload post due to internal error";
+                            Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                                    error, Snackbar.LENGTH_SHORT)
+                                    .show();
+                            mainActivity.floatingActionButton.show();
+                            Log.e("UPLOAD_POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
+                            stop();
+                            receivers[POST_UPLOAD_RECEIVER] = null;
+                            return;
+                    }
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            error, Snackbar.LENGTH_SHORT)
+                            .show();
                     break;
             }
         }
@@ -403,13 +424,13 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case Broadcasts.ERROR:
                     network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    String error;
+                    String error = "Can't load posts from " + Networks.nameOfNetwork(network) + ": ";
                     switch (message.getIntExtra(Broadcasts.ERROR_KIND, -1)) {
                         case Broadcasts.NETWORK_ERROR:
-                            error = "No internet connection";
+                            error += "no internet connection";
                             break;
                         case Broadcasts.INVALID_TOKEN:
-                            error = "Lost connection to " + Networks.nameOfNetwork(network);
+                            error += "lost connection to it";
                             break;
                         default:
                             error = "Unexpected error";
@@ -418,8 +439,6 @@ public class MainActivity extends AppCompatActivity {
                     Snackbar.make(mainActivity.findViewById(R.id.main_layout),
                             error, Snackbar.LENGTH_SHORT)
                             .show();
-                    stop();
-                    receivers[LOAD_POSTS_RECEIVER] = null;
                     break;
             }
         }
@@ -439,34 +458,41 @@ public class MainActivity extends AppCompatActivity {
                 case Broadcasts.PROGRESS:
                     network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
                     Snackbar.make(mainActivity.findViewById(R.id.main_layout),
-                            "Deleting from " + Networks.nameOfNetwork(network) + "..." , Snackbar.LENGTH_INDEFINITE)
+                            "Deleting from " + Networks.nameOfNetwork(network) + "...", Snackbar.LENGTH_INDEFINITE)
                             .show();
                     break;
                 case Broadcasts.FINISHED:
                     Snackbar.make(mainActivity.findViewById(R.id.main_layout),
                             "Post deleted", Snackbar.LENGTH_SHORT)
                             .show();
+                    mainActivity.floatingActionButton.show();
+                    Loudly.getContext().startGetInfoService();
                     break;
                 case Broadcasts.ERROR:
-                    String error;
+                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    String error = "Can't delete post from " + Networks.nameOfNetwork(network) + ": ";
                     switch (message.getIntExtra(Broadcasts.ERROR_KIND, -1)) {
                         case Broadcasts.NETWORK_ERROR:
-                            network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                            error = "Can't delete from " + Networks.nameOfNetwork(network);
+                            error += "no internet connection";
                             break;
                         case Broadcasts.INVALID_TOKEN:
-                            network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                            error = "Lost connection to " + Networks.nameOfNetwork(network);
+                            error += "lost connection to network";
                             break;
                         default:
-                            error = "";
+                            //Totally unexpected
+                            error = "Can't delete post due to internal error :(";
+                            Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                                    error, Snackbar.LENGTH_SHORT)
+                                    .show();
+                            mainActivity.floatingActionButton.show();
+                            Log.e("DELETE_POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
+                            stop();
+                            receivers[POST_DELETE_RECEIVER] = null;
+                            return;
                     }
-                    if (!error.isEmpty()) {
-                        Snackbar.make(mainActivity.findViewById(R.id.main_layout),
-                                error, Snackbar.LENGTH_SHORT)
-                                .show();
-                    }
-                    Log.e("DELETE POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            error, Snackbar.LENGTH_SHORT)
+                            .show();
                     break;
             }
         }

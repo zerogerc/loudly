@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,12 +21,15 @@ import android.widget.Toast;
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
 
+import base.Networks;
 import base.SingleNetwork;
 import base.Tasks;
 import ly.loud.loudly.Loudly;
+import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.R;
 import util.AttachableReceiver;
 import util.Broadcasts;
+import util.UIAction;
 
 /**
  * Created by ZeRoGerc on 06.12.15.
@@ -157,7 +161,7 @@ public class PeopleListFragment extends Fragment {
     private static class GetPersonReceiver extends AttachableReceiver {
         WeakReference<PeopleListAdapter> adapter;
         public GetPersonReceiver(Context context) {
-            super(context, Broadcasts.POST_GET_PERSONS);
+            super(context, Broadcasts.GET_PERSONS);
         }
 
         public void attachAdapter(PeopleListAdapter adapter) {
@@ -174,14 +178,26 @@ public class PeopleListFragment extends Fragment {
             PeopleListAdapter recyclerViewAdapter = adapter.get();
             switch (status) {
                 case Broadcasts.PROGRESS:
-                    recyclerViewAdapter.notifyDataSetChanged();
+                    recyclerViewAdapter.notifyItemInserted(recyclerViewAdapter.getItemCount());
                     break;
                 case Broadcasts.ERROR:
-                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
-                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
+                    int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    int kind = message.getIntExtra(Broadcasts.ERROR_KIND, -1);
+                    String error = "Can't load people from " + Networks.nameOfNetwork(network) + ": ";
+                    switch (kind) {
+                        case Broadcasts.NETWORK_ERROR:
+                            error += "no internet connection";
+                            break;
+                        case Broadcasts.INVALID_TOKEN:
+                            error += "lost connection to network";
+                            break;
+                    }
+                    MainActivity mainActivity = (MainActivity) context;
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            error, Snackbar.LENGTH_SHORT)
+                            .show();
                     break;
                 case Broadcasts.FINISHED:
-                    recyclerViewAdapter.notifyDataSetChanged();
                     if (depth == 0) {
                         stop();
                         getPersonReceiver = null;

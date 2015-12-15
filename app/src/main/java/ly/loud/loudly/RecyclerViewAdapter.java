@@ -1,7 +1,9 @@
 package ly.loud.loudly;
 
 import android.animation.ObjectAnimator;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
@@ -49,7 +51,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private void setViewSizesForImageSizes(final ViewHolder holder, final int width, final int height) {
         int imageWidth = Utils.getDefaultScreenWidth() - 2 * holder.getMargin();
         float scale = ((float) imageWidth) / ((float) width);
-        int imageHeight = (int)(height * scale);
+        int imageHeight = (int) (height * scale);
         holder.postImageView.getLayoutParams().width = imageWidth;
         holder.postImageView.getLayoutParams().height = imageHeight;
         holder.postImageView.requestLayout();
@@ -128,7 +130,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     .listener(new RequestListener<Uri, GlideDrawable>() {
                         @Override
                         public boolean onException(Exception e, Uri model, Target<GlideDrawable> target, boolean isFirstResource) {
-                            Toast.makeText(Loudly.getContext(), "Error occured during image load", Toast.LENGTH_SHORT).show();
+                            Log.e("GLIDE", "Error occured during image load", e);
                             return false;
                         }
 
@@ -146,7 +148,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             holder.postImageView.setLayoutParams(layoutParams);
         }
 
-        holder.showMoreOptions.setOnClickListener(makeOptionsOnClickListener(post, activity));
+        holder.showMoreOptions.setOnClickListener(makeDeleteClickListener(post, activity));
 
         if (post.getInfo().comment != 0) {
             holder.commentsButton.setOnClickListener(new View.OnClickListener() {
@@ -183,14 +185,27 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     }
 
-    private View.OnClickListener makeOptionsOnClickListener(final Post post, final Context context) {
+    private View.OnClickListener makeDeleteClickListener(final Post post, final Context context) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
-                        new MainActivity.PostDeleteReceiver(context);
-                new Tasks.PostDeleter(post, MainActivity.posts, Loudly.getContext().getWraps()).
-                        executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new AlertDialog.Builder(activity)
+                        .setIcon(R.mipmap.ic_launcher)
+                        .setTitle("Delete post?")
+                        .setMessage("Do you want to delete this post from all networks?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Loudly.getContext().stopGetInfoService();
+                                activity.floatingActionButton.hide();
+                                MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
+                                        new MainActivity.PostDeleteReceiver(context);
+                                new Tasks.PostDeleter(post, MainActivity.posts, Loudly.getContext().getWraps()).
+                                        executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
             }
         };
     }
@@ -258,11 +273,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
     }
 
-    private void setAnimation(View viewToAnimate, int position)
-    {
+    private void setAnimation(View viewToAnimate, int position) {
         // If the bound view wasn't previously displayed on screen, it's animated
-        if (position > lastPosition)
-        {
+        if (position > lastPosition) {
             ObjectAnimator animator = ObjectAnimator.ofFloat(viewToAnimate, "translationY", Utils.getDefaultScreenHeight(), 0);
             animator.setDuration(400);
             animator.setInterpolator(new DecelerateInterpolator());

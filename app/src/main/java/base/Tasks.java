@@ -31,7 +31,6 @@ import util.InvalidTokenException;
 import util.ThreadStopped;
 import util.TimeInterval;
 import util.UIAction;
-import util.Utils;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -120,6 +119,12 @@ public class Tasks {
 
             for (Wrap w : wraps) {
                 try {
+
+                    Intent message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.PROGRESS,
+                            post.getLocalId());
+                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+                    publishProgress(message);
+
                     final int networkID = w.networkID();
                     post.setNetwork(networkID);
 
@@ -137,18 +142,13 @@ public class Tasks {
                                 publishProgress(message);
                             }
                         });
-                        Intent message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.IMAGE_FINISHED,
+                        message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.IMAGE_FINISHED,
                                 post.getLocalId());
                         message.putExtra(Broadcasts.IMAGE_FIELD, image.getLocalId());
                         message.putExtra(Broadcasts.NETWORK_FIELD, networkID);
                     }
 
                     w.uploadPost(post);
-
-                    Intent message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.PROGRESS,
-                            post.getLocalId());
-                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                    publishProgress(message);
                 } catch (InvalidTokenException e) {
                     Intent message = makeError(Broadcasts.POST_UPLOAD, Broadcasts.INVALID_TOKEN,
                             post.getLocalId(), e.getMessage());
@@ -216,12 +216,13 @@ public class Tasks {
             for (Wrap w : wraps) {
                 if (post.existsIn(w.networkID())) {
                     try {
-                            post.setNetwork(w.networkID());
-
-                        w.deletePost(post);
                         Intent message = makeMessage(Broadcasts.POST_DELETE, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
+
+                        post.setNetwork(w.networkID());
+                        w.deletePost(post);
+
                     } catch (InvalidTokenException e) {
                         Intent message = makeError(Broadcasts.POST_DELETE, Broadcasts.INVALID_TOKEN, e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
@@ -301,27 +302,27 @@ public class Tasks {
                             persons.addAll(got);
                         }
 
-                        Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);
+                        Intent message = makeMessage(Broadcasts.GET_PERSONS, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         message.putExtra(Broadcasts.ID_FIELD, ID);
                         publishProgress(message);
                     }
 
                 } catch (InvalidTokenException e) {
-                    Intent message = makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.INVALID_TOKEN,
+                    Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.INVALID_TOKEN,
                             e.getMessage());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     message.putExtra(Broadcasts.ID_FIELD, ID);
                     publishProgress(message);
                 } catch (IOException e) {
-                    Intent message = makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
+                    Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.NETWORK_ERROR,
                             e.getMessage());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     message.putExtra(Broadcasts.ID_FIELD, ID);
                     publishProgress(message);
                 }
             }
-            return makeSuccess(Broadcasts.POST_GET_PERSONS);
+            return makeSuccess(Broadcasts.GET_PERSONS);
         }
     }
 
@@ -354,27 +355,27 @@ public class Tasks {
                             comments.addAll(got);
                         }
 
-                        Intent message = makeMessage(Broadcasts.POST_GET_PERSONS, Broadcasts.PROGRESS);
+                        Intent message = makeMessage(Broadcasts.GET_PERSONS, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         message.putExtra(Broadcasts.ID_FIELD, ID);
                         publishProgress(message);
                     }
 
                 } catch (InvalidTokenException e) {
-                    Intent message = makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.INVALID_TOKEN,
+                    Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.INVALID_TOKEN,
                             e.getMessage());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     message.putExtra(Broadcasts.ID_FIELD, ID);
                     publishProgress(message);
                 } catch (IOException e) {
-                    Intent message = makeError(Broadcasts.POST_GET_PERSONS, Broadcasts.NETWORK_ERROR,
+                    Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.NETWORK_ERROR,
                             e.getMessage());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     message.putExtra(Broadcasts.ID_FIELD, ID);
                     publishProgress(message);
                 }
             }
-            return makeSuccess(Broadcasts.POST_GET_PERSONS);
+            return makeSuccess(Broadcasts.GET_PERSONS);
         }
     }
 
@@ -508,6 +509,7 @@ public class Tasks {
 
     public interface GetInfoCallback {
         void infoLoaded(Post post, Info info);
+
         void foundDeletedPost(Post post);
     }
 
@@ -522,8 +524,8 @@ public class Tasks {
      * </p>
      * Before loading posts from some network:
      * <ol>
-     *     <li>Broadcasts.STATUS_FIELD = Broadcasts.PROGRESS</li>
-     *     <li>Broadcasts.NETWORK_FIELD = id of the network</li>
+     * <li>Broadcasts.STATUS_FIELD = Broadcasts.PROGRESS</li>
+     * <li>Broadcasts.NETWORK_FIELD = id of the network</li>
      * </ol>
      * <p>
      * When loading is successfully finished:

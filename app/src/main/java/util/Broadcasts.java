@@ -12,7 +12,7 @@ public class Broadcasts {
     public static final String POST_LOAD = "post.load";
     public static final String POST_UPLOAD = "post.upload";
     public static final String POST_GET_INFO = "post.info";
-    public static final String POST_GET_PERSONS = "person";
+    public static final String GET_PERSONS = "person";
     public static final String POST_DELETE = "delete";
 
     /** Fields in broadcasts **/
