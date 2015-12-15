@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -102,18 +103,35 @@ public class PostCreateFragment extends Fragment {
         }
     }
 
+    public boolean existsAvailableNetworks() {
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (Loudly.getContext().getKeyKeeper(i) != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void setListeners() {
         getActivity().findViewById(R.id.new_post_send_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
-                Utils.hidePhoneKeyboard(getActivity());
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
-                ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,
-                        R.anim.slide_in_left, R.anim.slide_out_right);
-                ft.show(networksChooseFragment);
-                ft.addToBackStack(null);
-                ft.commit();
+                if (existsAvailableNetworks()) {
+                    getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+                    Utils.hidePhoneKeyboard(getActivity());
+                    networksChooseFragment.getIconsHolder().prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
+                    FragmentTransaction ft = getFragmentManager().beginTransaction();
+                    ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,
+                            R.anim.slide_in_left, R.anim.slide_out_right);
+                    ft.show(networksChooseFragment);
+                    ft.addToBackStack(null);
+                    ft.commit();
+                } else {
+                    Snackbar.make(getActivity().findViewById(R.id.main_layout),
+                            "You must be logged in at least one network", Snackbar.LENGTH_SHORT)
+                            .show();
+                }
+
             }
         });
 

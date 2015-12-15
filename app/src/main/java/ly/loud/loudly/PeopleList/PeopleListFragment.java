@@ -15,8 +15,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
@@ -29,7 +29,6 @@ import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.R;
 import util.AttachableReceiver;
 import util.Broadcasts;
-import util.UIAction;
 
 /**
  * Created by ZeRoGerc on 06.12.15.
@@ -49,13 +48,15 @@ public class PeopleListFragment extends Fragment {
     PeopleListAdapter recyclerViewAdapter;
     LinearLayoutManager layoutManager;
 
+    private ProgressBar progress;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.people_list, container, false);
 
         recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
-        recyclerViewAdapter = new PeopleListAdapter(items, getActivity());
+        recyclerViewAdapter = new PeopleListAdapter(items, getActivity(), this);
 //        recyclerView.setHasFixedSize(true); /// HERE
         layoutManager = new LinearLayoutManager(Loudly.getContext());
 
@@ -63,6 +64,8 @@ public class PeopleListFragment extends Fragment {
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
+
+        progress = ((ProgressBar) rootView.findViewById(R.id.people_list_progress));
 
         String text;
         switch (requestType) {
@@ -181,6 +184,7 @@ public class PeopleListFragment extends Fragment {
                     recyclerViewAdapter.notifyItemInserted(recyclerViewAdapter.getItemCount());
                     break;
                 case Broadcasts.ERROR:
+
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
                     int kind = message.getIntExtra(Broadcasts.ERROR_KIND, -1);
                     String error = "Can't load people from " + Networks.nameOfNetwork(network) + ": ";
@@ -207,24 +211,6 @@ public class PeopleListFragment extends Fragment {
         }
     }
 
-    public void show() {
-        FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction();
-        ft.addToBackStack(null);
-        ft.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_bottom);
-        ft.show(this);
-        ft.commit();
-    }
-
-    public void fillPersons(SingleNetwork element, int type) {
-        this.element = element;
-        this.requestType = type;
-    }
-
-    public void fillComments(SingleNetwork element) {
-        this.element = element;
-        this.requestType = COMMENTS;
-    }
-
     private static void show(Activity activity, PeopleListFragment fragment) {
         depth++;
         if (getPersonReceiver == null){
@@ -245,6 +231,13 @@ public class PeopleListFragment extends Fragment {
         transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_bottom);
         transaction.replace(R.id.fragment_container, fragment);
         transaction.commit();
+
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        showProgress();
+        super.onViewCreated(view, savedInstanceState);
     }
 
     public static PeopleListFragment showPersons(Activity activity, SingleNetwork element, int type) {
@@ -271,5 +264,13 @@ public class PeopleListFragment extends Fragment {
 
     public void setItems(LinkedList<Item> items) {
         this.items = items;
+    }
+
+    public void hideProgress() {
+        this.progress.setVisibility(View.GONE);
+    }
+
+    public void showProgress() {
+        this.progress.setVisibility(View.VISIBLE);
     }
 }

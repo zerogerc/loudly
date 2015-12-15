@@ -26,6 +26,7 @@ import util.Utils;
 public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<Item> items;
     private Activity activity;
+    private PeopleListFragment fragment;
 
     private void loadAvatar(final Person person, final ImageView icon) {
         if (person.getPhotoUrl() != null) {
@@ -123,9 +124,10 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     }
 
-    public PeopleListAdapter(List<Item> items, Activity activity) {
+    public PeopleListAdapter(List<Item> items, Activity activity, PeopleListFragment fragment) {
         this.items = items;
         this.activity = activity;
+        this.fragment = fragment;
     }
 
     @Override
@@ -156,6 +158,7 @@ public class PeopleListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        if (position == 0) fragment.hideProgress();
         refreshFields(holder, items.get(position));
     }
 

@@ -102,6 +102,7 @@ public class SettingsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         iconsHolder = (IconsHolder) findViewById(R.id.settings_icons_holder);
+        iconsHolder.prepareView(IconsHolder.SHOW_ALL);
         setIconsClick();
 
         initFragment();

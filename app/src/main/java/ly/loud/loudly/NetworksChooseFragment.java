@@ -139,6 +139,9 @@ public class NetworksChooseFragment extends Fragment {
         this.showAction = action;
     }
 
+    public IconsHolder getIconsHolder() {
+        return this.iconsHolder;
+    }
     @Override
     public void onStart() {
         super.onStart();
