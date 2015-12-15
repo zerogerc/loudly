@@ -18,6 +18,8 @@ import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -326,5 +328,15 @@ public class Utils {
         }
 
         return new Point(imageWidth, imageHeight);
+    }
+
+    public static void clearCookies(String domain) {
+        CookieManager cookieManager = CookieManager.getInstance();
+        String cookiestring = cookieManager.getCookie(domain);
+        String[] cookies =  cookiestring.split(";");
+        for (int i=0; i<cookies.length; i++) {
+            String[] cookieparts = cookies[i].split("=");
+            cookieManager.setCookie(domain, cookieparts[0].trim()+"=; Expires=Wed, 31 Dec 2025 23:59:59 GMT");
+        }
     }
 }

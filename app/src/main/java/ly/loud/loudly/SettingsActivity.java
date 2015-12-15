@@ -26,6 +26,7 @@ import base.says.Post;
 import util.AttachableReceiver;
 import util.Broadcasts;
 import util.UIAction;
+import util.Utils;
 import util.database.DatabaseActions;
 import util.database.DatabaseException;
 
@@ -273,6 +274,7 @@ public class SettingsActivity extends AppCompatActivity {
                 if (Loudly.getContext().getKeyKeeper(network) != null) {
                     try {
                         DatabaseActions.deleteKey(network);
+                        Utils.clearCookies(Networks.domainByNetwork(network));
                     } catch (DatabaseException e) {
                         e.printStackTrace();
                     }

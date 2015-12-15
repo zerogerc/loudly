@@ -41,6 +41,17 @@ public class Networks {
         }
     }
 
+    public static String domainByNetwork(int network) {
+        switch (network) {
+            case FB:
+                return "www.facebook.com";
+            case VK:
+                return "www.vk.com";
+            default:
+                return "";
+        }
+    }
+
     public static Wrap makeWrap(int network) {
         switch (network) {
             case FB:
