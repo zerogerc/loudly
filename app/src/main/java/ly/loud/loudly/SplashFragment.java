@@ -14,15 +14,12 @@ import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-
 import java.util.ArrayList;
 
 import base.Authorizer;
 import base.KeyKeeper;
 import base.Networks;
 import base.Tasks;
-import base.Wrap;
 import util.AttachableReceiver;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
@@ -90,9 +87,7 @@ public class SplashFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
     }
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void show() {
         noKeys = true;
         expiredKeys = false;
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -104,20 +99,12 @@ public class SplashFragment extends Fragment {
             }
         }
         if (noKeys || expiredKeys) {
-            this.show();
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.addToBackStack(null);
+            ft.show(this);
+            ft.commit();
+            run();
         }
-        //Listener HERE
-    }
-
-    public void show() {
-//        Glide.with(Loudly.getContext()).load(R.drawable.loudly_large)
-//                .fitCenter()
-//                .into(image);
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.addToBackStack(null);
-        ft.show(this);
-        ft.commit();
-        run();
     }
 
     public void hide() {
@@ -158,8 +145,8 @@ public class SplashFragment extends Fragment {
         fragment.refreshToken = new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
-                fragment.currentAuthorizer = (Authorizer)params[0];
-                fragment.currentKeys = (KeyKeeper)params[1];
+                fragment.currentAuthorizer = (Authorizer) params[0];
+                fragment.currentKeys = (KeyKeeper) params[1];
                 fragment.loadURL();
             }
         };
@@ -172,6 +159,7 @@ public class SplashFragment extends Fragment {
 
     private static class LoadKeysReceiver extends AttachableReceiver {
         SplashFragment fragment;
+
         public LoadKeysReceiver(Context context, SplashFragment fragment) {
             super(context, Broadcasts.KEYS_LOADED);
             this.fragment = fragment;
@@ -196,6 +184,7 @@ public class SplashFragment extends Fragment {
 
     private static class TokenRefreshReceiver extends AttachableReceiver {
         SplashFragment fragment;
+
         public TokenRefreshReceiver(Context context, SplashFragment fragment) {
             super(context, Broadcasts.AUTHORIZATION);
             this.fragment = fragment;

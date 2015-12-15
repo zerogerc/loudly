@@ -3,6 +3,7 @@ package base;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -485,6 +486,13 @@ public class Tasks {
         protected Intent doInBackground(Object... params) {
             try {
                 DatabaseActions.loadKeys();
+
+                // Loading preferences
+                SharedPreferences preferences = Loudly.getContext().getSharedPreferences(
+                        Loudly.PREFERENCES, Context.MODE_PRIVATE);
+                int frequency = preferences.getInt(Loudly.UPDATE_FREQUENCY, 30);
+                int loadLast = preferences.getInt(Loudly.LOAD_LAST, 7);
+                Loudly.setPreferences(frequency, loadLast);
             } catch (DatabaseException e) {
                 e.printStackTrace();
                 return makeError(Broadcasts.KEYS_LOADED, Broadcasts.DATABASE_ERROR, e.getMessage());
@@ -657,6 +665,7 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
+            publishProgress(makeMessage(Broadcasts.POST_LOAD, Broadcasts.STARTED));
             try {
                 loudlyPosts = DatabaseActions.loadPosts(time);
             } catch (DatabaseException e) {
@@ -666,7 +675,6 @@ public class Tasks {
 
             loudlyPostExists = new boolean[loudlyPosts.size()];
 
-            publishProgress(makeMessage(Broadcasts.POST_LOAD, Broadcasts.STARTED));
 
             merge(loudlyPosts);
 

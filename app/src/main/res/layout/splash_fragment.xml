@@ -46,7 +46,7 @@
                 android:layout_alignParentBottom="true"
                 android:textColor="@color/grey_color"
                 android:textSize="14sp"
-                android:text="loading..."/>
+                android:text="Loading..."/>
 
 
         </RelativeLayout>

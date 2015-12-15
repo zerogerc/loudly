@@ -4,6 +4,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 
 import java.util.Iterator;
 
@@ -36,6 +38,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private AuthFragment webViewFragment;
     private View webViewFragmentView;
+    private EditText loadLastText, frequencyText;
 
     public static String webViewURL;
     public static Authorizer webViewAuthorizer;
@@ -90,8 +93,6 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -129,6 +130,12 @@ public class SettingsActivity extends AppCompatActivity {
         if (authReceiver != null) {
             authReceiver.attach(this);
         }
+
+        int[] prefs = Loudly.getPreferences();
+        loadLastText = (EditText) findViewById(R.id.settings_loaded_days_number);
+        frequencyText = (EditText) findViewById(R.id.settings_check_interval_number);
+        frequencyText.setText(Integer.toString(prefs[0]));
+        loadLastText.setText(Integer.toString(prefs[1]));
     }
 
     @Override
@@ -143,6 +150,48 @@ public class SettingsActivity extends AppCompatActivity {
         self = this;
     }
 
+    @Override
+    public void onBackPressed() {
+        int count = getFragmentManager().getBackStackEntryCount();
+
+        if (count == 0) {
+            super.onBackPressed();
+            return;
+        }
+        getFragmentManager().popBackStack();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        self = null;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        aliveCopy--;
+
+        if (aliveCopy == 0) {
+            int frequency = Integer.parseInt(frequencyText.getText().toString());
+            int loadLast = Integer.parseInt(loadLastText.getText().toString());
+
+            savePreferences(frequency, loadLast);
+        }
+        if (authReceiver != null) {
+            authReceiver.stop();
+        }
+        authReceiver = null;
+    }
+
+    private void savePreferences(int frequency, int loadLast) {
+        SharedPreferences preferences = getSharedPreferences(Loudly.PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt(Loudly.UPDATE_FREQUENCY, frequency);
+        editor.putInt(Loudly.LOAD_LAST, loadLast);
+        editor.apply();
+    }
 
     private static class AuthReceiver extends AttachableReceiver {
         private IconsHolder iconsHolder;
@@ -209,34 +258,6 @@ public class SettingsActivity extends AppCompatActivity {
         getFragmentManager().popBackStack();
     }
 
-    @Override
-    public void onBackPressed() {
-        int count = getFragmentManager().getBackStackEntryCount();
-
-        if (count == 0) {
-            super.onBackPressed();
-            return;
-        }
-        getFragmentManager().popBackStack();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        self = null;
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        aliveCopy--;
-        if (isFinishing()) {
-            if (authReceiver != null) {
-                authReceiver.stop();
-            }
-            authReceiver = null;
-        }
-    }
 
     public void LogoutClick(int network) {
         Loudly.getContext().stopGetInfoService();

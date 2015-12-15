@@ -20,11 +20,14 @@ import util.TimeInterval;
  * Stores run-time variables
  */
 public class Loudly extends Application {
-    public static final int GET_INFO_INTERVAL = 30;
+    public static final String PREFERENCES = "loudlyprefs";
+    public static final String UPDATE_FREQUENCY = "upfreq";
+    public static final String LOAD_LAST = "loadlast";
 
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
     private TimeInterval timeInterval;
+    private static int loadLast, getInfoInterval;
 
     private AlarmManager alarmManager;
     PendingIntent getInfoService;
@@ -69,6 +72,23 @@ public class Loudly extends Application {
         return list.toArray(new Wrap[list.size()]);
     }
 
+    public static void setPreferences(int updateFreq, int loadLast) {
+        Loudly.loadLast = loadLast;
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, -loadLast);
+        Loudly.getContext().timeInterval = new TimeInterval(calendar.getTimeInMillis() / 1000, -1l);
+
+        Loudly.getInfoInterval = updateFreq;
+    }
+
+    /**
+     * @return Frequency of updates and posts interval
+     */
+    public static int[] getPreferences() {
+        return new int[]{getInfoInterval, loadLast};
+    }
+
     public TimeInterval getTimeInterval() {
         return timeInterval;
     }
@@ -80,7 +100,7 @@ public class Loudly extends Application {
         Intent runService = new Intent(context, GetInfoService.class);
         getInfoService = PendingIntent.getService(context, 0, runService, PendingIntent.FLAG_CANCEL_CURRENT);
         Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.SECOND, GET_INFO_INTERVAL);
+        cal.add(Calendar.SECOND, getInfoInterval);
         alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), getInfoService);
     }
 

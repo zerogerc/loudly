@@ -83,6 +83,17 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
 
             Post old = iterator.next();
             if (old.equals(post)) {
+                old.setId(null);
+                if (old instanceof LoudlyPost) {
+                    boolean visible = false;
+                    for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                        if (post.existsIn(i)) {
+                            visible = true;
+                            break;
+                        }
+                    }
+                    if (visible) break;
+                }
                 iterator.remove();
                 final int fixed = ind;
                 MainActivity.executeOnUI(new UIAction() {
@@ -92,6 +103,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
                         mainActivity.recyclerViewAdapter.notifyDeletedAtPosition(fixed);
                     }
                 });
+                break;
             }
             ind++;
         }

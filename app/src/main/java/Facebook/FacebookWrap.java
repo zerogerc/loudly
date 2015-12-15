@@ -322,9 +322,13 @@ public class FacebookWrap extends Wrap {
             parser = new JSONObject(response);
             for (Post post : posts) {
                 if (post.existsIn(networkID())) {
-                    JSONObject p = parser.getJSONObject(post.getId());
-                    Info info = getInfo(p);
-                    callback.infoLoaded(post, info);
+                    if (parser.has(post.getId())) {
+                        JSONObject p = parser.getJSONObject(post.getId());
+                        Info info = getInfo(p);
+                        callback.infoLoaded(post, info);
+                    } else {
+                        callback.foundDeletedPost(post);
+                    }
                 }
             }
         } catch (JSONException e) {

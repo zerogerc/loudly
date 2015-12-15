@@ -44,7 +44,8 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/settings_your_networks_text"
                     android:layout_margin="8dp"
-                    android:background="@null" />
+                    android:background="@null"
+                    />
             </RelativeLayout>
         </android.support.v7.widget.CardView>
 

@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     public RecyclerViewAdapter recyclerViewAdapter;
     public FloatingActionButton floatingActionButton;
     private PostCreateFragment newPostFragment;
+    private SplashFragment splashFragment;
 
     private Toolbar toolbar;
 
@@ -132,6 +133,8 @@ public class MainActivity extends AppCompatActivity {
 
         FragmentManager manager = getFragmentManager();
         newPostFragment = ((PostCreateFragment) manager.findFragmentById(R.id.new_post_fragment));
+        splashFragment = ((SplashFragment) manager.findFragmentById(R.id.splash_screen_fragment));
+        splashFragment.show();
 
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(newPostFragment);
@@ -160,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (keysLoaded && loadPosts == null) {
+            splashFragment.hide();
             loadPosts();
         }
     }
@@ -404,6 +408,10 @@ public class MainActivity extends AppCompatActivity {
             switch (status) {
                 case Broadcasts.STARTED:
                     dbLoaded = true;
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            "Loading Loudly posts...",
+                            Snackbar.LENGTH_INDEFINITE)
+                            .show();
                     break;
                 case Broadcasts.PROGRESS:
                     network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
