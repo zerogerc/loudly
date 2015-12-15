@@ -13,7 +13,6 @@ import base.KeyKeeper;
 import base.Networks;
 import base.Tasks;
 import base.Wrap;
-import util.IDInterval;
 import util.TimeInterval;
 
 /**
@@ -25,9 +24,6 @@ public class Loudly extends Application {
 
     private static Loudly context;
     private KeyKeeper[] keyKeepers;
-
-    private IDInterval[] loadedPosts;
-    private int[] offsets;
     private TimeInterval timeInterval;
 
     private AlarmManager alarmManager;
@@ -59,7 +55,6 @@ public class Loudly extends Application {
         return context;
     }
 
-
     public static void sendLocalBroadcast(Intent message) {
         LocalBroadcastManager.getInstance(getContext()).sendBroadcast(message);
     }
@@ -68,7 +63,7 @@ public class Loudly extends Application {
         ArrayList<Wrap> list = new ArrayList<>();
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (keyKeepers[i] != null) {
-                list.add(Wrap.makeWrap(i));
+                list.add(Networks.makeWrap(i));
             }
         }
         return list.toArray(new Wrap[list.size()]);
@@ -76,22 +71,6 @@ public class Loudly extends Application {
 
     public TimeInterval getTimeInterval() {
         return timeInterval;
-    }
-
-    public IDInterval getPostInterval(int network) {
-        return loadedPosts[network];
-    }
-
-    public void setPostInterval(int network, IDInterval interval) {
-        loadedPosts[network] = interval;
-    }
-
-    public int getOffset(int network) {
-        return offsets[network];
-    }
-
-    public void setOffset(int network, int offset) {
-        offsets[network] = offset;
     }
 
     public void startGetInfoService() {
@@ -115,8 +94,6 @@ public class Loudly extends Application {
         super.onCreate();
         keyKeepers = new KeyKeeper[Networks.NETWORK_COUNT];
         context = this;
-        loadedPosts = new IDInterval[Networks.NETWORK_COUNT];
-        offsets = new int[Networks.NETWORK_COUNT];
 
         // Load it from preferences
         Calendar cal = Calendar.getInstance();

@@ -194,7 +194,7 @@ public class PostCreateFragment extends Fragment {
                 ArrayList<Wrap> wraps = new ArrayList<>();
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
                     if (networksChooseFragment.shouldPostTo(i)) {
-                        wraps.add(Wrap.makeWrap(i));
+                        wraps.add(Networks.makeWrap(i));
                     }
                 }
                 Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,

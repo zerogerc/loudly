@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -112,12 +113,6 @@ public class Tasks {
                         e.getMessage());
             }
 
-            if (post.getAttachments().size() != 0) {
-                Image image = (Image) post.getAttachments().get(0);
-                // todo why do I do it?
-                Utils.resolveImageSize(image);
-            }
-
             posts.add(0, post);
 
             publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED,
@@ -129,7 +124,6 @@ public class Tasks {
                     post.setNetwork(networkID);
 
                     for (Attachment attachment : post.getAttachments()) {
-                        // // TODO: 12/12/2015 set network too
                         final LoudlyImage image = (LoudlyImage) attachment;
                         image.setNetwork(w.networkID());
                         w.uploadImage((LoudlyImage) attachment, new BackgroundAction() {
@@ -168,14 +162,6 @@ public class Tasks {
                 }
             }
 
-            // Change image links to external
-            for (Attachment attachment : post.getAttachments()) {
-                if (attachment instanceof LoudlyImage) {
-                    LoudlyImage image = ((LoudlyImage) attachment);
-                    image.deleteInternalLink();
-                }
-            }
-
             // Save posts links to DB
             try {
                 int[] networks = new int[wraps.length];
@@ -205,26 +191,23 @@ public class Tasks {
         }
 
         private void beautifulDelete(Post post) {
-            int i = 0;
-            for (Post p : posts) {
-                if (p.equals(post)) {
-                    break;
+            Iterator<Post> iterator = posts.listIterator();
+            int ind = 0;
+            while (iterator.hasNext()) {
+                Post old = iterator.next();
+                if (old.equals(post)) {
+                    iterator.remove();
+                    final int fixed = ind;
+                    MainActivity.executeOnUI(new UIAction() {
+                        @Override
+                        public void execute(Context context, Object... params) {
+                            MainActivity mainActivity = (MainActivity) context;
+                            mainActivity.recyclerViewAdapter.notifyDeletedAtPosition(fixed);
+                        }
+                    });
                 }
-                i++;
+                ind++;
             }
-            if (i == posts.size()) {
-                return;
-            }
-            posts.remove(i);
-            final int fixed = i;
-            MainActivity.executeOnMain(new UIAction() {
-                @Override
-                public void execute(Context context, Object... params) {
-                    MainActivity mainActivity = (MainActivity) context;
-                    mainActivity.recyclerViewAdapter.notifyDeletedAtPosition(fixed);
-                }
-            });
-
         }
 
         @Override
@@ -305,7 +288,6 @@ public class Tasks {
             this.ID = ID;
         }
 
-        // todo: Maybe callback?
         @Override
         protected Intent doInBackground(Object... posts) {
             for (Wrap w : wraps) {
@@ -526,6 +508,7 @@ public class Tasks {
 
     public interface GetInfoCallback {
         void infoLoaded(Post post, Info info);
+        void foundDeletedPost(Post post);
     }
 
     /**
@@ -541,11 +524,6 @@ public class Tasks {
      * <ol>
      *     <li>Broadcasts.STATUS_FIELD = Broadcasts.PROGRESS</li>
      *     <li>Broadcasts.NETWORK_FIELD = id of the network</li>
-     * </ol>
-     * After loading posts from some network:
-     * <ol>
-     * <li>Broadcasts.STATUS_FIELD = Broadcasts.LOADED</li>
-     * <li>Broadcasts.NETWORK_FIELD = id of the network</li>
      * </ol>
      * <p>
      * When loading is successfully finished:
@@ -623,7 +601,7 @@ public class Tasks {
                 // Crutch
                 int newI = i + j - oldJ;
                 if (newI == posts.size()) {
-                    MainActivity.executeOnMain(new UIAction() {
+                    MainActivity.executeOnUI(new UIAction() {
                         @Override
                         public void execute(Context context, Object... params) {
                             MainActivity mainActivity = ((MainActivity) context);
@@ -633,7 +611,7 @@ public class Tasks {
                 } else {
                     final int fixedI = i;
                     final int fixedLength = j - oldJ;
-                    MainActivity.executeOnMain(new UIAction() {
+                    MainActivity.executeOnUI(new UIAction() {
                         @Override
                         public void execute(Context context, Object... params) {
                             MainActivity mainActivity = (MainActivity) context;
@@ -655,7 +633,7 @@ public class Tasks {
                     loudlyPostExists[ind] = true;
                     lPost.setInfo(network, info);
                     final int postPosition = ind;
-                    MainActivity.executeOnMain(new UIAction() {
+                    MainActivity.executeOnUI(new UIAction() {
                         @Override
                         public void execute(Context context, Object... params) {
                             MainActivity mainActivity = (MainActivity) context;
@@ -709,11 +687,6 @@ public class Tasks {
                     Arrays.fill(loudlyPostExists, false);
 
                     merge(currentPosts);
-
-                    message = makeMessage(Broadcasts.POST_LOAD, Broadcasts.LOADED);
-                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                    publishProgress(message);
-
                 } catch (InvalidTokenException e) {
                     Intent message = makeError(Broadcasts.POST_LOAD, Broadcasts.INVALID_TOKEN,
                             e.getMessage());
@@ -745,7 +718,7 @@ public class Tasks {
                                 if (((LoudlyPost) post).getLocalId() == p.getLocalId()) {
                                     posts.remove(ind);
                                     final int fixedInd = ind;
-                                    MainActivity.executeOnMain(new UIAction() {
+                                    MainActivity.executeOnUI(new UIAction() {
                                         @Override
                                         public void execute(Context context, Object... params) {
                                             MainActivity mainActivity = (MainActivity) context;

@@ -65,16 +65,19 @@ public class LoudlyImage extends Image implements MultipleNetwork {
     @Override
     public void setId(int network, String link) {
         ids[network] = link;
+        if (link == null) {
+            setInfo(network, new Info());
+        }
     }
 
     @Override
     public String getId() {
-        return ids[network];
+        return getId(network);
     }
 
     @Override
     public void setId(String id) {
-        ids[network] = id;
+        setId(network, id);
     }
 
     @Override
@@ -99,8 +102,8 @@ public class LoudlyImage extends Image implements MultipleNetwork {
     }
 
     @Override
-    public String getExtra() {
-        return externalLink;
+    public void setInfo(Info info) {
+        setInfo(network, info);
     }
 
     public Uri getUri() {

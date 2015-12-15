@@ -9,8 +9,8 @@ import util.Query;
 
 public class FacebookAuthorizer extends Authorizer {
     private static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
-    private static final String RESPONSE_URL = "https://www.facebook.com/connect/login_success.html";
-    private static final String REDIRECT_URL = "https://web.facebook.com/connect/login_success.html";
+    private static final String RESPONSE_URL = "https://web.facebook.com/connect/login_success.html";
+    private static final String REDIRECT_URL = "https://www.facebook.com/connect/login_success.html";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String ERROR_DESCRIPTION = "error";
 
@@ -45,7 +45,7 @@ public class FacebookAuthorizer extends Authorizer {
     protected Query makeAuthQuery() {
         Query query = new Query(AUTHORIZE_URL);
         query.addParameter("client_id", FacebookKeyKeeper.CLIENT_ID);
-        query.addParameter("redirect_uri", RESPONSE_URL);
+        query.addParameter("redirect_uri", REDIRECT_URL);
         query.addParameter("scope", "publish_actions,user_posts");
         query.addParameter("response_type", "token");
         return query;

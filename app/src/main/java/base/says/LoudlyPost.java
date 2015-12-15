@@ -89,18 +89,21 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     }
 
     @Override
-    public void setId(int network, String link) {
-        ids[network] = link;
+    public void setId(int network, String id) {
+        ids[network] = id;
+        if (id == null) {
+            setInfo(network, new Info());   // Delete old info
+        }
     }
 
     @Override
     public String getId() {
-        return ids[network];
+        return getId(network);
     }
 
     @Override
     public void setId(String id) {
-        ids[network] = id;
+        setId(network, id);
     }
 
     @Override
@@ -112,6 +115,11 @@ public class LoudlyPost extends Post implements MultipleNetwork {
                 this.info.add(infos[i]);
             }
         }
+    }
+
+    @Override
+    public void setInfo(Info info) {
+        setInfo(network, info);
     }
 
     @Override

@@ -1,5 +1,14 @@
 package base;
 
+import Facebook.FacebookAuthorizer;
+import Facebook.FacebookKeyKeeper;
+import Facebook.FacebookWrap;
+import MailRu.MailRuAuthoriser;
+import MailRu.MailRuKeyKeeper;
+import VK.VKAuthorizer;
+import VK.VKKeyKeeper;
+import VK.VKWrap;
+
 /**
  * Constants for getting proper social network for holders
  */
@@ -29,6 +38,50 @@ public class Networks {
                 return "Мой мир";
             default:
                 return "";
+        }
+    }
+
+    public static Wrap makeWrap(int network) {
+        switch (network) {
+            case FB:
+                return new FacebookWrap();
+            case VK:
+                return new VKWrap();
+            default:
+                return null;
+        }
+    }
+
+    public static Authorizer makeAuthorizer(int network) {
+        //TODO other networks
+        switch (network) {
+            case FB:
+                return new FacebookAuthorizer();
+            case VK:
+                return new VKAuthorizer();
+            case MAILRU:
+                return new MailRuAuthoriser();
+            default:
+                return null;
+
+        }
+    }
+
+    /**
+     * Make proper instance of KeyKeeper for the network
+     * @param network ID of the network
+     * @return KeyKeeper for the network
+     */
+    public static KeyKeeper makeKeyKeeper(int network) {
+        switch (network) {
+            case FB:
+                return new FacebookKeyKeeper();
+            case VK:
+                return new VKKeyKeeper();
+            case MAILRU:
+                return new MailRuKeyKeeper();
+            default:
+                return null;
         }
     }
 }

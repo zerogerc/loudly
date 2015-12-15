@@ -3,14 +3,11 @@ package base;
 import java.io.IOException;
 import java.util.List;
 
-import Facebook.FacebookWrap;
-import VK.VKWrap;
 import base.attachments.Image;
 import base.attachments.LoudlyImage;
 import base.says.Comment;
 import base.says.LoudlyPost;
 import base.says.Post;
-import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
 import util.InvalidTokenException;
 import util.Query;
@@ -27,23 +24,10 @@ public abstract class Wrap implements Comparable<Wrap> {
     public static final int IMAGE_ONLY_LINK = 2;
 
     /**
-     * Proper flag from this class
+     * Reset fields such as offsets
      */
-    public abstract int shouldUploadImage();
+    public abstract void resetState();
 
-    // Firstly upload photos to networks, that allows only upload photos
-    @Override
-    public int compareTo(Wrap another) {
-        int first = shouldUploadImage();
-        int second = another.shouldUploadImage();
-        if (first < second) {
-            return -1;
-        }
-        if (first == second) {
-            return 0;
-        }
-        return 1;
-    }
 
     /**
      * @return ID of the network (from Networks class)
@@ -52,6 +36,7 @@ public abstract class Wrap implements Comparable<Wrap> {
 
 
     protected abstract Query makeAPICall(String url);
+
     protected abstract Query makeSignedAPICall(String url) throws InvalidTokenException;
 
     public abstract void uploadPost(LoudlyPost post) throws IOException;
@@ -72,14 +57,24 @@ public abstract class Wrap implements Comparable<Wrap> {
 
     public abstract String checkPost(LoudlyPost post);
 
-    public static Wrap makeWrap(int network) {
-        switch (network) {
-            case Networks.FB:
-                return new FacebookWrap();
-            case Networks.VK:
-                return new VKWrap();
-            default:
-                return null;
+
+    /**
+     * Proper flag from this class
+     */
+    public abstract int shouldUploadImage();
+
+    // Firstly upload photos to networks, that allows only upload photos
+    @Override
+    public int compareTo(Wrap another) {
+        int first = shouldUploadImage();
+        int second = another.shouldUploadImage();
+        if (first < second) {
+            return -1;
         }
+        if (first == second) {
+            return 0;
+        }
+        return 1;
     }
+
 }

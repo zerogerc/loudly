@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     static LinkedList<Post> posts = new LinkedList<>();
     static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
     static boolean dbLoaded = false;
-    private static int aliveCopy = 0;
+    static int aliveCopy = 0;
 
     RecyclerView recyclerView;
     public RecyclerViewAdapter recyclerViewAdapter;
@@ -53,8 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     static final int LOAD_POSTS_RECEIVER = 0;
     static final int POST_UPLOAD_RECEIVER = 1;
-    static final int GET_INFO_RECEIVER = 2;
-    static final int POST_DELETE_RECEIVER = 3;
+    static final int POST_DELETE_RECEIVER = 2;
     static final int RECEIVER_COUNT = 4;
 
     static AttachableReceiver[] receivers = null;
@@ -62,22 +61,16 @@ public class MainActivity extends AppCompatActivity {
 
     private static MainActivity self;
 
-    public void justText(View v) {
-        Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show();
+    public static void executeOnUI(final UIAction action) {
+        if (self != null) {
+            self.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    action.execute(self);
+                }
+            });
+        }
     }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.main_toolbar, menu);
-//        return super.onCreateOptionsMenu(menu);
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        callSettingsActivity();
-//        return super.onOptionsItemSelected(item);
-//    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -96,49 +89,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static void executeOnMain(final UIAction action) {
-        if (self != null) {
-            self.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    action.execute(self);
-                }
-            });
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (receivers == null) {
-            receivers = new AttachableReceiver[RECEIVER_COUNT];
-        }
-        for (AttachableReceiver receiver : receivers) {
-            if (receiver != null) {
-                receiver.attach(this);
-            }
-        }
-
-        if (loadPosts == null) {
-            ArrayList<Wrap> loadFrom = new ArrayList<>();
-            for (Wrap w : Loudly.getContext().getWraps()) {
-                if (!loadedNetworks[w.networkID()]) {
-                    loadFrom.add(w);
-                }
-            }
-            // Loading posts
-            if (loadFrom.size() > 0 || !dbLoaded) {
-                receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(this);
-
-                loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
-                        loadFrom.toArray(new Wrap[loadFrom.size()]));
-                loadPosts.execute();
-            } else {
-                Loudly.getContext().startGetInfoService();
-            }
-        }
-    }
 
     @Override
     public void finish() {
@@ -149,8 +99,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        self = this;
-        aliveCopy++;
         setContentView(R.layout.activity_main);
 
         toolbar = (Toolbar) findViewById(R.id.main_toolbar);
@@ -194,6 +142,68 @@ public class MainActivity extends AppCompatActivity {
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
         setRecyclerView();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        self = this;
+
+        if (receivers == null) {
+            receivers = new AttachableReceiver[RECEIVER_COUNT];
+        } else {
+            for (AttachableReceiver receiver : receivers) {
+                if (receiver != null) {
+                    receiver.attach(this);
+                }
+            }
+        }
+        if (loadPosts == null) {
+            ArrayList<Wrap> loadFrom = new ArrayList<>();
+            for (Wrap w : Loudly.getContext().getWraps()) {
+                if (!loadedNetworks[w.networkID()]) {
+                    loadFrom.add(w);
+                }
+            }
+            // Loading posts
+            if (loadFrom.size() > 0 || !dbLoaded) {
+                receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(this);
+
+                loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
+                        loadFrom.toArray(new Wrap[loadFrom.size()]));
+                loadPosts.execute();
+            } else {
+                Loudly.getContext().startGetInfoService();
+            }
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        aliveCopy++;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Utils.hidePhoneKeyboard(this);
+        aliveCopy--;
+    }
+
+    @Override
+    public void onBackPressed() {
+        int count = getFragmentManager().getBackStackEntryCount();
+
+        if (count == 0) {
+            super.onBackPressed();
+            return;
+        }
+        if (count == 1) {
+            background.setClickable(false);
+            background.getBackground().setAlpha(0);
+        }
+        getFragmentManager().popBackStack();
     }
 
     static class CustomRecyclerViewListener extends RecyclerView.OnScrollListener {
@@ -283,32 +293,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        Utils.hidePhoneKeyboard(this);
-        super.onDestroy();
+    protected void onPause() {
+        super.onPause();
         self = null;
-        aliveCopy--;
-        if (isFinishing() && aliveCopy == 0) {
-            if (receivers[GET_INFO_RECEIVER] != null) {
-                receivers[GET_INFO_RECEIVER].stop();
+        for (int i = 0; i < RECEIVER_COUNT; i++) {
+            if (receivers[i] != null) {
+                receivers[i].detach();
             }
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        int count = getFragmentManager().getBackStackEntryCount();
-
-        if (count == 0) {
-            super.onBackPressed();
-            return;
-        }
-        if (count == 1) {
-            background.setClickable(false);
-            background.getBackground().setAlpha(0);
-        }
-        getFragmentManager().popBackStack();
-    }
 
     static class PostUploaderReceiver extends AttachableReceiver {
         public PostUploaderReceiver(Context context) {
@@ -325,19 +319,16 @@ public class MainActivity extends AppCompatActivity {
             switch (status) {
                 case Broadcasts.STARTED:
                     // Saved to DB. Make place for the post
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    mainActivity.recyclerViewAdapter.notifyItemInserted(0);
                     break;
                 case Broadcasts.PROGRESS:
                     // Uploaded to network
-                    postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
                     int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
                     toast = Toast.makeText(context, "" + networkID, Toast.LENGTH_SHORT);
                     toast.show();
                     break;
                 case Broadcasts.IMAGE:
                     // Image is loading
-                    imageID = message.getLongExtra(Broadcasts.IMAGE_FIELD, 0);
-                    postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
                     progress = message.getIntExtra(Broadcasts.PROGRESS_FIELD, 0);
 //                    toast = Toast.makeText(context, "image " + progress, Toast.LENGTH_SHORT);
 //                    toast.show();
@@ -350,15 +341,16 @@ public class MainActivity extends AppCompatActivity {
                     networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
                     toast = Toast.makeText(context, "Image " + imageID + " uploaded to " + networkID, Toast.LENGTH_SHORT);
                     toast.show();
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.FINISHED:
                     // LoudlyPost uploaded
-                    toast = Toast.makeText(context, "Success", Toast.LENGTH_SHORT);
-                    toast.show();
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            "Successfully uploaded",
+                            Snackbar.LENGTH_LONG)
+                            .show();
+
                     receivers[POST_UPLOAD_RECEIVER].stop();
                     receivers[POST_UPLOAD_RECEIVER] = null;
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
                     break;
                 case Broadcasts.ERROR:
                     // Got an error
@@ -382,67 +374,52 @@ public class MainActivity extends AppCompatActivity {
         public void onMessageReceive(Context context, Intent message) {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, -1);
 
-            Toast toast;
             MainActivity mainActivity = (MainActivity) context;
+            int network;
             switch (status) {
                 case Broadcasts.STARTED:
                     dbLoaded = true;
                     break;
                 case Broadcasts.PROGRESS:
-                    int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
 
                     Snackbar.make(mainActivity.findViewById(R.id.main_layout),
-                            "Loading posts from " + Networks.nameOfNetwork(network), Snackbar.LENGTH_INDEFINITE)
+                            "Loading posts from " + Networks.nameOfNetwork(network) + "...",
+                            Snackbar.LENGTH_INDEFINITE)
                             .show();
                     loadedNetworks[network] = true;
                     break;
                 case Broadcasts.FINISHED:
-                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
-                            "Loaded", Snackbar.LENGTH_SHORT)
-                            .show();
+                    if (!posts.isEmpty()) {
+                        Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                                "Loaded", Snackbar.LENGTH_SHORT)
+                                .show();
+                    }
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
                     loadPosts = null; // Posts loaded
 
-                    receivers[GET_INFO_RECEIVER] = new GetInfoReceiver(context);
                     Loudly.getContext().startGetInfoService(); // Let's get info about posts
                     break;
                 case Broadcasts.ERROR:
-                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
-                    toast = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
-                    toast.show();
+                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    String error;
+                    switch (message.getIntExtra(Broadcasts.ERROR_KIND, -1)) {
+                        case Broadcasts.NETWORK_ERROR:
+                            error = "No internet connection";
+                            break;
+                        case Broadcasts.INVALID_TOKEN:
+                            error = "Lost connection to " + Networks.nameOfNetwork(network);
+                            break;
+                        default:
+                            error = "Unexpected error";
+                            break;
+                    }
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            error, Snackbar.LENGTH_SHORT)
+                            .show();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
-                    break;
-            }
-        }
-    }
-
-    static class GetInfoReceiver extends AttachableReceiver {
-        public GetInfoReceiver(Context context) {
-            super(context, Broadcasts.POST_GET_INFO);
-        }
-
-        @Override
-        public void onMessageReceive(Context context, Intent message) {
-            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            Toast t;
-            switch (status) {
-                case Broadcasts.PROGRESS:
-                    int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    t = Toast.makeText(context, "Got info for " + networkID, Toast.LENGTH_SHORT);
-                    t.show();
-                    break;
-                case Broadcasts.FINISHED:
-                    t = Toast.makeText(context, "Info got", Toast.LENGTH_SHORT);
-                    t.show();
-                    break;
-                case Broadcasts.ERROR:
-                    String error = message.getStringExtra(Broadcasts.ERROR_FIELD);
-                    t = Toast.makeText(context, "Fail: " + error, Toast.LENGTH_SHORT);
-                    t.show();
-                    stop();
-                    receivers[GET_INFO_RECEIVER] = null;
                     break;
             }
         }
@@ -456,24 +433,40 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onMessageReceive(Context context, Intent message) {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            Toast toast;
-            int id;
+            MainActivity mainActivity = (MainActivity) context;
+            int network;
             switch (status) {
                 case Broadcasts.PROGRESS:
-                    id = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    toast = Toast.makeText(context, "Deleted: " + id, Toast.LENGTH_SHORT);
-                    toast.show();
+                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            "Deleting from " + Networks.nameOfNetwork(network) + "..." , Snackbar.LENGTH_INDEFINITE)
+                            .show();
                     break;
                 case Broadcasts.FINISHED:
-                    toast = Toast.makeText(context, "Deleted from all", Toast.LENGTH_SHORT);
-                    toast.show();
-                    //// TODO: 12/13/2015 remove it
-                    MainActivity mainActivity = (MainActivity) context;
-                    mainActivity.recyclerViewAdapter.notifyDataSetChanged();
+                    Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                            "Post deleted", Snackbar.LENGTH_SHORT)
+                            .show();
                     break;
                 case Broadcasts.ERROR:
-                    toast = Toast.makeText(context, "Error!!!", Toast.LENGTH_SHORT);
-                    toast.show();
+                    String error;
+                    switch (message.getIntExtra(Broadcasts.ERROR_KIND, -1)) {
+                        case Broadcasts.NETWORK_ERROR:
+                            network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                            error = "Can't delete from " + Networks.nameOfNetwork(network);
+                            break;
+                        case Broadcasts.INVALID_TOKEN:
+                            network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                            error = "Lost connection to " + Networks.nameOfNetwork(network);
+                            break;
+                        default:
+                            error = "";
+                    }
+                    if (!error.isEmpty()) {
+                        Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                                error, Snackbar.LENGTH_SHORT)
+                                .show();
+                    }
+                    Log.e("DELETE POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
                     break;
             }
         }

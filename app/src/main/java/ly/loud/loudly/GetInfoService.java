@@ -6,12 +6,16 @@ import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedList;
 
+import base.Networks;
 import base.Tasks;
 import base.Wrap;
 import base.says.Info;
@@ -56,7 +60,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
                     old.setInfo(info);
                     summary.add(oldInfo.difference(info));
                     final int fixed = ind;
-                    MainActivity.executeOnMain(new UIAction() {
+                    MainActivity.executeOnUI(new UIAction() {
                         @Override
                         public void execute(Context context, Object... params) {
                             MainActivity mainActivity = (MainActivity) context;
@@ -68,6 +72,104 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
             }
             ind++;
         }
+    }
+
+    @Override
+    public void foundDeletedPost(Post post) {
+        int ind = 0;
+        Iterator<Post> iterator = MainActivity.posts.listIterator();
+        while (iterator.hasNext()) {
+            if (stopped) throw new ThreadStopped();
+
+            Post old = iterator.next();
+            if (old.equals(post)) {
+                iterator.remove();
+                final int fixed = ind;
+                MainActivity.executeOnUI(new UIAction() {
+                    @Override
+                    public void execute(Context context, Object... params) {
+                        MainActivity mainActivity = (MainActivity) context;
+                        mainActivity.recyclerViewAdapter.notifyDeletedAtPosition(fixed);
+                    }
+                });
+            }
+            ind++;
+        }
+    }
+
+    private void showSnackBar(Info summary) {
+        final String message = makeNewInfoMessages(summary)[1];
+        MainActivity.executeOnUI(new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                MainActivity mainActivity = (MainActivity) context;
+                Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                        message, Snackbar.LENGTH_SHORT)
+                        .show();
+            }
+        });
+        SettingsActivity.executeOnUI(new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                SettingsActivity settingsActivity = (SettingsActivity) context;
+                Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
+                        message, Snackbar.LENGTH_SHORT)
+                        .show();
+            }
+        });
+    }
+
+    private void makeNotification(Info summary) {
+        String[] messages = makeNewInfoMessages(summary);
+        NotificationCompat.Builder notificationCompat = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(messages[0])
+                .setContentText(messages[1])
+                .setAutoCancel(true)
+                .setColor(ContextCompat.getColor(this, R.color.colorAccent));
+        // Creates an explicit intent for an Activity in your app
+        Intent resultIntent = new Intent(this, MainActivity.class);
+
+        // The stack builder object will contain an artificial back stack for the
+        // started Activity.
+        // This ensures that navigating backward from the Activity leads out of
+        // your application to the Home screen.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        // Adds the back stack for the Intent (but not the Intent itself)
+        stackBuilder.addParentStack(MainActivity.class);
+        // Adds the Intent that starts the Activity to the top of the stack
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        notificationCompat.setContentIntent(resultPendingIntent);
+        // mId allows you to update the notification later on.
+        notificationManager.notify(NOTIFICATION_ID, notificationCompat.build());
+    }
+
+    private String[] makeNewInfoMessages(Info summary) {
+        String message = "New";
+        String longMessage = "You've got";
+        if (summary.like > 0) {
+            message += " likes,";
+            longMessage += " " + summary.like + " new like" +
+                    ((summary.like > 1) ? "s" : "") + ",";
+        }
+        if (summary.repost > 0) {
+            message += " shares,";
+            longMessage += " " + summary.repost + " new repost" +
+                    ((summary.repost > 1) ? "s" : "") + ",";
+        }
+        if (summary.comment > 0) {
+            message += " comments,";
+            longMessage += " " + summary.comment + " new comment" +
+                    ((summary.comment > 1) ? "s" : "") + ",";
+        }
+        longMessage = longMessage.substring(0, longMessage.length() - 1);
+        message = message.substring(0, message.length() - 1);
+        return new String[]{message, longMessage};
     }
 
     @Override
@@ -116,51 +218,11 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
         }
         Loudly.sendLocalBroadcast(BroadcastSendingTask.makeSuccess(Broadcasts.POST_GET_INFO));
         if (summary.hasPositiveChanges()) {
-            String message = "New";
-            String longMessage = "You've got";
-            if (summary.like > 0) {
-                message += " likes,";
-                longMessage += " " + summary.like + " new like" +
-                        ((summary.like > 1) ? "s" : "") + ",";
+            if (MainActivity.aliveCopy == 0 && SettingsActivity.aliveCopy == 0) {
+                makeNotification(summary);
+            } else {
+                showSnackBar(summary);
             }
-            if (summary.repost > 0) {
-                message += " shares,";
-                longMessage += " " + summary.repost + " new repost" +
-                        ((summary.repost > 1) ? "s" : "") + ",";
-            }
-            if (summary.comment > 0) {
-                message += " comments,";
-                longMessage += " " + summary.comment + " new people_list_comment" +
-                        ((summary.comment > 1) ? "s" : "") + ",";
-            }
-            longMessage = longMessage.substring(0, longMessage.length() - 1);
-            message = message.substring(0, message.length() - 1);
-
-            NotificationCompat.Builder notificationCompat = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_notification)
-                    .setContentTitle(message)
-                    .setContentText(longMessage)
-                    .setAutoCancel(true);
-            // Creates an explicit intent for an Activity in your app
-            Intent resultIntent = new Intent(this, MainActivity.class);
-
-            // The stack builder object will contain an artificial back stack for the
-            // started Activity.
-            // This ensures that navigating backward from the Activity leads out of
-            // your application to the Home screen.
-            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-            // Adds the back stack for the Intent (but not the Intent itself)
-            stackBuilder.addParentStack(MainActivity.class);
-            // Adds the Intent that starts the Activity to the top of the stack
-            stackBuilder.addNextIntent(resultIntent);
-            PendingIntent resultPendingIntent =
-                    stackBuilder.getPendingIntent(
-                            0,
-                            PendingIntent.FLAG_UPDATE_CURRENT
-                    );
-            notificationCompat.setContentIntent(resultPendingIntent);
-            // mId allows you to update the notification later on.
-            notificationManager.notify(NOTIFICATION_ID, notificationCompat.build());
         }
 
         Loudly.getContext().startGetInfoService();  // Restarting

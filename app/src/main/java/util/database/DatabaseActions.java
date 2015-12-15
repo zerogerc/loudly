@@ -1,6 +1,7 @@
 package util.database;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -22,6 +23,7 @@ import util.database.KeysContract.KeysEntry;
 import util.database.LinksContract.LinksEntry;
 import util.database.LocationContract.LocationEntry;
 import util.database.PostContract.PostEntry;
+import util.parsers.json.ObjectParser;
 
 public class DatabaseActions {
 
@@ -340,6 +342,16 @@ public class DatabaseActions {
         }
     }
 
+    public static void updateKey(int network, KeyKeeper keyKeeper) throws DatabaseException {
+        SQLiteDatabase db = KeysDbHelper.getInstance().getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KeysEntry.COLUMN_NAME_NETWORK, network);
+        values.put(KeysEntry.COLUMN_NAME_VALUE, keyKeeper.toStringBundle());
+        if (upsert(db, KeysEntry.TABLE_NAME, KeysEntry.COLUMN_NAME_NETWORK, network, values) == -1) {
+            throw new DatabaseException("Can't update key for: " + network);
+        }
+    }
+
     /**
      * Method that inserts or updates one row in DB
      * @param db database
@@ -350,7 +362,7 @@ public class DatabaseActions {
      * @return ID of newly created entry, 0 if update is successful or -1 if was error during update
      */
     private static long upsert(SQLiteDatabase db, String tableName,
-                               String findByColumn, String columnValue, ContentValues values) {
+                               String findByColumn, Object columnValue, ContentValues values) {
         Cursor cursor = null;
         try {
             cursor = db.query(
@@ -359,6 +371,7 @@ public class DatabaseActions {
                     sqlEqual(findByColumn, columnValue),
                     null, null, null, null);
 
+            cursor.moveToFirst();
             if (cursor.getCount() == 0) {
                 return db.insert(tableName, null, values);
             } else {
@@ -527,11 +540,7 @@ public class DatabaseActions {
         return nextId;
     }
 
-    private static String sqlEqual(String column, long value) {
-        return sqlEqual(column, Long.toString(value));
-    }
-
-    private static String sqlEqual(String column, String value) {
-        return column + " = " + value;
+    private static String sqlEqual(String column, Object value) {
+        return column + " = " + value.toString();
     }
 }

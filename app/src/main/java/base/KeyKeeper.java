@@ -5,10 +5,6 @@ import android.os.Parcelable;
 
 import java.util.Calendar;
 
-import Facebook.FacebookKeyKeeper;
-import MailRu.MailRuKeyKeeper;
-import VK.VKKeyKeeper;
-
 /**
  * Store keys, that we need in order to interact with social network
  */
@@ -51,7 +47,7 @@ public abstract class KeyKeeper implements Parcelable {
 
     public static KeyKeeper fromStringBundle(int network, String bundle) {
         String[] strings = bundle.split(String.valueOf(SEPARATOR));
-        KeyKeeper result = KeyKeeper.makeKeyKeeper(network);
+        KeyKeeper result = Networks.makeKeyKeeper(network);
         result.fromStrings(strings);
         return result;
     }
@@ -69,21 +65,4 @@ public abstract class KeyKeeper implements Parcelable {
         }
     }
 
-    /**
-     * Make proper instance of KeyKeeper for the network
-     * @param network ID of the network
-     * @return KeyKeeper for the network
-     */
-    public static KeyKeeper makeKeyKeeper(int network) {
-        switch (network) {
-            case Networks.FB:
-                return new FacebookKeyKeeper();
-            case Networks.VK:
-                return new VKKeyKeeper();
-            case Networks.MAILRU:
-                return new MailRuKeyKeeper();
-            default:
-                return null;
-        }
-    }
 }

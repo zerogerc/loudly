@@ -43,6 +43,11 @@ public class FacebookWrap extends Wrap {
     }
 
     @Override
+    public void resetState() {
+        // Have no state to reset
+    }
+
+    @Override
     public int networkID() {
         return NETWORK;
     }
@@ -287,7 +292,7 @@ public class FacebookWrap extends Wrap {
 
         int shares = 0;
         if (object.has("shares")) {
-            comments = object.getJSONObject("shares").getInt("count");
+            shares = object.getJSONObject("shares").getInt("count");
         }
 
         return new Info(likes, shares, comments);

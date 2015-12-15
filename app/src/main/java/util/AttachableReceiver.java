@@ -59,12 +59,19 @@ public abstract class AttachableReceiver extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Detaches receiver from current activity
+     */
+    public void detach() {
+        this.context.clear();
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (stopped) {
             return;
         }
-        if (this.context == null) {
+        if (this.context.get() == null) {
             lastMessage = intent;
         } else {
             onMessageReceive(this.context.get(), intent);

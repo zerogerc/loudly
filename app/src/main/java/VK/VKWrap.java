@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,6 +33,8 @@ import util.parsers.json.ObjectParser;
 
 public class VKWrap extends Wrap {
     private static final int NETWORK = Networks.VK;
+    private static int offset = 0;
+
     private static final String TAG = "VK_WRAP_TAG";
     private static final String API_VERSION = "5.40";
     private static final String MAIN_SERVER = "https://api.vk.com/method/";
@@ -47,6 +50,11 @@ public class VKWrap extends Wrap {
     @Override
     public int shouldUploadImage() {
         return Wrap.IMAGE_ONLY_UPLOAD;
+    }
+
+    @Override
+    public void resetState() {
+        offset = 0;
     }
 
     @Override
@@ -223,29 +231,42 @@ public class VKWrap extends Wrap {
         }
         query.addParameter("posts", sb);
 
-        String response = Network.makeGetRequest(query);
+        ObjectParser infoParser = new ObjectParser()
+                .parseInt("count");
 
-        try {
-            JSONArray parser = new JSONObject(response)
-                    .getJSONArray("response");
-            int k = 0;
-            for (Post post : posts) {
-                if (post.existsIn(networkID())) {
-                    JSONObject current = parser.getJSONObject(k++);
-                    callback.infoLoaded(post, getInfo(current));
+        ObjectParser postParser = new ObjectParser()
+                .parseString("id")
+                .parseObject("likes", (ObjectParser) infoParser.copyStructure())
+                .parseObject("comments", (ObjectParser) infoParser.copyStructure())
+                .parseObject("shares", (ObjectParser) infoParser.copyStructure());
+
+        ObjectParser responseParser = new ObjectParser()
+                .parseArray("response", new ArrayParser(-1, postParser));
+
+        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
+                .getArray();
+
+        Iterator<Post> iterator = posts.listIterator();
+        for (int i = 0; i < response.size(); i++) {
+            postParser = response.getObject(i);
+            String id = postParser.getString("");
+            int likes = postParser.getObject().getInt(0);
+            int comments = postParser.getObject().getInt(0);
+            int shares = postParser.getObject().getInt(0);
+
+            do {
+                Post post = iterator.next();
+                if (post.getId().equals(id)) {
+                    Info info = new Info(likes, shares, comments);
+                    callback.infoLoaded(post, info);
+                    break;
+                } else {
+                    callback.foundDeletedPost(post);
                 }
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
+            } while (iterator.hasNext());
         }
     }
 
-    private Info getInfo(JSONObject object) throws JSONException {
-        int like = object.getJSONObject("likes").getInt("count");
-        int repost = object.getJSONObject("reposts").getInt("count");
-        int comments = object.getJSONObject("comments").getInt("count");
-        return new Info(like, repost, comments);
-    }
 
     private ObjectParser makePhotoParser() {
         return new ObjectParser()
@@ -269,7 +290,7 @@ public class VKWrap extends Wrap {
 
     @Override
     public void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException {
-        int offset = Loudly.getContext().getOffset(networkID());
+        offset = Math.max(0, offset - 5);
 
         ObjectParser photoParser = makePhotoParser();
 
@@ -323,11 +344,6 @@ public class VKWrap extends Wrap {
                     continue;
                 }
 
-                // TODO: 12/8/2015 move interval to wrap
-                if (Loudly.getContext().getPostInterval(networkID()) == null) {
-                    Loudly.getContext().setPostInterval(networkID(), new IDInterval(id, id));
-                }
-
                 if (timeInterval.contains(date)) {
                     Post res = new Post(text, date, null, networkID(), id);
                     res.setInfo(info);
@@ -348,7 +364,6 @@ public class VKWrap extends Wrap {
 
             }
         } while (timeInterval.contains(earliestPost));
-        Loudly.getContext().setOffset(networkID(), offset);
     }
 
     @Override

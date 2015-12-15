@@ -15,6 +15,8 @@ import util.AttachableTask;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
 import util.Query;
+import util.database.DatabaseActions;
+import util.database.DatabaseException;
 
 /**
  * Base of Authorizer classes
@@ -124,6 +126,14 @@ public abstract class Authorizer implements Parcelable {
 
             Loudly.getContext().setKeyKeeper(network(), inKeys);
 
+            try {
+                DatabaseActions.updateKey(network(), Loudly.getContext().getKeyKeeper(network()));
+            } catch (DatabaseException e) {
+                Loudly.getContext().setKeyKeeper(network(), null);
+                return BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION,
+                        Broadcasts.DATABASE_ERROR, e.getMessage());
+            }
+
             Intent message = BroadcastSendingTask.makeSuccess(Broadcasts.AUTHORIZATION);
             message.putExtra(Broadcasts.NETWORK_FIELD, network());
 
@@ -144,13 +154,4 @@ public abstract class Authorizer implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
     }
 
-    public static Authorizer getAuthorizer(int network) {
-        //TODO other networks
-        switch (network) {
-            case Networks.VK:
-                return new VKAuthorizer();
-            default:
-                return new FacebookAuthorizer();
-        }
-    }
 }
