@@ -2,7 +2,6 @@ package ly.loud.loudly;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
@@ -46,7 +45,7 @@ public class PostCreateFragment extends Fragment {
     private final static int PICK_PHOTO_FROM_GALLERY = 13;
     private final static int REQUEST_PHOTO_FROM_CAMERA = 52;
 
-    private NetworksChooseFragment networksChooseFragment;
+//    private NetworksChooseFragment networksChooseFragment;
 
     private EditText editText;
     private ImageView postImageView;
@@ -117,15 +116,8 @@ public class PostCreateFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (existsAvailableNetworks()) {
-                    getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
-                    Utils.hidePhoneKeyboard(getActivity());
-                    networksChooseFragment.getIconsHolder().prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
-                    FragmentTransaction ft = getFragmentManager().beginTransaction();
-                    ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_left,
-                            R.anim.slide_in_left, R.anim.slide_out_left);
-                    ft.show(networksChooseFragment);
-                    ft.addToBackStack(null);
-                    ft.commit();
+                    NetworksChooseFragment fragment = NetworksChooseFragment.showNetworksChoose(getActivity());
+                    initNetworksChooseFragment(fragment);
                 } else {
                     Snackbar.make(getActivity().findViewById(R.id.main_layout),
                             "You must be logged in at least one network", Snackbar.LENGTH_SHORT)
@@ -145,32 +137,6 @@ public class PostCreateFragment extends Fragment {
             }
         });
 
-//        rootView.findViewById(R.id.new_post_gallery_button).setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//
-//                switch (event.getAction()) {
-//                    case MotionEvent.ACTION_DOWN: {
-//                        ImageView view = (ImageView) v;
-//                        //overlay is black with transparency of 0x77 (119)
-//                        view.getDrawable().setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP);
-//                        view.invalidate();
-//                        break;
-//                    }
-//                    case MotionEvent.ACTION_UP:
-//                    case MotionEvent.ACTION_CANCEL: {
-//                        ImageView view = (ImageView) v;
-//                        //clear the overlay
-//                        view.getDrawable().clearColorFilter();
-//                        view.invalidate();
-//                        break;
-//                    }
-//                }
-//                return false;
-//            }
-//        });
-
-
         getActivity().findViewById(R.id.new_post_camera_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -180,14 +146,14 @@ public class PostCreateFragment extends Fragment {
         });
     }
 
-    private void setNetworksChooseListeners() {
+    private void setNetworksChooseListeners(final NetworksChooseFragment fragment) {
         UIAction grayAction = new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
                 int network = ((int) params[0]);
                 if (Loudly.getContext().getKeyKeeper(network) == null)
                     return;
-                networksChooseFragment.setShouldPostTo(network, true);
+                fragment.setShouldPostTo(network, true);
             }
         };
         UIAction colorAction = new UIAction() {
@@ -196,7 +162,7 @@ public class PostCreateFragment extends Fragment {
                 int network = ((int) params[0]);
                 if (Loudly.getContext().getKeyKeeper(network) == null)
                     return;
-                networksChooseFragment.setShouldPostTo(network, false);
+                fragment.setShouldPostTo(network, false);
             }
         };
         UIAction buttonAction = new UIAction() {
@@ -211,7 +177,7 @@ public class PostCreateFragment extends Fragment {
 
                 ArrayList<Wrap> wraps = new ArrayList<>();
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                    if (networksChooseFragment.shouldPostTo(i)) {
+                    if (fragment.shouldPostTo(i)) {
                         wraps.add(Networks.makeWrap(i));
                     }
                 }
@@ -222,23 +188,20 @@ public class PostCreateFragment extends Fragment {
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
                 ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,
                         R.anim.slide_in_left, R.anim.slide_out_right);
-                ft.hide(networksChooseFragment);
+                ft.hide(fragment);
                 ft.commit();
                 getFragmentManager().popBackStack();
                 getFragmentManager().popBackStack();
             }
         };
 
-        networksChooseFragment.setGrayItemClick(grayAction);
-        networksChooseFragment.setColorItemsClick(colorAction);
-        networksChooseFragment.setPostButtonClick(buttonAction);
+        fragment.setGrayItemClick(grayAction);
+        fragment.setColorItemsClick(colorAction);
+        fragment.setPostButtonClick(buttonAction);
     }
 
-    private void initFragment() {
-        FragmentManager manager = getActivity().getFragmentManager();
-        networksChooseFragment = ((NetworksChooseFragment) manager.findFragmentById(R.id.networks_choose_fragment));
-
-        networksChooseFragment.setHideAction(new UIAction() {
+    private void initNetworksChooseFragment(final NetworksChooseFragment fragment) {
+        fragment.setHideAction(new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
                 getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
@@ -248,7 +211,7 @@ public class PostCreateFragment extends Fragment {
             }
         });
 
-        networksChooseFragment.setShowAction(new UIAction() {
+        fragment.setShowAction(new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
                 editText.setFocusableInTouchMode(false);
@@ -257,18 +220,14 @@ public class PostCreateFragment extends Fragment {
             }
         });
 
-        FragmentTransaction ft = manager.beginTransaction();
-        ft.hide(networksChooseFragment);
-        ft.commit();
-
-        setNetworksChooseListeners();
+        setNetworksChooseListeners(fragment);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        rootView = inflater.inflate(R.layout.activity_new_post, container, false);
+        rootView = inflater.inflate(R.layout.new_post_fragment, container, false);
         editText = (EditText)rootView.findViewById(R.id.new_post_edit_text);
         postImageView = (ImageView)rootView.findViewById(R.id.picture_with_cross_image);
         deleteImageButton = (ImageView)rootView.findViewById(R.id.picture_with_cross_clear);
@@ -297,8 +256,6 @@ public class PostCreateFragment extends Fragment {
         }
 
         setListeners();
-        initFragment();
-        getFragmentManager().popBackStack();
     }
 
     @Override
@@ -409,10 +366,19 @@ public class PostCreateFragment extends Fragment {
         }
     }
 
-    public void show() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.addToBackStack(null);
-        ft.show(this);
-        ft.commit();
+    private static void show(Activity activity, PostCreateFragment fragment) {
+        FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
+        transaction.addToBackStack(null);
+//        transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_bottom);
+        transaction.replace(R.id.fragment_container, fragment);
+        transaction.commit();
+
+        boolean f = true;
+    }
+
+    public static PostCreateFragment showPostCreate(Activity activity) {
+        PostCreateFragment newFragment = new PostCreateFragment();
+        show(activity, newFragment);
+        return newFragment;
     }
 }

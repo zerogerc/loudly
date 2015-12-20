@@ -2,10 +2,15 @@
 App for android course
 
 ## ToDo:
-0. ADD COMMENTS TO CODE
-0.5 Make post more Listenable (return Action in onPostExecute)
-1. Upload images by URL
-2. Post something with picture
-3. Make listeners more safe
-4. Think about better architecture of attachments
-5. Think about Service and Application
+0. Busy int in KeyKeeper
+1. New interface in Wraps
+2. Token Validity check in Wraps
+3. Array of signed networks in Loudly (?)
+4. Log out (with cookies erase) (Don't erase keeper)
+5. Service for post upload
+6. Wrap on DB
+7. Networks Choose
+8. Screen rotation
+9. Icons holder margins and paddings
+10. Comments in activity
+11. Show fragments above toolbar(LOLIPOP)

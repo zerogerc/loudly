@@ -1,5 +1,6 @@
 package ly.loud.loudly;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
@@ -84,33 +85,36 @@ public class SplashFragment extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        hide();
     }
 
-    public void show() {
-        noKeys = true;
-        expiredKeys = false;
+    private  void finishSplash() {
+        getFragmentManager().popBackStack();
+    }
+
+    private static void show(Activity activity, SplashFragment fragment) {
+        FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
+        transaction.addToBackStack(null);
+        transaction.replace(R.id.fragment_container, fragment);
+        transaction.commit();
+    }
+
+    public static void showSplash(Activity activity) {
+        SplashFragment newFragment = new SplashFragment();
+        newFragment.noKeys = true;
+        newFragment.expiredKeys = false;
+
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (Loudly.getContext().getKeyKeeper(i) != null) {
-                noKeys = false;
+                newFragment.noKeys = false;
                 if (Loudly.getContext().getKeyKeeper(i).mayExpire()) {
-                    expiredKeys = true;
+                    newFragment.expiredKeys = true;
                 }
             }
         }
-        if (noKeys || expiredKeys) {
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.addToBackStack(null);
-            ft.show(this);
-            ft.commit();
-            run();
+        if (newFragment.noKeys || newFragment.expiredKeys) {
+            show(activity, newFragment);
+            newFragment.run();
         }
-    }
-
-    public void hide() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.hide(this);
-        ft.commit();
     }
 
     private void run() {
@@ -133,7 +137,7 @@ public class SplashFragment extends Fragment {
             }
         }
         if (fragment.refreshTokens.size() == 0) {
-            fragment.hide();
+            finishSplash();
             MainActivity.loadPosts();
             return;
         }
@@ -193,11 +197,12 @@ public class SplashFragment extends Fragment {
         public void onMessageReceive(Context context, Intent message) {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, -1);
             int network = fragment.refreshTokens.get(fragment.refreshIndex);
+            boolean needFinish = false;
             switch (status) {
                 case Broadcasts.FINISHED:
 
                     if (fragment.refreshIndex == fragment.refreshTokens.size()) {
-                        fragment.hide();
+                        needFinish = true;
                         MainActivity.loadPosts();
                     }
                     fragment.splashInfo.setText("Login into " + Networks.nameOfNetwork(network));
@@ -207,10 +212,13 @@ public class SplashFragment extends Fragment {
                     break;
                 case Broadcasts.AUTH_FAIL:
                     fragment.splashInfo.setText("Can't login to " + Networks.nameOfNetwork(network));
-                    fragment.hide();
+                    needFinish = true;
                     break;
             }
             stop();
+            if (needFinish) {
+                fragment.finishSplash();
+            }
             fragment.tokenRefreshReciever = null;
         }
     }

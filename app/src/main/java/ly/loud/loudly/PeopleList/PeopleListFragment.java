@@ -53,7 +53,7 @@ public class PeopleListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.people_list, container, false);
+        rootView = inflater.inflate(R.layout.people_list_fragment, container, false);
 
         recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
         recyclerViewAdapter = new PeopleListAdapter(items, getActivity(), this);
@@ -231,7 +231,6 @@ public class PeopleListFragment extends Fragment {
         transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_bottom);
         transaction.replace(R.id.fragment_container, fragment);
         transaction.commit();
-
     }
 
     @Override

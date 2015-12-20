@@ -28,29 +28,11 @@
         android:clickable="false">
     </FrameLayout>
 
-    <fragment android:name="ly.loud.loudly.PostCreateFragment"
-        android:id="@+id/new_post_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:layout="@layout/activity_new_post" />
-
-    <fragment android:name="ly.loud.loudly.NetworksChooseFragment"
-        android:id="@+id/networks_choose_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:layout="@layout/network_choose_fragment" />
-
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/fragment_container">
     </FrameLayout>
-
-    <fragment android:name="ly.loud.loudly.SplashFragment"
-        android:id="@+id/splash_screen_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:layout="@layout/splash_fragment" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"

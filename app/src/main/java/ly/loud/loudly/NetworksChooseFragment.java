@@ -1,5 +1,6 @@
 package ly.loud.loudly;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
@@ -9,10 +10,12 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 import base.Networks;
 import util.UIAction;
+import util.Utils;
 
 /**
  * Created by ZeRoGerc on 11.12.15.
@@ -24,6 +27,8 @@ public class NetworksChooseFragment extends Fragment {
     private UIAction buttonClick;
     private boolean[] shouldPost = new boolean[Networks.NETWORK_COUNT];
 
+    private int mode = IconsHolder.SHOW_ALL;
+
     private UIAction hideAction = null;
     private UIAction showAction = null;
 
@@ -34,6 +39,9 @@ public class NetworksChooseFragment extends Fragment {
 
         rootView = inflater.inflate(R.layout.network_choose_fragment, container, false);
         iconsHolder = (IconsHolder)rootView.findViewById(R.id.network_choose_icons_holder);
+
+        iconsHolder.prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
+
         postButton = (ImageView)rootView.findViewById(R.id.network_choose_button);
 
         postButton.setOnClickListener(new View.OnClickListener() {
@@ -164,5 +172,33 @@ public class NetworksChooseFragment extends Fragment {
     public void onPause() {
         super.onPause();
         Log.d("NETWORK", "PAUSE");
+    }
+
+    private static void show(Activity activity, NetworksChooseFragment fragment) {
+        FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
+        transaction.addToBackStack(null);
+        transaction.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_left,
+                R.anim.slide_in_left, R.anim.slide_out_left);
+        transaction.replace(R.id.new_post_fragment_container, fragment);
+        transaction.commit();
+
+
+        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+        Utils.hidePhoneKeyboard(activity);
+        fragment.setMode(IconsHolder.SHOW_ONLY_AVAILABLE);
+    }
+
+    public static NetworksChooseFragment showNetworksChoose(Activity activity) {
+        NetworksChooseFragment newFragment = new NetworksChooseFragment();
+        show(activity, newFragment);
+        return newFragment;
+    }
+
+    public int getMode() {
+        return mode;
+    }
+
+    public void setMode(int mode) {
+        this.mode = mode;
     }
 }

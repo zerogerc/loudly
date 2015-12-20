@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -46,8 +45,6 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     public RecyclerViewAdapter recyclerViewAdapter;
     public FloatingActionButton floatingActionButton;
-    private PostCreateFragment newPostFragment;
-    private SplashFragment splashFragment;
 
     private Toolbar toolbar;
 
@@ -129,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 if (count == 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         getSupportActionBar().show();
-                    };
+                    }
                     AppBarLayout.LayoutParams params =
                             (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
                     params.setScrollFlags(customParams.getScrollFlags());
@@ -140,17 +137,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        FragmentManager manager = getFragmentManager();
-        newPostFragment = ((PostCreateFragment) manager.findFragmentById(R.id.new_post_fragment));
-        splashFragment = ((SplashFragment) manager.findFragmentById(R.id.splash_screen_fragment));
-        splashFragment.show();
-
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.hide(newPostFragment);
-        ft.commit();
-
         background = ((FrameLayout) findViewById(R.id.main_background));
         background.setAlpha(0);
+
+        SplashFragment.showSplash(this);
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
@@ -172,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (keysLoaded && loadPosts == null) {
-            splashFragment.hide();
             loadPosts();
         }
     }
@@ -308,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
             receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
-        newPostFragment.show();
+        PostCreateFragment.showPostCreate(this);
     }
 
     @Override
