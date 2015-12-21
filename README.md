@@ -1,2 +1,2 @@
 # Loudly
-Application for creating post and send it to a number of networks at one time
+Android application for simultaneous posting updates to many social networks at once. Main branch is Abstract
