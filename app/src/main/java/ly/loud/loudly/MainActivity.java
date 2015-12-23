@@ -107,6 +107,11 @@ public class MainActivity extends AppCompatActivity {
 
         final AppBarLayout.LayoutParams customParams = (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
 
+        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
+
+        background = ((FrameLayout) findViewById(R.id.main_background));
+        background.setAlpha(0);
+
         getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
@@ -137,12 +142,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        background = ((FrameLayout) findViewById(R.id.main_background));
-        background.setAlpha(0);
-
         SplashFragment.showSplash(this);
-
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
         setRecyclerView();
     }

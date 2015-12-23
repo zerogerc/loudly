@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import base.Networks;
-import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
 import base.attachments.LoudlyImage;
@@ -112,12 +111,34 @@ public class PostCreateFragment extends Fragment {
     }
 
     public void setListeners() {
+        final UIAction hideNetworksChooseAction = new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                // TODO remove this crutch
+                Activity activity = ((Activity) context);
+
+                activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+                editText.setFocusableInTouchMode(true);
+                editText.setFocusable(true);
+                setOverShadow(false);
+            }
+        };
+
+        final UIAction showNetworksChooseAction = new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                editText.setFocusableInTouchMode(false);
+                editText.setFocusable(false);
+                setOverShadow(true);
+            }
+        };
+
         getActivity().findViewById(R.id.new_post_send_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (existsAvailableNetworks()) {
-                    NetworksChooseFragment fragment = NetworksChooseFragment.showNetworksChoose(getActivity());
-                    initNetworksChooseFragment(fragment);
+                    NetworksChooseFragment fragment = NetworksChooseFragment.showNetworksChoose(getActivity(), showNetworksChooseAction, hideNetworksChooseAction);
+                    setNetworksChooseListeners(fragment);
                 } else {
                     Snackbar.make(getActivity().findViewById(R.id.main_layout),
                             "You must be logged in at least one network", Snackbar.LENGTH_SHORT)
@@ -181,15 +202,15 @@ public class PostCreateFragment extends Fragment {
                         wraps.add(Networks.makeWrap(i));
                     }
                 }
-                Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
-                        wraps.toArray(new Wrap[0]));
-                uploader.execute(post);
+//                Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
+//                        wraps.toArray(new Wrap[0]));
+//                uploader.execute(post);
 
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
                 ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,
                         R.anim.slide_in_left, R.anim.slide_out_right);
-                ft.hide(fragment);
                 ft.commit();
+
                 getFragmentManager().popBackStack();
                 getFragmentManager().popBackStack();
             }
@@ -198,29 +219,6 @@ public class PostCreateFragment extends Fragment {
         fragment.setGrayItemClick(grayAction);
         fragment.setColorItemsClick(colorAction);
         fragment.setPostButtonClick(buttonAction);
-    }
-
-    private void initNetworksChooseFragment(final NetworksChooseFragment fragment) {
-        fragment.setHideAction(new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-                editText.setFocusableInTouchMode(true);
-                editText.setFocusable(true);
-                setOverShadow(false);
-            }
-        });
-
-        fragment.setShowAction(new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                editText.setFocusableInTouchMode(false);
-                editText.setFocusable(false);
-                setOverShadow(true);
-            }
-        });
-
-        setNetworksChooseListeners(fragment);
     }
 
     @Override

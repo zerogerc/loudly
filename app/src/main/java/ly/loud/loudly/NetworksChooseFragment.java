@@ -40,6 +40,9 @@ public class NetworksChooseFragment extends Fragment {
         rootView = inflater.inflate(R.layout.network_choose_fragment, container, false);
         iconsHolder = (IconsHolder)rootView.findViewById(R.id.network_choose_icons_holder);
 
+        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+        Utils.hidePhoneKeyboard(getActivity());
+
         iconsHolder.prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
 
         postButton = (ImageView)rootView.findViewById(R.id.network_choose_button);
@@ -77,6 +80,22 @@ public class NetworksChooseFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (showAction != null) {
+            showAction.execute(getActivity());
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (hideAction != null) {
+            hideAction.execute(getActivity());
+        }
+    }
+
     public void setPostButtonClick(UIAction action) {
         this.buttonClick = action;
     }
@@ -98,29 +117,6 @@ public class NetworksChooseFragment extends Fragment {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.hide(this);
         ft.commit();
-    }
-
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        if (!hidden) {
-            if (showAction != null) {
-                showAction.execute(getActivity());
-            }
-            Log.d("NETWORK", "SHOW");
-            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                if (Loudly.getContext().getKeyKeeper(i) != null) {
-                    shouldPost[i] = true;
-                } else {
-                    shouldPost[i] = false;
-                }
-            }
-        } else {
-            if (hideAction != null) {
-                hideAction.execute(getActivity());
-            }
-            Log.d("NETWORK", "HIDE");
-        }
     }
 
     public void setVisible(int network) {
@@ -182,14 +178,15 @@ public class NetworksChooseFragment extends Fragment {
         transaction.replace(R.id.new_post_fragment_container, fragment);
         transaction.commit();
 
-
-        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
-        Utils.hidePhoneKeyboard(activity);
         fragment.setMode(IconsHolder.SHOW_ONLY_AVAILABLE);
+
+        activity.getFragmentManager().executePendingTransactions();
     }
 
-    public static NetworksChooseFragment showNetworksChoose(Activity activity) {
+    public static NetworksChooseFragment showNetworksChoose(Activity activity, UIAction showAction, UIAction hideAction) {
         NetworksChooseFragment newFragment = new NetworksChooseFragment();
+        newFragment.showAction = showAction;
+        newFragment.hideAction = hideAction;
         show(activity, newFragment);
         return newFragment;
     }
