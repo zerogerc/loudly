@@ -1,4 +1,4 @@
-package ly.loud.loudly.PeopleList;
+package ly.loud.loudly;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -24,9 +24,8 @@ import java.util.LinkedList;
 import base.Networks;
 import base.SingleNetwork;
 import base.Tasks;
-import ly.loud.loudly.Loudly;
-import ly.loud.loudly.MainActivity;
-import ly.loud.loudly.R;
+import ly.loud.loudly.adapter.Item;
+import ly.loud.loudly.adapter.AbstractAdapter;
 import util.AttachableReceiver;
 import util.Broadcasts;
 
@@ -45,7 +44,7 @@ public class PeopleListFragment extends Fragment {
 
     LinkedList<Item> items = new LinkedList<>();
     RecyclerView recyclerView;
-    PeopleListAdapter recyclerViewAdapter;
+    AbstractAdapter recyclerViewAdapter;
     LinearLayoutManager layoutManager;
 
     private ProgressBar progress;
@@ -56,8 +55,13 @@ public class PeopleListFragment extends Fragment {
         rootView = inflater.inflate(R.layout.people_list_fragment, container, false);
 
         recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
-        recyclerViewAdapter = new PeopleListAdapter(items, getActivity(), this);
-//        recyclerView.setHasFixedSize(true); /// HERE
+        recyclerViewAdapter = new AbstractAdapter(items, getActivity()) {
+            @Override
+            public void onFirstItemAppeared() {
+                hideProgress();
+            }
+        };
+
         layoutManager = new LinearLayoutManager(Loudly.getContext());
 
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
@@ -162,12 +166,12 @@ public class PeopleListFragment extends Fragment {
     }
 
     private static class GetPersonReceiver extends AttachableReceiver {
-        WeakReference<PeopleListAdapter> adapter;
+        WeakReference<AbstractAdapter> adapter;
         public GetPersonReceiver(Context context) {
             super(context, Broadcasts.GET_PERSONS);
         }
 
-        public void attachAdapter(PeopleListAdapter adapter) {
+        public void attachAdapter(AbstractAdapter adapter) {
             this.adapter = new WeakReference<>(adapter);
         }
 
@@ -178,7 +182,7 @@ public class PeopleListFragment extends Fragment {
             if (broadcastDepth != depth) {
                 return;
             }
-            PeopleListAdapter recyclerViewAdapter = adapter.get();
+            AbstractAdapter recyclerViewAdapter = adapter.get();
             switch (status) {
                 case Broadcasts.PROGRESS:
                     recyclerViewAdapter.notifyItemInserted(recyclerViewAdapter.getItemCount());

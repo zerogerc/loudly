@@ -11,6 +11,8 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -19,7 +21,11 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,6 +37,7 @@ import java.net.URL;
 import java.util.Calendar;
 
 import base.Networks;
+import base.Person;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.R;
@@ -97,30 +104,7 @@ public class Utils {
     }
 
     public static Bitmap getIconByNetwork(int network) {
-        int resource;
-        switch(network) {
-            case Networks.FB:
-                resource = R.mipmap.ic_facebook_round;
-                break;
-            case Networks.TWITTER:
-                resource = R.mipmap.ic_twitter_round;
-                break;
-            case Networks.INSTAGRAM:
-                resource = R.mipmap.ic_instagram_round;
-                break;
-            case Networks.VK:
-                resource = R.mipmap.ic_vk_round;
-                break;
-            case Networks.OK:
-                resource = R.mipmap.ic_ok_round;
-                break;
-            case Networks.MAILRU:
-                resource = R.mipmap.ic_mail_ru_round;
-                break;
-            default:
-                resource = R.mipmap.ic_launcher;
-        }
-        return BitmapFactory.decodeResource(Loudly.getContext().getResources(), resource);
+        return BitmapFactory.decodeResource(Loudly.getContext().getResources(), getResourceByNetwork(network));
     }
 
     public static int getResourceByNetwork(int network) {
@@ -337,6 +321,40 @@ public class Utils {
         for (int i=0; i<cookies.length; i++) {
             String[] cookieparts = cookies[i].split("=");
             cookieManager.setCookie(domain, cookieparts[0].trim()+"=; Expires=Wed, 31 Dec 2025 23:59:59 GMT");
+        }
+    }
+
+    public static void loadAvatar(final Person person, final ImageView icon) {
+        if (person.getPhotoUrl() != null) {
+            Glide.with(Loudly.getContext())
+                    .load(person.getPhotoUrl())
+                    .asBitmap()
+                    .override(Utils.dpToPx(48), Utils.dpToPx(48))
+                    .fitCenter()
+                    .into(new BitmapImageViewTarget(icon) {
+                        @Override
+                        protected void setResource(Bitmap resource) {
+                            RoundedBitmapDrawable circularBitmapDrawable =
+                                    RoundedBitmapDrawableFactory.create(Loudly.getContext().getResources(), resource);
+                            circularBitmapDrawable.setCircular(true);
+                            icon.setImageDrawable(circularBitmapDrawable);
+                        }
+                    });
+        } else {
+            Glide.with(Loudly.getContext())
+                    .load(R.mipmap.ic_launcher)
+                    .override(Utils.dpToPx(48), Utils.dpToPx(48))
+                    .fitCenter()
+                    .into(icon);
+        }
+    }
+
+    public static void loadName(Person person, TextView name) {
+        if (person.getFirstName() != null && person.getLastName() != null) {
+            String text = person.getFirstName() + " " + person.getLastName();
+            name.setText(text);
+        } else {
+            name.setText("");
         }
     }
 }

@@ -29,10 +29,9 @@ import base.Tasks;
 import base.attachments.Image;
 import base.says.LoudlyPost;
 import base.says.Post;
-import ly.loud.loudly.PeopleList.PeopleListFragment;
 import util.Utils;
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.PostViewHolder> {
     private List<Post> posts;
     private int lastPosition = -1;
     MainActivity activity;
@@ -47,7 +46,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         notifyItemRangeChanged(pos, posts.size());
     }
 
-    private void setViewSizesForImageSizes(final ViewHolder holder, final int width, final int height) {
+    private void setViewSizesForImageSizes(final PostViewHolder holder, final int width, final int height) {
         int imageWidth = Utils.getDefaultScreenWidth() - 2 * holder.getMargin();
         float scale = ((float) imageWidth) / ((float) width);
         int imageHeight = (int) (height * scale);
@@ -56,7 +55,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.postImageView.requestLayout();
     }
 
-    private void resizeImageView(final ViewHolder holder, final Post post) {
+    private void resizeImageView(final PostViewHolder holder, final Post post) {
         if (post.getAttachments().size() != 0) {
             if (post.getAttachments().get(0) instanceof Image) {
                 Image image = ((Image) post.getAttachments().get(0));
@@ -91,7 +90,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
     }
 
-    private void refreshFields(final ViewHolder holder, final Post post) {
+    private void refreshPostView(final PostViewHolder holder, final Post post) {
         holder.text.setText(post.getText());
 
         holder.data.setText(Utils.getDateFormatted(post.getDate()));
@@ -210,16 +209,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public PostViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.post_view, parent, false);
-        return new ViewHolder(v, new LoudlyPost("Hello world!!!"));
+        return new PostViewHolder(v, new LoudlyPost("Hello world!!!"));
     }
 
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(PostViewHolder holder, int position) {
         Post post = posts.get(position);
-        refreshFields(holder, post);
+        refreshPostView(holder, post);
         setAnimation(holder.root, position);
     }
 
@@ -228,7 +227,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return posts.size();
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    class PostViewHolder extends RecyclerView.ViewHolder {
         private View root;
         private ImageView socialIcon;
         private TextView text;
@@ -247,7 +246,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             return Utils.dpToPx(8);
         }
 
-        public ViewHolder(View itemView, final Post post) {
+        public PostViewHolder(View itemView, final Post post) {
             super(itemView);
 
             root = itemView;
@@ -268,7 +267,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) geoData.getLayoutParams();
             params.setMargins(0, 0, 0, 0);
             geoData.setLayoutParams(params);
-            refreshFields(this, post);
+            refreshPostView(this, post);
         }
     }
 

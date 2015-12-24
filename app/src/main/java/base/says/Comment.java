@@ -1,7 +1,7 @@
 package base.says;
 
 import base.Person;
-import ly.loud.loudly.PeopleList.Item;
+import ly.loud.loudly.adapter.Item;
 
 public class Comment extends Say implements Item {
     Person person;
@@ -27,5 +27,10 @@ public class Comment extends Say implements Item {
 
     public void setPerson(Person person) {
         this.person = person;
+    }
+
+    @Override
+    public int getType() {
+        return Item.COMMENT;
     }
 }

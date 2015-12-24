@@ -2,7 +2,7 @@ package base;
 
 import android.graphics.Bitmap;
 
-import ly.loud.loudly.PeopleList.Item;
+import ly.loud.loudly.adapter.Item;
 
 public class Person implements Item {
     private String firstName, lastName;
@@ -68,5 +68,10 @@ public class Person implements Item {
 
     public void setLittlePhoto(Bitmap littlePhoto) {
         this.littlePhoto = littlePhoto;
+    }
+
+    @Override
+    public int getType() {
+        return Item.PERSON;
     }
 }
