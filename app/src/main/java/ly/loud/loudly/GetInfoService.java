@@ -26,10 +26,10 @@ import util.Broadcasts;
 import util.InvalidTokenException;
 import util.ThreadStopped;
 import util.UIAction;
+import util.Utils;
 
 public class GetInfoService extends IntentService implements Tasks.GetInfoCallback {
     private static final String NAME = "GetInfoService";
-    private NotificationManager notificationManager;
     private static final int NOTIFICATION_ID = 0;
     private static volatile boolean stopped;
     private Info summary;
@@ -60,10 +60,9 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
                     old.setInfo(info);
                     summary.add(oldInfo.difference(info));
                     final int fixed = ind;
-                    MainActivity.executeOnUI(new UIAction() {
+                    MainActivity.executeOnUI(new UIAction<MainActivity>() {
                         @Override
-                        public void execute(Context context, Object... params) {
-                            MainActivity mainActivity = (MainActivity) context;
+                        public void execute(MainActivity mainActivity, Object... params) {
                             mainActivity.recyclerViewAdapter.notifyItemChanged(fixed);
                         }
                     });
@@ -72,93 +71,6 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
             }
             ind++;
         }
-    }
-
-    @Override
-    public void foundDeletedPost(Post post) {
-        int ind = 0;
-        Iterator<Post> iterator = MainActivity.posts.listIterator();
-        while (iterator.hasNext()) {
-            if (stopped) throw new ThreadStopped();
-
-            Post old = iterator.next();
-            if (old.equals(post)) {
-                old.setId(null);
-                if (old instanceof LoudlyPost) {
-                    boolean visible = false;
-                    for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                        if (post.existsIn(i)) {
-                            visible = true;
-                            break;
-                        }
-                    }
-                    if (visible) break;
-                }
-                iterator.remove();
-                final int fixed = ind;
-                MainActivity.executeOnUI(new UIAction() {
-                    @Override
-                    public void execute(Context context, Object... params) {
-                        MainActivity mainActivity = (MainActivity) context;
-                        mainActivity.recyclerViewAdapter.notifyDeletedAtPosition(fixed);
-                    }
-                });
-                break;
-            }
-            ind++;
-        }
-    }
-
-    private void showSnackBar(Info summary) {
-        final String message = makeNewInfoMessages(summary)[1];
-        MainActivity.executeOnUI(new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                MainActivity mainActivity = (MainActivity) context;
-                Snackbar.make(mainActivity.findViewById(R.id.main_layout),
-                        message, Snackbar.LENGTH_SHORT)
-                        .show();
-            }
-        });
-        SettingsActivity.executeOnUI(new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                SettingsActivity settingsActivity = (SettingsActivity) context;
-                Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
-                        message, Snackbar.LENGTH_SHORT)
-                        .show();
-            }
-        });
-    }
-
-    private void makeNotification(Info summary) {
-        String[] messages = makeNewInfoMessages(summary);
-        NotificationCompat.Builder notificationCompat = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(messages[0])
-                .setContentText(messages[1])
-                .setAutoCancel(true)
-                .setColor(ContextCompat.getColor(this, R.color.colorAccent));
-        // Creates an explicit intent for an Activity in your app
-        Intent resultIntent = new Intent(this, MainActivity.class);
-
-        // The stack builder object will contain an artificial back stack for the
-        // started Activity.
-        // This ensures that navigating backward from the Activity leads out of
-        // your application to the Home screen.
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        // Adds the back stack for the Intent (but not the Intent itself)
-        stackBuilder.addParentStack(MainActivity.class);
-        // Adds the Intent that starts the Activity to the top of the stack
-        stackBuilder.addNextIntent(resultIntent);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(
-                        0,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-        notificationCompat.setContentIntent(resultPendingIntent);
-        // mId allows you to update the notification later on.
-        notificationManager.notify(NOTIFICATION_ID, notificationCompat.build());
     }
 
     private String[] makeNewInfoMessages(Info summary) {
@@ -186,15 +98,14 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (notificationManager == null) {
-            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        }
         stopped = false;
         if (MainActivity.posts.isEmpty()) {
             return;
         }
         LinkedList<Post> currentPosts = new LinkedList<>();
         summary = new Info();
+        final LinkedList<Integer> success = new LinkedList<>();
+
         for (Wrap w : Loudly.getContext().getWraps()) {
             try {
                 currentPosts.clear();
@@ -214,6 +125,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
                         Broadcasts.PROGRESS);
                 message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                 Loudly.sendLocalBroadcast(message);
+                success.add(w.networkID());
             } catch (InvalidTokenException e) {
                 Intent message = BroadcastSendingTask.makeError(Broadcasts.POST_GET_INFO,
                         Broadcasts.INVALID_TOKEN, e.getMessage());
@@ -228,15 +140,23 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
                 return;
             }
         }
+
         Loudly.sendLocalBroadcast(BroadcastSendingTask.makeSuccess(Broadcasts.POST_GET_INFO));
         if (summary.hasPositiveChanges()) {
+            String[] strings = makeNewInfoMessages(summary);
             if (MainActivity.aliveCopy == 0 && SettingsActivity.aliveCopy == 0) {
-                makeNotification(summary);
+                Utils.makeNotification(this, strings[0], strings[1], NOTIFICATION_ID);
             } else {
-                showSnackBar(summary);
+                Utils.showSnackBar(strings[1]);
             }
         }
 
+        MainActivity.executeOnUI(new UIAction<MainActivity>() {
+            @Override
+            public void execute(MainActivity context, Object... params) {
+                context.recyclerViewAdapter.cleanUp(success);
+            }
+        });
         Loudly.getContext().startGetInfoService();  // Restarting
     }
 }

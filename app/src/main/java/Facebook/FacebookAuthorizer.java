@@ -12,7 +12,6 @@ public class FacebookAuthorizer extends Authorizer {
     private static final String RESPONSE_URL = "https://web.facebook.com/connect/login_success.html";
     private static final String REDIRECT_URL = "https://www.facebook.com/connect/login_success.html";
     private static final String ACCESS_TOKEN = "access_token";
-    private static final String ERROR_DESCRIPTION = "error";
 
     @Override
     public int network() {
@@ -55,16 +54,4 @@ public class FacebookAuthorizer extends Authorizer {
     public boolean isResponse(String url) {
         return url.startsWith(REDIRECT_URL) || url.startsWith(RESPONSE_URL);
     }
-
-    public static final Creator<FacebookAuthorizer> CREATOR = new Creator<FacebookAuthorizer>() {
-        @Override
-        public FacebookAuthorizer createFromParcel(Parcel source) {
-            return new FacebookAuthorizer();
-        }
-
-        @Override
-        public FacebookAuthorizer[] newArray(int size) {
-            return new FacebookAuthorizer[size];
-        }
-    };
 }

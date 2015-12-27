@@ -23,13 +23,20 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
+import base.Networks;
 import base.Tasks;
 import base.attachments.Image;
 import base.says.LoudlyPost;
 import base.says.Post;
+import util.ThreadStopped;
+import util.UIAction;
 import util.Utils;
+import Loudly.LoudlyWrap;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.PostViewHolder> {
     private List<Post> posts;
@@ -197,7 +204,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                 Loudly.getContext().stopGetInfoService();
                                 activity.floatingActionButton.hide();
                                 MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
-                                        new MainActivity.PostDeleteReceiver(context);
+                                        new MainActivity.PostDeleteReceiver((MainActivity)context);
                                 new Tasks.PostDeleter(post, MainActivity.posts, Loudly.getContext().getWraps()).
                                         executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                             }
@@ -282,6 +289,91 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             animator.start();
             lastPosition = position;
             Log.e("POS", Integer.toString(lastPosition));
+        }
+    }
+
+    public void merge(LinkedList<? extends Post> newPosts) {
+        int i = 0, j = 0;
+        // TODO: 12/11/2015 Make quicker with arrayLists
+        while (j < newPosts.size()) {
+            // while date of ith old post is greater than date of jth post in newPosts, i++
+            Post right = newPosts.get(j);
+            while (i < posts.size() && j < newPosts.size()) {
+                Post post = posts.get(i);
+
+                if (post.getDate() == right.getDate()) {
+                    // Skip existing post (especially for Loudly posts)
+                    j++;
+                    continue;
+                }
+                if (post.getDate() < right.getDate()) {
+                    break;
+                }
+                i++;
+            }
+            int oldJ = j;
+            while (j < newPosts.size() &&
+                    (i == posts.size() || newPosts.get(j).getDate() > posts.get(i).getDate())) {
+                j++;
+            }
+
+            posts.addAll(i, newPosts.subList(oldJ, j));
+
+            int newI = i + j - oldJ;
+            if (newI == posts.size()) {
+                notifyDataSetChanged();
+            } else {
+                notifyItemRangeInserted(i, j - oldJ);
+            }
+            i = newI;
+        }
+    }
+
+    /**
+     * Remove from the feed posts, removed from other network<b>
+     * If found loudly posts, that was removed from every network, delete it from DB <b>
+     * Otherwise, remove from feed
+     * @param networks list of wraps, from where posts were loaded
+     */
+    public void cleanUp(List<Integer> networks) {
+        Iterator<Post> iterator = posts.listIterator();
+        int ind = 0;
+        while (iterator.hasNext()) {
+            Post post = iterator.next();
+            boolean shouldHide = true;
+            if (post instanceof LoudlyPost) {
+                if (!post.exists()) {
+                    try {
+                        // If post hasn't deleted yet, delete it
+                        if (((LoudlyPost) post).getId(Networks.LOUDLY) != null) {
+                            new LoudlyWrap().delete(post);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    for (Integer network : networks) {
+                        if (post.existsIn(network)) {
+                            shouldHide = false;
+                        }
+                    }
+                }
+            } else {
+                if (post.exists()) {
+                    shouldHide = false;
+                }
+            }
+            if (shouldHide) {
+                iterator.remove();
+                final int fixed = ind;
+                MainActivity.executeOnUI(new UIAction<MainActivity>() {
+                    @Override
+                    public void execute(MainActivity context, Object... params) {
+                        context.recyclerViewAdapter.notifyDeletedAtPosition(fixed);
+                    }
+                });
+            }
+            ind++;
         }
     }
 }

@@ -10,26 +10,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
 
+import base.Link;
 import base.MultipleNetwork;
 import base.Networks;
 import base.says.Info;
 import ly.loud.loudly.Loudly;
 import util.Utils;
 
-public class LoudlyImage extends Image implements MultipleNetwork {
-    private String[] ids;
+public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
+    private Link[] ids;
     private Info[] infos;
-    private long localId = 0;
 
     private Uri internalLink;
 
     public LoudlyImage() {
         super();
-        ids = new String[Networks.NETWORK_COUNT];
+        ids = new Link[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
     }
 
-    public LoudlyImage(String externalLink, String[] ids) {
+    public LoudlyImage(String externalLink, Link[] ids) {
         internalLink = null;
         this.externalLink = externalLink;
         this.ids = ids;
@@ -41,14 +41,6 @@ public class LoudlyImage extends Image implements MultipleNetwork {
         this.internalLink = internalLink;
     }
 
-    public long getLocalId() {
-        return localId;
-    }
-
-    public void setLocalId(long localId) {
-        this.localId = localId;
-    }
-
     public void deleteInternalLink() {
         this.internalLink = null;
     }
@@ -58,12 +50,27 @@ public class LoudlyImage extends Image implements MultipleNetwork {
     }
 
     @Override
-    public String getId(int network) {
+    public boolean exists() {
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (existsIn(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean existsIn(int network) {
+        return ids[network] != null && ids[network].isValid();
+    }
+
+    @Override
+    public Link getId(int network) {
         return ids[network];
     }
 
     @Override
-    public void setId(int network, String link) {
+    public void setId(int network, Link link) {
         ids[network] = link;
         if (link == null) {
             setInfo(network, new Info());
@@ -71,17 +78,17 @@ public class LoudlyImage extends Image implements MultipleNetwork {
     }
 
     @Override
-    public String getId() {
+    public Link getId() {
         return getId(network);
     }
 
     @Override
-    public void setId(String id) {
+    public void setId(Link id) {
         setId(network, id);
     }
 
     @Override
-    public String[] getIds() {
+    public Link[] getIds() {
         return ids;
     }
 
@@ -94,8 +101,10 @@ public class LoudlyImage extends Image implements MultipleNetwork {
     public void setInfo(int network, Info info) {
         infos[network] = info;
         this.info = new Info();
+
+        //todo move summary info to the loudly info
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            if (existsIn(i)) {
+            if (infos[i] != null) {
                 this.info.add(infos[i]);
             }
         }
@@ -106,6 +115,7 @@ public class LoudlyImage extends Image implements MultipleNetwork {
         setInfo(network, info);
     }
 
+    @Override
     public Uri getUri() {
         if (internalLink != null) {
             return internalLink;
@@ -114,6 +124,7 @@ public class LoudlyImage extends Image implements MultipleNetwork {
         }
     }
 
+    @Override
     public String getMIMEType() {
         String type = Loudly.getContext().getContentResolver().getType(internalLink);
         if (type == null) {
@@ -123,6 +134,7 @@ public class LoudlyImage extends Image implements MultipleNetwork {
         return type;
     }
 
+    @Override
     public InputStream getContent() throws IOException {
         InputStream stream  = Loudly.getContext().getContentResolver().openInputStream(internalLink);
         if (stream == null) {
@@ -132,6 +144,7 @@ public class LoudlyImage extends Image implements MultipleNetwork {
         return stream;
     }
 
+    @Override
     public long getFileSize() throws IOException {
         Cursor cursor = null;
         try {

@@ -22,19 +22,19 @@ import ly.loud.loudly.Loudly;
  * It's important to stop the receiver after work with it
  */
 
-public abstract class AttachableReceiver extends BroadcastReceiver {
-    private WeakReference<Context> context;
+public abstract class AttachableReceiver<T extends Context> extends BroadcastReceiver {
+    private WeakReference<T> context;
     private Intent lastMessage;
     private boolean stopped;
 
-    public abstract void onMessageReceive(Context context, Intent message);
+    public abstract void onMessageReceive(T context, Intent message);
 
     /**
      * Constructor from initial context and list of filters
      * @param context initial context
      * @param filters filters, such as Loudly.POST_FINISHED
      */
-    public AttachableReceiver(Context context, String... filters) {
+    public AttachableReceiver(T context, String... filters) {
         super();
         this.context = new WeakReference<>(context);
         IntentFilter intentFilter = new IntentFilter();
@@ -51,7 +51,7 @@ public abstract class AttachableReceiver extends BroadcastReceiver {
      * will be called
      * @param context Current context
      */
-    public void attach(Context context) {
+    public void attach(T context) {
         this.context = new WeakReference<>(context);
         if (lastMessage != null) {
             onMessageReceive(context, lastMessage);

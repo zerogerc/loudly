@@ -3,6 +3,9 @@ package base;
 import Facebook.FacebookAuthorizer;
 import Facebook.FacebookKeyKeeper;
 import Facebook.FacebookWrap;
+import Loudly.LoudlyAuthorizer;
+import Loudly.LoudlyKeyKeeper;
+import Loudly.LoudlyWrap;
 import MailRu.MailRuAuthoriser;
 import MailRu.MailRuKeyKeeper;
 import VK.VKAuthorizer;
@@ -13,17 +16,22 @@ import VK.VKWrap;
  * Constants for getting proper social network for holders
  */
 public class Networks {
-    public static final int FB = 0;
-    public static final int TWITTER = 1;
-    public static final int INSTAGRAM = 2;
-    public static final int VK = 3;
-    public static final int OK = 4;
-    public static final int MAILRU = 5;
 
-    public static final int NETWORK_COUNT = 6;
+    // It's important to add new network to the LinksContract, so we could say it in DB
+    public static final int LOUDLY = 0;
+    public static final int FB = 1;
+    public static final int TWITTER = 2;
+    public static final int INSTAGRAM = 3;
+    public static final int VK = 4;
+    public static final int OK = 5;
+    public static final int MAILRU = 6;
+
+    public static final int NETWORK_COUNT = 7;
 
     public static String nameOfNetwork(int network) {
         switch (network) {
+            case LOUDLY:
+                return "Loudly";
             case FB:
                 return "Facebook";
             case TWITTER:
@@ -54,6 +62,8 @@ public class Networks {
 
     public static Wrap makeWrap(int network) {
         switch (network) {
+            case LOUDLY:
+                return new LoudlyWrap();
             case FB:
                 return new FacebookWrap();
             case VK:
@@ -66,6 +76,8 @@ public class Networks {
     public static Authorizer makeAuthorizer(int network) {
         //TODO other networks
         switch (network) {
+            case LOUDLY:
+                return new LoudlyAuthorizer();
             case FB:
                 return new FacebookAuthorizer();
             case VK:
@@ -85,6 +97,8 @@ public class Networks {
      */
     public static KeyKeeper makeKeyKeeper(int network) {
         switch (network) {
+            case LOUDLY:
+                return new LoudlyKeyKeeper();
             case FB:
                 return new FacebookKeyKeeper();
             case VK:

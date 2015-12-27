@@ -10,6 +10,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import base.attachments.Image;
+import base.attachments.LocalFile;
 import base.attachments.LoudlyImage;
 import util.parsers.Parser;
 import util.parsers.StringParser;
@@ -28,6 +30,8 @@ public class Network {
         try {
             conn = (HttpURLConnection) new URL(query.toURL()).openConnection();
             conn.setRequestMethod("GET");
+            conn.setUseCaches(false);
+            conn.setConnectTimeout(5000);
             return getResponse(conn, parser);
         } finally {
             if (conn != null) {
@@ -64,14 +68,14 @@ public class Network {
      * @param query            request to server
      * @param onProgressUpdate is called during making request
      * @param tag              - name of the photo field
-     * @param image            - image that should be uploaded
+     * @param file            - image that should be uploaded
      * @return response from server
      * @throws IOException if any IO-error occurs
      */
 
     public static String makePostRequest(Query query,
                                          BackgroundAction onProgressUpdate,
-                                         String tag, LoudlyImage image) throws IOException {
+                                         String tag, LocalFile file) throws IOException {
 
         String boundary = "===" + System.currentTimeMillis() + "===";
 
@@ -89,25 +93,27 @@ public class Network {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setDoInput(true);
-            String requestFormat = (image == null) ? "application/x-www-form-urlencoded" : "multipart/form-data";
+            conn.setUseCaches(false);
+            conn.setConnectTimeout(5000);
+            String requestFormat = (file == null) ? "application/x-www-form-urlencoded" : "multipart/form-data";
             conn.setRequestProperty("Content-type", requestFormat + "; boundary=" + boundary);
 
             outputStream = conn.getOutputStream();
             pw = new PrintWriter(outputStream);
 
-            if (image == null) {
+            if (file == null) {
                 // If we should send only text
-                String request = query.getParameters().toString(); // Get parameters in proper format
+                String request = query.parametersToString(); // Get parameters in proper format
                 pw.append(request);
                 pw.flush();
             } else {
                 // If we should upload file
                 // Add parameters in appropriate format
-                for (Parameter p : query.getParameters().asList()) {
+                for (Query.Parameter p : query.getParameters()) {
                     paramToPOST(pw, p, boundary);
                 }
 
-                String type = image.getMIMEType();
+                String type = file.getMIMEType();
 
                 // Append file as sequence of bytes
                 // Appending file's info:
@@ -128,13 +134,13 @@ public class Network {
                 byte[] buffer = new byte[4096];
                 int bytesRead = -1;
 
-                long size = image.getFileSize();
+                long size = file.getFileSize();
                 size = size == 0 ? Long.MAX_VALUE : size;
                 long uploaded = 0;
                 long progress = 0;
                 InputStream content = null;
                 try {
-                    content = image.getContent();
+                    content = file.getContent();
                     while ((bytesRead = content.read(buffer)) != -1) {
                         outputStream.write(buffer, 0, bytesRead);
                         uploaded += bytesRead;
@@ -224,7 +230,7 @@ public class Network {
     /**
      * Writes text parameter as form-value in POST request
      */
-    private static void paramToPOST(PrintWriter pw, Parameter parameter, String boundary) {
+    private static void paramToPOST(PrintWriter pw, Query.Parameter parameter, String boundary) {
         pw.append("--").append(boundary).append(CRLF);
         pw.append("Content-Disposition: form-data; name=\"")
                 .append(parameter.name)
@@ -234,5 +240,4 @@ public class Network {
         pw.append(parameter.value).append(CRLF);
         pw.flush();
     }
-
 }

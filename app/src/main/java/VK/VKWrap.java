@@ -9,20 +9,21 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import base.KeyKeeper;
+import base.Link;
 import base.Networks;
 import base.Person;
 import base.SingleNetwork;
 import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
-import base.attachments.LoudlyImage;
+import base.attachments.LocalFile;
 import base.says.Comment;
 import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
 import ly.loud.loudly.Loudly;
 import util.BackgroundAction;
-import util.InvalidTokenException;
 import util.Network;
 import util.Query;
 import util.TimeInterval;
@@ -69,13 +70,9 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    protected Query makeSignedAPICall(String method) throws InvalidTokenException {
+    protected Query makeSignedAPICall(String method, KeyKeeper keyKeeper)  {
         Query query = makeAPICall(method);
-        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
-        if (!keys.isValid()) {
-            throw new InvalidTokenException();
-        }
-        query.addParameter(ACCESS_TOKEN, keys.getAccessToken());
+        query.addParameter(ACCESS_TOKEN, ((VKKeyKeeper) keyKeeper).getAccessToken());
         return query;
     }
 
@@ -91,8 +88,8 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public void uploadPost(LoudlyPost post) throws IOException {
-        Query query = makeSignedAPICall(POST_METHOD);
+    protected void upload(Post post, KeyKeeper keyKeeper) throws IOException {
+        Query query = makeSignedAPICall(POST_METHOD, keyKeeper);
         if (post.getText().length() > 0) {
             query.addParameter("message", post.getText());
         }
@@ -108,7 +105,7 @@ public class VKWrap extends Wrap {
         try {
             parser = new JSONObject(response);
             String id = parser.getJSONObject("response").getString("post_id");
-            post.setId(id);
+            post.setId(new Link(id));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -116,8 +113,8 @@ public class VKWrap extends Wrap {
 
 
     @Override
-    public void uploadImage(LoudlyImage image, BackgroundAction progress) throws IOException {
-        Query getUploadServerAddress = makeSignedAPICall(PHOTO_UPLOAD_METHOD);
+    protected void upload(Image image, BackgroundAction progress, KeyKeeper keyKeeper) throws IOException {
+        Query getUploadServerAddress = makeSignedAPICall(PHOTO_UPLOAD_METHOD, keyKeeper);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         getUploadServerAddress.addParameter("user_id", keys.getUserId());
 
@@ -136,9 +133,10 @@ public class VKWrap extends Wrap {
 
         Query imageUploadQuery = new Query(uploadURL);
 
-        response = Network.makePostRequest(imageUploadQuery, progress, "photo", image);
+        // In VK we can only upload images as files
+        response = Network.makePostRequest(imageUploadQuery, progress, "photo", (LocalFile)image);
 
-        Query getPhotoId = makeSignedAPICall(SAVE_PHOTO_METHOD);
+        Query getPhotoId = makeSignedAPICall(SAVE_PHOTO_METHOD, keyKeeper);
 
         try {
             parser = new JSONObject(response);
@@ -162,7 +160,7 @@ public class VKWrap extends Wrap {
             }
             int height = parser.getInt("height");
             int width = parser.getInt("width");
-            image.setId(id);
+            image.setId(new Link(id));
             image.setHeight(height);
             image.setWidth(width);
         } catch (JSONException e) {
@@ -171,12 +169,11 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public void getImageInfo(List<Image> images) throws IOException {
-        Query query = makeSignedAPICall("photos.getById");
+    protected void getImageInfo(List<Image> images, KeyKeeper keyKeeper) throws IOException {
+        Query query = makeSignedAPICall("photos.getById", keyKeeper);
         StringBuilder sb = new StringBuilder();
-        VKKeyKeeper keyKeeper = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
         for (Image image : images) {
-            sb.append(keyKeeper.getUserId());
+            sb.append(((VKKeyKeeper) keyKeeper).getUserId());
             sb.append('_');
             sb.append(image.getId());
         }
@@ -200,8 +197,8 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public void deletePost(Post post) throws IOException {
-        Query query = makeSignedAPICall(DELETE_METHOD);
+    protected void delete(Post post, KeyKeeper keyKeeper) throws IOException {
+        Query query = makeSignedAPICall(DELETE_METHOD, keyKeeper);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter("owner_id", keys.getUserId());
         query.addParameter("post_id", post.getId());
@@ -213,8 +210,8 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public void getPostsInfo(List<Post> posts, Tasks.GetInfoCallback callback) throws IOException {
-        Query query = makeSignedAPICall(GET_METHOD);
+    protected void getPostsInfo(List<Post> posts, Tasks.GetInfoCallback callback, KeyKeeper keyKeeper) throws IOException {
+        Query query = makeSignedAPICall(GET_METHOD, keyKeeper);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         StringBuilder sb = new StringBuilder();
         for (Post post : posts) {
@@ -260,7 +257,7 @@ public class VKWrap extends Wrap {
                     callback.infoLoaded(post, info);
                     break;
                 } else {
-                    callback.foundDeletedPost(post);
+                    post.getId().setValid(false);
                 }
             }
         }
@@ -282,13 +279,13 @@ public class VKWrap extends Wrap {
         int height = photoParser.getInt(0);
 
         image.setExternalLink(link);
-        image.setId(photoId);
+        image.setId(new Link(photoId));
         image.setWidth(width);
         image.setHeight(height);
     }
 
     @Override
-    public void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback) throws IOException {
+    protected void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback, KeyKeeper keyKeeper) throws IOException {
         offset = Math.max(0, offset - 5);
 
         ObjectParser photoParser = makePhotoParser();
@@ -315,8 +312,7 @@ public class VKWrap extends Wrap {
         long earliestPost = -1;
         do {
             Query query = makeAPICall(LOAD_POSTS_METHOD);
-            VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
-            query.addParameter("owner_id", keys.getUserId());
+            query.addParameter("owner_id", ((VKKeyKeeper) keyKeeper).getUserId());
             query.addParameter("filter", "owner");
             query.addParameter("count", "10");
             query.addParameter("offset", offset);
@@ -338,13 +334,8 @@ public class VKWrap extends Wrap {
 
                 Info info = new Info(likes, shares, comments);
 
-                boolean updated = callback.updateLoudlyPostInfo(id, networkID(), info);
-                if (updated) {
-                    continue;
-                }
-
                 if (timeInterval.contains(date)) {
-                    Post res = new Post(text, date, null, networkID(), id);
+                    Post res = new Post(text, date, null, networkID(), new Link(id));
                     res.setInfo(info);
 
                     for (int j = 0; j < attachments.size(); j++) {
@@ -366,14 +357,13 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public List<Comment> getComments(SingleNetwork element) throws IOException {
+    protected List<Comment> getComments(SingleNetwork element, KeyKeeper keyKeeper) throws IOException {
         if (!(element instanceof Post)) {
             return new LinkedList<>(); // TODO: 12/12/2015  
         }
-        Query query = makeSignedAPICall("wall.getComments");
-        VKKeyKeeper keyKeeper = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
+        Query query = makeSignedAPICall("wall.getComments", keyKeeper);
 
-        query.addParameter("owner_id", keyKeeper.getUserId());
+        query.addParameter("owner_id", ((VKKeyKeeper) keyKeeper).getUserId());
         query.addParameter("post_id", element.getId());
         query.addParameter("need_likes", 1);
         query.addParameter("count", 20);
@@ -450,7 +440,7 @@ public class VKWrap extends Wrap {
             int likes = commentParser.getObject().getInt(0);
             ArrayParser attachments = commentParser.getArray();
 
-            Comment comment = new Comment(text, date, author, networkID(), id);
+            Comment comment = new Comment(text, date, author, networkID(), new Link(id));
             if (attachments != null) {
                 for (int j = 0; j < attachments.size(); j++) {
                     attachmentParser = attachments.getObject(i);
@@ -469,8 +459,8 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    public LinkedList<Person> getPersons(int what, SingleNetwork element) throws IOException {
-        Query query = makeSignedAPICall("likes.getList");
+    protected LinkedList<Person> getPersons(int what, SingleNetwork element, KeyKeeper keyKeeper) throws IOException {
+        Query query = makeSignedAPICall("likes.getList", keyKeeper);
         String type;
         if (element instanceof Post) {
             type = "post";
@@ -483,8 +473,7 @@ public class VKWrap extends Wrap {
         }
 
         query.addParameter("type", type);
-        VKKeyKeeper keys = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID()));
-        query.addParameter("owner_id", keys.getUserId());
+        query.addParameter("owner_id", ((VKKeyKeeper) keyKeeper).getUserId());
         query.addParameter("item_id", element.getId());
         String filter;
         switch (what) {
@@ -504,7 +493,7 @@ public class VKWrap extends Wrap {
 
         String response = Network.makeGetRequest(query);
 
-        Query getPeopleQuery = makeSignedAPICall("users.get");
+        Query getPeopleQuery = makeSignedAPICall("users.get", keyKeeper);
 
         JSONObject parser;
         try {

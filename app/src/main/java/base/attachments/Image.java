@@ -3,6 +3,7 @@ package base.attachments;
 import android.graphics.Point;
 import android.net.Uri;
 
+import base.Link;
 import base.SingleNetwork;
 import base.says.Info;
 
@@ -15,7 +16,7 @@ public class Image implements Attachment, SingleNetwork {
 
     protected Info info;
     protected int network;
-    protected String id;
+    protected Link id;
 
     public Image() {
         externalLink = null;
@@ -24,7 +25,7 @@ public class Image implements Attachment, SingleNetwork {
         id = null;
     }
 
-    public Image(String externalLink, int network, String id) {
+    public Image(String externalLink, int network, Link id) {
         this.externalLink = externalLink;
         this.network = network;
         this.id = id;
@@ -77,17 +78,22 @@ public class Image implements Attachment, SingleNetwork {
     }
 
     @Override
-    public boolean existsIn(int network) {
-        return this.network == network;
+    public boolean exists() {
+        return existsIn(network);
     }
 
     @Override
-    public String getId() {
+    public boolean existsIn(int network) {
+        return this.network == network && id != null && id.isValid();
+    }
+
+    @Override
+    public Link getId() {
         return id;
     }
 
     @Override
-    public void setId(String id) {
+    public void setId(Link id) {
         this.id = id;
     }
 

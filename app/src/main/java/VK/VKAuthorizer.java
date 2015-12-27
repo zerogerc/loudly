@@ -57,16 +57,4 @@ public class VKAuthorizer extends Authorizer {
     public boolean isResponse(String url) {
         return url.startsWith(RESPONSE_URL);
     }
-
-    public static final Creator<VKAuthorizer> CREATOR = new Creator<VKAuthorizer>() {
-        @Override
-        public VKAuthorizer createFromParcel(Parcel source) {
-            return new VKAuthorizer();
-        }
-
-        @Override
-        public VKAuthorizer[] newArray(int size) {
-            return new VKAuthorizer[size];
-        }
-    };
 }

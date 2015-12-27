@@ -32,7 +32,7 @@ import util.database.DatabaseException;
 
 public class SettingsActivity extends AppCompatActivity {
     private static SettingsActivity self;
-    private static AttachableReceiver authReceiver = null;
+    private static AttachableReceiver<SettingsActivity> authReceiver = null;
     static int aliveCopy = 0;
 
     private IconsHolder iconsHolder;
@@ -45,7 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
     public static Authorizer webViewAuthorizer;
     public static KeyKeeper webViewKeyKeeper;
 
-    public static void executeOnUI(final UIAction action) {
+    public static void executeOnUI(final UIAction<SettingsActivity> action) {
         if (self != null) {
             self.runOnUiThread(new Runnable() {
                 @Override
@@ -57,15 +57,25 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public void setIconsClick() {
-        UIAction grayItemClick = new UIAction() {
+        UIAction<SettingsActivity> grayItemClick = new UIAction<SettingsActivity>() {
             @Override
-            public void execute(Context context, Object... params) {
+            public void execute(SettingsActivity context, Object... params) {
                 int network = ((int) params[0]);
                 //TODO remove when all networks will have been implemented
                 if (network == Networks.VK || network == Networks.FB) {
                     startReceiver();
                     Authorizer authorizer = Networks.makeAuthorizer(network);
-                    authorizer.createAsyncTask(context).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    authorizer.createAsyncTask(context, new UIAction<SettingsActivity>() {
+                        @Override
+                        public void execute(SettingsActivity context, Object... params) {
+                            Authorizer authorizer = (Authorizer) params[0];
+                            KeyKeeper result = (KeyKeeper) params[1];
+                            context.webViewURL = authorizer.makeAuthQuery().toURL();
+                            context.webViewKeyKeeper = result;
+                            context.webViewAuthorizer = authorizer;
+                            context.startWebView();
+                        }
+                    }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             }
         };
@@ -200,7 +210,7 @@ public class SettingsActivity extends AppCompatActivity {
         editor.apply();
     }
 
-    private static class AuthReceiver extends AttachableReceiver {
+    private static class AuthReceiver extends AttachableReceiver<SettingsActivity> {
         private IconsHolder iconsHolder;
 
         public AuthReceiver(SettingsActivity context, IconsHolder iconHolder) {
@@ -209,9 +219,8 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onMessageReceive(Context context, Intent message) {
+        public void onMessageReceive(SettingsActivity activity, Intent message) {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            SettingsActivity activity = (SettingsActivity) context;
             switch (status) {
                 case Broadcasts.FINISHED:
                     Snackbar.make(activity.findViewById(R.id.settings_parent_layout),
@@ -246,12 +255,11 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    // That's here because of 3 different click listeners
     private void startReceiver() {
         authReceiver = new AuthReceiver(this, iconsHolder);
     }
 
-    // ToDo: make buttons onclickable during authorization
+    // ToDo: make buttons not clickable during authorization
 
     public void startWebView() {
         FragmentTransaction ft = getFragmentManager().beginTransaction();

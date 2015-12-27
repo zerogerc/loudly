@@ -2,15 +2,9 @@ package base;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 
-import Facebook.FacebookAuthorizer;
-import VK.VKAuthorizer;
 import ly.loud.loudly.Loudly;
-import ly.loud.loudly.SettingsActivity;
 import util.AttachableTask;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
@@ -24,7 +18,7 @@ import util.database.DatabaseException;
  * Classes, which extends it, should contain CREATOR as element of the implementation of Parcelable
  **/
 
-public abstract class Authorizer implements Parcelable {
+public abstract class Authorizer {
     /**
      * @return ID of proper social network
      */
@@ -32,6 +26,7 @@ public abstract class Authorizer implements Parcelable {
 
     /**
      * Initial steps of authorization before opening authActivity
+     *
      * @return keys that we use to interact with social network
      */
     protected abstract KeyKeeper beginAuthorize();
@@ -48,7 +43,8 @@ public abstract class Authorizer implements Parcelable {
 
     /**
      * Add fields such as access_token from response to KeyKeeper
-     * @param keys Keys, generated during beginAuthorize
+     *
+     * @param keys     Keys, generated during beginAuthorize
      * @param response Response from server
      */
     public abstract void addFieldsFromQuery(KeyKeeper keys, Query response);
@@ -61,6 +57,7 @@ public abstract class Authorizer implements Parcelable {
 
     /**
      * Check validity of response
+     *
      * @param url URL, opened in AuthFragment
      * @return true, if opened URL is valid response from server
      */
@@ -71,11 +68,11 @@ public abstract class Authorizer implements Parcelable {
      * It performs initial steps of authorisation and opens AuthFragment to get authorisation tokens
      */
 
-    private static class AbstractAuthorizationTask extends AttachableTask<Object, Void, KeyKeeper> {
+    public static class AbstractAuthorizationTask<T extends Context> extends AttachableTask<T, Object, Void, KeyKeeper> {
         private Authorizer authorizer;
-        private UIAction doInUI;
+        private UIAction<T> doInUI;
 
-        public AbstractAuthorizationTask(Context context, Authorizer authorizer, UIAction doInUI) {
+        public AbstractAuthorizationTask(T context, Authorizer authorizer, UIAction<T> doInUI) {
             super(context);
             this.authorizer = authorizer;
             this.doInUI = doInUI;
@@ -88,86 +85,70 @@ public abstract class Authorizer implements Parcelable {
         }
 
         @Override
-        public void executeInUI(Context context, KeyKeeper result) {
+        public void executeInUI(T context, KeyKeeper result) {
             if (result == null) {
                 return;
             }
             doInUI.execute(context, authorizer, result);
-
-
         }
     }
 
     /**
-     * Creates AsyncTask, which performs initialisation and opens AuthFragment.
-     * In AuthFragment after receiving password starts another async task to parse response.
-     * @return AsyncTask, which authorises user in social network
+     * Create Async task, that begins authorisation, than executes UI action with initialised keyKeeper.
+     * After it should be called continueAuthorisation with url of with authToken.
+     *
+     * @param context context to which task should be attached
+     * @param doInUI  UI action, first argument - context, second - authorizer, third - keykeeper
+     * @return Attachable task
      */
-    public AsyncTask<Object, Void, KeyKeeper> createAsyncTask(Context context) {
-        return new AbstractAuthorizationTask(context, this, new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                Authorizer authorizer = (Authorizer) params[0];
-                KeyKeeper result = (KeyKeeper) params[1];
-                SettingsActivity activity = (SettingsActivity)context;
-                SettingsActivity.webViewURL = authorizer.makeAuthQuery().toURL();
-                SettingsActivity.webViewKeyKeeper = result;
-                SettingsActivity.webViewAuthorizer = authorizer;
-                activity.startWebView();
-            }
-        });
+    public <T extends Context> AbstractAuthorizationTask<T> createAsyncTask(T context, UIAction<T> doInUI) {
+        return new AbstractAuthorizationTask<>(context, this, doInUI);
     }
 
-    public AsyncTask<Object, Void, KeyKeeper> createAsyncTask(Context context, UIAction doInUI) {
-        return new AbstractAuthorizationTask(context, this, doInUI);
-    }
+    public class FinishAuthorization extends BroadcastSendingTask {
+        private KeyKeeper keyKeeper;
+        private String url;
 
-    /**
-     * Last step of authorization.
-     * @param url response from authorization server
-     * @param inKeys keys returned from beginAuthorize
-     * @return message to Settings Activity
-     */
-
-    public Intent continueAuthorization(final String url, KeyKeeper inKeys) {
-        Query response = Query.fromURL(url);
-
-        if (response == null) {
-            return BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION, Broadcasts.AUTH_FAIL,
-                    "Failed to parse response");
+        public FinishAuthorization(KeyKeeper keyKeeper, String url) {
+            this.keyKeeper = keyKeeper;
+            this.url = url;
         }
 
-        if (response.containsParameter(successToken())) {
-            addFieldsFromQuery(inKeys, response);
+        @Override
+        protected Intent doInBackground(Object... params) {
+            Query response = Query.fromURL(url);
 
-            Loudly.getContext().setKeyKeeper(network(), inKeys);
-
-            try {
-                DatabaseActions.updateKey(network(), Loudly.getContext().getKeyKeeper(network()));
-            } catch (DatabaseException e) {
-                Loudly.getContext().setKeyKeeper(network(), null);
-                return BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION,
-                        Broadcasts.DATABASE_ERROR, e.getMessage());
+            if (response == null) {
+                return makeError(Broadcasts.AUTHORIZATION, Broadcasts.AUTH_FAIL,
+                        "Failed to parse response");
             }
 
-            Intent message = BroadcastSendingTask.makeSuccess(Broadcasts.AUTHORIZATION);
-            message.putExtra(Broadcasts.NETWORK_FIELD, network());
+            if (response.containsParameter(successToken())) {
+                addFieldsFromQuery(keyKeeper, response);
 
-            return message;
-        } else {
-            String errorToken = response.getParameter(errorToken());
-            return BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION, Broadcasts.AUTH_FAIL,
-                    errorToken);
+                Loudly.getContext().setKeyKeeper(network(), keyKeeper);
+
+                try {
+                    DatabaseActions.updateKey(network(), Loudly.getContext().getKeyKeeper(network()));
+                } catch (DatabaseException e) {
+                    Loudly.getContext().setKeyKeeper(network(), null);
+                    return makeError(Broadcasts.AUTHORIZATION,
+                            Broadcasts.DATABASE_ERROR, e.getMessage());
+                }
+
+                Intent message = BroadcastSendingTask.makeSuccess(Broadcasts.AUTHORIZATION);
+                message.putExtra(Broadcasts.NETWORK_FIELD, network());
+
+                return message;
+            } else {
+                String errorToken = response.getParameter(errorToken());
+                return makeError(Broadcasts.AUTHORIZATION, Broadcasts.AUTH_FAIL,
+                        errorToken);
+            }
         }
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public BroadcastSendingTask createFinishAuthorizationTask(KeyKeeper keyKeeper, String url) {
+        return new FinishAuthorization(keyKeeper, url);
     }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-    }
-
 }

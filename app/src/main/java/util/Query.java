@@ -1,12 +1,16 @@
 package util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+
 public class Query {
     private String serverURL;
-    private ParameterBundle params;
+    private ArrayList<Parameter> params;
 
     public Query(String serverURL) {
         this.serverURL = serverURL;
-        params = new ParameterBundle();
+        params = new ArrayList<>();
     }
 
     public boolean containsParameter(String name) {
@@ -14,18 +18,23 @@ public class Query {
     }
 
     public void addParameter(Parameter parameter) {
-        params.addParameter(parameter);
+        params.add(parameter);
     }
 
     public void addParameter(String parameter, Object value) {
-        params.addParameter(parameter, value);
+        params.add(new Parameter(parameter, value));
     }
 
     public String getParameter(String name) {
-        return params.getParameter(name);
+        for (Parameter p: params) {
+            if (p.name.equals(name)) {
+                return p.value;
+            }
+        }
+        return "";
     }
 
-    public ParameterBundle getParameters() {
+    public ArrayList<Parameter> getParameters() {
         return params;
     }
 
@@ -61,10 +70,46 @@ public class Query {
     public String toURL() {
         StringBuilder sb = new StringBuilder(serverURL);
         if (this.params.size() > 0) {
-            String params = this.params.toString();
             sb.append('?');
-            sb.append(params);
+            sb.append(parametersToString());
         }
         return sb.toString();
+    }
+
+    public String parametersToString() {
+        StringBuilder sb = new StringBuilder();
+        if (params.size() >= 1) {
+            sb.append(params.get(0));
+        }
+        for (int i = 1; i < params.size(); i++) {
+            sb.append('&');
+            sb.append(params.get(i));
+        }
+        return sb.toString();
+    }
+
+    public static class Parameter implements Comparable<Parameter>{
+        public String name, value;
+
+        public Parameter(String name, Object value) {
+            this.name = name;
+            this.value = value.toString();
+        }
+
+        @Override
+        public int compareTo(Parameter another) {
+            return name.compareTo(another.name);
+        }
+
+        @Override
+        public String toString() {
+            String encodedValue;
+            try {
+                encodedValue = URLEncoder.encode(value, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                encodedValue = "";
+            }
+            return name + '=' + encodedValue;
+        }
     }
 }

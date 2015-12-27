@@ -3,6 +3,8 @@ package base;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Calendar;
 
 /**
@@ -10,15 +12,32 @@ import java.util.Calendar;
  */
 public abstract class KeyKeeper implements Parcelable {
     protected long validThrough;
+    private volatile int instances;
 
     private static final char SEPARATOR = '&';
-    public KeyKeeper() {}
+    public KeyKeeper() {
+    }
 
     /**
      * @return content of KeyKeeper as list of strings
      */
     protected abstract String[] toStrings();
     protected abstract void fromStrings(String[] strings);
+
+    public static abstract class Action<T> {
+        public abstract T execute(KeyKeeper keyKeeper) throws IOException;
+    }
+
+    public <T> T doWithKeys(Action<T> action) throws IOException {
+        instances++;
+        T result = action.execute(this);
+        instances--;
+        return result;
+    }
+
+    public boolean isBusy() {
+        return instances != 0;
+    }
 
     public void expiresIn(long time) {
         validThrough = Calendar.getInstance().getTimeInMillis() / 1000 + time - 60 * 5;

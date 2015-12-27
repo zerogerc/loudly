@@ -9,10 +9,11 @@ public interface SingleNetwork {
     void setNetwork(int network);
     int getNetwork();
 
+    boolean exists();
     boolean existsIn(int network);
 
-    String getId();
-    void setId(String id);
+    Link getId();
+    void setId(Link id);
 
     Info getInfo();
     void setInfo(Info info);

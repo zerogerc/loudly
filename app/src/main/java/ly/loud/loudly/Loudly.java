@@ -128,6 +128,5 @@ public class Loudly extends Application {
         super.onLowMemory();
         stopGetInfoService();
         MainActivity.posts.clear();
-        MainActivity.dbLoaded = false;
     }
 }

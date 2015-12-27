@@ -20,7 +20,6 @@ import util.Utils;
 
 public class AuthFragment extends Fragment {
     private View rootView;
-    private SettingsActivity activity;
     ProgressBar circle;
     boolean gotResponse;
     WebView webView;
@@ -28,20 +27,25 @@ public class AuthFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // ToDo: Extract gotResponse from bundle
-
-        gotResponse = false;
+        if (savedInstanceState != null) {
+            gotResponse = savedInstanceState.getBoolean("got");
+        } else {
+            gotResponse = false;
+        }
 
         rootView = inflater.inflate(R.layout.activity_auth, container, false);
-        activity = (SettingsActivity)getActivity();
 
         webView = (WebView) rootView.findViewById(R.id.webView);
         circle = (ProgressBar) rootView.findViewById(R.id.progressBar);
 
-
         return rootView;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("got", gotResponse);
+    }
 
     @Override
     public void onHiddenChanged(boolean hidden) {
@@ -58,7 +62,7 @@ public class AuthFragment extends Fragment {
             String url = SettingsActivity.webViewURL;
             final Authorizer authorizer = SettingsActivity.webViewAuthorizer;
             final KeyKeeper keys = SettingsActivity.webViewKeyKeeper;
-//        webView.setVisibility(View.INVISIBLE);
+
             circle.setVisibility(View.VISIBLE);
 
             final Fragment fragment = this;
@@ -70,11 +74,9 @@ public class AuthFragment extends Fragment {
                     if (authorizer.isResponse(url)) {
                         view.setVisibility(View.VISIBLE);
 
-                        FinishAuthorization continueAuth = new FinishAuthorization();
-                        continueAuth.execute(authorizer, url, keys);
+                        authorizer.createFinishAuthorizationTask(keys, url).
+                                execute();
                         gotResponse = true;
-
-                        //TODO strange
 
                         FragmentTransaction ft = getFragmentManager().beginTransaction();
                         ft.hide(fragment);
@@ -99,16 +101,5 @@ public class AuthFragment extends Fragment {
 
     public void clearWebView() {
         this.webView.loadUrl("about:blank");
-    }
-
-    private static class FinishAuthorization extends BroadcastSendingTask {
-        @Override
-        protected Intent doInBackground(Object... params) {
-            Authorizer authorizer = (Authorizer) params[0];
-            String url = (String) params[1];
-            KeyKeeper keys = (KeyKeeper) params[2];
-
-            return authorizer.continueAuthorization(url, keys);
-        }
     }
 }

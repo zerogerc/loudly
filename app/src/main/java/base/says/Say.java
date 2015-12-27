@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 
+import base.Link;
 import base.SingleNetwork;
 import base.attachments.Attachment;
 import base.attachments.Image;
@@ -16,7 +17,7 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     // Links part
     protected int network;
-    protected String id;
+    protected Link id;
 
     // Likes, shares, comments
     protected Info info;
@@ -27,17 +28,17 @@ public class Say implements SingleNetwork, Comparable<Say> {
         date = -1;
         info = new Info();
         network = -1;
-        id = "";
+        id = new Link();
     }
 
-    public Say(String text, int network, String id) {
+    public Say(String text, int network, Link id) {
         this();
         this.text = text;
         this.network = network;
         this.id = id;
     }
 
-    public Say(String text, long date, int network, String id) {
+    public Say(String text, long date, int network, Link id) {
         this.text = text;
         this.date = date;
         this.network = network;
@@ -45,7 +46,7 @@ public class Say implements SingleNetwork, Comparable<Say> {
         this.id = id;
     }
 
-    public Say(String text, ArrayList<Attachment> attachments, long date, int network, String id) {
+    public Say(String text, ArrayList<Attachment> attachments, long date, int network, Link id) {
         this.text = text;
         this.attachments = attachments;
         this.date = date;
@@ -55,18 +56,25 @@ public class Say implements SingleNetwork, Comparable<Say> {
     }
 
     // Methods from SingleNetwork
+
+
     @Override
-    public boolean existsIn(int network) {
-        return this.network == network && id != null;
+    public boolean exists() {
+        return existsIn(network);
     }
 
     @Override
-    public String getId() {
+    public boolean existsIn(int network) {
+        return this.network == network && id != null && id.isValid();
+    }
+
+    @Override
+    public Link getId() {
         return id;
     }
 
     @Override
-    public void setId(String id) {
+    public void setId(Link id) {
         this.id = id;
     }
 
@@ -138,6 +146,6 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Say && ((Say) o).date == date;
+        return o instanceof Say && ((Say) o).id.equals(id);
     }
 }

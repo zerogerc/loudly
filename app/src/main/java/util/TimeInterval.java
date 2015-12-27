@@ -1,8 +1,11 @@
 package util;
 
-public class TimeInterval extends Interval<Long> {
-    public TimeInterval(Long from, Long to) {
-        super(from, to);
+public class TimeInterval {
+    public long from, to;
+
+    public TimeInterval(long from, long to) {
+        this.from = from;
+        this.to = to;
     }
     public TimeInterval copy() {
         return new TimeInterval(from, to);
@@ -20,8 +23,7 @@ public class TimeInterval extends Interval<Long> {
         return new TimeInterval(Long.MIN_VALUE, time);
     }
 
-    @Override
-    public boolean contains(Long x) {
+    public boolean contains(long x) {
         if (to == -1) {
             return from < x;
         }

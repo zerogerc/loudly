@@ -52,15 +52,4 @@ public class MailRuAuthoriser extends Authorizer {
     public boolean isResponse(String url) {
         return url.startsWith(REDIRECT_URL);
     }
-    public static final Creator<MailRuAuthoriser> CREATOR = new Creator<MailRuAuthoriser>() {
-        @Override
-        public MailRuAuthoriser createFromParcel(Parcel source) {
-            return new MailRuAuthoriser();
-        }
-
-        @Override
-        public MailRuAuthoriser[] newArray(int size) {
-            return new MailRuAuthoriser[size];
-        }
-    };
 }

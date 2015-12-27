@@ -56,6 +56,7 @@ public class PostDbHelper extends SQLiteOpenHelper {
     private static final String SQL_CREATE_LINKS_TABLE =
             "CREATE TABLE " + LinksEntry.TABLE_NAME + " ("
                     + LinksEntry._ID + " INTEGER PRIMARY KEY, "
+                    + LinksEntry.COLUMN_NAME_LOUDLY + " TEXT, "
                     + LinksEntry.COLUMN_NAME_FB + " TEXT, "
                     + LinksEntry.COLUMN_NAME_TWITTER + " TEXT, "
                     + LinksEntry.COLUMN_NAME_INSTAGRAM + " TEXT, "

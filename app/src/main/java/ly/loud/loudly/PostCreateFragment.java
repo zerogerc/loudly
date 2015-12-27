@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import base.Networks;
+import base.Tasks;
 import base.Wrap;
 import base.attachments.Image;
 import base.attachments.LoudlyImage;
@@ -198,13 +199,15 @@ public class PostCreateFragment extends Fragment {
 
                 ArrayList<Wrap> wraps = new ArrayList<>();
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                    if (fragment.shouldPostTo(i)) {
+                    // ToDO: upload to only selected networks
+                    if (Loudly.getContext().getKeyKeeper(i) != null) {
                         wraps.add(Networks.makeWrap(i));
                     }
                 }
-//                Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
-//                        wraps.toArray(new Wrap[0]));
-//                uploader.execute(post);
+
+                Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
+                        wraps.toArray(new Wrap[0]));
+                uploader.execute(post);
 
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
                 ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,

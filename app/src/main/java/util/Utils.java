@@ -1,7 +1,11 @@
 package util;
 
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -11,6 +15,9 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.DisplayMetrics;
@@ -40,7 +47,9 @@ import base.Networks;
 import base.Person;
 import base.attachments.Image;
 import ly.loud.loudly.Loudly;
+import ly.loud.loudly.MainActivity;
 import ly.loud.loudly.R;
+import ly.loud.loudly.SettingsActivity;
 
 public class Utils {
     private static final String TAG = "UTIL_TAG";
@@ -356,5 +365,54 @@ public class Utils {
         } else {
             name.setText("");
         }
+    }
+
+    public static void makeNotification(Context context, String title, String content, int id) {
+        NotificationCompat.Builder notificationCompat = new NotificationCompat.Builder(context)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setAutoCancel(true)
+                .setColor(ContextCompat.getColor(context, R.color.colorAccent));
+        // Creates an explicit intent for an Activity in your app
+        Intent resultIntent = new Intent(context, MainActivity.class);
+
+        // The stack builder object will contain an artificial back stack for the
+        // started Activity.
+        // This ensures that navigating backward from the Activity leads out of
+        // your application to the Home screen.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+        // Adds the back stack for the Intent (but not the Intent itself)
+        stackBuilder.addParentStack(MainActivity.class);
+        // Adds the Intent that starts the Activity to the top of the stack
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        notificationCompat.setContentIntent(resultPendingIntent);
+        // mId allows you to update the notification later on.
+        ((NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE)).
+                notify(id, notificationCompat.build());
+    }
+
+    public static void showSnackBar(final String message) {
+        MainActivity.executeOnUI(new UIAction<MainActivity>() {
+            @Override
+            public void execute(MainActivity mainActivity, Object... params) {
+                Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                        message, Snackbar.LENGTH_SHORT)
+                        .show();
+            }
+        });
+        SettingsActivity.executeOnUI(new UIAction<SettingsActivity>() {
+            @Override
+            public void execute(SettingsActivity settingsActivity, Object... params) {
+                Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
+                        message, Snackbar.LENGTH_SHORT)
+                        .show();
+            }
+        });
     }
 }

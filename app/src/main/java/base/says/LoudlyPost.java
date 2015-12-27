@@ -3,6 +3,7 @@ package base.says;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import base.Link;
 import base.Location;
 import base.MultipleNetwork;
 import base.Networks;
@@ -12,22 +13,18 @@ import base.attachments.Attachment;
  * Сlass that stores text and attachments to post.
  */
 public class LoudlyPost extends Post implements MultipleNetwork {
-    private String[] ids;
+    private Link[] ids;
     private Info[] infos;
-
-    private long localId;       // Convert to string for sameness
 
     public LoudlyPost(
             String text,
             ArrayList<Attachment> attachments,
-            String[] ids,
+            Link[] ids,
             long date,
-            Location location,
-            long localId) {
+            Location location) {
 
-        super(text, attachments, date, location, -1, "");
+        super(text, attachments, date, location, 0, null);
         this.ids = ids;
-        this.localId = localId;
         infos = new Info[Networks.NETWORK_COUNT];
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             infos[i] = new Info();
@@ -36,27 +33,25 @@ public class LoudlyPost extends Post implements MultipleNetwork {
 
     public LoudlyPost() {
         super();
-        ids = new String[Networks.NETWORK_COUNT];
+        ids = new Link[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             infos[i] = new Info();
         }
-        localId = -1;
     }
 
     public LoudlyPost(String text) {
-        super(text, -1, "");
+        super(text, -1, null);
         date = Calendar.getInstance().getTimeInMillis() / 1000;
-        ids = new String[Networks.NETWORK_COUNT];
+        ids = new Link[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             infos[i] = new Info();
         }
-        localId = -1;
     }
 
     public LoudlyPost(String text, long date, Location location) {
-        super(text, date, location, -1, "");
+        super(text, date, location, 0, null);
     }
 
     @Override
@@ -71,25 +66,17 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         }
     }
 
-    public long getLocalId() {
-        return localId;
-    }
-
-    public void setLocalId(long localId) {
-        this.localId = localId;
-    }
-
-    public String[] getIds() {
+    public Link[] getIds() {
         return ids;
     }
 
     @Override
-    public String getId(int network) {
+    public Link getId(int network) {
         return ids[network];
     }
 
     @Override
-    public void setId(int network, String id) {
+    public void setId(int network, Link id) {
         ids[network] = id;
         if (id == null) {
             setInfo(network, new Info());   // Delete old info
@@ -97,12 +84,12 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     }
 
     @Override
-    public String getId() {
+    public Link getId() {
         return getId(network);
     }
 
     @Override
-    public void setId(String id) {
+    public void setId(Link id) {
         setId(network, id);
     }
 
@@ -127,18 +114,39 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         return infos[network];
     }
 
+    /**
+     * @return Networks.LOUDLY
+     */
+    @Override
+    public int getNetwork() {
+        return Networks.LOUDLY;
+    }
+
+    @Override
+    public boolean exists() {
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (existsIn(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean existsIn(int network) {
-        return ids[network] != null;
+        return ids[network] != null && ids[network].isValid();
     }
 
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof LoudlyPost)) {
-            return false;
+        if (o instanceof LoudlyPost) {
+            return ids[Networks.LOUDLY].equals(((LoudlyPost) o).ids[Networks.LOUDLY]);
         }
-        LoudlyPost p = (LoudlyPost) o;
-        return localId == p.localId;
+        if (o instanceof Post) {
+            Post post = (Post)o;
+            return ids[post.getNetwork()] != null && ids[post.getNetwork()].equals(post.getId());
+        }
+        return false;
     }
 }

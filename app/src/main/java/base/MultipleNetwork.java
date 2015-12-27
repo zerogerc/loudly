@@ -3,13 +3,13 @@ package base;
 import base.says.Info;
 
 /**
- * Interface for objects which are in many networks
+ * Interface for objects which are in many networks. They are stored in the local database
  */
 
 public interface MultipleNetwork extends SingleNetwork {
-    String getId(int network);
-    void setId(int network, String link);
-    String[] getIds();
+    Link getId(int network);
+    void setId(int network, Link id);
+    Link[] getIds();
 
     Info getInfo(int network);
     void setInfo(int network, Info info);

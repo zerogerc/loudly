@@ -20,9 +20,7 @@ import java.util.ArrayList;
 import base.Authorizer;
 import base.KeyKeeper;
 import base.Networks;
-import base.Tasks;
 import util.AttachableReceiver;
-import util.BroadcastSendingTask;
 import util.Broadcasts;
 import util.UIAction;
 
@@ -56,8 +54,8 @@ public class SplashFragment extends Fragment {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (currentAuthorizer.isResponse(url)) {
-                    FinishAuthorization continueAuth = new FinishAuthorization();
-                    continueAuth.execute(currentAuthorizer, url, currentKeys);
+                    currentAuthorizer.createFinishAuthorizationTask(currentKeys, url)
+                            .execute();
                     return true;
                 }
                 return false;
@@ -70,24 +68,12 @@ public class SplashFragment extends Fragment {
         hiddenWebView.loadUrl(currentAuthorizer.makeAuthQuery().toURL());
     }
 
-    private static class FinishAuthorization extends BroadcastSendingTask {
-        @Override
-        protected Intent doInBackground(Object... params) {
-            Authorizer authorizer = (Authorizer) params[0];
-            String url = (String) params[1];
-            KeyKeeper keys = (KeyKeeper) params[2];
-
-            return authorizer.continueAuthorization(url, keys);
-        }
-    }
-
-
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
     }
 
-    private  void finishSplash() {
+    private void finishSplash() {
         getFragmentManager().popBackStack();
     }
 
@@ -119,8 +105,11 @@ public class SplashFragment extends Fragment {
 
     private void run() {
         if (noKeys) {
-            loadKeysReceiver = new LoadKeysReceiver(Loudly.getContext(), this);
-            new Tasks.LoadKeysTask().execute();
+            // Load keys
+            tokenRefreshReciever = new TokenRefreshReceiver(Loudly.getContext(), this);
+            Networks.makeAuthorizer(Networks.LOUDLY)
+                    .createAsyncTask(null, null)
+                    .execute();
         } else {
             refreshTokens(this);
         }
@@ -154,35 +143,9 @@ public class SplashFragment extends Fragment {
             }
         };
 
-        fragment.tokenRefreshReciever = new TokenRefreshReceiver(Loudly.getContext(), fragment);
         Networks.makeAuthorizer(network).createAsyncTask(Loudly.getContext(), fragment.refreshToken)
                 .execute();
         fragment.refreshIndex++;
-    }
-
-    private static class LoadKeysReceiver extends AttachableReceiver {
-        SplashFragment fragment;
-
-        public LoadKeysReceiver(Context context, SplashFragment fragment) {
-            super(context, Broadcasts.KEYS_LOADED);
-            this.fragment = fragment;
-        }
-
-        @Override
-        public void onMessageReceive(Context context, Intent message) {
-            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, -1);
-            switch (status) {
-                case Broadcasts.ERROR:
-                    fragment.splashInfo.setText("Internal error. Please, clean application's data");
-                    return;
-                case Broadcasts.FINISHED:
-                    stop();
-                    MainActivity.keysLoaded = true;
-                    fragment.loadKeysReceiver = null;
-                    fragment.splashInfo.setText("Loaded");
-                    fragment.refreshTokens(fragment);
-            }
-        }
     }
 
     private static class TokenRefreshReceiver extends AttachableReceiver {
@@ -196,11 +159,17 @@ public class SplashFragment extends Fragment {
         @Override
         public void onMessageReceive(Context context, Intent message) {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, -1);
-            int network = fragment.refreshTokens.get(fragment.refreshIndex);
+            int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
             boolean needFinish = false;
             switch (status) {
                 case Broadcasts.FINISHED:
-
+                    if (network == Networks.LOUDLY) {
+                        MainActivity.keysLoaded = true;
+                        fragment.loadKeysReceiver = null;
+                        fragment.splashInfo.setText("Loaded");
+                        fragment.refreshTokens(fragment);
+                        return;
+                    }
                     if (fragment.refreshIndex == fragment.refreshTokens.size()) {
                         needFinish = true;
                         MainActivity.loadPosts();
