@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
         // Loading posts
         if (loadFrom.size() > 0) {
             receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(self);
-            loadPosts = new Tasks.LoadPostsTask(posts, Loudly.getContext().getTimeInterval(),
+            loadPosts = new Tasks.LoadPostsTask(Loudly.getContext().getTimeInterval(),
                     loadFrom.toArray(new Wrap[loadFrom.size()]));
             loadPosts.execute();
         } else {

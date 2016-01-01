@@ -400,14 +400,10 @@ public class Tasks {
 
     public static class LoadPostsTask extends BroadcastSendingTask implements LoadCallback {
         private volatile boolean stopped;
-        private LinkedList<Post> posts;
         private TimeInterval time;
         private Wrap[] wraps;
         private LinkedList<Post> currentPosts;
         private LinkedList<Post> loaded;
-
-        private boolean[] loudlyPostExists;
-
 
         /**
          * Loads posts from every network
@@ -415,9 +411,7 @@ public class Tasks {
          * @param time  Load posts with date int interval
          * @param wraps Networks, from which load posts
          */
-        public LoadPostsTask(LinkedList<Post> posts,
-                             TimeInterval time, Wrap... wraps) {
-            this.posts = posts;
+        public LoadPostsTask(TimeInterval time, Wrap... wraps) {
             this.time = time;
             this.wraps = wraps;
             stopped = false;
@@ -430,13 +424,11 @@ public class Tasks {
         @Override
         public void postLoaded(Post post) {
             Post alreadyLoaded = null;
-            int ind = 0;
-            for (Post p : posts) {
+            for (Post p : loaded) {
                 if (p.equals(post)) {
                     alreadyLoaded = p;
                     break;
                 }
-                ind++;
             }
             if (stopped) throw new ThreadStopped();
             if (alreadyLoaded == null) {
@@ -446,11 +438,13 @@ public class Tasks {
                 alreadyLoaded.setNetwork(post.getNetwork());
                 alreadyLoaded.setInfo(post.getInfo());
                 alreadyLoaded.getId().setValid(true);
-                final int fixed = ind;
+
+                // todo: fix index
+                final Post fixed = alreadyLoaded;
                 MainActivity.executeOnUI(new UIAction<MainActivity>() {
                     @Override
                     public void execute(MainActivity mainActivity, Object... params) {
-                        mainActivity.recyclerViewAdapter.notifyItemChanged(fixed);
+                        mainActivity.recyclerViewAdapter.notifyPostChanged(fixed);
                     }
                 });
             }
@@ -487,10 +481,14 @@ public class Tasks {
                     currentPosts = new LinkedList<>();
                     w.loadPosts(time, this);
 
+                    final LinkedList<Post> copy = new LinkedList<>();
+                    for (Post post : currentPosts) {
+                        copy.add(post);
+                    }
                     MainActivity.executeOnUI(new UIAction<MainActivity>() {
                         @Override
                         public void execute(MainActivity context, Object... params) {
-                            context.recyclerViewAdapter.merge(currentPosts);
+                            context.recyclerViewAdapter.merge(copy);
                         }
                     });
                     successfullyLoaded.add(w.networkID());

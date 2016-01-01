@@ -1,21 +1,12 @@
 package ly.loud.loudly;
 
 import android.app.IntentService;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
-import android.content.Context;
 import android.content.Intent;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.LinkedList;
 
-import base.Networks;
 import base.Tasks;
 import base.Wrap;
 import base.says.Info;
@@ -33,6 +24,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
     private static final int NOTIFICATION_ID = 0;
     private static volatile boolean stopped;
     private Info summary;
+    private LinkedList<Post> currentPosts;
 
     public GetInfoService() {
         super(NAME);
@@ -45,31 +37,24 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
 
     @Override
     public void infoLoaded(Post post, Info info) {
-        int ind = 0;
-        for (Post old : MainActivity.posts) {
+        for (Post old : currentPosts) {
             if (stopped) throw new ThreadStopped();
 
             if (old.equals(post)) {
-                Info oldInfo;
-                if (old instanceof LoudlyPost) {
-                    oldInfo = ((LoudlyPost) old).getInfo(post.getNetwork());
-                } else {
-                    oldInfo = old.getInfo();
-                }
+                Info oldInfo = old.getInfo();
                 if (!oldInfo.equals(info)) {
                     old.setInfo(info);
                     summary.add(oldInfo.difference(info));
-                    final int fixed = ind;
+                    final Post fixed = old;
                     MainActivity.executeOnUI(new UIAction<MainActivity>() {
                         @Override
                         public void execute(MainActivity mainActivity, Object... params) {
-                            mainActivity.recyclerViewAdapter.notifyItemChanged(fixed);
+                            mainActivity.recyclerViewAdapter.notifyPostChanged(fixed);
                         }
                     });
                 }
                 break;
             }
-            ind++;
         }
     }
 
@@ -102,7 +87,8 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
         if (MainActivity.posts.isEmpty()) {
             return;
         }
-        LinkedList<Post> currentPosts = new LinkedList<>();
+
+        currentPosts = new LinkedList<>();
         summary = new Info();
         final LinkedList<Integer> success = new LinkedList<>();
 
@@ -113,9 +99,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
                 for (Post post : MainActivity.posts) {
                     if (stopped) throw new ThreadStopped();
                     if (post.existsIn(w.networkID())) {
-                        if (post instanceof LoudlyPost) {
-                            post.setNetwork(w.networkID());
-                        }
+                        post.setNetwork(w.networkID());
                         currentPosts.add(post);
                     }
                 }

@@ -27,7 +27,7 @@ public class Say implements SingleNetwork, Comparable<Say> {
         attachments = new ArrayList<>();
         date = -1;
         info = new Info();
-        network = -1;
+        network = 0;
         id = new Link();
     }
 
@@ -146,6 +146,13 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Say && ((Say) o).id.equals(id);
+        if (!(o instanceof Say)) {
+            return false;
+        }
+        Say say = (Say)o;
+        if (say.getId() == null) {
+            return false;
+        }
+        return say.getId().equals(id);
     }
 }

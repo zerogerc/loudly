@@ -41,7 +41,7 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     }
 
     public LoudlyPost(String text) {
-        super(text, -1, null);
+        super(text, 0, null);
         date = Calendar.getInstance().getTimeInMillis() / 1000;
         ids = new Link[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
@@ -96,10 +96,10 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     @Override
     public void setInfo(int network, Info info) {
         infos[network] = info;
-        this.info = new Info();
+        infos[Networks.LOUDLY] = new Info();
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (infos[i] != null) {
-                this.info.add(infos[i]);
+                infos[Networks.LOUDLY].add(infos[i]);
             }
         }
     }
@@ -112,6 +112,11 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     @Override
     public Info getInfo(int network) {
         return infos[network];
+    }
+
+    @Override
+    public Info getInfo() {
+        return getInfo(network);
     }
 
     /**

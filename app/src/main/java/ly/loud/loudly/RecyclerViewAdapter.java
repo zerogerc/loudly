@@ -28,15 +28,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import Loudly.LoudlyWrap;
 import base.Networks;
 import base.Tasks;
 import base.attachments.Image;
+import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
-import util.ThreadStopped;
 import util.UIAction;
 import util.Utils;
-import Loudly.LoudlyWrap;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.PostViewHolder> {
     private List<Post> posts;
@@ -113,15 +113,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 .placeholder(resource)
                 .into(holder.socialIcon);
 
-        if (post.getInfo() != null) {
-            holder.commentsAmount.setText(Integer.toString(post.getInfo().comment));
-            holder.likesAmount.setText(Integer.toString(post.getInfo().like));
-            holder.repostsAmount.setText(Integer.toString(post.getInfo().repost));
-        } else {
-            holder.commentsAmount.setText("0");
-            holder.likesAmount.setText("0");
-            holder.repostsAmount.setText("0");
-        }
 
         if (post.getAttachments().size() != 0) {
             holder.postImageView.setImageBitmap(null);
@@ -155,7 +146,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.showMoreOptions.setOnClickListener(makeDeleteClickListener(post, activity));
 
-        if (post.getInfo().comment != 0) {
+
+        int like, comment, repost;
+        Info info = (post instanceof LoudlyPost) ? ((LoudlyPost) post).getInfo(Networks.LOUDLY) :
+                post.getInfo();
+
+        if (info != null) {
+            like = info.like;
+            comment = info.comment;
+            repost = info.repost;
+        } else {
+            like = 0;
+            comment = 0;
+            repost = 0;
+        }
+        if (comment != 0) {
+            holder.commentsAmount.setText(Integer.toString(comment));
             holder.commentsButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -166,7 +172,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             setOverShadowFooterComponent(holder.commentsButton, holder.commentsAmount, false);
         }
 
-        if (post.getInfo().like != 0) {
+        if (like != 0) {
+            holder.likesAmount.setText(Integer.toString(like));
             holder.likesButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -177,7 +184,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             setOverShadowFooterComponent(holder.likesButton, holder.likesAmount, false);
         }
 
-        if (post.getInfo().repost != 0) {
+        if (repost != 0) {
+            holder.repostsAmount.setText(Integer.toString(repost));
             holder.repostsButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -204,7 +212,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                 Loudly.getContext().stopGetInfoService();
                                 activity.floatingActionButton.hide();
                                 MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
-                                        new MainActivity.PostDeleteReceiver((MainActivity)context);
+                                        new MainActivity.PostDeleteReceiver((MainActivity) context);
                                 new Tasks.PostDeleter(post, MainActivity.posts, Loudly.getContext().getWraps()).
                                         executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                             }
@@ -292,7 +300,23 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
     }
 
+    public void notifyPostChanged(Post post) {
+        int pos = 0;
+        for (Post p : posts) {
+            if (p.equals(post)) {
+                notifyItemChanged(pos);
+            }
+            pos++;
+        }
+    }
+
+    /**
+     * Merge two lists of posts into one according to date they were ulpoaded
+     *
+     * @param newPosts
+     */
     public void merge(LinkedList<? extends Post> newPosts) {
+        Log.e("TAG", "merge");
         int i = 0, j = 0;
         // TODO: 12/11/2015 Make quicker with arrayLists
         while (j < newPosts.size()) {
@@ -333,9 +357,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
      * Remove from the feed posts, removed from other network<b>
      * If found loudly posts, that was removed from every network, delete it from DB <b>
      * Otherwise, remove from feed
+     *
      * @param networks list of wraps, from where posts were loaded
      */
     public void cleanUp(List<Integer> networks) {
+        Log.e("TAG", "clean");
         Iterator<Post> iterator = posts.listIterator();
         int ind = 0;
         while (iterator.hasNext()) {
