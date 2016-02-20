@@ -119,6 +119,8 @@ public class Utils {
     public static int getResourceByNetwork(int network) {
         int resource;
         switch (network) {
+            case Networks.LOUDLY:
+                return R.mipmap.ic_launcher;
             case Networks.FB:
                 resource = R.mipmap.ic_facebook_round;
                 break;

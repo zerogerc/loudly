@@ -13,24 +13,22 @@ import util.Utils;
 /**
  * Created by ZeRoGerc on 25.12.15.
  */
-public class ViewHolderPerson extends ViewHolder {
-    ImageView icon;
-    TextView name;
+public class ViewHolderPerson extends ViewHolder<Person> {
+    private ImageView icon;
+    private TextView name;
 
     public ViewHolderPerson(Activity activity, ViewGroup parent) {
-        super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_person, parent, false));
+        super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.list_person, parent, false));
 
-        Item item = new Person();
+        Person person = new Person();
 
         icon = (ImageView) itemView.findViewById(R.id.people_list_person_avatar);
         name = (TextView) itemView.findViewById(R.id.people_list_person_name);
-        refresh(item);
+        refresh(person);
     }
 
     @Override
-    public void refresh(Item item) {
-        Person person = ((Person) item);
-
+    public void refresh(final Person person) {
         Utils.loadAvatar(person, icon);
         Utils.loadName(person, name);
     }

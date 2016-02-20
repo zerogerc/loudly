@@ -4,12 +4,10 @@ import java.util.ArrayList;
 
 import base.Link;
 import base.Location;
-import base.SingleNetwork;
 import base.attachments.Attachment;
-import base.attachments.Image;
-import base.attachments.LoudlyImage;
+import ly.loud.loudly.adapter.Item;
 
-public class Post extends Say {
+public class Post extends Say implements Item {
     protected Location location;
 
     public void cleanIds() {
@@ -46,5 +44,10 @@ public class Post extends Say {
 
     public void setLocation(Location location) {
         this.location = location;
+    }
+
+    @Override
+    public int getType() {
+        return Item.POST;
     }
 }

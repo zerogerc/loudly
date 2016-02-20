@@ -8,14 +8,16 @@ import android.view.ViewGroup;
 /**
  * Created by ZeRoGerc on 25.12.15.
  */
-public abstract class ViewHolder extends RecyclerView.ViewHolder {
+
+public abstract class ViewHolder<T extends Item> extends RecyclerView.ViewHolder {
     private Activity activity;
 
     public ViewHolder(Activity activity, View itemView) {
         super(itemView);
+        this.activity = activity;
     }
 
-    public abstract void refresh(Item item);
+    public abstract void refresh(final T item);
 
     public static ViewHolder makeViewHolder(Activity activity, ViewGroup parent, int viewType) {
         switch (viewType) {
@@ -23,6 +25,8 @@ public abstract class ViewHolder extends RecyclerView.ViewHolder {
                 return new ViewHolderComment(activity, parent);
             case Item.PERSON:
                 return new ViewHolderPerson(activity, parent);
+            case Item.POST:
+                return new ViewHolderPost(activity, parent);
             default:
                 return new ViewHolderDelimiter(activity, parent);
         }

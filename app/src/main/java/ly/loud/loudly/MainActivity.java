@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     static int aliveCopy = 0;
 
     RecyclerView recyclerView;
-    public RecyclerViewAdapter recyclerViewAdapter;
+    public MainActivityPostsAdapter mainActivityPostsAdapter;
     public FloatingActionButton floatingActionButton;
 
     private Toolbar toolbar;
@@ -274,14 +274,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void setRecyclerView() {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        recyclerViewAdapter = new RecyclerViewAdapter(posts, this);
+        mainActivityPostsAdapter = new MainActivityPostsAdapter(posts, this);
         recyclerView.setHasFixedSize(true); /// HERE
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         recyclerView.addOnScrollListener(
                 new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), Utils.getDefaultScreenHeight()) {
                 });
-        recyclerView.setAdapter(recyclerViewAdapter);
+        recyclerView.setAdapter(mainActivityPostsAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
     }
@@ -323,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
             switch (status) {
                 case Broadcasts.STARTED:
                     // Saved to DB. Make place for the post
-                    context.recyclerViewAdapter.notifyItemInserted(0);
+                    context.mainActivityPostsAdapter.notifyItemInserted(0);
                     Loudly.getContext().stopGetInfoService();
                     break;
                 case Broadcasts.PROGRESS:

@@ -17,18 +17,18 @@ import util.Utils;
 /**
  * Created by ZeRoGerc on 25.12.15.
  */
-public class ViewHolderComment extends ViewHolder {
-    ImageView icon;
-    TextView name;
-    TextView text;
-    ImageView likesButton;
-    TextView likesAmount;
-    TextView commentTime;
+public class ViewHolderComment extends ViewHolder<Comment> {
+    private ImageView icon;
+    private TextView name;
+    private TextView text;
+    private ImageView likesButton;
+    private TextView likesAmount;
+    private TextView commentTime;
 
     public ViewHolderComment(Activity activity, ViewGroup parent) {
-        super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_comment, parent, false));
+        super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.list_comment, parent, false));
 
-        Item item = new Comment();
+        Comment comment = new Comment();
 
         icon = ((ImageView) itemView.findViewById(R.id.comment_avatar));
         name = ((TextView) itemView.findViewById(R.id.comment_name));
@@ -36,12 +36,11 @@ public class ViewHolderComment extends ViewHolder {
         likesAmount = ((TextView) itemView.findViewById(R.id.comment_likes_amount));
         likesButton = ((ImageView) itemView.findViewById(R.id.comment_likes_button));
         commentTime = ((TextView) itemView.findViewById(R.id.comment_time));
-        refresh(item);
+        refresh(comment);
     }
 
     @Override
-    public void refresh(Item item) {
-        final Comment comment = ((Comment) item);
+    public void refresh(final Comment comment) {
         final Person person = comment.getPerson();
 
         Utils.loadAvatar(person, icon);

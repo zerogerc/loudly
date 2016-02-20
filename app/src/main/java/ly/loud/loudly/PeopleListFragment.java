@@ -52,10 +52,10 @@ public class PeopleListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.people_list_fragment, container, false);
+        rootView = inflater.inflate(R.layout.list_fragment, container, false);
 
         recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
-        recyclerViewAdapter = new AbstractAdapter(items, getActivity()) {
+        recyclerViewAdapter = new AbstractAdapter<Activity, Item>(items, getActivity()) {
             @Override
             public void onFirstItemAppeared() {
                 hideProgress();

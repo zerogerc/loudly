@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import base.Tasks;
 import base.Wrap;
 import base.says.Info;
-import base.says.LoudlyPost;
 import base.says.Post;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
@@ -49,7 +48,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
                     MainActivity.executeOnUI(new UIAction<MainActivity>() {
                         @Override
                         public void execute(MainActivity mainActivity, Object... params) {
-                            mainActivity.recyclerViewAdapter.notifyPostChanged(fixed);
+                            mainActivity.mainActivityPostsAdapter.notifyPostChanged(fixed);
                         }
                     });
                 }
@@ -138,7 +137,7 @@ public class GetInfoService extends IntentService implements Tasks.GetInfoCallba
         MainActivity.executeOnUI(new UIAction<MainActivity>() {
             @Override
             public void execute(MainActivity context, Object... params) {
-                context.recyclerViewAdapter.cleanUp(success);
+                context.mainActivityPostsAdapter.cleanUp(success);
             }
         });
         Loudly.getContext().startGetInfoService();  // Restarting

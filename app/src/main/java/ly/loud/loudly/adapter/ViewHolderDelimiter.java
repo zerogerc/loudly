@@ -14,27 +14,24 @@ import util.Utils;
 /**
  * Created by ZeRoGerc on 25.12.15.
  */
-public class ViewHolderDelimiter extends ViewHolder {
-    ImageView icon;
+public class ViewHolderDelimiter extends ViewHolder<NetworkDelimiter> {
+    private ImageView icon;
 
     public ViewHolderDelimiter(Activity activity, ViewGroup parent) {
-        super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.people_list_delimeter, parent, false));
+        super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.list_delimeter, parent, false));
 
-        Item item = new NetworkDelimiter();
+        NetworkDelimiter delimiter = new NetworkDelimiter();
 
         icon = (ImageView) itemView.findViewById(R.id.people_list_delimeter_icon);
-        refresh(item);
+        refresh(delimiter);
     }
 
     @Override
-    public void refresh(Item item) {
-        NetworkDelimiter delimiter = ((NetworkDelimiter) item);
-
+    public void refresh(final NetworkDelimiter delimiter) {
         Glide.with(Loudly.getContext())
                 .load(Utils.getResourceByNetwork(delimiter.getNetwork()))
                 .override(Utils.dpToPx(48), Utils.dpToPx(48))
                 .fitCenter()
                 .into(icon);
-
     }
 }

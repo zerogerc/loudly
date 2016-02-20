@@ -1,20 +1,15 @@
 package base;
 
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import Loudly.LoudlyWrap;
 import base.attachments.Attachment;
 import base.attachments.Image;
 import base.says.Comment;
@@ -23,9 +18,9 @@ import base.says.LoudlyPost;
 import base.says.Post;
 import ly.loud.loudly.Loudly;
 import ly.loud.loudly.MainActivity;
+import ly.loud.loudly.MainActivityPostsAdapter;
 import ly.loud.loudly.adapter.Item;
 import ly.loud.loudly.adapter.NetworkDelimiter;
-import ly.loud.loudly.RecyclerViewAdapter;
 import util.BackgroundAction;
 import util.BroadcastSendingTask;
 import util.Broadcasts;
@@ -33,8 +28,6 @@ import util.InvalidTokenException;
 import util.ThreadStopped;
 import util.TimeInterval;
 import util.UIAction;
-import util.database.DatabaseActions;
-import util.database.DatabaseException;
 
 /**
  * Class made for storing different asynchronous tasks
@@ -107,9 +100,16 @@ public class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
-            posts.add(0, post);
+            MainActivity.executeOnUI(new UIAction<MainActivity>() {
+                @Override
+                public void execute(MainActivity context, Object... params) {
+                    posts.add(0, post);
+                    context.mainActivityPostsAdapter.notifyItemInserted(0);
+                    Loudly.getContext().stopGetInfoService();
+                }
+            });
 
-            publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED));
+//            publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED));
 
             for (Wrap w : wraps) {
                 try {
@@ -194,7 +194,7 @@ public class Tasks {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    context.recyclerViewAdapter.cleanUp(success);
+                    context.mainActivityPostsAdapter.cleanUp(success);
                 }
             });
 
@@ -229,7 +229,7 @@ public class Tasks {
                         element.setNetwork(w.networkID()); // for LoudlyPosts
 
                         List<Person> got = w.getPersons(what, element);
-                        if (!got.isEmpty()) {
+                        if (got != null && !got.isEmpty()) { // TODO crutch (remove)
                             persons.add(new NetworkDelimiter(w.networkID()));
                             persons.addAll(got);
                         }
@@ -282,7 +282,7 @@ public class Tasks {
                         element.setNetwork(w.networkID());
 
                         List<Comment> got = w.getComments(element);
-                        if (!got.isEmpty()) {
+                        if (got != null && !got.isEmpty()) {
                             comments.add(new NetworkDelimiter(w.networkID()));
                             comments.addAll(got);
                         }
@@ -316,9 +316,9 @@ public class Tasks {
      */
     public static class FixAttachmentsLinks extends AsyncTask<Object, Object, Object> {
         Post post;
-        RecyclerViewAdapter adapter;
+        MainActivityPostsAdapter adapter;
 
-        public FixAttachmentsLinks(Post post, RecyclerViewAdapter adapter) {
+        public FixAttachmentsLinks(Post post, MainActivityPostsAdapter adapter) {
             this.post = post;
             this.adapter = adapter;
         }
@@ -444,7 +444,7 @@ public class Tasks {
                 MainActivity.executeOnUI(new UIAction<MainActivity>() {
                     @Override
                     public void execute(MainActivity mainActivity, Object... params) {
-                        mainActivity.recyclerViewAdapter.notifyPostChanged(fixed);
+                        mainActivity.mainActivityPostsAdapter.notifyPostChanged(fixed);
                     }
                 });
             }
@@ -488,7 +488,7 @@ public class Tasks {
                     MainActivity.executeOnUI(new UIAction<MainActivity>() {
                         @Override
                         public void execute(MainActivity context, Object... params) {
-                            context.recyclerViewAdapter.merge(copy);
+                            context.mainActivityPostsAdapter.merge(copy);
                         }
                     });
                     successfullyLoaded.add(w.networkID());
@@ -514,7 +514,7 @@ public class Tasks {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    context.recyclerViewAdapter.cleanUp(successfullyLoaded);
+                    context.mainActivityPostsAdapter.cleanUp(successfullyLoaded);
                 }
             });
 

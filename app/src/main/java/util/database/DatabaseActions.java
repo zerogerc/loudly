@@ -5,7 +5,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 import base.KeyKeeper;
 import base.Link;
@@ -249,6 +248,7 @@ public class DatabaseActions {
                 ArrayList<Attachment> attachments = readAttachments(db, atId);
 
                 LoudlyPost post = new LoudlyPost(text, attachments, links, date, location);
+                post.setId(Networks.LOUDLY, new Link(Long.toString(localId)));
                 callback.postLoaded(post);
 
                 cursor.moveToNext();

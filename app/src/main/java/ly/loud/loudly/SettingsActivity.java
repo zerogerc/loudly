@@ -320,7 +320,7 @@ public class SettingsActivity extends AppCompatActivity {
                                 MainActivity.executeOnUI(new UIAction() {
                                     @Override
                                     public void execute(Context context, Object... params) {
-                                        ((MainActivity) context).recyclerViewAdapter.notifyDeletedAtPosition(fixed);
+                                        ((MainActivity) context).mainActivityPostsAdapter.notifyDeletedAtPosition(fixed);
                                     }
                                 });
                             } else {
@@ -329,7 +329,7 @@ public class SettingsActivity extends AppCompatActivity {
                                     MainActivity.executeOnUI(new UIAction() {
                                         @Override
                                         public void execute(Context context, Object... params) {
-                                            ((MainActivity) context).recyclerViewAdapter.notifyItemChanged(fixed);
+                                            ((MainActivity) context).mainActivityPostsAdapter.notifyItemChanged(fixed);
                                         }
                                     });
                                 }
@@ -340,7 +340,7 @@ public class SettingsActivity extends AppCompatActivity {
                             MainActivity.executeOnUI(new UIAction() {
                                 @Override
                                 public void execute(Context context, Object... params) {
-                                    ((MainActivity) context).recyclerViewAdapter.notifyDeletedAtPosition(fixed);
+                                    ((MainActivity) context).mainActivityPostsAdapter.notifyDeletedAtPosition(fixed);
                                 }
                             });
                         }
