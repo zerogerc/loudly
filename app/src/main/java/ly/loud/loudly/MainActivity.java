@@ -320,18 +320,21 @@ public class MainActivity extends AppCompatActivity {
             int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
             long postID, imageID;
             int progress;
+            String msg;
             switch (status) {
                 case Broadcasts.STARTED:
                     // Saved to DB. Make place for the post
-                    context.mainActivityPostsAdapter.notifyItemInserted(0);
-                    Loudly.getContext().stopGetInfoService();
+                    msg = "Uploading post...";
+                    Snackbar.make(context.findViewById(R.id.main_layout),
+                            msg, Snackbar.LENGTH_INDEFINITE)
+                            .show();
                     break;
                 case Broadcasts.PROGRESS:
                     // Uploaded to network
                     int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
-                    String msg = "Uploading post to " + Networks.nameOfNetwork(networkID) + "...";
+                    msg = "Post uploaded to " + Networks.nameOfNetwork(networkID) + "...";
                     Snackbar.make(context.findViewById(R.id.main_layout),
-                            msg, Snackbar.LENGTH_INDEFINITE)
+                            msg, Snackbar.LENGTH_SHORT)
                             .show();
                     break;
                 case Broadcasts.IMAGE:

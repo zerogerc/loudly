@@ -1,6 +1,9 @@
 package Loudly;
 
+import android.util.Pair;
+
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import base.KeyKeeper;
@@ -12,6 +15,7 @@ import base.Wrap;
 import base.attachments.Image;
 import base.attachments.LoudlyImage;
 import base.says.Comment;
+import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
 import util.BackgroundAction;
@@ -57,13 +61,14 @@ public class LoudlyWrap extends Wrap {
     }
 
     @Override
-    protected void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback, KeyKeeper keyKeeper) throws IOException {
-        DatabaseActions.loadPosts(timeInterval, callback);
+    protected List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException {
+        return DatabaseActions.loadPosts(timeInterval);
     }
 
     @Override
-    protected void getPostsInfo(List<Post> posts, Tasks.GetInfoCallback callback, KeyKeeper keyKeeper) throws IOException {
+    protected List<Pair<Post, Info>> getPostsInfo(List<Post> posts, KeyKeeper keyKeeper) throws IOException {
         // Can't get nothing new
+        return null;
     }
 
     @Override

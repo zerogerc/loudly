@@ -1,5 +1,7 @@
 package base.says;
 
+import android.support.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -7,24 +9,153 @@ import base.Link;
 import base.Location;
 import base.MultipleNetwork;
 import base.Networks;
+import base.SingleNetwork;
 import base.attachments.Attachment;
 
 /**
  * Сlass that stores text and attachments to post.
  */
 public class LoudlyPost extends Post implements MultipleNetwork {
-    private Link[] ids;
+    private Link[] links;
     private Info[] infos;
+
+    /**
+     * Proxy class that allows thread-safer work with LoudlyPost
+     */
+    private class LoudlyPostProxy extends Post {
+        private LoudlyPost parent;
+
+        LoudlyPostProxy(LoudlyPost parent, int network) {
+            this.parent = parent;
+            this.network = network;
+        }
+
+        @Override
+        public void cleanIds() {
+            parent.links[network].setValid(false);
+            for (Attachment attachment : parent.attachments) {
+                SingleNetwork instance = attachment.getNetworkInstance(network);
+                if (instance != null && instance.getLink() != null) {
+                    instance.getLink().setValid(false);
+                }
+            }
+        }
+
+        @Override
+        public Location getLocation() {
+            return parent.getLocation();
+        }
+
+        @Override
+        public void setLocation(Location location) {
+            parent.setLocation(location);
+        }
+
+        @Override
+        public boolean exists() {
+            return existsIn(network);
+        }
+
+        @Override
+        public boolean existsIn(int network) {
+            return this.network == network && parent.links[network] != null &&
+                    parent.links[network].isValid();
+        }
+
+        @Override
+        public SingleNetwork getNetworkInstance(int network) {
+            return super.getNetworkInstance(network);
+        }
+
+        @Override
+        public Link getLink() {
+            return parent.getLink(network);
+        }
+
+        @Override
+        public void setLink(Link id) {
+            parent.setLink(network, id);
+        }
+
+        @Override
+        public int getNetwork() {
+            return network;
+        }
+
+        @Override
+        public void setNetwork(int network) {
+            this.network = network;
+        }
+
+        @Override
+        public ArrayList<Attachment> getAttachments() {
+            ArrayList<Attachment> copy = new ArrayList<>();
+            for (Attachment attachment : parent.getAttachments()) {
+                copy.add(((Attachment) attachment.getNetworkInstance(network)));
+            }
+            return copy;
+        }
+
+        @Override
+        public void addAttachment(Attachment attachment) {
+            parent.addAttachment(attachment);
+        }
+
+        @Override
+        public Counter getAttachmentsCounter() {
+            return parent.getAttachmentsCounter();
+        }
+
+        @Override
+        public String getText() {
+            return parent.getText();
+        }
+
+        @Override
+        public void setText(String text) {
+            parent.setText(text);
+        }
+
+        @Override
+        public Info getInfo() {
+            return parent.getInfo(network);
+        }
+
+        @Override
+        public void setInfo(Info info) {
+            parent.setInfo(network, info);
+        }
+
+        @Override
+        public long getDate() {
+            return parent.getDate();
+        }
+
+        @Override
+        public void setDate(long date) {
+            parent.setDate(date);
+        }
+
+        @Override
+        public int compareTo(@NonNull Say another) {
+            return parent.compareTo(another);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return super.equals(o);
+        }
+    }
 
     public LoudlyPost(
             String text,
             ArrayList<Attachment> attachments,
-            Link[] ids,
+            Link[] links,
             long date,
             Location location) {
 
         super(text, attachments, date, location, 0, null);
-        this.ids = ids;
+        this.links = links;
         infos = new Info[Networks.NETWORK_COUNT];
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             infos[i] = new Info();
@@ -33,7 +164,7 @@ public class LoudlyPost extends Post implements MultipleNetwork {
 
     public LoudlyPost() {
         super();
-        ids = new Link[Networks.NETWORK_COUNT];
+        links = new Link[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             infos[i] = new Info();
@@ -43,7 +174,7 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     public LoudlyPost(String text) {
         super(text, 0, null);
         date = Calendar.getInstance().getTimeInMillis() / 1000;
-        ids = new Link[Networks.NETWORK_COUNT];
+        links = new Link[Networks.NETWORK_COUNT];
         infos = new Info[Networks.NETWORK_COUNT];
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             infos[i] = new Info();
@@ -55,42 +186,42 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     }
 
     @Override
-    public void cleanIds() {
-        ids[network] = null;
-        for (Attachment attachment : attachments) {
-            if (attachment instanceof MultipleNetwork) {
-                ((MultipleNetwork) attachment).setId(network, null);
-            } else {
-                attachment.setId(null);
-            }
+    public SingleNetwork getNetworkInstance(int network) {
+        if (network == Networks.LOUDLY) {
+            return this;
         }
+        return new LoudlyPostProxy(this, network);
     }
 
-    public Link[] getIds() {
-        return ids;
-    }
-
-    @Override
-    public Link getId(int network) {
-        return ids[network];
+    public Link[] getLinks() {
+        return links;
     }
 
     @Override
-    public void setId(int network, Link id) {
-        ids[network] = id;
-        if (id == null) {
+    public Link getLink(int network) {
+        return links[network];
+    }
+
+    @Override
+    public void setLink(int network, Link link) {
+        links[network] = link;
+        if (link == null) {
             setInfo(network, new Info());   // Delete old info
         }
     }
 
     @Override
-    public Link getId() {
-        return getId(network);
-    }
-
-    @Override
-    public void setId(Link id) {
-        setId(network, id);
+    public void cleanIds() {
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (links[i] != null) {
+                links[i].setValid(false);
+            }
+            for (Attachment attachment : attachments) {
+                if (attachment.getNetworkInstance(i) != null) {
+                    attachment.getNetworkInstance(i).getLink().setValid(false);
+                }
+            }
+        }
     }
 
     @Override
@@ -105,18 +236,13 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     }
 
     @Override
-    public void setInfo(Info info) {
-        setInfo(network, info);
+    public Info getInfo() {
+        return getInfo(Networks.LOUDLY);
     }
 
     @Override
     public Info getInfo(int network) {
         return infos[network];
-    }
-
-    @Override
-    public Info getInfo() {
-        return getInfo(network);
     }
 
     /**
@@ -139,18 +265,17 @@ public class LoudlyPost extends Post implements MultipleNetwork {
 
     @Override
     public boolean existsIn(int network) {
-        return ids[network] != null && ids[network].isValid();
+        return links[network] != null && links[network].isValid();
     }
-
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof LoudlyPost) {
-            return ids[Networks.LOUDLY].equals(((LoudlyPost) o).ids[Networks.LOUDLY]);
+            return links[Networks.LOUDLY].equals(((LoudlyPost) o).links[Networks.LOUDLY]);
         }
         if (o instanceof Post) {
-            Post post = (Post)o;
-            return ids[post.getNetwork()] != null && ids[post.getNetwork()].equals(post.getId());
+            Post post = (Post) o;
+            return links[post.getNetwork()] != null && links[post.getNetwork()].equals(post.getLink());
         }
         return false;
     }

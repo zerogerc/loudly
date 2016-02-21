@@ -10,13 +10,6 @@ import ly.loud.loudly.adapter.Item;
 public class Post extends Say implements Item {
     protected Location location;
 
-    public void cleanIds() {
-        id = null;
-        for (Attachment attachment : attachments) {
-            attachment.setId(null);
-        }
-    }
-
     public Post() {
         super();
     }

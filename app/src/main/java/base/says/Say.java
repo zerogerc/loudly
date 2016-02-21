@@ -17,7 +17,7 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     // Links part
     protected int network;
-    protected Link id;
+    protected Link link;
 
     // Likes, shares, comments
     protected Info info;
@@ -28,31 +28,31 @@ public class Say implements SingleNetwork, Comparable<Say> {
         date = -1;
         info = new Info();
         network = 0;
-        id = new Link();
+        link = new Link();
     }
 
-    public Say(String text, int network, Link id) {
+    public Say(String text, int network, Link link) {
         this();
         this.text = text;
         this.network = network;
-        this.id = id;
+        this.link = link;
     }
 
-    public Say(String text, long date, int network, Link id) {
+    public Say(String text, long date, int network, Link link) {
         this.text = text;
         this.date = date;
         this.network = network;
         this.attachments = new ArrayList<>();
-        this.id = id;
+        this.link = link;
     }
 
-    public Say(String text, ArrayList<Attachment> attachments, long date, int network, Link id) {
+    public Say(String text, ArrayList<Attachment> attachments, long date, int network, Link link) {
         this.text = text;
         this.attachments = attachments;
         this.date = date;
         this.network = network;
         this.info = new Info();
-        this.id = id;
+        this.link = link;
     }
 
     // Methods from SingleNetwork
@@ -65,17 +65,25 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     @Override
     public boolean existsIn(int network) {
-        return this.network == network && id != null && id.isValid();
+        return this.network == network && link != null && link.isValid();
     }
 
     @Override
-    public Link getId() {
-        return id;
+    public SingleNetwork getNetworkInstance(int network) {
+        if (network == this.network) {
+            return this;
+        }
+        return null;
     }
 
     @Override
-    public void setId(Link id) {
-        this.id = id;
+    public Link getLink() {
+        return link;
+    }
+
+    @Override
+    public void setLink(Link id) {
+        this.link = id;
     }
 
     @Override
@@ -88,6 +96,10 @@ public class Say implements SingleNetwork, Comparable<Say> {
         this.network = network;
     }
 
+    /**
+     * Return list of attachments. Use only for iterating over attachments
+     * @return copy of attachments
+     */
     public ArrayList<Attachment> getAttachments() {
         return attachments;
     }
@@ -107,6 +119,16 @@ public class Say implements SingleNetwork, Comparable<Say> {
 //            }
         }
         return res;
+    }
+
+    public void cleanIds() {
+        getLink().setValid(false);
+        for (Attachment attachment : attachments) {
+            SingleNetwork instance = attachment.getNetworkInstance(getNetwork());
+            if (instance != null && instance.getLink() != null) {
+                instance.getLink().setValid(false);
+            }
+        }
     }
 
     public String getText() {
@@ -135,10 +157,10 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     @Override
     public int compareTo(@NonNull Say another) {
-        if (date < another.date) {
+        if (getDate() < another.getDate()) {
             return -1;
         }
-        if (date > another.date) {
+        if (getDate() > another.getDate()) {
             return 1;
         }
         return 0;
@@ -150,9 +172,9 @@ public class Say implements SingleNetwork, Comparable<Say> {
             return false;
         }
         Say say = (Say)o;
-        if (say.getId() == null) {
+        if (say.getLink() == null) {
             return false;
         }
-        return say.getId().equals(id);
+        return say.getLink().equals(getLink());
     }
 }

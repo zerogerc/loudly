@@ -21,8 +21,8 @@ public class Info {
         comment += info.comment;
     }
 
-    public Info difference(Info info) {
-        return new Info(info.like - like, info.repost - repost, info.comment - comment);
+    public Info subtract(Info info) {
+        return new Info(like - info.like, repost - info.repost, comment - info.comment);
     }
 
     public boolean hasPositiveChanges() {

@@ -1,10 +1,13 @@
 package VK;
 
+import android.util.Pair;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,7 +73,7 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    protected Query makeSignedAPICall(String method, KeyKeeper keyKeeper)  {
+    protected Query makeSignedAPICall(String method, KeyKeeper keyKeeper) {
         Query query = makeAPICall(method);
         query.addParameter(ACCESS_TOKEN, ((VKKeyKeeper) keyKeeper).getAccessToken());
         return query;
@@ -96,7 +99,7 @@ public class VKWrap extends Wrap {
         if (post.getAttachments().size() > 0) {
             Image image = (Image) post.getAttachments().get(0);
             String userID = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID())).getUserId();
-            query.addParameter("attachments", "photo" + userID + "_" + image.getId());
+            query.addParameter("attachments", "photo" + userID + "_" + image.getLink());
         }
 
         String response = Network.makePostRequest(query);
@@ -105,7 +108,7 @@ public class VKWrap extends Wrap {
         try {
             parser = new JSONObject(response);
             String id = parser.getJSONObject("response").getString("post_id");
-            post.setId(new Link(id));
+            post.setLink(new Link(id));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -134,7 +137,7 @@ public class VKWrap extends Wrap {
         Query imageUploadQuery = new Query(uploadURL);
 
         // In VK we can only upload images as files
-        response = Network.makePostRequest(imageUploadQuery, progress, "photo", (LocalFile)image);
+        response = Network.makePostRequest(imageUploadQuery, progress, "photo", (LocalFile) image);
 
         Query getPhotoId = makeSignedAPICall(SAVE_PHOTO_METHOD, keyKeeper);
 
@@ -160,7 +163,7 @@ public class VKWrap extends Wrap {
             }
             int height = parser.getInt("height");
             int width = parser.getInt("width");
-            image.setId(new Link(id));
+            image.setLink(new Link(id));
             image.setHeight(height);
             image.setWidth(width);
         } catch (JSONException e) {
@@ -175,7 +178,7 @@ public class VKWrap extends Wrap {
         for (Image image : images) {
             sb.append(((VKKeyKeeper) keyKeeper).getUserId());
             sb.append('_');
-            sb.append(image.getId());
+            sb.append(image.getLink());
         }
         if (sb.length() > 0) {
             sb.delete(sb.length() - 1, sb.length());
@@ -201,7 +204,7 @@ public class VKWrap extends Wrap {
         Query query = makeSignedAPICall(DELETE_METHOD, keyKeeper);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
         query.addParameter("owner_id", keys.getUserId());
-        query.addParameter("post_id", post.getId());
+        query.addParameter("post_id", post.getLink());
 
         String response = Network.makeGetRequest(query);
 
@@ -210,7 +213,7 @@ public class VKWrap extends Wrap {
     }
 
     @Override
-    protected void getPostsInfo(List<Post> posts, Tasks.GetInfoCallback callback, KeyKeeper keyKeeper) throws IOException {
+    protected List<Pair<Post, Info>> getPostsInfo(List<Post> posts, KeyKeeper keyKeeper) throws IOException {
         Query query = makeSignedAPICall(GET_METHOD, keyKeeper);
         VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
         StringBuilder sb = new StringBuilder();
@@ -218,7 +221,7 @@ public class VKWrap extends Wrap {
             if (post.existsIn(networkID())) {
                 sb.append(keys.getUserId());
                 sb.append('_');
-                sb.append(post.getId());
+                sb.append(post.getLink());
                 sb.append(',');
             }
         }
@@ -243,6 +246,7 @@ public class VKWrap extends Wrap {
                 .getArray();
 
         Iterator<Post> iterator = posts.listIterator();
+        ArrayList<Pair<Post, Info>> result = new ArrayList<>();
         for (int i = 0; i < response.size(); i++) {
             postParser = response.getObject(i);
             String id = postParser.getString("");
@@ -252,15 +256,25 @@ public class VKWrap extends Wrap {
 
             while (iterator.hasNext()) {
                 Post post = iterator.next();
-                if (post.getId().equals(id)) {
-                    Info info = new Info(likes, shares, comments);
-                    callback.infoLoaded(post, info);
-                    break;
-                } else {
-                    post.getId().setValid(false);
+
+                // Todo: (sic!)
+                if (post.getLink() != null) {
+                    if (post.getLink().equals(id)) {
+                        Info info = new Info(likes, shares, comments);
+
+                        if (!post.getInfo().equals(info)) {
+                            result.add(new Pair<>(post, info));
+                        }
+                        break;
+
+                    } else {
+                        result.add(new Pair<Post, Info>(post, null));
+                        post.getLink().setValid(false);
+                    }
                 }
             }
         }
+        return result;
     }
 
 
@@ -279,13 +293,13 @@ public class VKWrap extends Wrap {
         int height = photoParser.getInt(0);
 
         image.setExternalLink(link);
-        image.setId(new Link(photoId));
+        image.setLink(new Link(photoId));
         image.setWidth(width);
         image.setHeight(height);
     }
 
     @Override
-    protected void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback, KeyKeeper keyKeeper) throws IOException {
+    protected List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException {
         offset = Math.max(0, offset - 5);
 
         ObjectParser photoParser = makePhotoParser();
@@ -310,6 +324,7 @@ public class VKWrap extends Wrap {
         ObjectParser parser = new ObjectParser()
                 .parseObject("response", responseParser);
         long earliestPost = -1;
+        LinkedList<Post> posts = new LinkedList<>();
         do {
             Query query = makeAPICall(LOAD_POSTS_METHOD);
             query.addParameter("owner_id", ((VKKeyKeeper) keyKeeper).getUserId());
@@ -348,12 +363,13 @@ public class VKWrap extends Wrap {
                             res.addAttachment(image);
                         }
                     }
-                    callback.postLoaded(res);
+                    posts.add(res);
                     offset++;
                 }
 
             }
         } while (timeInterval.contains(earliestPost));
+        return posts;
     }
 
     @Override
@@ -364,7 +380,7 @@ public class VKWrap extends Wrap {
         Query query = makeSignedAPICall("wall.getComments", keyKeeper);
 
         query.addParameter("owner_id", ((VKKeyKeeper) keyKeeper).getUserId());
-        query.addParameter("post_id", element.getId());
+        query.addParameter("post_id", element.getLink());
         query.addParameter("need_likes", 1);
         query.addParameter("count", 20);
         query.addParameter("sort", "asc");
@@ -474,7 +490,7 @@ public class VKWrap extends Wrap {
 
         query.addParameter("type", type);
         query.addParameter("owner_id", ((VKKeyKeeper) keyKeeper).getUserId());
-        query.addParameter("item_id", element.getId());
+        query.addParameter("item_id", element.getLink());
         String filter;
         switch (what) {
             case Tasks.LIKES:

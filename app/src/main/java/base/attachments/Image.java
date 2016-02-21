@@ -31,6 +31,14 @@ public class Image implements Attachment, SingleNetwork {
         this.id = id;
     }
 
+    @Override
+    public SingleNetwork getNetworkInstance(int network) {
+        if (network == this.network) {
+            return this;
+        }
+        return null;
+    }
+
     public void setWidth(int width) {
         size.x = width;
     }
@@ -88,12 +96,12 @@ public class Image implements Attachment, SingleNetwork {
     }
 
     @Override
-    public Link getId() {
+    public Link getLink() {
         return id;
     }
 
     @Override
-    public void setId(Link id) {
+    public void setLink(Link id) {
         this.id = id;
     }
 

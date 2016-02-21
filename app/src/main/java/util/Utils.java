@@ -404,7 +404,7 @@ public class Utils {
             @Override
             public void execute(MainActivity mainActivity, Object... params) {
                 Snackbar.make(mainActivity.findViewById(R.id.main_layout),
-                        message, Snackbar.LENGTH_SHORT)
+                        message, Snackbar.LENGTH_LONG)
                         .show();
             }
         });
@@ -412,7 +412,7 @@ public class Utils {
             @Override
             public void execute(SettingsActivity settingsActivity, Object... params) {
                 Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
-                        message, Snackbar.LENGTH_SHORT)
+                        message, Snackbar.LENGTH_LONG)
                         .show();
             }
         });

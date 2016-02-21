@@ -8,6 +8,10 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import base.KeyKeeper;
 import base.Networks;
@@ -28,6 +32,7 @@ public class Loudly extends Application {
     private KeyKeeper[] keyKeepers;
     private TimeInterval timeInterval;
     private static int loadLast, getInfoInterval;
+    private static ThreadPoolExecutor executor = null;
 
     private AlarmManager alarmManager;
     PendingIntent getInfoService;
@@ -56,6 +61,15 @@ public class Loudly extends Application {
      */
     public static Loudly getContext() {
         return context;
+    }
+
+    // ToDo: make singleton
+    public static ThreadPoolExecutor getExecutor() {
+        if (executor == null) {
+            executor = new ThreadPoolExecutor(2, Networks.NETWORK_COUNT, 30, TimeUnit.SECONDS,
+                    new ArrayBlockingQueue<Runnable>(Networks.NETWORK_COUNT * 4));
+        }
+        return executor;
     }
 
     public static void sendLocalBroadcast(Intent message) {
@@ -105,7 +119,6 @@ public class Loudly extends Application {
     }
 
     public void stopGetInfoService() {
-        GetInfoService.stop();
         alarmManager.cancel(getInfoService);
     }
 

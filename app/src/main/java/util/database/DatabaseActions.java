@@ -5,12 +5,15 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import base.KeyKeeper;
 import base.Link;
 import base.Location;
 import base.MultipleNetwork;
 import base.Networks;
+import base.SingleNetwork;
 import base.Tasks;
 import base.attachments.Attachment;
 import base.attachments.LoudlyImage;
@@ -41,7 +44,7 @@ public class DatabaseActions {
 
             // Insert post's links
             long linksId = db.insert(LinksEntry.TABLE_NAME, LinksEntry.COLUMN_NAME_LOUDLY,
-                    createLinkRow(post.getIds()));
+                    createLinkRow(post.getLinks()));
             if (linksId == -1) {
                 throw new DatabaseException("Can't insert links");
             }
@@ -59,7 +62,7 @@ public class DatabaseActions {
             long prevId = AttachmentsEntry.END_OF_LIST_VALUE;
             long firstId = AttachmentsEntry.END_OF_LIST_VALUE;
             for (Attachment att : post.getAttachments()) {
-                long curId = Long.parseLong(att.getId().get());
+                long curId = Long.parseLong(att.getLink().get());
 
                 // Update attachments link in DB. Structure - Double-linked list
                 if (prevId != AttachmentsEntry.END_OF_LIST_VALUE) {
@@ -102,7 +105,7 @@ public class DatabaseActions {
             if (upsert(db, LinksEntry.TABLE_NAME, LinksEntry._ID, localId, update) == -1) {
                 throw new DatabaseException("Can't update id");
             }
-            post.setId(new Link(localId));
+            post.setLink(Networks.LOUDLY, new Link(localId));
 
             // Success
             db.setTransactionSuccessful();
@@ -117,7 +120,7 @@ public class DatabaseActions {
         db.beginTransaction();
         try {
             long atLinkId = db.insert(LinksEntry.TABLE_NAME, LinksEntry.COLUMN_NAME_FB,
-                    createLinkRow(attachment.getIds()));
+                    createLinkRow(attachment.getLinks()));
 
             if (atLinkId == -1) {
                 throw new DatabaseException("Can't insert links for an attachment");
@@ -130,7 +133,7 @@ public class DatabaseActions {
                 throw new DatabaseException("Can't insert attachment");
             }
 
-            attachment.setId(new Link(curId));
+            attachment.setLink(new Link(curId));
             // Success
             db.setTransactionSuccessful();
         } finally {
@@ -154,10 +157,10 @@ public class DatabaseActions {
             String[] projection = {
                     PostEntry.COLUMN_NAME_LINKS, PostEntry.COLUMN_NAME_FIRST_ATTACHMENT};
             cursor = db.query(PostEntry.TABLE_NAME,
-                    projection, sqlEqual(PostEntry._ID, post.getId(Networks.LOUDLY)),
+                    projection, sqlEqual(PostEntry._ID, post.getLink(Networks.LOUDLY)),
                     null, null, null, null);
             if (cursor.getCount() == 0) {
-                throw new DatabaseException("Can't find post: " + post.getId(Networks.LOUDLY));
+                throw new DatabaseException("Can't find post: " + post.getLink(Networks.LOUDLY));
             }
 
             cursor.moveToFirst();
@@ -166,11 +169,11 @@ public class DatabaseActions {
 
             ContentValues update = new ContentValues();
             for (int network : networks) {
-                update.put(LinksEntry.LINK_COLUMNS[network], post.getId(network).get());
+                update.put(LinksEntry.LINK_COLUMNS[network], post.getLink(network).get());
             }
             if (db.update(LinksEntry.TABLE_NAME, update,
                     sqlEqual(LinksEntry._ID, linkTd), null) != 1) {
-                throw new DatabaseException("Failed updating links for post: " + post.getId(Networks.LOUDLY));
+                throw new DatabaseException("Failed updating links for post: " + post.getLink(Networks.LOUDLY));
             }
 
             projection = new String[]{AttachmentsEntry.COLUMN_NAME_LINK,
@@ -190,7 +193,7 @@ public class DatabaseActions {
                         projection, sqlEqual(AttachmentsEntry._ID, atId),
                         null, null, null, null);
                 if (cursor.getCount() == 0) {
-                    throw new DatabaseException("Can't find attachments for post: " + post.getId(Networks.LOUDLY));
+                    throw new DatabaseException("Can't find attachments for post: " + post.getLink(Networks.LOUDLY));
                 }
 
                 cursor.moveToFirst();
@@ -200,7 +203,7 @@ public class DatabaseActions {
                 update = new ContentValues();
                 for (int network : networks) {
                     MultipleNetwork attachment = (MultipleNetwork) post.getAttachments().get(ind);
-                    update.put(LinksEntry.LINK_COLUMNS[network], attachment.getId(network).get());
+                    update.put(LinksEntry.LINK_COLUMNS[network], attachment.getLink(network).get());
                 }
                 ind++;
                 if (db.update(LinksEntry.TABLE_NAME,
@@ -215,7 +218,7 @@ public class DatabaseActions {
         }
     }
 
-    public static void loadPosts(TimeInterval time, Tasks.LoadCallback callback) throws DatabaseException {
+    public static List<Post> loadPosts(TimeInterval time) throws DatabaseException {
         SQLiteDatabase db = PostDbHelper.getInstance().getReadableDatabase();
 
         String sortOrder = PostEntry.COLUMN_NAME_DATE + " DESC";
@@ -227,6 +230,7 @@ public class DatabaseActions {
         String select = (sinceTimeQuery.equals("") ? beforeTimeQuery : sinceTimeQuery) +
                 (beforeTimeQuery.equals("") ? "" : " AND " + beforeTimeQuery);
 
+        LinkedList<Post> posts = new LinkedList<>();
         try {
             cursor = db.query(
                     PostEntry.TABLE_NAME,
@@ -248,14 +252,15 @@ public class DatabaseActions {
                 ArrayList<Attachment> attachments = readAttachments(db, atId);
 
                 LoudlyPost post = new LoudlyPost(text, attachments, links, date, location);
-                post.setId(Networks.LOUDLY, new Link(Long.toString(localId)));
-                callback.postLoaded(post);
+                post.setLink(Networks.LOUDLY, new Link(Long.toString(localId), false));
 
+                posts.add(post);
                 cursor.moveToNext();
             }
         } finally {
             Utils.closeQuietly(cursor);
         }
+        return posts;
     }
 
     // ToDo: Split into deletion of attachments and deletion post
@@ -264,7 +269,7 @@ public class DatabaseActions {
         Cursor cursor = null;
         try {
             cursor = db.query(PostEntry.TABLE_NAME, PostEntry.POST_COLUMNS,
-                    sqlEqual(PostEntry._ID, post.getId(Networks.LOUDLY)), null, null, null, null);
+                    sqlEqual(PostEntry._ID, post.getLink(Networks.LOUDLY)), null, null, null, null);
             if (cursor.getCount() == 0) {
                 return;
             }
@@ -287,10 +292,12 @@ public class DatabaseActions {
                 atId = deleteAttachment(db, atId);
             }
 
-            if (db.delete(PostEntry.TABLE_NAME, sqlEqual(PostEntry._ID, post.getId(Networks.LOUDLY)), null) != 1) {
-                throw new DatabaseException("Can't delete post: " + post.getId(Networks.LOUDLY));
+            if (db.delete(PostEntry.TABLE_NAME, sqlEqual(PostEntry._ID, post.getLink(Networks.LOUDLY)), null) != 1) {
+                throw new DatabaseException("Can't delete post: " + post.getLink(Networks.LOUDLY));
             }
-            post.cleanIds();
+            if (post.getLink(Networks.LOUDLY) != null) {
+                post.getLink(Networks.LOUDLY).setValid(false);
+            }
             db.setTransactionSuccessful();
         } finally {
             Utils.closeQuietly(cursor);

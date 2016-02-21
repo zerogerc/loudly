@@ -1,13 +1,14 @@
 package base;
 
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import java.io.IOException;
 import java.util.List;
 
 import base.attachments.Image;
-import base.attachments.LoudlyImage;
 import base.says.Comment;
+import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
 import ly.loud.loudly.Loudly;
@@ -60,9 +61,16 @@ public abstract class Wrap implements Comparable<Wrap> {
 
     protected abstract void delete(Post post, KeyKeeper keyKeeper) throws IOException;
 
-    protected abstract void loadPosts(TimeInterval timeInterval, Tasks.LoadCallback callback, KeyKeeper keyKeeper) throws IOException;
+    protected abstract List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException;
 
-    protected abstract void getPostsInfo(List<Post> posts, Tasks.GetInfoCallback callback, KeyKeeper keyKeeper) throws IOException;
+    /**
+     * Get changed info for posts
+     * @param posts Lists of Posts to which should get updated info
+     * @param keyKeeper Actual keykeeper with user ID
+     * @return List of pair of posts, which info have changed, and new info. If info isn't got, return pair <Post, null>
+     * @throws IOException in case of network exception
+     */
+    protected abstract List<Pair<Post, Info>> getPostsInfo(List<Post> posts, KeyKeeper keyKeeper) throws IOException;
 
     protected abstract List<Person> getPersons(int what, SingleNetwork element, KeyKeeper keyKeeper) throws IOException;
 
@@ -100,22 +108,20 @@ public abstract class Wrap implements Comparable<Wrap> {
         });
     }
 
-    public void loadPosts(final TimeInterval timeInterval, final Tasks.LoadCallback callback) throws IOException {
-        doWithKeys(new KeyKeeper.Action<Void>() {
+    public List<Post> loadPosts(final TimeInterval timeInterval) throws IOException {
+        return doWithKeys(new KeyKeeper.Action<List<Post>>() {
             @Override
-            public Void execute(KeyKeeper keyKeeper) throws IOException {
-                loadPosts(timeInterval, callback, keyKeeper);
-                return null;
+            public List<Post> execute(KeyKeeper keyKeeper) throws IOException {
+                return loadPosts(timeInterval, keyKeeper);
             }
         });
     }
 
-    public void getPostsInfo(final List<Post> posts, final Tasks.GetInfoCallback callback) throws IOException {
-        doWithKeys(new KeyKeeper.Action<Void>() {
+    public List<Pair<Post, Info>> getPostsInfo(final List<Post> posts) throws IOException {
+        return doWithKeys(new KeyKeeper.Action<List<Pair<Post, Info>>>() {
             @Override
-            public Void execute(KeyKeeper keyKeeper) throws IOException {
-                getPostsInfo(posts, callback, keyKeeper);
-                return null;
+            public List<Pair<Post, Info>> execute(KeyKeeper keyKeeper) throws IOException {
+                return getPostsInfo(posts, keyKeeper);
             }
         });
     }

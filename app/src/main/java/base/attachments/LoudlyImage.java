@@ -1,6 +1,7 @@
 package base.attachments;
 
 import android.database.Cursor;
+import android.graphics.Point;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 
@@ -13,6 +14,7 @@ import java.net.URLConnection;
 import base.Link;
 import base.MultipleNetwork;
 import base.Networks;
+import base.SingleNetwork;
 import base.says.Info;
 import ly.loud.loudly.Loudly;
 import util.Utils;
@@ -22,6 +24,120 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
     private Info[] infos;
 
     private Uri internalLink;
+
+    private class LoudlyImageProxy extends Image implements LocalFile {
+        LoudlyImage parent;
+
+        public LoudlyImageProxy(LoudlyImage parent, int network) {
+            this.parent = parent;
+            this.network = network;
+        }
+
+        @Override
+        public void setWidth(int width) {
+            parent.setWidth(width);
+        }
+
+        @Override
+        public void setHeight(int height) {
+            parent.setHeight(height);
+        }
+
+        @Override
+        public int getWidth() {
+            return parent.getWidth();
+        }
+
+        @Override
+        public int getHeight() {
+            return parent.getHeight();
+        }
+
+        @Override
+        public Point getSize() {
+            return parent.getSize();
+        }
+
+        @Override
+        public void setSize(Point size) {
+            parent.setSize(size);
+        }
+
+        @Override
+        public String getExternalLink() {
+            return parent.getExternalLink();
+        }
+
+        @Override
+        public void setExternalLink(String externalLink) {
+            parent.setExternalLink(externalLink);
+        }
+
+        @Override
+        public Uri getUri() {
+            return parent.getUri();
+        }
+
+        @Override
+        public int getNetwork() {
+            return super.getNetwork();
+        }
+
+        @Override
+        public boolean exists() {
+            return existsIn(network);
+        }
+
+        @Override
+        public boolean existsIn(int network) {
+            return parent.existsIn(network);
+        }
+
+        @Override
+        public Link getLink() {
+            return parent.getLink(network);
+        }
+
+        @Override
+        public void setLink(Link id) {
+            parent.setLink(network, id);
+        }
+
+        @Override
+        public Info getInfo() {
+            return parent.getInfo(network);
+        }
+
+        @Override
+        public void setInfo(Info info) {
+            parent.setInfo(network, info);
+        }
+
+        @Override
+        public int getType() {
+            return parent.getType();
+        }
+
+        @Override
+        public String getExtra() {
+            return parent.getExtra();
+        }
+
+        @Override
+        public String getMIMEType() {
+            return parent.getMIMEType();
+        }
+
+        @Override
+        public InputStream getContent() throws IOException {
+            return parent.getContent();
+        }
+
+        @Override
+        public long getFileSize() throws IOException {
+            return parent.getFileSize();
+        }
+    }
 
     public LoudlyImage() {
         super();
@@ -50,6 +166,14 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
     }
 
     @Override
+    public SingleNetwork getNetworkInstance(int network) {
+        if (network == Networks.LOUDLY) {
+            return this;
+        }
+        return new LoudlyImageProxy(this, network);
+    }
+
+    @Override
     public boolean exists() {
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (existsIn(i)) {
@@ -65,12 +189,12 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
     }
 
     @Override
-    public Link getId(int network) {
+    public Link getLink(int network) {
         return ids[network];
     }
 
     @Override
-    public void setId(int network, Link link) {
+    public void setLink(int network, Link link) {
         ids[network] = link;
         if (link == null) {
             setInfo(network, new Info());
@@ -78,17 +202,7 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
     }
 
     @Override
-    public Link getId() {
-        return getId(network);
-    }
-
-    @Override
-    public void setId(Link id) {
-        setId(network, id);
-    }
-
-    @Override
-    public Link[] getIds() {
+    public Link[] getLinks() {
         return ids;
     }
 
@@ -100,19 +214,13 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
     @Override
     public void setInfo(int network, Info info) {
         infos[network] = info;
-        this.info = new Info();
+        infos[Networks.LOUDLY] = new Info();
 
-        //todo move summary info to the loudly info
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (infos[i] != null) {
-                this.info.add(infos[i]);
+                infos[Networks.LOUDLY].add(infos[i]);
             }
         }
-    }
-
-    @Override
-    public void setInfo(Info info) {
-        setInfo(network, info);
     }
 
     @Override
@@ -136,7 +244,7 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
 
     @Override
     public InputStream getContent() throws IOException {
-        InputStream stream  = Loudly.getContext().getContentResolver().openInputStream(internalLink);
+        InputStream stream = Loudly.getContext().getContentResolver().openInputStream(internalLink);
         if (stream == null) {
             File file = new File(internalLink.toString());
             stream = new FileInputStream(file);

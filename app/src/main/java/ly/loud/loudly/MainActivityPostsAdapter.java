@@ -5,17 +5,21 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import Loudly.LoudlyWrap;
 import base.Networks;
+import base.SingleNetwork;
 import base.Tasks;
+import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
 import ly.loud.loudly.adapter.AbstractAdapter;
@@ -80,30 +84,51 @@ public class MainActivityPostsAdapter extends AbstractAdapter<MainActivity, Post
      * Merge two lists of posts into one according to date they were ulpoaded
      *
      * @param newPosts
+     * @param network
      */
-    public void merge(LinkedList<? extends Post> newPosts) {
+    public void merge(List<? extends Post> newPosts, int network) {
         Log.e("TAG", "merge");
         int i = 0, j = 0;
         // TODO: 12/11/2015 Make quicker with arrayLists
-        while (j < newPosts.size()) {
+        // j iterates over newPosts, i over oldPosts
+        rightLoop: while (j < newPosts.size()) {
             // while date of ith old post is greater than date of jth post in newPosts, i++
             Post right = newPosts.get(j);
+            SingleNetwork rightNetworkInstance = right.getNetworkInstance(network);
+
             while (i < items.size() && j < newPosts.size()) {
                 Post post = items.get(i);
+                SingleNetwork postNetworkInstance = post.getNetworkInstance(network);
 
-                if (post.getDate() == right.getDate()) {
-                    // Skip existing post (especially for Loudly posts)
+                // Skip posts with the same ID and mark them as loaded
+                if (rightNetworkInstance != null && postNetworkInstance != null &&
+                        rightNetworkInstance.getLink().equals(postNetworkInstance.getLink())) {
+                    if (post instanceof LoudlyPost) {
+                        // LoudlyPost is loaded, mark it as loaded and update info
+                        ((LoudlyPost) post).getLink(Networks.LOUDLY).setValid(true);
+                    }
+                    postNetworkInstance.getLink().setValid(true);
+
+                    // Update info if necessary
+                    if (!postNetworkInstance.getInfo().equals(rightNetworkInstance.getInfo())) {
+                        postNetworkInstance.setInfo(rightNetworkInstance.getInfo());
+                        notifyItemChanged(i);
+                    }
                     j++;
-                    continue;
+                    i++;
+                    continue rightLoop;
                 }
+
                 if (post.getDate() < right.getDate()) {
                     break;
                 }
                 i++;
             }
+
+            Post tmp = i < items.size() ? items.get(i) : null;    // Insert after this
             int oldJ = j;
             while (j < newPosts.size() &&
-                    (i == items.size() || newPosts.get(j).getDate() > items.get(i).getDate())) {
+                    (i == items.size() || newPosts.get(j).getDate() > tmp.getDate())) {
                 j++;
             }
 
@@ -111,6 +136,7 @@ public class MainActivityPostsAdapter extends AbstractAdapter<MainActivity, Post
 
             int newI = i + j - oldJ;
             if (newI == items.size()) {
+                // We're unlucky, I don't know why, but here we should reset all viewholders
                 notifyDataSetChanged();
             } else {
                 notifyItemRangeInserted(i, j - oldJ);
@@ -128,45 +154,80 @@ public class MainActivityPostsAdapter extends AbstractAdapter<MainActivity, Post
      */
     public void cleanUp(List<Integer> networks) {
         Log.e("TAG", "clean");
+        ArrayList<Integer> notLoaded = new ArrayList<>();
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (!(networks.contains(i))) {
+                notLoaded.add(i);
+            }
+        }
+
         Iterator<Post> iterator = items.listIterator();
         int ind = 0;
         while (iterator.hasNext()) {
             Post post = iterator.next();
-            boolean shouldHide = true;
-            if (post instanceof LoudlyPost) {
-                if (!post.exists()) {
-                    try {
-                        // If post hasn't deleted yet, delete it
-                        if (((LoudlyPost) post).getId(Networks.LOUDLY) != null) {
+
+            // Post is valid if it exists in any network
+            boolean valid = false;
+            for (int id : networks) {
+                SingleNetwork instance = post.getNetworkInstance(id);
+                if (instance != null && post.getNetworkInstance(id).exists()) {
+                    valid = true;
+                    break;
+                }
+            }
+            if (!valid) {
+                // Check if post has links in network, from which posts wasn't loaded
+                boolean existsSomewhere = false;
+                for (int id : notLoaded) {
+                    SingleNetwork instance = post.getNetworkInstance(id);
+                    if (instance != null && instance.getLink() != null) {
+                        existsSomewhere = true;
+                        break;
+                    }
+                }
+
+                // If post doesn't exist in any network
+                if (!existsSomewhere) {
+                    // Hide post
+                    iterator.remove();
+                    notifyDeletedAtPosition(ind);
+                    if (post instanceof LoudlyPost) {
+                        // And delete from DB
+                        try {
                             new LoudlyWrap().delete(post);
+                        } catch (IOException e) {
+                            Log.e("cleanUp", "can't delete post from DB", e);
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    for (Integer network : networks) {
-                        if (post.existsIn(network)) {
-                            shouldHide = false;
-                        }
+
                     }
                 }
-            } else {
-                if (post.exists()) {
-                    shouldHide = false;
-                }
             }
-            if (shouldHide) {
-                iterator.remove();
-                final int fixed = ind;
-                MainActivity.executeOnUI(new UIAction<MainActivity>() {
-                    @Override
-                    public void execute(MainActivity context, Object... params) {
-                        context.mainActivityPostsAdapter.notifyDeletedAtPosition(fixed);
-                    }
-                });
-            }
+
             ind++;
         }
+    }
+
+    public Info updateInfo(List<Pair<Post, Info>> pairs, int network) {
+        Iterator<Post> iterator = MainActivity.posts.iterator();
+        int curPost = 0;
+        Info summary = new Info();
+        for (Pair<Post, Info> pair : pairs) {
+            while (iterator.hasNext()) {
+                Post post = (Post) iterator.next().getNetworkInstance(network);
+                curPost++;
+                if (post != null && post.equals(pair.first.getNetworkInstance(network))) {
+                    Info oldInfo = post.getInfo();
+                    if (!oldInfo.equals(pair.second)) {
+                        summary.add(pair.second.subtract(post.getInfo()));
+                        post.setInfo(pair.second);
+
+                        notifyItemChanged(curPost - 1);
+                    }
+                    break;
+                }
+            }
+        }
+        return summary;
     }
 
     public void notifyDeletedAtPosition(int pos) {

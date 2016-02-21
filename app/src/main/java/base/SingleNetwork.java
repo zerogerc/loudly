@@ -12,8 +12,10 @@ public interface SingleNetwork {
     boolean exists();
     boolean existsIn(int network);
 
-    Link getId();
-    void setId(Link id);
+    SingleNetwork getNetworkInstance(int network);
+
+    Link getLink();
+    void setLink(Link id);
 
     Info getInfo();
     void setInfo(Info info);
