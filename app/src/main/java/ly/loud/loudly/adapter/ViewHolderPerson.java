@@ -12,7 +12,9 @@ import util.Utils;
 
 /**
  * Created by ZeRoGerc on 25.12.15.
+ * ITMO University
  */
+
 public class ViewHolderPerson extends ViewHolder<Person> {
     private ImageView icon;
     private TextView name;

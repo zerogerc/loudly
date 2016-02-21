@@ -18,7 +18,9 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/main_content"/>
+    <include layout="@layout/main_content"
+        android:id="@+id/main_content"
+        />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -36,15 +38,18 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
         android:src="@mipmap/ic_mode_edit_white_24dp"
-        android:layout_margin="12dp"
+        android:layout_margin="16dp"
         app:elevation="6dp"
         app:pressedTranslationZ="12dp"
         app:layout_anchor="@id/main_layout"
-        app:layout_anchorGravity="bottom|right|end"
+        app:layout_anchorGravity="bottom|right"
+        app:layout_behavior="ly.loud.loudly.ScrollAwareFABBehavior"
+        app:borderWidth="0dp"
+        app:fabSize="normal"
         android:onClick="callPostCreate" />
 
 </android.support.design.widget.CoordinatorLayout>

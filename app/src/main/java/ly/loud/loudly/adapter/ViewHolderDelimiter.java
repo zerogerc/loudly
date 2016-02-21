@@ -13,7 +13,9 @@ import util.Utils;
 
 /**
  * Created by ZeRoGerc on 25.12.15.
+ * ITMO University
  */
+
 public class ViewHolderDelimiter extends ViewHolder<NetworkDelimiter> {
     private ImageView icon;
 

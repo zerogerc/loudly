@@ -24,27 +24,29 @@ import java.util.LinkedList;
 import base.Networks;
 import base.SingleNetwork;
 import base.Tasks;
+import base.says.Comment;
+import ly.loud.loudly.adapter.AfterLoadAdapter;
 import ly.loud.loudly.adapter.Item;
-import ly.loud.loudly.adapter.AbstractAdapter;
+import ly.loud.loudly.adapter.ViewHolder;
+import ly.loud.loudly.adapter.ViewHolderComment;
 import util.AttachableReceiver;
 import util.Broadcasts;
 
 /**
  * Created by ZeRoGerc on 06.12.15.
+ * ITMO University
  */
 public class PeopleListFragment extends Fragment {
     private static final int COMMENTS = -1;
     private static int depth = 0;
     static GetPersonReceiver getPersonReceiver;
 
-    private View rootView;
-
     private int requestType = Tasks.LIKES;
     private SingleNetwork element;
 
     LinkedList<Item> items = new LinkedList<>();
     RecyclerView recyclerView;
-    AbstractAdapter recyclerViewAdapter;
+    AfterLoadAdapter recyclerViewAdapter;
     LinearLayoutManager layoutManager;
 
     private ProgressBar progress;
@@ -52,13 +54,36 @@ public class PeopleListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.list_fragment, container, false);
+        View rootView = inflater.inflate(R.layout.list_fragment, container, false);
 
         recyclerView = (RecyclerView) rootView.findViewById(R.id.people_list_recycler_view);
-        recyclerViewAdapter = new AbstractAdapter<Activity, Item>(items, getActivity()) {
+
+//        //TODO: remove this
+//        items.add(new Post());
+//        for (int i = 0; i < 1000; i++) {
+//            if (i % 2 == 0) {
+//                items.add(new NetworkDelimiter(Networks.FB));
+//            } else {
+//                items.add(new Person("Vlad", "Sazanovich", null, Networks.VK));
+//            }
+//        }
+        recyclerViewAdapter = new AfterLoadAdapter(items, getActivity()) {
             @Override
             public void onFirstItemAppeared() {
                 hideProgress();
+            }
+
+            @Override
+            public void onBindViewHolder(ViewHolder holder, final int position) {
+                if (holder instanceof ViewHolderComment) {
+                    ((ViewHolderComment) holder).setLikesOnClick(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            PeopleListFragment.showPersons(getActivity(), ((Comment) items.get(position)), Tasks.LIKES);
+                        }
+                    });
+                }
+                super.onBindViewHolder(holder, position);
             }
         };
 
@@ -71,17 +96,16 @@ public class PeopleListFragment extends Fragment {
 
         progress = ((ProgressBar) rootView.findViewById(R.id.people_list_progress));
 
-        String text;
+        int text;
         switch (requestType) {
-            //TODO decode from string resource
             case Tasks.LIKES:
-                text = "People who like it";
+                text = R.string.people_fragment_title_likes;
                 break;
             case Tasks.SHARES:
-                text = "People who shared it";
+                text = R.string.people_fragment_title_shares;
                 break;
             default:
-                text = "Comments";
+                text = R.string.people_fragment_title_comments;
                 break;
         }
         ((TextView) rootView.findViewById(R.id.people_list_title)).setText(text);
@@ -166,12 +190,12 @@ public class PeopleListFragment extends Fragment {
     }
 
     private static class GetPersonReceiver extends AttachableReceiver {
-        WeakReference<AbstractAdapter> adapter;
+        WeakReference<AfterLoadAdapter> adapter;
         public GetPersonReceiver(Context context) {
             super(context, Broadcasts.GET_PERSONS);
         }
 
-        public void attachAdapter(AbstractAdapter adapter) {
+        public void attachAdapter(AfterLoadAdapter adapter) {
             this.adapter = new WeakReference<>(adapter);
         }
 
@@ -182,7 +206,7 @@ public class PeopleListFragment extends Fragment {
             if (broadcastDepth != depth) {
                 return;
             }
-            AbstractAdapter recyclerViewAdapter = adapter.get();
+            AfterLoadAdapter recyclerViewAdapter = adapter.get();
             switch (status) {
                 case Broadcasts.PROGRESS:
                     recyclerViewAdapter.notifyItemInserted(recyclerViewAdapter.getItemCount());
@@ -259,14 +283,6 @@ public class PeopleListFragment extends Fragment {
 
         show(activity, newFragment);
         return newFragment;
-    }
-
-    public LinkedList<Item> getItems() {
-        return items;
-    }
-
-    public void setItems(LinkedList<Item> items) {
-        this.items = items;
     }
 
     public void hideProgress() {

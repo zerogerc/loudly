@@ -8,15 +8,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import base.Person;
-import base.Tasks;
 import base.says.Comment;
-import ly.loud.loudly.PeopleListFragment;
 import ly.loud.loudly.R;
 import util.Utils;
 
 /**
  * Created by ZeRoGerc on 25.12.15.
+ * ITMO University
  */
+
 public class ViewHolderComment extends ViewHolder<Comment> {
     private ImageView icon;
     private TextView name;
@@ -68,12 +68,9 @@ public class ViewHolderComment extends ViewHolder<Comment> {
             likesAmount.setVisibility(View.GONE);
             commentTime.setVisibility(View.GONE);
         }
+    }
 
-        likesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PeopleListFragment.showPersons(getActivity(), comment, Tasks.LIKES);
-            }
-        });
+    public void setLikesOnClick(View.OnClickListener listener) {
+        likesButton.setOnClickListener(listener);
     }
 }
