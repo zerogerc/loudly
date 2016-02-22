@@ -22,13 +22,13 @@ import base.Tasks;
 import base.says.Info;
 import base.says.LoudlyPost;
 import base.says.Post;
-import ly.loud.loudly.adapter.AbstractAdapter;
+import ly.loud.loudly.adapter.BaseAdapter;
 import ly.loud.loudly.adapter.ViewHolder;
 import ly.loud.loudly.adapter.ViewHolderPost;
 import util.UIAction;
 import util.Utils;
 
-public class MainActivityPostsAdapter extends AbstractAdapter<MainActivity, Post> {
+public class MainActivityPostsAdapter extends BaseAdapter<MainActivity, Post> {
     private int lastPosition = -1;
 
     MainActivityPostsAdapter(List<Post> posts, MainActivity activity) {
@@ -37,8 +37,6 @@ public class MainActivityPostsAdapter extends AbstractAdapter<MainActivity, Post
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Log.e("BIND_MAIN", Integer.toString(items.size()) + ' ' + Integer.toString(position));
-
         final Post post = items.get(position);
 
         if (holder instanceof ViewHolderPost) {

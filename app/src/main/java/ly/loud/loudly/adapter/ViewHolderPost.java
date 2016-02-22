@@ -28,6 +28,7 @@ import util.Utils;
 
 /**
  * Created by ZeRoGerc on 18.02.16.
+ * ITMO University
  */
 
 public class ViewHolderPost extends ViewHolder<Post> {
@@ -39,7 +40,7 @@ public class ViewHolderPost extends ViewHolder<Post> {
     private ImageView commentsButton;
     private TextView likesAmount;
     private ImageView likesButton;
-    private TextView repostsAmount;
+    private TextView sharesAmount;
     private ImageView repostsButton;
     private ImageView postImageView;
     private ImageView showMoreOptions;
@@ -57,7 +58,7 @@ public class ViewHolderPost extends ViewHolder<Post> {
         commentsButton = (ImageView) itemView.findViewById(R.id.post_view_comments_button);
         likesAmount = (TextView) itemView.findViewById(R.id.post_view_likes_amount);
         likesButton = (ImageView) itemView.findViewById(R.id.post_view_likes_button);
-        repostsAmount = (TextView) itemView.findViewById(R.id.post_view_reposts_amount);
+        sharesAmount = (TextView) itemView.findViewById(R.id.post_view_reposts_amount);
         repostsButton = (ImageView) itemView.findViewById(R.id.post_view_reposts_button);
         postImageView = (ImageView) itemView.findViewById(R.id.post_view_post_image);
         showMoreOptions = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
@@ -72,15 +73,14 @@ public class ViewHolderPost extends ViewHolder<Post> {
     @Override
     public void refresh(final Post post) {
         text.setText(post.getText());
-
         data.setText(Utils.getDateFormatted(post.getDate()));
 
-        setOverShadowFooterComponent(commentsButton, commentsAmount, true);
-        setOverShadowFooterComponent(likesButton, likesAmount, true);
-        setOverShadowFooterComponent(repostsButton, repostsAmount, true);
+        loadPictures(post);
+        handleButtons(post);
+    }
 
+    private void loadPictures(final Post post) {
         int resource = Utils.getResourceByNetwork(post.getNetwork());
-
         Glide.with(Loudly.getContext()).load("image")
                 .error(resource)
                 .placeholder(resource)
@@ -116,22 +116,26 @@ public class ViewHolderPost extends ViewHolder<Post> {
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(0, 0);
             postImageView.setLayoutParams(layoutParams);
         }
+    }
 
-        int like, comment, repost;
+    private void handleButtons(final Post post) {
+        int like, comment, shares;
         Info info = (post instanceof LoudlyPost) ? ((LoudlyPost) post).getInfo(Networks.LOUDLY) :
                 post.getInfo();
 
         if (info != null) {
             like = info.like;
             comment = info.comment;
-            repost = info.repost;
+            shares = info.repost;
         } else {
             like = 0;
             comment = 0;
-            repost = 0;
+            shares = 0;
         }
         if (comment != 0) {
             commentsAmount.setText(Integer.toString(comment));
+            setOverShadowFooterComponent(commentsButton, commentsAmount, true);
+
         } else {
             setOverShadowFooterComponent(commentsButton, commentsAmount, false);
             setCommentsOnClick(null);
@@ -139,15 +143,17 @@ public class ViewHolderPost extends ViewHolder<Post> {
 
         if (like != 0) {
             likesAmount.setText(Integer.toString(like));
+            setOverShadowFooterComponent(likesButton, likesAmount, true);
         } else {
             setOverShadowFooterComponent(likesButton, likesAmount, false);
             setLikesOnClick(null);
         }
 
-        if (repost != 0) {
-            repostsAmount.setText(Integer.toString(repost));
+        if (shares != 0) {
+            sharesAmount.setText(Integer.toString(shares));
+            setOverShadowFooterComponent(repostsButton, sharesAmount, true);
         } else {
-            setOverShadowFooterComponent(repostsButton, repostsAmount, false);
+            setOverShadowFooterComponent(repostsButton, sharesAmount, false);
             setRepostsOnClick(null);
         }
     }

@@ -2,7 +2,9 @@ package ly.loud.loudly.adapter;
 
 /**
  * Created by ZeRoGerc on 07.12.15.
+ * ITMO University
  */
+
 public class NetworkDelimiter implements Item {
     private int network;
 

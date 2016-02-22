@@ -4,8 +4,9 @@
     android:layout_height="wrap_content"
     xmlns:post_card="http://schemas.android.com/apk/res-auto"
     android:id="@+id/post_card"
-    android:layout_margin="8dp"
-    post_card:cardCornerRadius="4dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    post_card:cardCornerRadius="2dp"
     android:padding="0dp">
 
     <RelativeLayout

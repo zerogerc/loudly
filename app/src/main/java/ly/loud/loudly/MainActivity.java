@@ -1,8 +1,5 @@
 package ly.loud.loudly;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Build;
@@ -118,10 +115,10 @@ public class MainActivity extends AppCompatActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         getSupportActionBar().hide();
                     }
-                    AppBarLayout.LayoutParams params =
-                            (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
-                    params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED);
-                    floatingActionButton.hide();
+//                    AppBarLayout.LayoutParams params =
+//                            (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+//                    params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED);
+                    floatingActionButton.setVisibility(View.INVISIBLE);
                     background.setAlpha(1);
                     background.getBackground().setAlpha(100);
                     background.setClickable(true);
@@ -130,10 +127,11 @@ public class MainActivity extends AppCompatActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         getSupportActionBar().show();
                     }
-                    AppBarLayout.LayoutParams params =
-                            (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
-                    params.setScrollFlags(customParams.getScrollFlags());
-                    floatingActionButton.show();
+//                    AppBarLayout.LayoutParams params =
+//                            (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+//                    params.setScrollFlags(customParams.getScrollFlags());
+                    Log.e("TRANSLATION_Y_FAB", Integer.toString(((int) floatingActionButton.getTranslationY())));
+                    floatingActionButton.setVisibility(View.VISIBLE);
                     background.setAlpha(0);
                     background.setClickable(false);
                 }
@@ -183,13 +181,15 @@ public class MainActivity extends AppCompatActivity {
 
         if (count == 0) {
             super.onBackPressed();
+            getFragmentManager().popBackStack();
             return;
         }
+
         if (count == 1) {
             background.setClickable(false);
             background.getBackground().setAlpha(0);
+            getFragmentManager().popBackStack();
         }
-        getFragmentManager().popBackStack();
     }
 
     static void loadPosts() {
@@ -210,77 +210,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    static class CustomRecyclerViewListener extends RecyclerView.OnScrollListener {
-        private FloatingActionButton fab;
-        private boolean isShowFab = true;
-        private boolean nowAnimating = false;
-        private int animDuration = 200;
-        private ObjectAnimator fabAnimSlideDown;
-        private ObjectAnimator fabAnimSlideUp;
-
-        public CustomRecyclerViewListener(FloatingActionButton fab, int screenHeight) {
-            this.fab = fab;
-            this.fabAnimSlideDown = ObjectAnimator.ofFloat(fab, "translationY", 0, screenHeight / 4).setDuration(animDuration);
-            this.fabAnimSlideUp = ObjectAnimator.ofFloat(fab, "translationY", screenHeight / 4, 0).setDuration(animDuration);
-        }
-
-        @Override
-        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-            super.onScrollStateChanged(recyclerView, newState);
-        }
-
-        @Override
-        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-            super.onScrolled(recyclerView, dx, dy);
-            if (dy > 5 && isShowFab && (!nowAnimating)) {
-                fabAnimSlideDown.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        super.onAnimationStart(animation);
-                        nowAnimating = true;
-                        isShowFab = false;
-
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        fab.setVisibility(View.GONE);
-                        nowAnimating = false;
-                    }
-                });
-                fabAnimSlideDown.start();
-            }
-            if (dy < -5 && (!isShowFab) && (!nowAnimating)) {
-                fabAnimSlideUp.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        super.onAnimationStart(animation);
-                        nowAnimating = true;
-                        isShowFab = true;
-                        fab.setVisibility(View.VISIBLE);
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        nowAnimating = false;
-                    }
-                });
-                fabAnimSlideUp.start();
-            }
-        }
-    }
-
     private void setRecyclerView() {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mainActivityPostsAdapter = new MainActivityPostsAdapter(posts, this);
         recyclerView.setHasFixedSize(true); /// HERE
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.addOnScrollListener(
-                new CustomRecyclerViewListener((FloatingActionButton) findViewById(R.id.fab), Utils.getDefaultScreenHeight()) {
-                });
         recyclerView.setAdapter(mainActivityPostsAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
@@ -360,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
                     Loudly.getContext().startGetInfoService();
                     receivers[POST_UPLOAD_RECEIVER].stop();
                     receivers[POST_UPLOAD_RECEIVER] = null;
-                    context.floatingActionButton.show();
+                    context.floatingActionButton.setVisibility(View.VISIBLE);
                     break;
                 case Broadcasts.ERROR:
                     // Got an error
@@ -380,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
                             Snackbar.make(context.findViewById(R.id.main_layout),
                                     error, Snackbar.LENGTH_SHORT)
                                     .show();
-                            context.floatingActionButton.show();
+                            context.floatingActionButton.setVisibility(View.VISIBLE);
                             Log.e("UPLOAD_POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
                             stop();
                             receivers[POST_UPLOAD_RECEIVER] = null;
@@ -488,7 +423,7 @@ public class MainActivity extends AppCompatActivity {
                     Snackbar.make(context.findViewById(R.id.main_layout),
                             "Post deleted", Snackbar.LENGTH_SHORT)
                             .show();
-                    context.floatingActionButton.show();
+                    context.floatingActionButton.setVisibility(View.VISIBLE);
                     Loudly.getContext().startGetInfoService();
                     break;
                 case Broadcasts.ERROR:
@@ -507,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
                             Snackbar.make(context.findViewById(R.id.main_layout),
                                     error, Snackbar.LENGTH_SHORT)
                                     .show();
-                            context.floatingActionButton.show();
+                            context.floatingActionButton.setVisibility(View.VISIBLE);
                             Log.e("DELETE_POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
                             stop();
                             receivers[POST_DELETE_RECEIVER] = null;
