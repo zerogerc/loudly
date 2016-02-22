@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp"
+    android:clickable="true">
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent" android:layout_height="match_parent">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/splash_logo"
+                android:layout_centerVertical="true"
+                android:layout_margin="36dp"
+                android:src="@drawable/loudly_large"/>
+
+            <WebView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_above="@id/splash_logo"
+                android:id="@+id/splash_web_view">
+            </WebView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="Loudly"
+                android:textSize="32sp"
+                android:id="@+id/splash_name"
+                android:textColor="@color/grey_color"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/splash_logo"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/splash_info"
+                android:layout_below="@id/splash_name"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:layout_alignParentBottom="true"
+                android:textColor="@color/grey_color"
+                android:textSize="14sp"
+                android:text="Loading..."/>
+
+
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+</RelativeLayout>

@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Loudly</string>
+
+    <!--PeopleListFragment-->
+    <string name="people_fragment_title_likes">People who like it</string>
+    <string name="people_fragment_title_shares">People who shared it</string>
+    <string name="people_fragment_title_comments">Comments</string>
+
+</resources>
