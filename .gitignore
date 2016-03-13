@@ -23,9 +23,6 @@ gen/
 out/
 
 # Gradle files
-.gradle/
-build/
-
 # Log Files
 *.log
 
@@ -33,7 +30,8 @@ build/
 .navigation/
 
 # Android Studio captures folder
-captures/
-
 # Intellij
 *.iml
+
+# Android tests
+/app/src/androidTest/
