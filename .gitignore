@@ -32,6 +32,3 @@ out/
 # Android Studio captures folder
 # Intellij
 *.iml
-
-# Android tests
-/app/src/androidTest/
