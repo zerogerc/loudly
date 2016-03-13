@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="ly.loud.loudly.SettingsActivity"
+    tools:context=".ui.SettingsActivity"
     tools:showIn="@layout/activity_settings">
 
     <RelativeLayout
@@ -38,7 +38,7 @@
                     android:text="Your social networks"
                     android:textSize="17sp" />
 
-                <ly.loud.loudly.IconsHolder
+                <ly.loud.loudly.ui.IconsHolder
                     android:id="@+id/settings_icons_holder"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

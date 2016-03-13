@@ -43,7 +43,7 @@
                     android:padding="8dp"/>
                 </RelativeLayout>
 
-                <ly.loud.loudly.IconsHolder
+                <ly.loud.loudly.ui.IconsHolder
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:layout_below="@id/network_choose_header"

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:id="@+id/main_layout"
-    tools:context="ly.loud.loudly.SettingsActivity">
+    tools:context=".ui.SettingsActivity">
 
     <android.support.design.widget.AppBarLayout android:layout_height="wrap_content"
         android:layout_width="match_parent" android:theme="@style/AppTheme.AppBarOverlay">
@@ -20,7 +20,7 @@
 
     <include layout="@layout/settings_content"/>
 
-    <fragment android:name="ly.loud.loudly.AuthFragment"
+    <fragment android:name="ly.loud.loudly.ui.AuthFragment"
         android:id="@+id/setting_web_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

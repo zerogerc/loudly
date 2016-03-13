@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:id="@+id/main_layout"
-    tools:context="ly.loud.loudly.MainActivity">
+    tools:context=".ui.MainActivity">
 
     <android.support.design.widget.AppBarLayout android:layout_height="wrap_content"
         android:layout_width="match_parent" android:theme="@style/AppTheme.AppBarOverlay">
@@ -47,7 +47,7 @@
         app:pressedTranslationZ="12dp"
         app:layout_anchor="@id/main_layout"
         app:layout_anchorGravity="bottom|right"
-        app:layout_behavior="ly.loud.loudly.ScrollAwareFABBehavior"
+        app:layout_behavior="ly.loud.loudly.ui.ScrollAwareFABBehavior"
         app:borderWidth="0dp"
         app:fabSize="normal"
         android:onClick="callPostCreate" />
