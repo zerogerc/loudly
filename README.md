@@ -1,5 +1,5 @@
 # Loudly
-Android application for simultaneous posting updates to many social networks at once. Main branch is Abstract.
+Android application for simultaneous posting updates to many social networks at once.
 
 Main features of Loudly:
 * Upload post to many social networks
