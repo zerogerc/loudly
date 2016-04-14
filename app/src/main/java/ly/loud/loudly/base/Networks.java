@@ -31,9 +31,9 @@ public class Networks {
     public static String nameOfNetwork(int network) {
         switch (network) {
             case LOUDLY:
-                return "ly/loud/loudly/networks/Loudly";
+                return "Loudly";
             case FB:
-                return "ly/loud/loudly/networks/Facebook";
+                return "Facebook";
             case TWITTER:
                 return "Twitter";
             case INSTAGRAM:

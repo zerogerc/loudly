@@ -20,32 +20,23 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/people_list_title"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
                     android:layout_centerHorizontal="true"
-                    android:text="Likes"
-                    android:textColor="@color/grey_color"
+                    android:textColor="@color/white_color"
                     android:textSize="20sp"
+                    android:background="@color/colorPrimary"
+                    android:gravity="center"
                     />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:id="@+id/people_list_delimiter"
-                    android:layout_marginRight="32dp"
-                    android:layout_marginLeft="32dp"
-                    android:layout_below="@id/people_list_title"
-                    android:background="@color/light_grey_color" />
-
 
                 <android.support.v7.widget.RecyclerView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:id="@+id/people_list_recycler_view"
-                    android:layout_below="@id/people_list_delimiter" />
+                    android:layout_below="@id/people_list_title" />
             </RelativeLayout>
 
             <ProgressBar

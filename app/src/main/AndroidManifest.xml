@@ -21,7 +21,7 @@
 
         <activity android:name=".ui.MainActivity"
             android:windowSoftInputMode="stateHidden"
-            android:label="Loudly"
+            android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,7 +32,7 @@
         <activity android:name=".ui.SettingsActivity"
             android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="stateHidden"
-            android:label="Settings"
+            android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -44,3 +44,15 @@
     </application>
 
 </manifest>
+<!--=======-->
+<!--<manifest xmlns:android="http://schemas.android.com/apk/res/android" >-->
+
+    <!--<application>-->
+        <!--<activity android:name="ly.loud.loudly.ui.MainActivity"-->
+                    <!--android:label="@string/title_activity_main"-->
+                <!--android:theme="@style/AppTheme.NoActionBar"-->
+<!--&gt;-->
+        <!--</activity>-->
+    <!--</application>-->
+<!--</manifest>-->
+<!--&gt;>>>>>> Added-->

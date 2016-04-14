@@ -1,6 +1,7 @@
 package ly.loud.loudly.ui.adapter;
 
 import android.app.Activity;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -17,13 +18,13 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.ui.Loudly;
-import ly.loud.loudly.R;
 import ly.loud.loudly.util.Utils;
 
 /**
@@ -195,6 +196,10 @@ public class ViewHolderPost extends ViewHolder<Post> {
 
     private void setViewSizesForImageSizes(final int width, final int height) {
         int imageWidth = Utils.getDefaultScreenWidth() - 2 * getMargin();
+        //TODO: remove
+        if (Loudly.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            imageWidth /= 2;
+        }
         float scale = ((float) imageWidth) / ((float) width);
         int imageHeight = (int) (height * scale);
         postImageView.getLayoutParams().width = imageWidth;

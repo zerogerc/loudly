@@ -2,36 +2,42 @@ package ly.loud.loudly.ui;
 
 import android.app.FragmentManager;
 import android.content.Intent;
-import android.os.Build;
+import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.R;
+import ly.loud.loudly.ui.adapter.SpacesItemDecoration;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
+
     private final String TAG = "MAIN";
     static LinkedList<Post> posts = new LinkedList<>();
     static boolean keysLoaded = false;
@@ -41,10 +47,6 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     public MainActivityPostsAdapter mainActivityPostsAdapter;
     public FloatingActionButton floatingActionButton;
-
-    private Toolbar toolbar;
-
-    private FrameLayout background;
 
     static final int LOAD_POSTS_RECEIVER = 0;
     static final int POST_UPLOAD_RECEIVER = 1;
@@ -67,24 +69,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.main_call_settings) {
-            callSettingsActivity();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        int id = item.getItemId();
+//
+//        if (id == R.id.main_call_settings) {
+//            callSettingsActivity();
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 
     @Override
     public void finish() {
@@ -92,49 +87,16 @@ public class MainActivity extends AppCompatActivity {
         Utils.hidePhoneKeyboard(this);
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setShowHideAnimationEnabled(true);
-
-        final AppBarLayout.LayoutParams customParams = (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
-
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
-
-        background = ((FrameLayout) findViewById(R.id.main_background));
-        background.setAlpha(0);
-
+    private void init() {
         getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
                 int count = getFragmentManager().getBackStackEntryCount();
                 if (count > 0) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        getSupportActionBar().hide();
-                    }
-//                    AppBarLayout.LayoutParams params =
-//                            (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
-//                    params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED);
                     floatingActionButton.setVisibility(View.INVISIBLE);
-                    background.setAlpha(1);
-                    background.getBackground().setAlpha(100);
-                    background.setClickable(true);
                 }
                 if (count == 0) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        getSupportActionBar().show();
-                    }
-//                    AppBarLayout.LayoutParams params =
-//                            (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
-//                    params.setScrollFlags(customParams.getScrollFlags());
-                    Log.e("TRANSLATION_Y_FAB", Integer.toString(((int) floatingActionButton.getTranslationY())));
                     floatingActionButton.setVisibility(View.VISIBLE);
-                    background.setAlpha(0);
-                    background.setClickable(false);
                 }
             }
         });
@@ -142,6 +104,101 @@ public class MainActivity extends AppCompatActivity {
         SplashFragment.showSplash(this);
 
         setRecyclerView();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                callPostCreate(view);
+            }
+        });
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        init();
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            int count = getFragmentManager().getBackStackEntryCount();
+
+            if (count == 0) {
+                super.onBackPressed();
+                getFragmentManager().popBackStack();
+                return;
+            }
+
+            if (count == 1) {
+                getFragmentManager().popBackStack();
+            }
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            callSettingsActivity();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_camara) {
+            // Handle the camera action
+        } else if (id == R.id.nav_gallery) {
+
+        } else if (id == R.id.nav_slideshow) {
+
+        } else if (id == R.id.nav_manage) {
+
+        } else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_send) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.fab);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 
     @Override
@@ -176,23 +233,6 @@ public class MainActivity extends AppCompatActivity {
         aliveCopy--;
     }
 
-    @Override
-    public void onBackPressed() {
-        int count = getFragmentManager().getBackStackEntryCount();
-
-        if (count == 0) {
-            super.onBackPressed();
-            getFragmentManager().popBackStack();
-            return;
-        }
-
-        if (count == 1) {
-            background.setClickable(false);
-            background.getBackground().setAlpha(0);
-            getFragmentManager().popBackStack();
-        }
-    }
-
     static void loadPosts() {
         ArrayList<Wrap> loadFrom = new ArrayList<>();
         for (Wrap w : Loudly.getContext().getWraps()) {
@@ -215,10 +255,15 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mainActivityPostsAdapter = new MainActivityPostsAdapter(posts, this);
         recyclerView.setHasFixedSize(true); /// HERE
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         recyclerView.setAdapter(mainActivityPostsAdapter);
-        recyclerView.setLayoutManager(layoutManager);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        } else {
+            recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+            int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.recycler_landscape_margin);
+            recyclerView.addItemDecoration(new SpacesItemDecoration(spacingInPixels));
+        }
         recyclerView.setItemAnimator(itemAnimator);
     }
 
@@ -261,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
                 case Broadcasts.STARTED:
                     // Saved to DB. Make place for the post
                     msg = "Uploading post...";
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             msg, Snackbar.LENGTH_INDEFINITE)
                             .show();
                     break;
@@ -269,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
                     // Uploaded to network
                     int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
                     msg = "Post uploaded to " + Networks.nameOfNetwork(networkID) + "...";
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             msg, Snackbar.LENGTH_SHORT)
                             .show();
                     break;
@@ -288,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case Broadcasts.FINISHED:
                     // LoudlyPost uploaded
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             "Successfully uploaded",
                             Snackbar.LENGTH_LONG)
                             .show();
@@ -313,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
                         default:
                             // Database fail
                             error = "Can't upload post due to internal error";
-                            Snackbar.make(context.findViewById(R.id.main_layout),
+                            Snackbar.make(context.findViewById(R.id.fab),
                                     error, Snackbar.LENGTH_SHORT)
                                     .show();
                             context.floatingActionButton.setVisibility(View.VISIBLE);
@@ -322,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
                             receivers[POST_UPLOAD_RECEIVER] = null;
                             return;
                     }
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             error, Snackbar.LENGTH_SHORT)
                             .show();
                     break;
@@ -342,14 +387,14 @@ public class MainActivity extends AppCompatActivity {
             int network;
             switch (status) {
                 case Broadcasts.STARTED:
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             "Loading Loudly posts...",
                             Snackbar.LENGTH_INDEFINITE)
                             .show();
                     break;
                 case Broadcasts.LOADED:
                     if (posts.size() == 0) {
-                        Snackbar.make(context.findViewById(R.id.main_layout),
+                        Snackbar.make(context.findViewById(R.id.fab),
                                 "You haven't upload any post yet",
                                 Snackbar.LENGTH_SHORT)
                                 .show();
@@ -357,7 +402,7 @@ public class MainActivity extends AppCompatActivity {
                         receivers[LOAD_POSTS_RECEIVER] = null;
                         loadPosts = null;
                     } else {
-                        Snackbar.make(context.findViewById(R.id.main_layout),
+                        Snackbar.make(context.findViewById(R.id.fab),
                                 "Loudly posts loaded",
                                 Snackbar.LENGTH_INDEFINITE)
                                 .show();
@@ -366,14 +411,14 @@ public class MainActivity extends AppCompatActivity {
                 case Broadcasts.PROGRESS:
                     network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
 
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             "Loading posts from " + Networks.nameOfNetwork(network) + "...",
                             Snackbar.LENGTH_INDEFINITE)
                             .show();
                     loadedNetworks[network] = true;
                     break;
                 case Broadcasts.FINISHED:
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             "Loaded", Snackbar.LENGTH_SHORT)
                             .show();
                     stop();
@@ -396,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
                             error = "Unexpected error";
                             break;
                     }
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             error, Snackbar.LENGTH_SHORT)
                             .show();
                     break;
@@ -416,12 +461,12 @@ public class MainActivity extends AppCompatActivity {
             switch (status) {
                 case Broadcasts.PROGRESS:
                     network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             "Deleting from " + Networks.nameOfNetwork(network) + "...", Snackbar.LENGTH_INDEFINITE)
                             .show();
                     break;
                 case Broadcasts.FINISHED:
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             "Post deleted", Snackbar.LENGTH_SHORT)
                             .show();
                     context.floatingActionButton.setVisibility(View.VISIBLE);
@@ -440,7 +485,7 @@ public class MainActivity extends AppCompatActivity {
                         default:
                             //Totally unexpected
                             error = "Can't delete post due to internal error :(";
-                            Snackbar.make(context.findViewById(R.id.main_layout),
+                            Snackbar.make(context.findViewById(R.id.fab),
                                     error, Snackbar.LENGTH_SHORT)
                                     .show();
                             context.floatingActionButton.setVisibility(View.VISIBLE);
@@ -449,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
                             receivers[POST_DELETE_RECEIVER] = null;
                             return;
                     }
-                    Snackbar.make(context.findViewById(R.id.main_layout),
+                    Snackbar.make(context.findViewById(R.id.fab),
                             error, Snackbar.LENGTH_SHORT)
                             .show();
                     break;
