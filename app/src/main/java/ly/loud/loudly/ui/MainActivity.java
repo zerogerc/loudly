@@ -88,6 +88,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void init() {
+        self = this;
+
         getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {

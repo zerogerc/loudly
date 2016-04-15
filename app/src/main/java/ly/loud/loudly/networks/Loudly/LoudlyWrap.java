@@ -3,6 +3,7 @@ package ly.loud.loudly.networks.Loudly;
 import android.util.Pair;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import ly.loud.loudly.base.KeyKeeper;
@@ -71,12 +72,12 @@ public class LoudlyWrap extends Wrap {
 
     @Override
     protected List<Person> getPersons(int what, SingleNetwork element, KeyKeeper keyKeeper) throws IOException {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
     protected List<Comment> getComments(SingleNetwork element, KeyKeeper keyKeeper) throws IOException {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override

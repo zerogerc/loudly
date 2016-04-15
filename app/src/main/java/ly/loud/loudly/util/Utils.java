@@ -403,7 +403,7 @@ public class Utils {
         MainActivity.executeOnUI(new UIAction<MainActivity>() {
             @Override
             public void execute(MainActivity mainActivity, Object... params) {
-                Snackbar.make(mainActivity.findViewById(R.id.main_layout),
+                Snackbar.make(mainActivity.findViewById(R.id.fab),
                         message, Snackbar.LENGTH_LONG)
                         .show();
             }

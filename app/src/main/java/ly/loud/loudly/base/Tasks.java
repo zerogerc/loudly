@@ -305,18 +305,16 @@ public final class Tasks {
     public static final int SHARES = 1;
 
     public static class PersonGetter extends BroadcastSendingTask {
-        private int ID;
         private SingleNetwork element;
         private int what;
         private List<Item> persons;
         private Wrap[] wraps;
 
-        public PersonGetter(int ID, SingleNetwork element, int what, List<Item> persons, Wrap... wraps) {
+        public PersonGetter(SingleNetwork element, int what, List<Item> persons, Wrap... wraps) {
             this.element = element;
             this.what = what;
             this.persons = persons;
             this.wraps = wraps;
-            this.ID = ID;
         }
 
         @Override
@@ -337,13 +335,11 @@ public final class Tasks {
                         Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.INVALID_TOKEN,
                                 e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
                         publishProgress(message);
                     } catch (IOException e) {
                         Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.NETWORK_ERROR,
                                 e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
                         publishProgress(message);
                     }
                     return null;
@@ -360,7 +356,6 @@ public final class Tasks {
 
                         Intent message = makeMessage(Broadcasts.GET_PERSONS, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, result.second);
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
                         publishProgress(message);
                     }
                 }
@@ -374,13 +369,11 @@ public final class Tasks {
      * Throws Broadcasts.POST_GET_PERSON as like as PersonGetter
      */
     public static class CommentsGetter extends BroadcastSendingTask {
-        private int ID;
         private SingleNetwork element;
         private List<Item> comments;
         private Wrap[] wraps;
 
-        public CommentsGetter(int ID, SingleNetwork element, List<Item> comments, Wrap... wraps) {
-            this.ID = ID;
+        public CommentsGetter(SingleNetwork element, List<Item> comments, Wrap... wraps) {
             this.element = element;
             this.comments = comments;
             this.wraps = wraps;
@@ -404,13 +397,11 @@ public final class Tasks {
                         Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.INVALID_TOKEN,
                                 e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
                         publishProgress(message);
                     } catch (IOException e) {
                         Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.NETWORK_ERROR,
                                 e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
                         publishProgress(message);
                     }
                     return null;
@@ -427,7 +418,6 @@ public final class Tasks {
 
                         Intent message = makeMessage(Broadcasts.GET_PERSONS, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, result.second);
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
                         publishProgress(message);
                     }
                 }
