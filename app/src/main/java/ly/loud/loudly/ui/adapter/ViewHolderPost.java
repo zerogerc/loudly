@@ -195,21 +195,16 @@ public class ViewHolderPost extends ViewHolder<Post> {
     }
 
     private void setViewSizesForImageSizes(final int width, final int height) {
-        int imageWidth = Utils.getDefaultScreenWidth() - 2 * getMargin();
+        int imageWidth = Utils.getDefaultScreenWidth();
         //TODO: remove
         if (Loudly.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            imageWidth /= 2;
+            imageWidth= Utils.getDefaultScreenHeight() / 2;
         }
         float scale = ((float) imageWidth) / ((float) width);
         int imageHeight = (int) (height * scale);
         postImageView.getLayoutParams().width = imageWidth;
         postImageView.getLayoutParams().height = imageHeight;
         postImageView.requestLayout();
-    }
-
-    public int getMargin() {
-        //TODO: measure layout
-        return Utils.dpToPx(8);
     }
 
     public void setLikesOnClick(View.OnClickListener listener) {

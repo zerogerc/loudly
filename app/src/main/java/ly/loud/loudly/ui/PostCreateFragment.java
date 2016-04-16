@@ -1,8 +1,9 @@
 package ly.loud.loudly.ui;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -13,11 +14,9 @@ import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -30,30 +29,28 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LoudlyImage;
 import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.R;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 
 
-public class PostCreateFragment extends Fragment {
+public class PostCreateFragment extends DialogFragment {
     private static String EDIT_TEXT = "EDIT_TEXT";
+    private static String TAG = "Post Create Fragment";
     private final static int PICK_PHOTO_FROM_GALLERY = 13;
     private final static int REQUEST_PHOTO_FROM_CAMERA = 52;
 
-//    private NetworksChooseFragment networksChooseFragment;
-
     private EditText editText;
     private ImageView postImageView;
-    private ImageView deleteImageButton;
-    private View rootView;
-    private FrameLayout background;
     private static Image postImage;
+
+    private View rootView;
 
     private Uri currentImageUri;
 
@@ -113,34 +110,11 @@ public class PostCreateFragment extends Fragment {
     }
 
     public void setListeners() {
-        final UIAction hideNetworksChooseAction = new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                // TODO remove this crutch
-                Activity activity = ((Activity) context);
-
-                activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-                editText.setFocusableInTouchMode(true);
-                editText.setFocusable(true);
-                setOverShadow(false);
-            }
-        };
-
-        final UIAction showNetworksChooseAction = new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                editText.setFocusableInTouchMode(false);
-                editText.setFocusable(false);
-                setOverShadow(true);
-            }
-        };
-
-        getActivity().findViewById(R.id.new_post_send_button).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.new_post_send_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (existsAvailableNetworks()) {
-                    NetworksChooseFragment fragment = NetworksChooseFragment.showNetworksChoose(getActivity(), showNetworksChooseAction, hideNetworksChooseAction);
-                    setNetworksChooseListeners(fragment);
+                    showNetworksChooseFragment();
                 } else {
                     Snackbar.make(getActivity().findViewById(R.id.main_layout),
                             "You must be logged in at least one network", Snackbar.LENGTH_SHORT)
@@ -150,7 +124,7 @@ public class PostCreateFragment extends Fragment {
             }
         });
 
-        getActivity().findViewById(R.id.new_post_gallery_button).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.new_post_gallery_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -160,7 +134,7 @@ public class PostCreateFragment extends Fragment {
             }
         });
 
-        getActivity().findViewById(R.id.new_post_camera_button).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.new_post_camera_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Utils.hidePhoneKeyboard(getActivity());
@@ -169,7 +143,9 @@ public class PostCreateFragment extends Fragment {
         });
     }
 
-    private void setNetworksChooseListeners(final NetworksChooseFragment fragment) {
+    private void showNetworksChooseFragment() {
+        final NetworksChooseFragment fragment = new NetworksChooseFragment();
+
         UIAction grayAction = new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
@@ -201,7 +177,7 @@ public class PostCreateFragment extends Fragment {
                 ArrayList<Wrap> wraps = new ArrayList<>();
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
                     // ToDO: upload to only selected networks
-                    if (Loudly.getContext().getKeyKeeper(i) != null) {
+                    if (Loudly.getContext().getKeyKeeper(i) != null && fragment.shouldPost(i)) {
                         wraps.add(Networks.makeWrap(i));
                     }
                 }
@@ -210,29 +186,28 @@ public class PostCreateFragment extends Fragment {
                         wraps.toArray(new Wrap[0]));
                 uploader.execute(post);
 
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
-                ft.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right,
-                        R.anim.slide_in_left, R.anim.slide_out_right);
-                ft.commit();
-
-                getFragmentManager().popBackStack();
-                getFragmentManager().popBackStack();
+                dismiss();
             }
         };
 
         fragment.setGrayItemClick(grayAction);
         fragment.setColorItemsClick(colorAction);
         fragment.setPostButtonClick(buttonAction);
+
+        fragment.show(getFragmentManager(), NetworksChooseFragment.TAG);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-        rootView = inflater.inflate(R.layout.new_post_fragment, container, false);
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        rootView = inflater.inflate(R.layout.new_post_fragment, null);
+
         editText = (EditText)rootView.findViewById(R.id.new_post_edit_text);
         postImageView = (ImageView)rootView.findViewById(R.id.picture_with_cross_image);
-        deleteImageButton = (ImageView)rootView.findViewById(R.id.picture_with_cross_clear);
+        ImageView deleteImageButton = (ImageView)rootView.findViewById(R.id.picture_with_cross_clear);
         deleteImageButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
@@ -243,10 +218,15 @@ public class PostCreateFragment extends Fragment {
         );
 
         postImage = null;
-        background = ((FrameLayout) rootView.findViewById(R.id.new_post_background));
-        setOverShadow(false);
 
-        return rootView;
+        setListeners();
+
+        builder.setView(rootView);
+
+        Dialog dialog = builder.create();
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        return dialog;
     }
 
     @Override
@@ -256,8 +236,6 @@ public class PostCreateFragment extends Fragment {
         if (savedInstanceState != null) {
             editText.setText(savedInstanceState.getString(EDIT_TEXT));
         }
-
-        setListeners();
     }
 
     @Override
@@ -268,7 +246,6 @@ public class PostCreateFragment extends Fragment {
 
             postImageView.setImageBitmap(null);
             editText.setText(null);
-            setOverShadow(true);
         } else {
             clearImageView();
 
@@ -278,8 +255,6 @@ public class PostCreateFragment extends Fragment {
             LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
             layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
             editText.requestFocus();
-
-            setOverShadow(false);
         }
     }
 
@@ -357,30 +332,9 @@ public class PostCreateFragment extends Fragment {
         }
     }
 
-    public void setOverShadow(boolean flag) {
-        if (flag) {
-            background.setAlpha(1);
-            background.getBackground().setAlpha(100);
-            background.setClickable(true);
-        } else {
-            background.setAlpha(0);
-            background.setClickable(false);
-        }
-    }
-
-    private static void show(Activity activity, PostCreateFragment fragment) {
-        FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
-        transaction.addToBackStack(null);
-//        transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_bottom);
-        transaction.replace(R.id.fragment_container, fragment);
-        transaction.commit();
-
-        boolean f = true;
-    }
-
     public static PostCreateFragment showPostCreate(Activity activity) {
         PostCreateFragment newFragment = new PostCreateFragment();
-        show(activity, newFragment);
+        newFragment.show(activity.getFragmentManager(), TAG);
         return newFragment;
     }
 }

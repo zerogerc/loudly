@@ -1,44 +1,46 @@
 package ly.loud.loudly.ui;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
-import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.R;
+import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 
 /**
  * Created by ZeRoGerc on 11.12.15.
  */
-public class NetworksChooseFragment extends Fragment {
+public class NetworksChooseFragment extends DialogFragment {
+    public static String TAG = "Networks Choose Fragment";
+
     private View rootView;
     private IconsHolder iconsHolder;
     private ImageView postButton;
-    private UIAction buttonClick;
-    private boolean[] shouldPost = new boolean[Networks.NETWORK_COUNT];
+
+    private UIAction sendClick;
+    private UIAction grayClick;
+    private UIAction coloredClick;
+
+    private boolean[] shouldPost;
 
     private int mode = IconsHolder.SHOW_ALL;
 
-    private UIAction hideAction = null;
-    private UIAction showAction = null;
-
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-        rootView = inflater.inflate(R.layout.network_choose_fragment, container, false);
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        rootView = inflater.inflate(R.layout.network_choose_fragment, null);
+
         iconsHolder = (IconsHolder)rootView.findViewById(R.id.network_choose_icons_holder);
 
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
@@ -51,54 +53,39 @@ public class NetworksChooseFragment extends Fragment {
         postButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (buttonClick != null) {
-                    buttonClick.execute(Loudly.getContext());
-                    getActivity().getFragmentManager().popBackStack();
+                if (sendClick != null) {
+                    sendClick.execute(Loudly.getContext());
+                    dismiss();
                 }
             }
         });
 
-        rootView.findViewById(R.id.network_choose_card).setOnTouchListener(new View.OnTouchListener() {
+        iconsHolder.setGrayItemClick(new UIAction() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return true;
-            }
-        });
-
-        rootView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (!rootView.findViewById(R.id.network_choose_card).onTouchEvent(event)) {
-                        getActivity().getFragmentManager().popBackStack();
-                    }
-                    return true;
+            public void execute(Context context, Object... params) {
+                if (grayClick != null) {
+                    grayClick.execute(context, params);
                 }
-                return false;
             }
         });
 
-        return rootView;
-    }
+        iconsHolder.setColorItemsClick(new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                if (coloredClick != null) {
+                    coloredClick.execute(context, params);
+                }
+            }
+        });
 
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        if (showAction != null) {
-            showAction.execute(getActivity());
+        shouldPost = new boolean[Networks.NETWORK_COUNT];
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            shouldPost[i] = true;
         }
-    }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (hideAction != null) {
-            hideAction.execute(getActivity());
-        }
-    }
+        builder.setView(rootView);
 
-    public void setPostButtonClick(UIAction action) {
-        this.buttonClick = action;
+        return builder.create();
     }
 
     public void setShouldPostTo(int network, boolean state) {
@@ -110,86 +97,20 @@ public class NetworksChooseFragment extends Fragment {
         shouldPost[network] = state;
     }
 
-    public boolean shouldPostTo(int network) {
-        return shouldPost[network];
-    }
-
-    public void hide() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.hide(this);
-        ft.commit();
-    }
-
-    public void setVisible(int network) {
-        iconsHolder.setVisible(network);
-    }
-
-    public void setInvisible(int network) {
-        iconsHolder.setInvisible(network);
-    }
-
     public void setColorItemsClick(UIAction action) {
-        iconsHolder.setColorItemsClick(action);
+        coloredClick = action;
     }
 
     public void setGrayItemClick(UIAction action) {
-        iconsHolder.setGrayItemClick(action);
+        grayClick = action;
     }
 
-    public void setHideAction(UIAction action) {
-        this.hideAction = action;
+    public void setPostButtonClick(UIAction action) {
+        sendClick = action;
     }
 
-    public void setShowAction(UIAction action) {
-        this.showAction = action;
-    }
-
-    public IconsHolder getIconsHolder() {
-        return this.iconsHolder;
-    }
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d("NETWORK", "START");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d("NETWORK", "RESUME");
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        Log.d("NETWORK", "STOP");
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d("NETWORK", "PAUSE");
-    }
-
-    private static void show(Activity activity, NetworksChooseFragment fragment) {
-        FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
-        transaction.addToBackStack(null);
-        transaction.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_left,
-                R.anim.slide_in_left, R.anim.slide_out_left);
-        transaction.replace(R.id.new_post_fragment_container, fragment);
-        transaction.commit();
-
-        fragment.setMode(IconsHolder.SHOW_ONLY_AVAILABLE);
-
-        activity.getFragmentManager().executePendingTransactions();
-    }
-
-    public static NetworksChooseFragment showNetworksChoose(Activity activity, UIAction showAction, UIAction hideAction) {
-        NetworksChooseFragment newFragment = new NetworksChooseFragment();
-        newFragment.showAction = showAction;
-        newFragment.hideAction = hideAction;
-        show(activity, newFragment);
-        return newFragment;
+    public boolean shouldPost(int network) {
+        return shouldPost[network];
     }
 
     public int getMode() {
