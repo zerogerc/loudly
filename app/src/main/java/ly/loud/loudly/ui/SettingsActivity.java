@@ -273,7 +273,7 @@ public class SettingsActivity extends AppCompatActivity {
         webViewFragment.clearWebView();
     }
 
-
+// ToDo: fix this
     public void LogoutClick(int network) {
         Loudly.getContext().stopGetInfoService();
         if (MainActivity.loadPosts != null) {
@@ -300,7 +300,7 @@ public class SettingsActivity extends AppCompatActivity {
             protected void onPostExecute(Integer network) {
                 Loudly.getContext().setKeyKeeper(network, null);
                 // Clean posts from this network
-                Iterator<Post> iterator = MainActivity.posts.listIterator();
+                Iterator<Post> iterator = Loudly.getPostHolder().getPosts().iterator();
                 int ind = 0;
                 while (iterator.hasNext()) {
                     Post post = iterator.next();
@@ -321,7 +321,7 @@ public class SettingsActivity extends AppCompatActivity {
                                 MainActivity.executeOnUI(new UIAction() {
                                     @Override
                                     public void execute(Context context, Object... params) {
-                                        ((MainActivity) context).mainActivityPostsAdapter.notifyDeletedAtPosition(fixed);
+                                        ((MainActivity) context).postsAdapter.notifyItemDeletedAtPosition(fixed);
                                     }
                                 });
                             } else {
@@ -330,7 +330,7 @@ public class SettingsActivity extends AppCompatActivity {
                                     MainActivity.executeOnUI(new UIAction() {
                                         @Override
                                         public void execute(Context context, Object... params) {
-                                            ((MainActivity) context).mainActivityPostsAdapter.notifyItemChanged(fixed);
+                                            ((MainActivity) context).postsAdapter.notifyItemChanged(fixed);
                                         }
                                     });
                                 }
@@ -341,7 +341,7 @@ public class SettingsActivity extends AppCompatActivity {
                             MainActivity.executeOnUI(new UIAction() {
                                 @Override
                                 public void execute(Context context, Object... params) {
-                                    ((MainActivity) context).mainActivityPostsAdapter.notifyDeletedAtPosition(fixed);
+                                    ((MainActivity) context).postsAdapter.notifyItemDeletedAtPosition(fixed);
                                 }
                             });
                         }

@@ -2,13 +2,16 @@ package ly.loud.loudly.base;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
-public class Link implements Parcelable {
+import java.util.Comparator;
+
+public class Link implements Parcelable, Comparable<Link> {
     private String link;
     private boolean valid;
 
     public Link() {
-        this(null, false);
+        this("", false);
     }
 
     public Link(String link) {
@@ -16,7 +19,7 @@ public class Link implements Parcelable {
     }
 
     public Link(Object link) {
-        this(link == null ? null : link.toString());
+        this(link == null ? "" : link.toString());
     }
 
     public Link(String link, boolean valid) {
@@ -71,6 +74,11 @@ public class Link implements Parcelable {
             return new Link[size];
         }
     };
+
+    @Override
+    public int compareTo(@NonNull Link another) {
+        return link.compareTo(another.link);
+    }
 
     @Override
     public String toString() {

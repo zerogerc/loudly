@@ -302,27 +302,7 @@ public class VKWrap extends Wrap {
     protected List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException {
         offset = Math.max(0, offset - 5);
 
-        ObjectParser photoParser = makePhotoParser();
 
-        ObjectParser attachmentParser = new ObjectParser()
-                .parseString("type")
-                .parseObject("photo", photoParser);
-
-        ObjectParser postParser = new ObjectParser()
-                .parseString("id")
-                .parseLong("date")
-                .parseString("text")
-                .parseObject("likes", new ObjectParser().parseInt("count"))
-                .parseObject("reposts", new ObjectParser().parseInt("count"))
-                .parseObject("comments", new ObjectParser().parseInt("count"))
-                .parseArray("attachments", new ArrayParser(-1, attachmentParser));
-
-        ArrayParser itemsParser = new ArrayParser(-1, postParser);
-        ObjectParser responseParser = new ObjectParser()
-                .parseArray("items", itemsParser);
-
-        ObjectParser parser = new ObjectParser()
-                .parseObject("response", responseParser);
         long earliestPost = -1;
         LinkedList<Post> posts = new LinkedList<>();
         do {
@@ -332,13 +312,39 @@ public class VKWrap extends Wrap {
             query.addParameter("count", "10");
             query.addParameter("offset", offset);
 
+            ObjectParser photoParser = makePhotoParser();
+
+            ObjectParser attachmentParser = new ObjectParser()
+                    .parseString("type")
+                    .parseObject("photo", photoParser);
+
+            ObjectParser postParser = new ObjectParser()
+                    .parseString("id")
+                    .parseLong("date")
+                    .parseString("text")
+                    .parseObject("likes", new ObjectParser().parseInt("count"))
+                    .parseObject("reposts", new ObjectParser().parseInt("count"))
+                    .parseObject("comments", new ObjectParser().parseInt("count"))
+                    .parseArray("attachments", new ArrayParser(-1, attachmentParser));
+
+            ArrayParser itemsParser = new ArrayParser(-1, postParser);
+            ObjectParser responseParser = new ObjectParser()
+                    .parseArray("items", itemsParser);
+
+            ObjectParser parser = new ObjectParser()
+                    .parseObject("response", responseParser);
+
             ObjectParser response = Network.makeGetRequestAndParse(query, parser);
 
             ArrayParser arrayParser = response.getObject().getArray();
+            if (arrayParser.size() == 0) {
+                break;
+            }
+
             for (int i = 0; i < arrayParser.size(); i++) {
                 postParser = arrayParser.getObject(i);
                 String id = postParser.getString("");
-                long date = postParser.getLong(0l);
+                long date = postParser.getLong(0L);
                 String text = postParser.getString("");
 
                 int likes = postParser.getObject().getInt(0);
@@ -366,7 +372,7 @@ public class VKWrap extends Wrap {
                     posts.add(res);
                     offset++;
                 }
-
+                earliestPost = date;
             }
         } while (timeInterval.contains(earliestPost));
         return posts;

@@ -74,8 +74,8 @@ public class ViewHolderPost extends ViewHolder<Post> {
     @Override
     public void refresh(final Post post) {
         text.setText(post.getText());
-        data.setText(Utils.getDateFormatted(post.getDate()));
-
+//        data.setText(Utils.getDateFormatted(post.getDate()));
+        data.setText(Long.toString(post.getDate()));
         loadPictures(post);
         handleButtons(post);
     }

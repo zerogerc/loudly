@@ -1,16 +1,11 @@
 package ly.loud.loudly.base.says;
 
 import android.support.annotation.NonNull;
+import ly.loud.loudly.base.*;
+import ly.loud.loudly.base.attachments.Attachment;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Location;
-import ly.loud.loudly.base.MultipleNetwork;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.attachments.Attachment;
 
 /**
  * Сlass that stores text and attachments to post.
@@ -137,13 +132,12 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         }
 
         @Override
-        public int compareTo(@NonNull Say another) {
-            return parent.compareTo(another);
-        }
-
-        @Override
         public boolean equals(Object o) {
-            return super.equals(o);
+            if (!(o instanceof Post)) {
+                return false;
+            }
+            SingleNetwork say = ((Say)o).getNetworkInstance(getNetwork());
+            return say != null && getLink().equals(say.getLink());
         }
     }
 
@@ -225,7 +219,7 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     }
 
     @Override
-    public void setInfo(int network, Info info) {
+    public synchronized void setInfo(int network, Info info) {
         infos[network] = info;
         infos[Networks.LOUDLY] = new Info();
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -270,13 +264,13 @@ public class LoudlyPost extends Post implements MultipleNetwork {
 
     @Override
     public boolean equals(Object o) {
+        if (!(o instanceof Post)) {
+            return false;
+        }
         if (o instanceof LoudlyPost) {
             return links[Networks.LOUDLY].equals(((LoudlyPost) o).links[Networks.LOUDLY]);
         }
-        if (o instanceof Post) {
-            Post post = (Post) o;
-            return links[post.getNetwork()] != null && links[post.getNetwork()].equals(post.getLink());
-        }
-        return false;
+        Post post = (Post) o;
+        return links[post.getNetwork()] != null && links[post.getNetwork()].equals(post.getLink());
     }
 }

@@ -5,29 +5,20 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Pair;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.ui.MainActivity;
-import ly.loud.loudly.ui.MainActivityPostsAdapter;
+import ly.loud.loudly.ui.PostsAdapter;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
-import ly.loud.loudly.util.BackgroundAction;
-import ly.loud.loudly.util.BroadcastSendingTask;
-import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.InvalidTokenException;
-import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.UIAction;
+import ly.loud.loudly.util.*;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Class made for storing different asynchronous tasks
@@ -86,7 +77,7 @@ public final class Tasks {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (ExecutionException e) {
-                    Log.e("ly/loud/loudly/networks/Loudly", "doAndWait: Execution exception", e);
+                    Log.e("Loudly", "doAndWait: Execution exception", e);
                     e.printStackTrace();
                 }
             }
@@ -162,11 +153,9 @@ public final class Tasks {
     public static class PostUploader extends BroadcastSendingTask {
         private Post post;
         private Wrap[] wraps;
-        private List<Post> posts;
 
-        public PostUploader(Post post, List<Post> posts, Wrap... wraps) {
+        public PostUploader(Post post, Wrap... wraps) {
             this.post = post;
-            this.posts = posts;
             this.wraps = wraps;
 
             Arrays.sort(this.wraps);
@@ -174,11 +163,11 @@ public final class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
+            Loudly.getContext().stopGetInfoService();
+
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    posts.add(0, post);
-                    context.mainActivityPostsAdapter.notifyItemInserted(0);
                     Loudly.getContext().stopGetInfoService();
                 }
             });
@@ -227,26 +216,25 @@ public final class Tasks {
                 @Override
                 public void apply(Integer result) {
                     if (result != null) {
+                        Loudly.getPostHolder().merge(Collections.singletonList((Post)post.getNetworkInstance(result)),
+                                result);
                         Intent message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, result);
                         publishProgress(message);
                     }
                 }
             }, wraps);
-
             return makeSuccess(Broadcasts.POST_UPLOAD);
         }
     }
 
     public static class PostDeleter extends BroadcastSendingTask {
         private Post post;
-        LinkedList<Post> posts;
         private Wrap[] wraps;
 
-        public PostDeleter(Post post, LinkedList<Post> posts, Wrap... wraps) {
+        public PostDeleter(Post post, Wrap... wraps) {
             this.post = post;
             this.wraps = wraps;
-            this.posts = posts;
             Arrays.sort(wraps); // todo not good
         }
 
@@ -293,7 +281,7 @@ public final class Tasks {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    context.mainActivityPostsAdapter.cleanUp(success);
+                    Loudly.getPostHolder().cleanUp(success);
                 }
             });
 
@@ -434,9 +422,9 @@ public final class Tasks {
     @Deprecated
     public static class FixAttachmentsLinks extends AsyncTask<Object, Object, Object> {
         Post post;
-        MainActivityPostsAdapter adapter;
+        PostsAdapter adapter;
 
-        public FixAttachmentsLinks(Post post, MainActivityPostsAdapter adapter) {
+        public FixAttachmentsLinks(Post post, PostsAdapter adapter) {
             this.post = post;
             this.adapter = adapter;
         }
@@ -559,7 +547,7 @@ public final class Tasks {
                         MainActivity.executeOnUI(new UIAction<MainActivity>() {
                             @Override
                             public void execute(MainActivity context, Object... params) {
-                                context.mainActivityPostsAdapter.merge(result.first, result.second);
+                                Loudly.getPostHolder().merge(result.first, result.second);
                             }
                         });
 
@@ -571,7 +559,7 @@ public final class Tasks {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    context.mainActivityPostsAdapter.cleanUp(successfullyLoaded);
+                    Loudly.getPostHolder().cleanUp(successfullyLoaded);
                 }
             });
 

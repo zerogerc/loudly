@@ -20,6 +20,7 @@ import ly.loud.loudly.util.InvalidTokenException;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 
+// ToDo: It's totally not thread-safe
 public class GetInfoService extends IntentService {
     private static final String NAME = "GetInfoService";
     private static final int NOTIFICATION_ID = 0;
@@ -69,16 +70,16 @@ public class GetInfoService extends IntentService {
         }
 
         stopped = false;
-        if (MainActivity.posts.isEmpty()) {
+        if (Loudly.getPostHolder().getPosts().isEmpty()) {
             return;
         }
 
         summary = new Info();
         final LinkedList<Integer> success = new LinkedList<>();
 
-        Tasks.doAndWait(MainActivity.posts, new Tasks.ActionWithWrap<LinkedList<Post>, Pair<List<Pair<Post, Info>>, Integer>>() {
+        Tasks.doAndWait(Loudly.getPostHolder().getPosts(), new Tasks.ActionWithWrap<List<Post>, Pair<List<Pair<Post, Info>>, Integer>>() {
             @Override
-            public Pair<List<Pair<Post, Info>>, Integer> apply(LinkedList<Post> item, Wrap w) {
+            public Pair<List<Pair<Post, Info>>, Integer> apply(List<Post> item, Wrap w) {
                 ArrayList<Post> current = new ArrayList<>();
                 for (Post p : item) {
                     if (p.existsIn(w.networkID())) {
@@ -106,9 +107,7 @@ public class GetInfoService extends IntentService {
                     MainActivity.executeOnUI(new UIAction<MainActivity>() {
                         @Override
                         public void execute(MainActivity context, Object... params) {
-                            summary.add(context
-                                    .mainActivityPostsAdapter
-                                    .updateInfo(result.first, result.second));
+                            summary.add(Loudly.getPostHolder().updateInfo(result.first, result.second));
 
                             Intent message = BroadcastSendingTask.makeMessage(Broadcasts.POST_GET_INFO,
                                     Broadcasts.PROGRESS);
@@ -127,7 +126,7 @@ public class GetInfoService extends IntentService {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    context.mainActivityPostsAdapter.cleanUp(success);
+                    Loudly.getPostHolder().cleanUp(success);
                 }
             });
         }

@@ -182,7 +182,7 @@ public class PostCreateFragment extends DialogFragment {
                     }
                 }
 
-                Tasks.PostUploader uploader = new Tasks.PostUploader(post, MainActivity.posts,
+                Tasks.PostUploader uploader = new Tasks.PostUploader(post,
                         wraps.toArray(new Wrap[0]));
                 uploader.execute(post);
 

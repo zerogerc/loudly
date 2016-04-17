@@ -22,13 +22,11 @@ import android.view.MenuItem;
 import android.view.View;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.ui.adapter.SpacesItemDecoration;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
@@ -39,13 +37,12 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private final String TAG = "MAIN";
-    static LinkedList<Post> posts = new LinkedList<>();
     static boolean keysLoaded = false;
     static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
     static int aliveCopy = 0;
 
     RecyclerView recyclerView;
-    public MainActivityPostsAdapter mainActivityPostsAdapter;
+    public PostsAdapter postsAdapter;
     public FloatingActionButton floatingActionButton;
 
     static final int LOAD_POSTS_RECEIVER = 0;
@@ -105,7 +102,7 @@ public class MainActivity extends AppCompatActivity
 
         SplashFragment.showSplash(this);
 
-        setRecyclerView();
+        setRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
     }
 
     @Override
@@ -184,18 +181,14 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camara) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        if (id == R.id.nav_no_filter) {
+            setRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
+        } else if (id == R.id.nav_loudly) {
+            setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.LOUDLY, this));
+        } else if (id == R.id.nav_facebook) {
+            setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.FB, this));
+        } else if (id == R.id.nav_vk) {
+            setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.VK, this));
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -253,12 +246,14 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void setRecyclerView() {
+    private void setRecyclerView(PostsAdapter adapter) {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mainActivityPostsAdapter = new MainActivityPostsAdapter(posts, this);
+        postsAdapter = adapter;
+        Loudly.getPostHolder().setAdapter(postsAdapter);
+
         recyclerView.setHasFixedSize(true); /// HERE
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.setAdapter(mainActivityPostsAdapter);
+        recyclerView.setAdapter(postsAdapter);
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
         } else {
@@ -395,7 +390,7 @@ public class MainActivity extends AppCompatActivity
                             .show();
                     break;
                 case Broadcasts.LOADED:
-                    if (posts.size() == 0) {
+                    if (Loudly.getPostHolder().getPosts().isEmpty()) {
                         Snackbar.make(context.findViewById(R.id.fab),
                                 "You haven't upload any post yet",
                                 Snackbar.LENGTH_SHORT)

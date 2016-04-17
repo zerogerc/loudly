@@ -3,13 +3,15 @@ package ly.loud.loudly.base.says;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import ly.loud.loudly.base.Link;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 
-public class Say implements SingleNetwork, Comparable<Say> {
+public class Say implements SingleNetwork {
     // Main part
     protected String text;
     protected ArrayList<Attachment> attachments;
@@ -21,6 +23,45 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     // Likes, shares, comments
     protected Info info;
+
+    public static final Comparator<Say> COMPARATOR = new Comparator<Say>() {
+        @Override
+        public int compare(Say lhs, Say rhs) {
+            // Compare says by date
+            if (lhs.getDate() < rhs.getDate()) {
+                return -1;
+            }
+            if (lhs.getDate() > rhs.getDate()) {
+                return 1;
+            }
+            // If says have the same dates, check if they belongs to one network
+            SingleNetwork fst, snd;
+            if (lhs instanceof LoudlyPost) {
+                fst = lhs.getNetworkInstance(rhs.getNetwork());
+            } else {
+                fst = lhs;
+            }
+            if (rhs instanceof LoudlyPost) {
+                snd = rhs.getNetworkInstance(lhs.getNetwork());
+            } else {
+                snd = rhs;
+            }
+
+            if (fst != null && snd != null && fst.getLink() != null && snd.getLink() != null) {
+                return fst.getLink().compareTo(snd.getLink());
+            }
+            // If says are from different networks, compare by network ID
+            if (lhs.getNetwork() < rhs.getNetwork()) {
+                return -1;
+            }
+            if (lhs.getNetwork() > rhs.getNetwork()) {
+                return 1;
+            }
+            return 0;
+        }
+    };
+
+    public static final Comparator<Say> FEED_ORDER = Collections.reverseOrder(COMPARATOR);
 
     public Say() {
         text = null;
@@ -156,25 +197,12 @@ public class Say implements SingleNetwork, Comparable<Say> {
     }
 
     @Override
-    public int compareTo(@NonNull Say another) {
-        if (getDate() < another.getDate()) {
-            return -1;
-        }
-        if (getDate() > another.getDate()) {
-            return 1;
-        }
-        return 0;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (!(o instanceof Say)) {
             return false;
         }
-        Say say = (Say)o;
-        if (say.getLink() == null) {
-            return false;
-        }
-        return say.getLink().equals(getLink());
+
+        SingleNetwork say = ((Say)o).getNetworkInstance(getNetwork());
+        return say != null && getLink().equals(say.getLink());
     }
 }

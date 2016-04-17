@@ -31,9 +31,10 @@ public class Loudly extends Application {
     private TimeInterval timeInterval;
     private static int loadLast, getInfoInterval;
     private static ThreadPoolExecutor executor = null;
+    private static PostsHolder posts;
 
     private AlarmManager alarmManager;
-    PendingIntent getInfoService;
+    private PendingIntent getInfoService;
 
     /**
      * @param network ID of the network
@@ -59,6 +60,13 @@ public class Loudly extends Application {
      */
     public static Loudly getContext() {
         return context;
+    }
+
+    public static PostsHolder getPostHolder() {
+        if (posts == null) {
+            posts = new PostsHolder();
+        }
+        return posts;
     }
 
     // ToDo: make singleton
@@ -138,6 +146,6 @@ public class Loudly extends Application {
     public void onLowMemory() {
         super.onLowMemory();
         stopGetInfoService();
-        MainActivity.posts.clear();
+        posts.getPosts().clear();
     }
 }
