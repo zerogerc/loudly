@@ -1,6 +1,5 @@
 package ly.loud.loudly.ui;
 
-import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -35,8 +34,9 @@ import ly.loud.loudly.util.Utils;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private static final String TAG = "MAIN";
+    private static final String BUNDLE_RECYCLER_LAYOUT = "Recycler View State";
 
-    private final String TAG = "MAIN";
     static boolean keysLoaded = false;
     static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
     static int aliveCopy = 0;
@@ -87,19 +87,6 @@ public class MainActivity extends AppCompatActivity
     private void init() {
         self = this;
 
-        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-            @Override
-            public void onBackStackChanged() {
-                int count = getFragmentManager().getBackStackEntryCount();
-                if (count > 0) {
-                    floatingActionButton.setVisibility(View.INVISIBLE);
-                }
-                if (count == 0) {
-                    floatingActionButton.setVisibility(View.VISIBLE);
-                }
-            }
-        });
-
         SplashFragment.showSplash(this);
 
         setRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
@@ -130,6 +117,25 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         init();
+
+        if (savedInstanceState != null) {
+            int position = savedInstanceState.getInt(BUNDLE_RECYCLER_LAYOUT);
+            recyclerView.getLayoutManager().scrollToPosition(position);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        int position = 0;
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            position = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+        } else {
+            int[] positions = new int[2];
+            ((StaggeredGridLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPositions(positions);
+            position = positions[0];
+        }
+        outState.putInt(BUNDLE_RECYCLER_LAYOUT, position);
     }
 
     @Override
@@ -273,7 +279,7 @@ public class MainActivity extends AppCompatActivity
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
             receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
-        PostCreateFragment.showPostCreate(this);
+        PostCreateFragment.newInstance().show(getFragmentManager(), PostCreateFragment.TAG);
     }
 
     @Override

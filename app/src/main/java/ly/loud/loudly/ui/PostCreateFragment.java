@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,7 +14,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -31,26 +29,26 @@ import java.util.Date;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Tasks;
-import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LoudlyImage;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 
 
 public class PostCreateFragment extends DialogFragment {
-    private static String EDIT_TEXT = "EDIT_TEXT";
-    private static String TAG = "Post Create Fragment";
+    public static final String TAG = "Post Create Fragment";
+    private static final String CURRENT_IMAGE_URI = "image_uri";
+    private static final String POST_IMAGES_KEY = "post_images";
+
     private final static int PICK_PHOTO_FROM_GALLERY = 13;
     private final static int REQUEST_PHOTO_FROM_CAMERA = 52;
 
-    private EditText editText;
-    private ImageView postImageView;
-    private static Image postImage;
+    //TODO: try to avoid such style
+    protected static PostCreateFragment self;
 
     private View rootView;
+    private EditText editText;
+    private ImageView postImageView;
+    private ArrayList<Image> postImages;
 
     private Uri currentImageUri;
 
@@ -144,59 +142,17 @@ public class PostCreateFragment extends DialogFragment {
     }
 
     private void showNetworksChooseFragment() {
-        final NetworksChooseFragment fragment = new NetworksChooseFragment();
-
-        UIAction grayAction = new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                int network = ((int) params[0]);
-                if (Loudly.getContext().getKeyKeeper(network) == null)
-                    return;
-                fragment.setShouldPostTo(network, true);
-            }
-        };
-        UIAction colorAction = new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                int network = ((int) params[0]);
-                if (Loudly.getContext().getKeyKeeper(network) == null)
-                    return;
-                fragment.setShouldPostTo(network, false);
-            }
-        };
-        UIAction buttonAction = new UIAction() {
-            @Override
-            public void execute(Context context, Object... params) {
-                String text = editText.getText().toString();
-                LoudlyPost post = new LoudlyPost(text);
-                if (postImage != null) {
-                    post.addAttachment(postImage);
-                    postImage = null;
-                }
-
-                ArrayList<Wrap> wraps = new ArrayList<>();
-                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                    // ToDO: upload to only selected networks
-                    if (Loudly.getContext().getKeyKeeper(i) != null && fragment.shouldPost(i)) {
-                        wraps.add(Networks.makeWrap(i));
-                    }
-                }
-
-                Tasks.PostUploader uploader = new Tasks.PostUploader(post,
-                        wraps.toArray(new Wrap[0]));
-                uploader.execute(post);
-
-                dismiss();
-            }
-        };
-
-        fragment.setGrayItemClick(grayAction);
-        fragment.setColorItemsClick(colorAction);
-        fragment.setPostButtonClick(buttonAction);
-
+        NetworksChooseFragment fragment = NetworksChooseFragment.newInstance(editText.getText().toString(), postImages);
         fragment.show(getFragmentManager(), NetworksChooseFragment.TAG);
     }
 
+    public static PostCreateFragment newInstance() {
+        Bundle args = new Bundle();
+        args.putParcelableArrayList(POST_IMAGES_KEY, new ArrayList<Image>());
+        PostCreateFragment fragment = new PostCreateFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -217,55 +173,67 @@ public class PostCreateFragment extends DialogFragment {
                 }
         );
 
-        postImage = null;
-
-        setListeners();
+        if (getArguments() != null) {
+            currentImageUri = getArguments().getParcelable(CURRENT_IMAGE_URI);
+            postImages = getArguments().getParcelableArrayList(POST_IMAGES_KEY);
+        } else {
+            postImages = new ArrayList<>();
+        }
 
         builder.setView(rootView);
+
+
+        setListeners();
+        showImages();
 
         Dialog dialog = builder.create();
         dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
+        self = this;
         return dialog;
     }
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+//    @Override
+//    public void onActivityCreated(Bundle savedInstanceState) {
+//        super.onActivityCreated(savedInstanceState);
+//
+//        if (savedInstanceState != null) {
+//            editText.setText(savedInstanceState.getString(EDIT_TEXT));
+//        }
+//    }
 
-        if (savedInstanceState != null) {
-            editText.setText(savedInstanceState.getString(EDIT_TEXT));
-        }
-    }
-
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        if (hidden) {
-            Utils.hidePhoneKeyboard(getActivity());
-
-            postImageView.setImageBitmap(null);
-            editText.setText(null);
-        } else {
-            clearImageView();
-
-            InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-            imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-
-            LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
-            layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
-            editText.requestFocus();
-        }
-    }
+//    @Override
+//    public void onHiddenChanged(boolean hidden) {
+//        super.onHiddenChanged(hidden);
+//        if (hidden) {
+//            Utils.hidePhoneKeyboard(getActivity());
+//
+//            postImageView.setImageBitmap(null);
+//            editText.setText(null);
+//        } else {
+//            clearImageView();
+//
+//            InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+//            imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+//
+//            LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
+//            layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
+//            editText.requestFocus();
+//        }
+//    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        if (currentImageUri != null) {
+            outState.putParcelable(CURRENT_IMAGE_URI, currentImageUri);
+        }
+        outState.putParcelableArrayList(POST_IMAGES_KEY, postImages);
+
         super.onSaveInstanceState(outState);
-        outState.putString(EDIT_TEXT, editText.getText().toString());
     }
 
     private void deleteImage() {
-        if (postImage == null) {
+        if (postImages.size() == 0) {
             return;
         }
 
@@ -279,7 +247,7 @@ public class PostCreateFragment extends DialogFragment {
         layoutParams.setMargins(0, 0, 0, 0);
         layout.setLayoutParams(layoutParams);
         postImageView.setImageBitmap(null);
-        postImage = null;
+        postImages.clear();
     }
 
     private void clearImageView() {
@@ -306,6 +274,17 @@ public class PostCreateFragment extends DialogFragment {
         layout.setLayoutParams(layoutParams);
     }
 
+    private void showImages() {
+        if (postImages.size() == 0) {
+            return;
+        }
+        galleryAddPic();
+        prepareImageView();
+        Glide.with(Loudly.getContext()).load(postImages.get(0).getUri())
+                .fitCenter()
+                .into(postImageView);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -313,7 +292,7 @@ public class PostCreateFragment extends DialogFragment {
             if (data == null) {
                 Log.e("IMG_LOAD_TAG", "Data to received");
             } else {
-                postImage = new LoudlyImage(data.getData());
+                postImages.add(new LoudlyImage(data.getData()));
                 prepareImageView();
                 Glide.with(Loudly.getContext()).load(data.getData())
                         .fitCenter()
@@ -322,19 +301,8 @@ public class PostCreateFragment extends DialogFragment {
             }
         }
         if (requestCode == REQUEST_PHOTO_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
-            postImage = new LoudlyImage(currentImageUri);
-            galleryAddPic();
-            prepareImageView();
-            Glide.with(Loudly.getContext()).load(currentImageUri)
-                    .fitCenter()
-                    .into(postImageView);
-
+            postImages.add(new LoudlyImage(currentImageUri));
+            showImages();
         }
-    }
-
-    public static PostCreateFragment showPostCreate(Activity activity) {
-        PostCreateFragment newFragment = new PostCreateFragment();
-        newFragment.show(activity.getFragmentManager(), TAG);
-        return newFragment;
     }
 }

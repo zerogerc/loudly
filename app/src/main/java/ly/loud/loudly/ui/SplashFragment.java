@@ -1,34 +1,33 @@
 package ly.loud.loudly.ui;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.base.Authorizer;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.R;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
 
-public class SplashFragment extends Fragment {
+public class SplashFragment extends DialogFragment {
+    public static String TAG = "Splash";
+
     private View rootView;
     private ImageView image;
-    private TextView splashInfo;
     private WebView hiddenWebView;
 
     private int refreshIndex;
@@ -43,12 +42,15 @@ public class SplashFragment extends Fragment {
 
     private boolean noKeys, expiredKeys;
 
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.splash_fragment, container, false);
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        rootView = inflater.inflate(R.layout.splash_fragment, null);
+
         image = ((ImageView) rootView.findViewById(R.id.splash_logo));
-        splashInfo = (TextView) rootView.findViewById(R.id.splash_info);
         hiddenWebView = (WebView) rootView.findViewById(R.id.splash_web_view);
 
         hiddenWebView.setWebViewClient(new WebViewClient() {
@@ -62,27 +64,25 @@ public class SplashFragment extends Fragment {
                 return false;
             }
         });
-        return rootView;
+
+        builder.setView(rootView);
+
+        return builder.create();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //TODO: need testing
+        run();
     }
 
     private void loadURL() {
         hiddenWebView.loadUrl(currentAuthorizer.makeAuthQuery().toURL());
     }
 
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-    }
-
     private void finishSplash() {
-        getFragmentManager().popBackStack();
-    }
-
-    private static void show(Activity activity, SplashFragment fragment) {
-        FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
-        transaction.addToBackStack(null);
-        transaction.replace(R.id.fragment_container, fragment);
-        transaction.commit();
+        dismiss();
     }
 
     public static void showSplash(Activity activity) {
@@ -99,8 +99,7 @@ public class SplashFragment extends Fragment {
             }
         }
         if (newFragment.noKeys || newFragment.expiredKeys) {
-            show(activity, newFragment);
-            newFragment.run();
+            newFragment.show(activity.getFragmentManager(), TAG);
         }
     }
 
@@ -134,7 +133,7 @@ public class SplashFragment extends Fragment {
 
         fragment.refreshIndex = 0;
         int network = fragment.refreshTokens.get(0);
-        fragment.splashInfo.setText("Login into " + Networks.nameOfNetwork(network));
+//        fragment.splashInfo.setText("Login into " + Networks.nameOfNetwork(network));
         fragment.refreshToken = new UIAction() {
             @Override
             public void execute(Context context, Object... params) {
@@ -167,7 +166,7 @@ public class SplashFragment extends Fragment {
                     if (network == Networks.LOUDLY) {
                         MainActivity.keysLoaded = true;
                         fragment.loadKeysReceiver = null;
-                        fragment.splashInfo.setText("Loaded");
+//                        fragment.splashInfo.setText("Loaded");
                         fragment.refreshTokens(fragment);
                         return;
                     }
@@ -175,13 +174,13 @@ public class SplashFragment extends Fragment {
                         needFinish = true;
                         MainActivity.loadPosts();
                     }
-                    fragment.splashInfo.setText("Login into " + Networks.nameOfNetwork(network));
+//                    fragment.splashInfo.setText("Login into " + Networks.nameOfNetwork(network));
 
                     Networks.makeAuthorizer(network).createAsyncTask(context, fragment.refreshToken);
                     fragment.refreshIndex++;
                     break;
                 case Broadcasts.AUTH_FAIL:
-                    fragment.splashInfo.setText("Can't login to " + Networks.nameOfNetwork(network));
+//                    fragment.splashInfo.setText("Can't login to " + Networks.nameOfNetwork(network));
                     needFinish = true;
                     break;
             }

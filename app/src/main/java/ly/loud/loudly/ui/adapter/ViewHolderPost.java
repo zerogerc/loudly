@@ -198,7 +198,7 @@ public class ViewHolderPost extends ViewHolder<Post> {
         int imageWidth = Utils.getDefaultScreenWidth();
         //TODO: remove
         if (Loudly.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            imageWidth= Utils.getDefaultScreenHeight() / 2;
+            imageWidth /= 2;
         }
         float scale = ((float) imageWidth) / ((float) width);
         int imageHeight = (int) (height * scale);

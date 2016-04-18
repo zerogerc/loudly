@@ -5,6 +5,15 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Pair;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
@@ -14,11 +23,12 @@ import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PostsAdapter;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
-import ly.loud.loudly.util.*;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import ly.loud.loudly.util.BackgroundAction;
+import ly.loud.loudly.util.BroadcastSendingTask;
+import ly.loud.loudly.util.Broadcasts;
+import ly.loud.loudly.util.InvalidTokenException;
+import ly.loud.loudly.util.TimeInterval;
+import ly.loud.loudly.util.UIAction;
 
 /**
  * Class made for storing different asynchronous tasks
@@ -214,10 +224,15 @@ public final class Tasks {
                 }
             }, new ActionWithResult<Integer>() {
                 @Override
-                public void apply(Integer result) {
+                public void apply(final Integer result) {
                     if (result != null) {
-                        Loudly.getPostHolder().merge(Collections.singletonList((Post)post.getNetworkInstance(result)),
-                                result);
+                        MainActivity.executeOnUI(new UIAction<MainActivity>() {
+                            @Override
+                            public void execute(MainActivity context, Object... params) {
+                                Loudly.getPostHolder().merge(Collections.singletonList((Post) post.getNetworkInstance(result)),
+                                        result);
+                            }
+                        });
                         Intent message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, result);
                         publishProgress(message);

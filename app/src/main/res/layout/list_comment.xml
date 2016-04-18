@@ -2,7 +2,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     >
 
     <RelativeLayout
@@ -92,7 +92,7 @@
                 android:layout_toStartOf="@id/comment_likes_button"
                 android:layout_centerVertical="true"
                 android:text="11.12.2015 around 2 hours"
-                android:textColor="@color/grey_blue"/>
+                android:textColor="@color/grey_color"/>
 
         </RelativeLayout>
     </RelativeLayout>
