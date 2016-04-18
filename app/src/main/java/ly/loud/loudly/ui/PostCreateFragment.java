@@ -190,37 +190,9 @@ public class PostCreateFragment extends DialogFragment {
         dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         self = this;
+
         return dialog;
     }
-
-//    @Override
-//    public void onActivityCreated(Bundle savedInstanceState) {
-//        super.onActivityCreated(savedInstanceState);
-//
-//        if (savedInstanceState != null) {
-//            editText.setText(savedInstanceState.getString(EDIT_TEXT));
-//        }
-//    }
-
-//    @Override
-//    public void onHiddenChanged(boolean hidden) {
-//        super.onHiddenChanged(hidden);
-//        if (hidden) {
-//            Utils.hidePhoneKeyboard(getActivity());
-//
-//            postImageView.setImageBitmap(null);
-//            editText.setText(null);
-//        } else {
-//            clearImageView();
-//
-//            InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-//            imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-//
-//            LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
-//            layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
-//            editText.requestFocus();
-//        }
-//    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {

@@ -92,15 +92,10 @@ public class NetworksChooseFragment extends DialogFragment {
                         wraps.toArray(new Wrap[0]));
                 uploader.execute(post);
 
+                PostCreateFragment.self.dismiss();
                 dismiss();
             }
         });
-    }
-
-    @Override
-    public void onDetach() {
-        PostCreateFragment.self.dismiss();
-        super.onDetach();
     }
 
     @Override
@@ -158,6 +153,4 @@ public class NetworksChooseFragment extends DialogFragment {
         outState.putString(POST_TEXT_KEY, postText);
         outState.putParcelableArrayList(POST_IMAGES_KEY, postImages);
     }
-
-
 }
