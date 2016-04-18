@@ -34,21 +34,9 @@ public class Say implements SingleNetwork {
             if (lhs.getDate() > rhs.getDate()) {
                 return 1;
             }
-            // If says have the same dates, check if they belongs to one network
-            SingleNetwork fst, snd;
-            if (lhs instanceof LoudlyPost) {
-                fst = lhs.getNetworkInstance(rhs.getNetwork());
-            } else {
-                fst = lhs;
-            }
-            if (rhs instanceof LoudlyPost) {
-                snd = rhs.getNetworkInstance(lhs.getNetwork());
-            } else {
-                snd = rhs;
-            }
 
-            if (fst != null && snd != null && fst.getLink() != null && snd.getLink() != null) {
-                return fst.getLink().compareTo(snd.getLink());
+            if (lhs.getNetwork() == rhs.getNetwork()) {
+                return lhs.getLink().compareTo(rhs.getLink());
             }
             // If says are from different networks, compare by network ID
             if (lhs.getNetwork() < rhs.getNetwork()) {
@@ -111,7 +99,7 @@ public class Say implements SingleNetwork {
 
     @Override
     public SingleNetwork getNetworkInstance(int network) {
-        if (network == this.network) {
+        if (network == this.network && link != null) {
             return this;
         }
         return null;
@@ -201,7 +189,9 @@ public class Say implements SingleNetwork {
         if (!(o instanceof Say)) {
             return false;
         }
-
+        if (this == o) {
+            return true;
+        }
         SingleNetwork say = ((Say)o).getNetworkInstance(getNetwork());
         return say != null && getLink().equals(say.getLink());
     }

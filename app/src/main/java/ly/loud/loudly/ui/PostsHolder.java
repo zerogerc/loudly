@@ -19,10 +19,12 @@ import java.util.*;
  */
 public class PostsHolder {
     private List<Post> posts;
+    private Map<Pair<Integer, String>, LoudlyPost> hiddenPosts;
     private ModifiableAdapter<Post> adapter;
 
     public PostsHolder() {
         this.posts = new ArrayList<>();
+        hiddenPosts = new HashMap<>();
     }
 
     public List<Post> getPosts() {
@@ -75,54 +77,39 @@ public class PostsHolder {
         return new Pair<>(result, added);
     }
 
-    private void addWithoutDuplicates(List<Post> from, List<Post> dest) {
-        Set<String> links = new HashSet<>();
+    private void addLinks(List<? extends Post> posts) {
+        for (Post p : posts) {
+            LoudlyPost loudlyPost = (LoudlyPost)p;
+            for (int i = 1; i < Networks.NETWORK_COUNT; i++) {
+                if (loudlyPost.getLink(i) != null) {
+                    hiddenPosts.put(new Pair<>(i, loudlyPost.getLink(i).get()), loudlyPost);
+                }
+            }
+        }
+    }
+
+    private void addWithoutDuplicates(List<? extends Post> from, List<Post> dest) {
         for (Post p : from) {
             if (p instanceof LoudlyPost) {
                 dest.add(p);
-                LoudlyPost loudlyPost = (LoudlyPost) p;
-                for (int i = 1; i < Networks.NETWORK_COUNT; i++) {
-                    if (loudlyPost.getLink(i) != null) {
-                        links.add(loudlyPost.getLink(i).get());
-                    }
-                }
             } else {
-                if (!links.contains(p.getLink().get())) {
+                LoudlyPost found = hiddenPosts.get(new Pair<>(p.getNetwork(), p.getLink().get()));
+                if (found == null) {
                     dest.add(p);
+                } else {
+                    found.getLink().setValid(true);
+                    found.getLink(p.getNetwork()).setValid(true);
+                    found.setInfo(p.getNetwork(), p.getInfo());
                 }
             }
         }
     }
 
     public void merge(List<? extends Post> newPosts, final int network) {
-        Pair<List<Post>, List<Post>> merged = merge(posts, newPosts, new Comparator<Post>() {
-            @Override
-            public int compare(Post lhs, Post rhs) {
-                int comparison = Say.FEED_ORDER.compare(lhs, rhs);
-                // Make links valid
-                SingleNetwork left = lhs.getNetworkInstance(network);
-                SingleNetwork right = rhs.getNetworkInstance(network);
-                if (comparison == 0 && left != null && right != null) {
-                    left.getLink().setValid(true);
-                    right.getLink().setValid(true);
-                    // Show LoudlyPost instead of post for networks
-                    if (lhs instanceof LoudlyPost) {
-                        LoudlyPost loudlyPost = (LoudlyPost) lhs;
-                        loudlyPost.getLink(Networks.LOUDLY).setValid(true);
-                        loudlyPost.setInfo(network, rhs.getInfo());
-                        return -1;
-                    }
-                    if (rhs instanceof LoudlyPost) {
-                        LoudlyPost loudlyPost = (LoudlyPost) rhs;
-                        loudlyPost.getLink(Networks.LOUDLY).setValid(true);
-                        loudlyPost.setInfo(network, lhs.getInfo());
-                        return 1;
-                    }
-                    return 0;
-                }
-                return comparison;
-            }
-        });
+        if (network == Networks.LOUDLY) {
+            addLinks(newPosts);
+        }
+        Pair<List<Post>, List<Post>> merged = merge(posts, newPosts, Say.FEED_ORDER);
         posts.clear();
         addWithoutDuplicates(merged.first, posts);
         adapter.insert(merged.second);
@@ -137,7 +124,6 @@ public class PostsHolder {
      * @param networks list of wraps, from where posts were loaded
      */
     public void cleanUp(List<Integer> networks) {
-        Log.e("TAG", "clean");
         ArrayList<Integer> notLoaded = new ArrayList<>();
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (!(networks.contains(i))) {
@@ -155,9 +141,16 @@ public class PostsHolder {
             boolean valid = false;
             for (int id : networks) {
                 SingleNetwork instance = post.getNetworkInstance(id);
-                if (instance != null && post.getNetworkInstance(id).exists()) {
-                    valid = true;
-                    break;
+                if (instance != null) {
+                    if (instance.exists()) {
+                        valid = true;
+                    }
+                    if (instance.getLink() != null && !instance.getLink().isValid()) {
+                        instance.setLink(null);
+                        if (!deleted.contains(post)) {
+                            deleted.add(post);
+                        }
+                    }
                 }
             }
             if (!valid) {
@@ -173,8 +166,9 @@ public class PostsHolder {
 
                 // If post doesn't exist in any network
                 if (!existsSomewhere) {
-                    deleted.add(post);
-
+                    if (!deleted.contains(post)) {
+                        deleted.add(post);
+                    }
                     // Hide post
                     iterator.remove();
                     if (post instanceof LoudlyPost) {

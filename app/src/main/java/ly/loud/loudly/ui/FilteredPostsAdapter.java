@@ -1,6 +1,7 @@
 package ly.loud.loudly.ui;
 
 import com.android.internal.util.Predicate;
+import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.util.FilteredListView;
 
@@ -17,14 +18,16 @@ public class FilteredPostsAdapter extends PostsAdapter {
         super(new FilteredListView<>(posts, new Predicate<Post>(){
             @Override
             public boolean apply(Post post) {
-                return post.getNetworkInstance(networkFilter) != null;
+                SingleNetwork network = post.getNetworkInstance(networkFilter);
+                return network != null;
             }
         }), activity);
         network = networkFilter;
         predicate = new Predicate<Post>() {
             @Override
             public boolean apply(Post post) {
-                return post.getNetworkInstance(networkFilter) != null;
+                SingleNetwork network = post.getNetworkInstance(networkFilter);
+                return network != null;
             }
         };
     }
@@ -46,6 +49,6 @@ public class FilteredPostsAdapter extends PostsAdapter {
 
     @Override
     public void delete(List<? extends Post> deleted) {
-        super.delete(new FilteredListView<>(deleted, predicate));
+        super.delete(deleted);
     }
 }

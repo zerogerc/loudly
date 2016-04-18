@@ -17,7 +17,7 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     /**
      * Proxy class that allows thread-safer work with LoudlyPost
      */
-    private class LoudlyPostProxy extends Post {
+    private static class LoudlyPostProxy extends Post {
         private LoudlyPost parent;
 
         LoudlyPostProxy(LoudlyPost parent, int network) {
@@ -184,7 +184,10 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         if (network == Networks.LOUDLY) {
             return this;
         }
-        return new LoudlyPostProxy(this, network);
+        if (links[network] != null) {
+            return new LoudlyPostProxy(this, network);
+        }
+        return null;
     }
 
     public Link[] getLinks() {
@@ -194,6 +197,11 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     @Override
     public Link getLink(int network) {
         return links[network];
+    }
+
+    @Override
+    public Link getLink() {
+        return links[Networks.LOUDLY];
     }
 
     @Override

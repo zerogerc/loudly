@@ -4,22 +4,20 @@ import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
-
-import java.util.*;
-
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.says.Say;
+import ly.loud.loudly.R;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.R;
+import ly.loud.loudly.base.says.Say;
 import ly.loud.loudly.ui.adapter.BaseAdapter;
 import ly.loud.loudly.ui.adapter.ModifiableAdapter;
 import ly.loud.loudly.ui.adapter.ViewHolder;
 import ly.loud.loudly.ui.adapter.ViewHolderPost;
 import ly.loud.loudly.util.Utils;
+
+import java.util.Comparator;
+import java.util.List;
 
 public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements ModifiableAdapter<Post> {
     private int lastPosition = -1;
@@ -37,8 +35,8 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
         final Post post = getPost(position);
 
         if (holder instanceof ViewHolderPost) {
-            ViewHolderPost postHolder = (ViewHolderPost)holder;
-            
+            ViewHolderPost postHolder = (ViewHolderPost) holder;
+
             postHolder.setLikesOnClick(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -107,7 +105,6 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
 //            viewToAnimate.startAnimation(animation);
             animator.start();
             lastPosition = position;
-            Log.e("POS", Integer.toString(lastPosition));
         }
     }
 
@@ -134,14 +131,16 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
 
     @Override
     public void insert(List<? extends Post> inserted) {
-        for (Post p : inserted) {
-            int pos = linearSearch(items, p, Say.FEED_ORDER);
-            if (pos < items.size() - 1) {
-                notifyItemInserted(pos);
-            } else {
-                notifyDataSetChanged();
-            }
-        }
+        notifyDataSetChanged();
+        // ToDo: Commented code doesn't work because of internal error of RecyclerView. Maybe it can be fixed
+//        for (Post p : inserted) {
+//            int pos = linearSearch(items, p, Say.FEED_ORDER);
+//            if (pos < items.size() - 1) {
+//                notifyItemInserted(pos);
+//            } else {
+//                notifyDataSetChanged();
+//            }
+//        }
     }
 
     @Override

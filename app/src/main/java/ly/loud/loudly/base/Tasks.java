@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
+import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.ui.MainActivity;
@@ -183,6 +184,10 @@ public final class Tasks {
             });
 
             publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED));
+
+            for (Wrap w : wraps) {
+                ((LoudlyPost)post).setLink(w.networkID(), new Link());
+            }
 
             doAndWait(post, new ActionWithWrap<Post, Integer>() {
                 @Override
