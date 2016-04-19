@@ -83,7 +83,6 @@ public class NetworksChooseFragment extends DialogFragment {
 
                 ArrayList<Wrap> wraps = new ArrayList<>();
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                    // ToDO: upload to only selected networks
                     if (Loudly.getContext().getKeyKeeper(i) != null && shouldPost[i]) {
                         wraps.add(Networks.makeWrap(i));
                     }
@@ -115,11 +114,15 @@ public class NetworksChooseFragment extends DialogFragment {
 
         iconsHolder.prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
 
-        if (shouldPost == null) {
+        if (savedInstanceState == null) {
             shouldPost = new boolean[Networks.NETWORK_COUNT];
             for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
                 shouldPost[i] = true;
             }
+        }
+
+        for (int i = 0; i < shouldPost.length; i++) {
+            setShouldPostTo(i, shouldPost[i]);
         }
 
         postText = getArguments().getString(POST_TEXT_KEY);
@@ -159,7 +162,6 @@ public class NetworksChooseFragment extends DialogFragment {
 
     @Override
     public void onDismiss(DialogInterface dialog) {
-        shouldPost = null;
         super.onDismiss(dialog);
     }
 }

@@ -129,6 +129,7 @@ public class IconsHolder extends View {
 
         int cur_w = margin;
         int cur_h = marginTopBottom;
+        int picNumber = 0;
         for (int network = 0; network < Networks.NETWORK_COUNT; network++) {
             if (!available[network]) continue;
             Bitmap bitmap = null;
@@ -143,10 +144,11 @@ public class IconsHolder extends View {
             canvas.drawBitmap(bitmap, cur_w, cur_h, null);
 
             cur_w += iconWidth + margin;
-            if ((columns != 0) && ((network + 1) % columns == 0)) {
+            if ((columns != 0) && ((picNumber + 1) % columns == 0)) {
                 cur_h += iconHeight + margin;
                 cur_w = margin;
             }
+            picNumber++;
         }
     }
 
