@@ -1,6 +1,6 @@
 package ly.loud.loudly.base.says;
 
-import android.support.annotation.NonNull;
+import android.os.Parcel;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,6 +82,16 @@ public class Say implements SingleNetwork {
         this.network = network;
         this.info = new Info();
         this.link = link;
+    }
+
+    public Say(Parcel source) {
+        text = source.readString();
+        //TODO: check this
+        attachments = source.readArrayList(Image.class.getClassLoader());
+        date = source.readLong();
+        network = source.readInt();
+        link = source.readParcelable(Link.class.getClassLoader());
+        info = source.readParcelable(Info.class.getClassLoader());
     }
 
     // Methods from SingleNetwork
@@ -195,4 +205,31 @@ public class Say implements SingleNetwork {
         SingleNetwork say = ((Say)o).getNetworkInstance(getNetwork());
         return say != null && getLink().equals(say.getLink());
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(text);
+        dest.writeList(attachments);
+        dest.writeLong(date);
+        dest.writeInt(network);
+        dest.writeParcelable(link, flags);
+        dest.writeParcelable(info, flags);
+    }
+
+    public static final Creator<Say> CREATOR = new Creator<Say>() {
+        @Override
+        public Say createFromParcel(Parcel source) {
+            return new Say(source);
+        }
+
+        @Override
+        public Say[] newArray(int size) {
+            return new Say[size];
+        }
+    };
 }

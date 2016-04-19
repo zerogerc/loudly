@@ -4,7 +4,6 @@ import android.database.Cursor;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Parcel;
-import android.os.Parcelable;
 import android.provider.OpenableColumns;
 
 import java.io.File;
@@ -26,6 +25,141 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
     private Info[] infos;
 
     private Uri internalLink;
+
+    public LoudlyImage() {
+        super();
+        ids = new Link[Networks.NETWORK_COUNT];
+        infos = new Info[Networks.NETWORK_COUNT];
+    }
+
+    public LoudlyImage(String externalLink, Link[] ids) {
+        internalLink = null;
+        this.externalLink = externalLink;
+        this.ids = ids;
+        this.infos = new Info[Networks.NETWORK_COUNT];
+    }
+
+    public LoudlyImage(Uri internalLink) {
+        this();
+        this.internalLink = internalLink;
+    }
+
+    public LoudlyImage(Parcel source) {
+        super(source);
+        source.readTypedArray(ids, Link.CREATOR);
+        source.readTypedArray(infos, Info.CREATOR);
+        internalLink = source.readParcelable(Uri.class.getClassLoader());
+    }
+
+    public void deleteInternalLink() {
+        this.internalLink = null;
+    }
+
+    public boolean isLocal() {
+        return externalLink == null;
+    }
+
+    @Override
+    public SingleNetwork getNetworkInstance(int network) {
+        if (network == Networks.LOUDLY) {
+            return this;
+        }
+        return new LoudlyImageProxy(this, network);
+    }
+
+    @Override
+    public boolean exists() {
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (existsIn(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean existsIn(int network) {
+        return ids[network] != null && ids[network].isValid();
+    }
+
+    @Override
+    public Link getLink(int network) {
+        return ids[network];
+    }
+
+    @Override
+    public void setLink(int network, Link link) {
+        ids[network] = link;
+        if (link == null) {
+            setInfo(network, new Info());
+        }
+    }
+
+    @Override
+    public Link[] getLinks() {
+        return ids;
+    }
+
+    @Override
+    public Info getInfo(int network) {
+        return infos[network];
+    }
+
+    @Override
+    public void setInfo(int network, Info info) {
+        infos[network] = info;
+        infos[Networks.LOUDLY] = new Info();
+
+        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            if (infos[i] != null) {
+                infos[Networks.LOUDLY].add(infos[i]);
+            }
+        }
+    }
+
+    @Override
+    public Uri getUri() {
+        if (internalLink != null) {
+            return internalLink;
+        } else {
+            return Uri.parse(externalLink);
+        }
+    }
+
+    @Override
+    public String getMIMEType() {
+        String type = Loudly.getContext().getContentResolver().getType(internalLink);
+        if (type == null) {
+            File file = new File(internalLink.toString());
+            type = URLConnection.guessContentTypeFromName(file.getName());
+        }
+        return type;
+    }
+
+    @Override
+    public InputStream getContent() throws IOException {
+        InputStream stream = Loudly.getContext().getContentResolver().openInputStream(internalLink);
+        if (stream == null) {
+            File file = new File(internalLink.toString());
+            stream = new FileInputStream(file);
+        }
+        return stream;
+    }
+
+    @Override
+    public long getFileSize() throws IOException {
+        Cursor cursor = null;
+        try {
+            cursor = Loudly.getContext().getContentResolver().query(internalLink, null, null, null, null);
+            if (cursor == null) {
+                return new File(internalLink.toString()).length();
+            }
+            cursor.moveToFirst();
+            return cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE));
+        } finally {
+            Utils.closeQuietly(cursor);
+        }
+    }
 
     private static class LoudlyImageProxy extends Image implements LocalFile {
         LoudlyImage parent;
@@ -141,165 +275,28 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
         }
     }
 
-    public LoudlyImage() {
-        super();
-        ids = new Link[Networks.NETWORK_COUNT];
-        infos = new Info[Networks.NETWORK_COUNT];
-    }
-
-    public LoudlyImage(String externalLink, Link[] ids) {
-        internalLink = null;
-        this.externalLink = externalLink;
-        this.ids = ids;
-        this.infos = new Info[Networks.NETWORK_COUNT];
-    }
-
-    public LoudlyImage(Uri internalLink) {
-        this();
-        this.internalLink = internalLink;
-    }
-
-    public LoudlyImage(Parcel source) {
-        externalLink = source.readString();
-        size = source.readParcelable(Point.class.getClassLoader());
-        info = source.readParcelable(Info.class.getClassLoader());
-        network = source.readInt();
-        id = source.readParcelable(Link.class.getClassLoader());
-    }
-
-    public void deleteInternalLink() {
-        this.internalLink = null;
-    }
-
-    public boolean isLocal() {
-        return externalLink == null;
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     @Override
-    public SingleNetwork getNetworkInstance(int network) {
-        if (network == Networks.LOUDLY) {
-            return this;
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeTypedArray(ids, flags);
+        dest.writeTypedArray(infos, flags);
+        dest.writeParcelable(internalLink, flags);
+    }
+
+    public static final Creator<LoudlyImage> CREATOR = new Creator<LoudlyImage>() {
+        @Override
+        public LoudlyImage createFromParcel(Parcel source) {
+            return new LoudlyImage(source);
         }
-        return new LoudlyImageProxy(this, network);
-    }
 
-    @Override
-    public boolean exists() {
-        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            if (existsIn(i)) {
-                return true;
-            }
+        @Override
+        public LoudlyImage[] newArray(int size) {
+            return new LoudlyImage[size];
         }
-        return false;
-    }
-
-    @Override
-    public boolean existsIn(int network) {
-        return ids[network] != null && ids[network].isValid();
-    }
-
-    @Override
-    public Link getLink(int network) {
-        return ids[network];
-    }
-
-    @Override
-    public void setLink(int network, Link link) {
-        ids[network] = link;
-        if (link == null) {
-            setInfo(network, new Info());
-        }
-    }
-
-    @Override
-    public Link[] getLinks() {
-        return ids;
-    }
-
-    @Override
-    public Info getInfo(int network) {
-        return infos[network];
-    }
-
-    @Override
-    public void setInfo(int network, Info info) {
-        infos[network] = info;
-        infos[Networks.LOUDLY] = new Info();
-
-        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            if (infos[i] != null) {
-                infos[Networks.LOUDLY].add(infos[i]);
-            }
-        }
-    }
-
-    @Override
-    public Uri getUri() {
-        if (internalLink != null) {
-            return internalLink;
-        } else {
-            return Uri.parse(externalLink);
-        }
-    }
-
-    @Override
-    public String getMIMEType() {
-        String type = Loudly.getContext().getContentResolver().getType(internalLink);
-        if (type == null) {
-            File file = new File(internalLink.toString());
-            type = URLConnection.guessContentTypeFromName(file.getName());
-        }
-        return type;
-    }
-
-    @Override
-    public InputStream getContent() throws IOException {
-        InputStream stream = Loudly.getContext().getContentResolver().openInputStream(internalLink);
-        if (stream == null) {
-            File file = new File(internalLink.toString());
-            stream = new FileInputStream(file);
-        }
-        return stream;
-    }
-
-    @Override
-    public long getFileSize() throws IOException {
-        Cursor cursor = null;
-        try {
-            cursor = Loudly.getContext().getContentResolver().query(internalLink, null, null, null, null);
-            if (cursor == null) {
-                return new File(internalLink.toString()).length();
-            }
-            cursor.moveToFirst();
-            return cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE));
-        } finally {
-            Utils.closeQuietly(cursor);
-        }
-    }
-
-//    @Override
-//    public int describeContents() {
-//        return 0;
-//    }
-//
-//    @Override
-//    public void writeToParcel(Parcel dest, int flags) {
-//        dest.writeString(externalLink);
-//        dest.writeParcelable(size, 0);
-//        dest.writeParcelable(info, 0);
-//        dest.writeInt(network);
-//        dest.writeParcelable(id, 0);
-//    }
-//
-//    public static final Creator<Image> CREATOR = new Creator<Image>() {
-//        @Override
-//        public Image createFromParcel(Parcel source) {
-//            return new Image(source);
-//        }
-//
-//        @Override
-//        public Image[] newArray(int size) {
-//            return new Image[size];
-//        }
-//    };
+    };
 }

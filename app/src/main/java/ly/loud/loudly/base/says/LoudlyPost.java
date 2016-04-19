@@ -1,11 +1,16 @@
 package ly.loud.loudly.base.says;
 
-import android.support.annotation.NonNull;
-import ly.loud.loudly.base.*;
-import ly.loud.loudly.base.attachments.Attachment;
+import android.os.Parcel;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import ly.loud.loudly.base.Link;
+import ly.loud.loudly.base.Location;
+import ly.loud.loudly.base.MultipleNetwork;
+import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.base.attachments.Attachment;
 
 /**
  * Сlass that stores text and attachments to post.
@@ -179,6 +184,12 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         super(text, date, location, 0, null);
     }
 
+    public LoudlyPost(Parcel source) {
+        super(source);
+        source.readTypedArray(links, Link.CREATOR);
+        source.readTypedArray(infos, Info.CREATOR);
+    }
+
     @Override
     public SingleNetwork getNetworkInstance(int network) {
         if (network == Networks.LOUDLY) {
@@ -281,4 +292,29 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         Post post = (Post) o;
         return links[post.getNetwork()] != null && links[post.getNetwork()].equals(post.getLink());
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeTypedArray(links, flags);
+        dest.writeTypedArray(infos, flags);
+    }
+
+    public static final Creator<LoudlyPost> CREATOR = new Creator<LoudlyPost>() {
+        @Override
+        public LoudlyPost createFromParcel(Parcel source) {
+            return new LoudlyPost(source);
+        }
+
+        @Override
+        public LoudlyPost[] newArray(int size) {
+            return new LoudlyPost[size];
+        }
+    };
+
 }

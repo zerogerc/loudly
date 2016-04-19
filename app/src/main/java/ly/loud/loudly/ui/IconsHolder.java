@@ -120,7 +120,6 @@ public class IconsHolder extends View {
         margin = (parentWidth - (iconWidth) * columns) / (columns + 1);
         marginTopBottom = Utils.dpToPx(8);
 
-
         setMeasuredDimension(parentWidth, iconHeight * rows + margin * (rows - 1) + marginTopBottom * 2);
     }
 

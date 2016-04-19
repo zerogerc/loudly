@@ -1,16 +1,15 @@
 package ly.loud.loudly.base;
 
-import android.graphics.Bitmap;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import ly.loud.loudly.ui.adapter.Item;
 
-public class Person implements Item {
+public class Person implements Item, Parcelable {
     private String firstName, lastName;
     private String photoUrl;
     private int network;
     private String id;
-
-    private Bitmap littlePhoto;
 
     public Person() {
         this.firstName = null;
@@ -24,6 +23,14 @@ public class Person implements Item {
         this.lastName = lastName;
         this.photoUrl = photoUrl;
         this.network = network;
+    }
+
+    public Person(Parcel source) {
+        firstName = source.readString();
+        lastName = source.readString();
+        photoUrl = source.readString();
+        network = source.readInt();
+        id = source.readString();
     }
 
     public String getId() {
@@ -62,16 +69,34 @@ public class Person implements Item {
         return network;
     }
 
-    public Bitmap getLittlePhoto() {
-        return littlePhoto;
-    }
-
-    public void setLittlePhoto(Bitmap littlePhoto) {
-        this.littlePhoto = littlePhoto;
-    }
-
     @Override
     public int getType() {
         return Item.PERSON;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(firstName);
+        dest.writeString(lastName);
+        dest.writeString(photoUrl);
+        dest.writeInt(network);
+        dest.writeString(id);
+    }
+
+    public static final Creator<Person> CREATOR = new Creator<Person>() {
+        @Override
+        public Person createFromParcel(Parcel source) {
+            return new Person(source);
+        }
+
+        @Override
+        public Person[] newArray(int size) {
+            return new Person[size];
+        }
+    };
 }

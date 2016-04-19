@@ -1,6 +1,7 @@
 package ly.loud.loudly.ui.adapter;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.support.v4.content.ContextCompat;
@@ -24,6 +25,7 @@ import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.ui.FullPostInfo;
 import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.util.Utils;
 
@@ -76,6 +78,15 @@ public class ViewHolderPost extends ViewHolder<Post> {
         text.setText(post.getText());
 //        data.setText(Utils.getDateFormatted(post.getDate()));
         data.setText(Long.toString(post.getDate()));
+
+        itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), FullPostInfo.class);
+                intent.putExtra(FullPostInfo.POST_KEY, post);
+                getActivity().startActivity(intent);
+            }
+        });
         loadPictures(post);
         handleButtons(post);
     }

@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -114,9 +115,11 @@ public class NetworksChooseFragment extends DialogFragment {
 
         iconsHolder.prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
 
-        shouldPost = new boolean[Networks.NETWORK_COUNT];
-        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            shouldPost[i] = true;
+        if (shouldPost == null) {
+            shouldPost = new boolean[Networks.NETWORK_COUNT];
+            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                shouldPost[i] = true;
+            }
         }
 
         postText = getArguments().getString(POST_TEXT_KEY);
@@ -152,5 +155,11 @@ public class NetworksChooseFragment extends DialogFragment {
 
         outState.putString(POST_TEXT_KEY, postText);
         outState.putParcelableArrayList(POST_IMAGES_KEY, postImages);
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        shouldPost = null;
+        super.onDismiss(dialog);
     }
 }
