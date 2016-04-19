@@ -227,10 +227,9 @@ public class FacebookWrap extends Wrap {
 
         ObjectParser imageParser = makePhotoParser();
 
-        ArrayParser attachmentsParser = new ArrayParser(-1,
-                new ObjectParser()
+        ObjectParser attachmentParser = new ObjectParser()
                         .parseObject("media",
-                                new ObjectParser().parseObject("image", imageParser)));
+                                new ObjectParser().parseObject("image", imageParser));
 
         ObjectParser postParser = new ObjectParser()
                 .parseString("message")
@@ -240,10 +239,10 @@ public class FacebookWrap extends Wrap {
                 .parseObject("likes", makeLikesOrCommentParser())
                 .parseObject("comments", makeLikesOrCommentParser())
                 .parseObject("attachments", new ObjectParser()
-                        .parseArray("data", attachmentsParser));
+                        .parseArray("data", attachmentParser));
 
         ObjectParser responseParser = new ObjectParser()
-                .parseArray("data", new ArrayParser(-1, postParser));
+                .parseArray("data", postParser);
 
         ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
                 .getArray();
@@ -257,7 +256,7 @@ public class FacebookWrap extends Wrap {
             int shares = postParser.getObject().getInt(0);
             int likes = postParser.getObject().getObject().getInt(0);
             int comments = postParser.getObject().getObject().getInt(0);
-            attachmentsParser = postParser.getObject().getArray();
+            ArrayParser attachmentsParser = postParser.getObject().getArray();
 
             Info info = new Info(likes, shares, comments);
 
@@ -361,7 +360,7 @@ public class FacebookWrap extends Wrap {
                 .parseObject("attachment", attachmentParser);
 
         ObjectParser responseParser = new ObjectParser()
-                .parseArray("data", new ArrayParser(-1, commentParser));
+                .parseArray("data", commentParser);
 
         ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
                 .getArray();

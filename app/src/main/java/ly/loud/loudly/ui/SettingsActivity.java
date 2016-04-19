@@ -63,7 +63,7 @@ public class SettingsActivity extends AppCompatActivity {
             public void execute(SettingsActivity context, Object... params) {
                 int network = ((int) params[0]);
                 //TODO remove when all networks will have been implemented
-                if (network == Networks.VK || network == Networks.FB) {
+                if (Networks.makeAuthorizer(network) != null) {
                     startReceiver();
                     Authorizer authorizer = Networks.makeAuthorizer(network);
                     authorizer.createAsyncTask(context, new UIAction<SettingsActivity>() {

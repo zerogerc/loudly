@@ -3,6 +3,9 @@ package ly.loud.loudly.base;
 import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.Facebook.FacebookWrap;
+import ly.loud.loudly.networks.Instagram.InstagramAuthorizer;
+import ly.loud.loudly.networks.Instagram.InstagramKeyKeeper;
+import ly.loud.loudly.networks.Instagram.InstagramWrap;
 import ly.loud.loudly.networks.Loudly.LoudlyAuthorizer;
 import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
 import ly.loud.loudly.networks.Loudly.LoudlyWrap;
@@ -17,7 +20,7 @@ import ly.loud.loudly.networks.VK.VKWrap;
  */
 public class Networks {
 
-    // It's important to add new network to the LinksContract, so we could say it in DB
+    // It's important to add new network to the LinksContract, so we could save it to DB
     public static final int LOUDLY = 0;
     public static final int FB = 1;
     public static final int TWITTER = 2;
@@ -55,6 +58,8 @@ public class Networks {
                 return "www.facebook.com";
             case VK:
                 return "www.vk.com";
+            case INSTAGRAM:
+                return "www.instagram.com";
             default:
                 return "";
         }
@@ -68,6 +73,8 @@ public class Networks {
                 return new FacebookWrap();
             case VK:
                 return new VKWrap();
+            case INSTAGRAM:
+                return new InstagramWrap();
             default:
                 return null;
         }
@@ -84,6 +91,8 @@ public class Networks {
                 return new VKAuthorizer();
             case MAILRU:
                 return new MailRuAuthoriser();
+            case INSTAGRAM:
+                return new InstagramAuthorizer();
             default:
                 return null;
 
@@ -103,6 +112,8 @@ public class Networks {
                 return new FacebookKeyKeeper();
             case VK:
                 return new VKKeyKeeper();
+            case INSTAGRAM:
+                return new InstagramKeyKeeper();
             case MAILRU:
                 return new MailRuKeyKeeper();
             default:

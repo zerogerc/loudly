@@ -193,10 +193,11 @@ public class MainActivity extends AppCompatActivity
             setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.LOUDLY, this));
         } else if (id == R.id.nav_facebook) {
             setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.FB, this));
+        } else if (id == R.id.nav_instagram) {
+            setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.INSTAGRAM, this));
         } else if (id == R.id.nav_vk) {
             setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.VK, this));
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;

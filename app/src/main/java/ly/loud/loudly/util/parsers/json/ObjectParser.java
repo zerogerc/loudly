@@ -55,29 +55,29 @@ public class ObjectParser implements Parser<ObjectParser>, JsonParser {
         index = 0;
     }
 
-    public ObjectParser parseString(String name) {
-        fields.add(new Field(name, JsonParser.STRING));
+    private ObjectParser addFieldParser(String name, int type) {
+        fields.add(new Field(name, type));
         return this;
+    }
+
+    public ObjectParser parseString(String name) {
+        return addFieldParser(name, JsonParser.STRING);
     }
 
     public ObjectParser parseInt(String name) {
-        fields.add(new Field(name, JsonParser.INT));
-        return this;
+        return addFieldParser(name, JsonParser.INT);
     }
 
     public ObjectParser parseLong(String name) {
-        fields.add(new Field(name, JsonParser.LONG));
-        return this;
+        return addFieldParser(name, JsonParser.LONG);
     }
 
     public ObjectParser parseDouble(String name) {
-        fields.add(new Field(name, JsonParser.DOUBLE));
-        return this;
+        return addFieldParser(name, JsonParser.DOUBLE);
     }
 
     public ObjectParser parseBoolean(String name) {
-        fields.add(new Field(name, JsonParser.BOOLEAN));
-        return this;
+        return addFieldParser(name, JsonParser.BOOLEAN);
     }
 
     public ObjectParser parseObject(String name, ObjectParser parser) {
@@ -85,8 +85,8 @@ public class ObjectParser implements Parser<ObjectParser>, JsonParser {
         return this;
     }
 
-    public ObjectParser parseArray(String name, ArrayParser parser) {
-        fields.add(new Field(name, parser));
+    public ObjectParser parseArray(String name, JsonParser parser) {
+        fields.add(new Field(name, new ArrayParser(parser)));
         return this;
     }
 
@@ -103,19 +103,19 @@ public class ObjectParser implements Parser<ObjectParser>, JsonParser {
         return get(STRING, defaultValue);
     }
 
-    public Integer getInt(Integer defaultValue) {
+    public int getInt(Integer defaultValue) {
         return get(INT, defaultValue);
     }
 
-    public Long getLong(Long defaultValue) {
+    public long getLong(Long defaultValue) {
         return get(LONG, defaultValue);
     }
 
-    public Double getDouble(Double defaultValue) {
+    public double getDouble(Double defaultValue) {
         return get(LONG, defaultValue);
     }
 
-    public Boolean getBoolean(Boolean defaultValue) {
+    public boolean getBoolean(Boolean defaultValue) {
         return get(BOOLEAN, defaultValue);
     }
 
@@ -150,12 +150,12 @@ public class ObjectParser implements Parser<ObjectParser>, JsonParser {
         String name;
         JsonParser parser;
 
-        public Field(String name, JsonParser parser) {
+        Field(String name, JsonParser parser) {
             this.name = name;
             this.parser = parser;
         }
 
-        public Field(String name, int type) {
+        Field(String name, int type) {
             this.name = name;
             this.parser = new FieldParser(type);
         }

@@ -29,7 +29,9 @@ public abstract class Authorizer {
      *
      * @return keys that we use to interact with social network
      */
-    protected abstract KeyKeeper beginAuthorize();
+    protected KeyKeeper beginAuthorize() {
+        return Networks.makeKeyKeeper(network());
+    }
 
     /**
      * @return Token that determines that response is successful

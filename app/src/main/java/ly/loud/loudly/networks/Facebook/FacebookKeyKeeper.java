@@ -12,7 +12,7 @@ public class FacebookKeyKeeper extends KeyKeeper {
         super();
     }
 
-    public FacebookKeyKeeper(String accessToken) {
+    private FacebookKeyKeeper(String accessToken) {
         this.accessToken = accessToken;
     }
 

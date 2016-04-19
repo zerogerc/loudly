@@ -10,6 +10,8 @@
                       android:title="Loudly"/>
                 <item android:id="@+id/nav_facebook" android:icon="@drawable/ic_settings"
                       android:title="Facebook"/>
+                <item android:id="@+id/nav_instagram" android:icon="@android:drawable/ic_dialog_alert"
+                      android:title="Instragram"/>
                 <item android:id="@+id/nav_vk" android:icon="@android:drawable/ic_menu_gallery"
                       android:title="VK"/>
             </group>

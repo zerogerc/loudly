@@ -17,11 +17,6 @@ public class FacebookAuthorizer extends Authorizer {
     }
 
     @Override
-    protected FacebookKeyKeeper beginAuthorize() {
-        return new FacebookKeyKeeper();
-    }
-
-    @Override
     public String successToken() {
         return ACCESS_TOKEN;
     }

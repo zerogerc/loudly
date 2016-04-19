@@ -12,7 +12,6 @@ import ly.loud.loudly.util.parsers.Parser;
  * Parser for JSON file consist of only one token. May be used in ArrayParsers
  */
 public class FieldParser implements Parser<FieldParser>, JsonParser {
-
     int type;
     Object value;
 

@@ -187,7 +187,7 @@ public class VKWrap extends Wrap {
 
         ObjectParser photoParser = makePhotoParser();
         ObjectParser parser = new ObjectParser()
-                .parseArray("response", new ArrayParser(-1, photoParser));
+                .parseArray("response", photoParser);
 
         ArrayParser response = Network.makeGetRequestAndParse(query, parser).getArray();
         if (response.size() != images.size()) {
@@ -240,7 +240,7 @@ public class VKWrap extends Wrap {
                 .parseObject("shares", (ObjectParser) infoParser.copyStructure());
 
         ObjectParser responseParser = new ObjectParser()
-                .parseArray("response", new ArrayParser(-1, postParser));
+                .parseArray("response", postParser);
 
         ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
                 .getArray();
@@ -325,11 +325,10 @@ public class VKWrap extends Wrap {
                     .parseObject("likes", new ObjectParser().parseInt("count"))
                     .parseObject("reposts", new ObjectParser().parseInt("count"))
                     .parseObject("comments", new ObjectParser().parseInt("count"))
-                    .parseArray("attachments", new ArrayParser(-1, attachmentParser));
+                    .parseArray("attachments", attachmentParser);
 
-            ArrayParser itemsParser = new ArrayParser(-1, postParser);
             ObjectParser responseParser = new ObjectParser()
-                    .parseArray("items", itemsParser);
+                    .parseArray("items", postParser);
 
             ObjectParser parser = new ObjectParser()
                     .parseObject("response", responseParser);
@@ -411,7 +410,7 @@ public class VKWrap extends Wrap {
                 .parseObject("likes", new ObjectParser().parseInt("count"))
                 .parseObject("reposts", new ObjectParser().parseInt("count"))
                 .parseObject("comments", new ObjectParser().parseInt("count"))
-                .parseArray("attachments", new ArrayParser(-1, attachmentParser));
+                .parseArray("attachments", attachmentParser);
 
         ObjectParser personParser = new ObjectParser()
                 .parseString("id")
@@ -420,8 +419,8 @@ public class VKWrap extends Wrap {
                 .parseString("photo_50");
 
         ObjectParser parser = new ObjectParser()
-                .parseArray("items", new ArrayParser(-1, commentParser))
-                .parseArray("profiles", new ArrayParser(-1, personParser));
+                .parseArray("items", commentParser)
+                .parseArray("profiles", personParser);
 
         ObjectParser response = Network.makeGetRequestAndParse(query,
                 new ObjectParser().parseObject("response", parser))
@@ -456,7 +455,7 @@ public class VKWrap extends Wrap {
                 }
             }
 
-            long date = commentParser.getLong(0l);
+            long date = commentParser.getLong(0L);
             String text = commentParser.getString("");
 
             int likes = commentParser.getObject().getInt(0);

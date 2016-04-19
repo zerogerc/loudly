@@ -28,7 +28,6 @@ public abstract class Wrap implements Comparable<Wrap> {
     public static final int IMAGE_ONLY_LINK = 2;
 
     public static final int UPLOAD_LAST = 1337;
-
     // Interface
 
     /**
