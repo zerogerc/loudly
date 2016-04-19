@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.parsers.json;
 
 import android.util.JsonReader;
+import android.util.JsonToken;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,8 +33,14 @@ public class ObjectParser implements Parser<ObjectParser>, JsonParser {
 
     @Override
     public void parse(JsonReader reader) throws IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            return;
+        }
         reader.beginObject();
         while (reader.hasNext()) {
+            if (reader.peek() == JsonToken.NULL) {
+                reader.skipValue();
+            }
             final String field = reader.nextName();
             if (field == null) {
                 reader.skipValue();

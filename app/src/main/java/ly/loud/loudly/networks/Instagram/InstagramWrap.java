@@ -1,8 +1,18 @@
 package ly.loud.loudly.networks.Instagram;
 
-import android.graphics.Point;
 import android.util.Pair;
-import ly.loud.loudly.base.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.base.Link;
+import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.base.Person;
+import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Info;
@@ -14,11 +24,6 @@ import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.parsers.json.ArrayParser;
 import ly.loud.loudly.util.parsers.json.ObjectParser;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Danil Kolikov
@@ -81,7 +86,6 @@ public class InstagramWrap extends Wrap {
         query.addParameter("count", 10);
         // ToDo: load more then 10 posts
         ObjectParser captionParser = new ObjectParser()
-                .parseLong("created_time")
                 .parseString("text");
         ObjectParser countParser = new ObjectParser()
                 .parseInt("count");
@@ -91,6 +95,7 @@ public class InstagramWrap extends Wrap {
                 .parseInt("height");
         ObjectParser postParser = new ObjectParser()
                 .parseObject("caption", captionParser)
+                .parseLong("created_time")
                 .parseString("id")
                 .parseObject("comments", (ObjectParser)countParser.copyStructure())
                 .parseObject("likes", (ObjectParser)countParser.copyStructure())
@@ -106,8 +111,8 @@ public class InstagramWrap extends Wrap {
         for (int i = 0; i < posts.size(); i++) {
             postParser = posts.getObject(i);
             captionParser = postParser.getObject();
-            long time = captionParser.getLong(0L);
             String text = captionParser.getString("");
+            long time = postParser.getLong(0L);
             String id = postParser.getString("");
             int comments = postParser.getObject().getInt(0);
             int likes = postParser.getObject().getInt(0);

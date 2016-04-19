@@ -3,6 +3,8 @@ package ly.loud.loudly.base.attachments;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.provider.OpenableColumns;
 
 import java.io.File;
@@ -25,7 +27,7 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
 
     private Uri internalLink;
 
-    private class LoudlyImageProxy extends Image implements LocalFile {
+    private static class LoudlyImageProxy extends Image implements LocalFile {
         LoudlyImage parent;
 
         public LoudlyImageProxy(LoudlyImage parent, int network) {
@@ -157,6 +159,14 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
         this.internalLink = internalLink;
     }
 
+    public LoudlyImage(Parcel source) {
+        externalLink = source.readString();
+        size = source.readParcelable(Point.class.getClassLoader());
+        info = source.readParcelable(Info.class.getClassLoader());
+        network = source.readInt();
+        id = source.readParcelable(Link.class.getClassLoader());
+    }
+
     public void deleteInternalLink() {
         this.internalLink = null;
     }
@@ -266,4 +276,30 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
             Utils.closeQuietly(cursor);
         }
     }
+
+//    @Override
+//    public int describeContents() {
+//        return 0;
+//    }
+//
+//    @Override
+//    public void writeToParcel(Parcel dest, int flags) {
+//        dest.writeString(externalLink);
+//        dest.writeParcelable(size, 0);
+//        dest.writeParcelable(info, 0);
+//        dest.writeInt(network);
+//        dest.writeParcelable(id, 0);
+//    }
+//
+//    public static final Creator<Image> CREATOR = new Creator<Image>() {
+//        @Override
+//        public Image createFromParcel(Parcel source) {
+//            return new Image(source);
+//        }
+//
+//        @Override
+//        public Image[] newArray(int size) {
+//            return new Image[size];
+//        }
+//    };
 }

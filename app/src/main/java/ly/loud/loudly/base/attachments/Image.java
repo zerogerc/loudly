@@ -147,7 +147,6 @@ public class Image implements Attachment, SingleNetwork, Parcelable {
         dest.writeParcelable(info, 0);
         dest.writeInt(network);
         dest.writeParcelable(id, 0);
-
     }
 
     public static final Creator<Image> CREATOR = new Creator<Image>() {
