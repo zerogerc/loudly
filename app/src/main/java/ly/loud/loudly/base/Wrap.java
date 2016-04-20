@@ -2,10 +2,6 @@ package ly.loud.loudly.base;
 
 import android.support.annotation.NonNull;
 import android.util.Pair;
-
-import java.io.IOException;
-import java.util.List;
-
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Info;
@@ -13,9 +9,12 @@ import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.util.BackgroundAction;
-import ly.loud.loudly.util.InvalidTokenException;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * Base interface for all interactions with particular social network.
@@ -63,8 +62,19 @@ public abstract class Wrap implements Comparable<Wrap> {
     protected abstract List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException;
 
     /**
+     * Handle ERROR answer from network
+     *
+     * @param stream ErrorStream from network
+     * @return User-friendly description of error
+     * @throws IOException If some error occurs
+     */
+    public abstract String handleError(InputStream stream) throws IOException;
+
+
+    /**
      * Get changed info for posts
-     * @param posts Lists of Posts to which should get updated info
+     *
+     * @param posts     Lists of Posts to which should get updated info
      * @param keyKeeper Actual keykeeper with user ID
      * @return List of pair of posts, which info have changed, and new info. If info isn't got, return pair <Post, null>
      * @throws IOException in case of network exception
@@ -157,10 +167,7 @@ public abstract class Wrap implements Comparable<Wrap> {
     private <T> T doWithKeys(KeyKeeper.Action<T> action) throws IOException {
         KeyKeeper keys = Loudly.getContext().getKeyKeeper(networkID());
         if (keys == null) {
-            throw new InvalidTokenException();
-        }
-        if (!keys.isValid()) {
-            throw new InvalidTokenException();
+            return null;
         }
         return keys.doWithKeys(action);
     }

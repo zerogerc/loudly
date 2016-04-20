@@ -3,16 +3,12 @@ package ly.loud.loudly.networks.Instagram;
 import android.util.Pair;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.Wrap;
+import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Info;
@@ -30,12 +26,13 @@ import ly.loud.loudly.util.parsers.json.ObjectParser;
  */
 public class InstagramWrap extends Wrap {
     private static final String MAIN_SERVER = "https://api.instagram.com/v1";
-    private static int minId = 0;
-    private static int maxId = 0;
+    private static String minId = "";
+    private static String maxId = "";
 
     @Override
     public void resetState() {
-        // Instagram have no state at least now
+        minId = "";
+        maxId = "";
     }
 
     @Override
@@ -46,6 +43,25 @@ public class InstagramWrap extends Wrap {
     @Override
     public int shouldUploadImage() {
         return Wrap.UPLOAD_LAST;
+    }
+
+    @Override
+    public String handleError(InputStream stream) throws IOException {
+        ObjectParser metaParser = new ObjectParser()
+                .parseString("error_type")
+                .parseString("error_message");
+        ObjectParser parser = new ObjectParser()
+                .parseObject("meta", metaParser);
+        parser.parse(stream);
+        metaParser = parser.getObject();
+        String type = metaParser.getString("");
+        String message = metaParser.getString("");
+
+        // See https://www.instagram.com/developer/authentication/
+        if (type.equals("OAuthAccessTokenError")) {
+            throw new TokenExpiredException();
+        }
+        return message;
     }
 
     @Override
@@ -78,62 +94,81 @@ public class InstagramWrap extends Wrap {
     @Override
     protected void delete(Post post, KeyKeeper keyKeeper) throws IOException {
         // ToDo: Post deletion
+        post.cleanIds();
     }
 
     @Override
     protected List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException {
         Query query = makeSignedAPICall("/users/self/media/recent", keyKeeper);
         query.addParameter("count", 10);
-        // ToDo: load more then 10 posts
-        ObjectParser captionParser = new ObjectParser()
-                .parseString("text");
-        ObjectParser countParser = new ObjectParser()
-                .parseInt("count");
-        ObjectParser imageParser = new ObjectParser()
-                .parseString("url")
-                .parseInt("width")
-                .parseInt("height");
-        ObjectParser postParser = new ObjectParser()
-                .parseObject("caption", captionParser)
-                .parseLong("created_time")
-                .parseString("id")
-                .parseObject("comments", (ObjectParser)countParser.copyStructure())
-                .parseObject("likes", (ObjectParser)countParser.copyStructure())
-                .parseObject("images", new ObjectParser().parseObject("standard_resolution", imageParser));
-        ObjectParser parser = new ObjectParser()
-                .parseArray("data", postParser);
-
-        parser = Network.makeGetRequestAndParse(query, parser);
-
+        if (!maxId.isEmpty()) {
+            query.addParameter("max_id", maxId);
+        }
         List<Post> result = new ArrayList<>();
 
-        ArrayParser posts = parser.getArray();
-        for (int i = 0; i < posts.size(); i++) {
-            postParser = posts.getObject(i);
-            captionParser = postParser.getObject();
-            String text = captionParser.getString("");
-            long time = postParser.getLong(0L);
-            String id = postParser.getString("");
-            int comments = postParser.getObject().getInt(0);
-            int likes = postParser.getObject().getInt(0);
+        long lastDate = 0;
+        do {
+            ObjectParser captionParser = new ObjectParser()
+                    .parseString("text");
+            ObjectParser countParser = new ObjectParser()
+                    .parseInt("count");
+            ObjectParser imageParser = new ObjectParser()
+                    .parseString("url")
+                    .parseInt("width")
+                    .parseInt("height");
+            ObjectParser postParser = new ObjectParser()
+                    .parseObject("caption", captionParser)
+                    .parseLong("created_time")
+                    .parseString("id")
+                    .parseObject("comments", (ObjectParser) countParser.copyStructure())
+                    .parseObject("likes", (ObjectParser) countParser.copyStructure())
+                    .parseObject("images", new ObjectParser().parseObject("standard_resolution", imageParser));
+            ObjectParser pagination = new ObjectParser()
+                    .parseString("next_url");
 
-            Info info = new Info(likes, 0, comments);
-            Post post = new Post(text, time, null, networkID(), new Link(id));
-            post.setInfo(info);
+            ObjectParser parser = new ObjectParser()
+                    .parseArray("data", postParser)
+                    .parseObject("pagination", pagination);
 
-            imageParser = postParser.getObject();
-            if (imageParser != null) {
-                imageParser = imageParser.getObject();
-                String url = imageParser.getString("");
-                int width = imageParser.getInt(0);
-                int height = imageParser.getInt(0);
-                Image image = new Image(url, networkID(), new Link(url));
-                image.setWidth(width);
-                image.setHeight(height);
-                post.addAttachment(image);
+            parser = Network.makeGetRequestAndParse(query, parser, this);
+
+            ArrayParser posts = parser.getArray();
+            pagination = parser.getObject();
+            for (int i = 0; i < posts.size(); i++) {
+                postParser = posts.getObject(i);
+                captionParser = postParser.getObject();
+                String text = captionParser.getString("");
+                long time = postParser.getLong(0L);
+                String id = postParser.getString("");
+                int comments = postParser.getObject().getInt(0);
+                int likes = postParser.getObject().getInt(0);
+
+                lastDate = time;
+                if (!timeInterval.contains(lastDate)) {
+                    break;
+                }
+                Info info = new Info(likes, 0, comments);
+                Post post = new Post(text, time, null, networkID(), new Link(id));
+                post.setInfo(info);
+
+                imageParser = postParser.getObject();
+                if (imageParser != null) {
+                    imageParser = imageParser.getObject();
+                    String url = imageParser.getString("");
+                    int width = imageParser.getInt(0);
+                    int height = imageParser.getInt(0);
+                    Image image = new Image(url, networkID(), new Link(url));
+                    image.setWidth(width);
+                    image.setHeight(height);
+                    post.addAttachment(image);
+                }
+                result.add(post);
+                maxId = id;
             }
-            result.add(post);
-        }
+
+            query = new Query(pagination.getString(""));
+        } while (timeInterval.contains(lastDate));
+
         return result;
     }
 
@@ -153,7 +188,7 @@ public class InstagramWrap extends Wrap {
                 .parseString("profile_picture");
         ObjectParser parser = new ObjectParser()
                 .parseArray("data", personParser);
-        parser = Network.makeGetRequestAndParse(query, parser);
+        parser = Network.makeGetRequestAndParse(query, parser, this);
         ArrayParser likes = parser.getArray();
         ArrayList<Person> result = new ArrayList<>();
 
@@ -162,7 +197,9 @@ public class InstagramWrap extends Wrap {
             String username = personParser.getString("");
             String name = personParser.getString("");
             String url = personParser.getString("");
-            result.add(new Person(name, "", url, networkID()));
+            Person person = new Person(name, "", url, networkID());
+            person.setId(username);
+            result.add(person);
         }
         return result;
     }
@@ -182,7 +219,7 @@ public class InstagramWrap extends Wrap {
         ObjectParser parser = new ObjectParser()
                 .parseArray("data", commentParser);
 
-        parser = Network.makeGetRequestAndParse(query, parser);
+        parser = Network.makeGetRequestAndParse(query, parser, this);
         ArrayParser comments = parser.getArray();
         List<Comment> result = new ArrayList<>();
 
@@ -196,8 +233,9 @@ public class InstagramWrap extends Wrap {
             String picture = userParser.getString("");
             String id = commentParser.getString("");
 
-
-            Comment comment = new Comment(text, time, new Person(name, "", picture, networkID()),
+            Person person = new Person(name, "", picture, networkID());
+            person.setId(username);
+            Comment comment = new Comment(text, time, person,
                     networkID(), new Link(id));
             result.add(comment);
         }

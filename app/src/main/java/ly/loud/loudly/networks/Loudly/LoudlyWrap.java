@@ -3,6 +3,7 @@ package ly.loud.loudly.networks.Loudly;
 import android.util.Pair;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -83,6 +84,12 @@ public class LoudlyWrap extends Wrap {
     @Override
     protected void getImageInfo(List<Image> images, KeyKeeper keyKeeper) throws IOException {
         // Can't load image info
+    }
+
+    @Override
+    public String handleError(InputStream stream) {
+        // Nothing can be handled
+        return null;
     }
 
     @Override

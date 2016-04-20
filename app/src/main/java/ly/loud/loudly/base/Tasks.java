@@ -27,7 +27,6 @@ import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.InvalidTokenException;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.UIAction;
 
@@ -216,8 +215,8 @@ public final class Tasks {
 
                         w.upload(post);
                         return w.networkID();
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.POST_UPLOAD, Broadcasts.INVALID_TOKEN, e.getMessage());
+                    } catch (TokenExpiredException e) {
+                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN, e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
                     } catch (IOException e) {
@@ -278,8 +277,8 @@ public final class Tasks {
 
                         w.delete((Post) post.getNetworkInstance(w.networkID()));
                         return w.networkID();
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.POST_DELETE, Broadcasts.INVALID_TOKEN, e.getMessage());
+                    } catch (TokenExpiredException e) {
+                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN, e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
                     } catch (IOException e) {
@@ -301,7 +300,7 @@ public final class Tasks {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    Loudly.getPostHolder().cleanUp(success);
+                    Loudly.getPostHolder().cleanUp(success, true);
                 }
             });
 
@@ -339,8 +338,8 @@ public final class Tasks {
                     try {
                         return new Pair<>(w.getPersons(what, element.getNetworkInstance(w.networkID())),
                                 w.networkID());
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.INVALID_TOKEN,
+                    } catch (TokenExpiredException e) {
+                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN,
                                 e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
@@ -401,8 +400,8 @@ public final class Tasks {
                     try {
                         return new Pair<>(w.getComments(element.getNetworkInstance(w.networkID())),
                                 w.networkID());
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.INVALID_TOKEN,
+                    } catch (TokenExpiredException e) {
+                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN,
                                 e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
@@ -547,8 +546,8 @@ public final class Tasks {
                         publishProgress(message);
                         return new Pair<>(w.loadPosts(time), w.networkID());
 
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.POST_LOAD, Broadcasts.INVALID_TOKEN,
+                    } catch (TokenExpiredException e) {
+                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN,
                                 e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
@@ -579,7 +578,7 @@ public final class Tasks {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    Loudly.getPostHolder().cleanUp(successfullyLoaded);
+                    Loudly.getPostHolder().cleanUp(successfullyLoaded, true);
                 }
             });
 

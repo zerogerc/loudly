@@ -50,16 +50,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.MainActivity" />
         </activity>
+
+        <receiver android:name=".ui.LocalBroadcastReceiver"
+                  android:enabled="true"
+                  android:exported="false">
+            <intent-filter>
+                <action android:name="internal"/>
+            </intent-filter>
+        </receiver>
     </application>
 
-</manifest> <!-- ======= -->
-<!-- <manifest xmlns:android="http://schemas.android.com/apk/res/android" > -->
-<!-- <application> -->
-<!-- <activity android:name="ly.loud.loudly.ui.MainActivity" -->
-<!-- android:label="@string/title_activity_main" -->
-<!-- android:theme="@style/AppTheme.NoActionBar" -->
-<!-- &gt; -->
-<!-- </activity> -->
-<!-- </application> -->
-<!-- </manifest> -->
-<!-- &gt;>>>>>> Added -->
+</manifest>

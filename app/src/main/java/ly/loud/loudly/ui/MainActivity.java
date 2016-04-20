@@ -37,12 +37,9 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = "MAIN";
     private static final String BUNDLE_RECYCLER_LAYOUT = "Recycler View State";
 
-    static boolean keysLoaded = false;
     static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
-    static int aliveCopy = 0;
 
-    RecyclerView recyclerView;
-    public PostsAdapter postsAdapter;
+    private RecyclerView recyclerView;
     public FloatingActionButton floatingActionButton;
 
     static final int LOAD_POSTS_RECEIVER = 0;
@@ -66,28 +63,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-//
-//        if (id == R.id.main_call_settings) {
-//            callSettingsActivity();
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
-    @Override
-    public void finish() {
-        super.finish();
-        Utils.hidePhoneKeyboard(this);
-    }
-
     private void init() {
         self = this;
-
-        SplashFragment.showSplash(this);
 
         setRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
     }
@@ -127,7 +104,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        int position = 0;
+        int position;
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             position = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
         } else {
@@ -207,6 +184,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         self = this;
+        Loudly.setCurrentActivity(this);
 
         if (receivers == null) {
             receivers = new AttachableReceiver[RECEIVER_COUNT];
@@ -217,7 +195,7 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }
-        if (keysLoaded && loadPosts == null) {
+        if (loadPosts == null) {
             loadPosts();
         }
     }
@@ -225,14 +203,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        aliveCopy++;
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         Utils.hidePhoneKeyboard(this);
-        aliveCopy--;
+        Loudly.clearCurrentActivity(this);
     }
 
     static void loadPosts() {
@@ -255,12 +232,11 @@ public class MainActivity extends AppCompatActivity
 
     private void setRecyclerView(PostsAdapter adapter) {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        postsAdapter = adapter;
-        Loudly.getPostHolder().setAdapter(postsAdapter);
+        Loudly.getPostHolder().setAdapter(adapter);
 
         recyclerView.setHasFixedSize(true); /// HERE
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.setAdapter(postsAdapter);
+        recyclerView.setAdapter(adapter);
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
         } else {
@@ -356,7 +332,7 @@ public class MainActivity extends AppCompatActivity
                         case Broadcasts.NETWORK_ERROR:
                             error += "no internet connection";
                             break;
-                        case Broadcasts.INVALID_TOKEN:
+                        case Broadcasts.EXPIRED_TOKEN:
                             error += "lost connection to network";
                             break;
                         default:
@@ -438,7 +414,7 @@ public class MainActivity extends AppCompatActivity
                         case Broadcasts.NETWORK_ERROR:
                             error += "no internet connection";
                             break;
-                        case Broadcasts.INVALID_TOKEN:
+                        case Broadcasts.EXPIRED_TOKEN:
                             error += "lost connection to it";
                             break;
                         default:
@@ -448,6 +424,7 @@ public class MainActivity extends AppCompatActivity
                     Snackbar.make(context.findViewById(R.id.fab),
                             error, Snackbar.LENGTH_SHORT)
                             .show();
+                    loadedNetworks[network] = false;
                     break;
             }
         }
@@ -483,7 +460,7 @@ public class MainActivity extends AppCompatActivity
                         case Broadcasts.NETWORK_ERROR:
                             error += "no internet connection";
                             break;
-                        case Broadcasts.INVALID_TOKEN:
+                        case Broadcasts.EXPIRED_TOKEN:
                             error += "lost connection to network";
                             break;
                         default:

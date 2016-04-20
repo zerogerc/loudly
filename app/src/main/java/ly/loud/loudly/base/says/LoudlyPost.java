@@ -30,6 +30,11 @@ public class LoudlyPost extends Post implements MultipleNetwork {
             this.network = network;
         }
 
+        private LoudlyPostProxy(Parcel parcel) {
+            super(parcel);
+            parent = parcel.readParcelable(LoudlyPost.class.getClassLoader());
+        }
+
         @Override
         public void cleanIds() {
             parent.links[network].setValid(false);
@@ -141,9 +146,30 @@ public class LoudlyPost extends Post implements MultipleNetwork {
             if (!(o instanceof Post)) {
                 return false;
             }
+            if (o == this) {
+                return true;
+            }
             SingleNetwork say = ((Say)o).getNetworkInstance(getNetwork());
-            return say != null && getLink().equals(say.getLink());
+            return say != null && say.getLink().equals(getLink());
         }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeParcelable(parent, flags);
+        }
+
+        public static final Creator<LoudlyPostProxy> CREATOR = new Creator<LoudlyPostProxy>() {
+            @Override
+            public LoudlyPostProxy createFromParcel(Parcel source) {
+                return new LoudlyPostProxy(source);
+            }
+
+            @Override
+            public LoudlyPostProxy[] newArray(int size) {
+                return new LoudlyPostProxy[size];
+            }
+        };
     }
 
     public LoudlyPost(

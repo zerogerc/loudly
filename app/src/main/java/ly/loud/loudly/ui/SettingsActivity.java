@@ -4,7 +4,6 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,16 +13,12 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-
-import java.util.Iterator;
-
+import ly.loud.loudly.R;
 import ly.loud.loudly.base.Authorizer;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
+import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.R;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
@@ -31,20 +26,18 @@ import ly.loud.loudly.util.Utils;
 import ly.loud.loudly.util.database.DatabaseActions;
 import ly.loud.loudly.util.database.DatabaseException;
 
+import java.util.Collections;
+
 public class SettingsActivity extends AppCompatActivity {
-    private static SettingsActivity self;
-    private static AttachableReceiver<SettingsActivity> authReceiver = null;
-    static int aliveCopy = 0;
-
-    private IconsHolder iconsHolder;
-
-    private AuthFragment webViewFragment;
-    private View webViewFragmentView;
-    private EditText loadLastText, frequencyText;
-
     public static String webViewURL;
     public static Authorizer webViewAuthorizer;
     public static KeyKeeper webViewKeyKeeper;
+    private static SettingsActivity self;
+    private static AttachableReceiver<SettingsActivity> authReceiver = null;
+    private IconsHolder iconsHolder;
+    private AuthFragment webViewFragment;
+    private View webViewFragmentView;
+    private EditText loadLastText, frequencyText;
 
     public static void executeOnUI(final UIAction<SettingsActivity> action) {
         if (self != null) {
@@ -153,13 +146,13 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        aliveCopy++;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         self = this;
+        Loudly.setCurrentActivity(this);
         if (authReceiver != null) {
             authReceiver.attach(this);
         }
@@ -183,84 +176,28 @@ public class SettingsActivity extends AppCompatActivity {
             authReceiver.detach();
         }
         self = null;
+
+        int frequency = Integer.parseInt(frequencyText.getText().toString());
+        int loadLast = Integer.parseInt(loadLastText.getText().toString());
+
+        Loudly.savePreferences(frequency, loadLast);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        aliveCopy--;
+        Loudly.clearCurrentActivity(this);
 
-        if (aliveCopy == 0) {
-            int frequency = Integer.parseInt(frequencyText.getText().toString());
-            int loadLast = Integer.parseInt(loadLastText.getText().toString());
-
-            savePreferences(frequency, loadLast);
-        }
         if (authReceiver != null) {
             authReceiver.stop();
         }
         authReceiver = null;
     }
 
-    private void savePreferences(int frequency, int loadLast) {
-        SharedPreferences preferences = getSharedPreferences(Loudly.PREFERENCES, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt(Loudly.UPDATE_FREQUENCY, frequency);
-        editor.putInt(Loudly.LOAD_LAST, loadLast);
-        editor.apply();
-    }
-
-    private static class AuthReceiver extends AttachableReceiver<SettingsActivity> {
-        private IconsHolder iconsHolder;
-
-        public AuthReceiver(SettingsActivity context, IconsHolder iconHolder) {
-            super(context, Broadcasts.AUTHORIZATION);
-            this.iconsHolder = iconHolder;
-        }
-
-        @Override
-        public void onMessageReceive(SettingsActivity activity, Intent message) {
-            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            switch (status) {
-                case Broadcasts.FINISHED:
-                    Snackbar.make(activity.findViewById(R.id.settings_parent_layout),
-                            "Successful login", Snackbar.LENGTH_SHORT)
-                            .show();
-                    int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    iconsHolder.setVisible(network);
-                    activity.finishWebView();
-
-                    break;
-                case Broadcasts.ERROR:
-                    int kind = message.getIntExtra(Broadcasts.ERROR_KIND, -1);
-                    String error = "";
-                    switch (kind) {
-                        case Broadcasts.NETWORK_ERROR:
-                            error = "Problems with network";
-                            break;
-                        case Broadcasts.DATABASE_ERROR:
-                            error = "Can't save your login";
-                    }
-                    if (!error.isEmpty()) {
-                        Snackbar.make(activity.findViewById(R.id.settings_parent_layout),
-                                error, Snackbar.LENGTH_SHORT)
-                                .show();
-                    }
-                    activity.finishWebView();
-                    Log.e("LOGIN", message.getStringExtra(Broadcasts.ERROR_FIELD));
-                    break;
-            }
-            stop();
-            authReceiver = null;
-        }
-    }
-
     private void startReceiver() {
         authReceiver = new AuthReceiver(this, iconsHolder);
     }
-
-    // ToDo: make buttons not clickable during authorization
 
     public void startWebView() {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
@@ -269,11 +206,12 @@ public class SettingsActivity extends AppCompatActivity {
         ft.commit();
     }
 
+    // ToDo: make buttons not clickable during authorization
+
     public void finishWebView() {
         webViewFragment.clearWebView();
     }
 
-// ToDo: fix this
     public void LogoutClick(int network) {
         Loudly.getContext().stopGetInfoService();
         if (MainActivity.loadPosts != null) {
@@ -298,57 +236,64 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(Integer network) {
+                Networks.makeWrap(network).resetState();
+
                 Loudly.getContext().setKeyKeeper(network, null);
                 // Clean posts from this network
-                Iterator<Post> iterator = Loudly.getPostHolder().getPosts().iterator();
-                int ind = 0;
-                while (iterator.hasNext()) {
-                    Post post = iterator.next();
-                    if (post.existsIn(network)) {
-                        if (post instanceof LoudlyPost) {
-                            Info oldInfo = post.getInfo();
-                            ((LoudlyPost) post).setInfo(network, new Info());
-                            boolean visible = false;
-                            for (int j = 0; j < Networks.NETWORK_COUNT; j++) {
-                                if (post.existsIn(j)) {
-                                    visible = true;
-                                    break;
-                                }
-                            }
-                            if (!visible) {
-                                iterator.remove();
-                                final int fixed = ind;
-                                MainActivity.executeOnUI(new UIAction() {
-                                    @Override
-                                    public void execute(Context context, Object... params) {
-                                        ((MainActivity) context).postsAdapter.notifyItemDeletedAtPosition(fixed);
-                                    }
-                                });
-                            } else {
-                                if (!oldInfo.equals(post.getInfo())) {
-                                    final int fixed = ind;
-                                    MainActivity.executeOnUI(new UIAction() {
-                                        @Override
-                                        public void execute(Context context, Object... params) {
-                                            ((MainActivity) context).postsAdapter.notifyItemChanged(fixed);
-                                        }
-                                    });
-                                }
-                            }
-                        } else {
-                            iterator.remove();
-                            final int fixed = ind;
-                            MainActivity.executeOnUI(new UIAction() {
-                                @Override
-                                public void execute(Context context, Object... params) {
-                                    ((MainActivity) context).postsAdapter.notifyItemDeletedAtPosition(fixed);
-                                }
-                            });
-                        }
+                for (Post p : Loudly.getPostHolder().getPosts()) {
+                    SingleNetwork singleNetwork = p.getNetworkInstance(network);
+                    if (singleNetwork != null) {
+                        singleNetwork.getLink().setValid(false);
                     }
                 }
+
+                Loudly.getPostHolder().cleanUp(Collections.singletonList(network), false);
                 MainActivity.loadedNetworks[network] = false;
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, network);
+    }
+
+    private static class AuthReceiver extends AttachableReceiver<SettingsActivity> {
+        private IconsHolder iconsHolder;
+
+        public AuthReceiver(SettingsActivity context, IconsHolder iconHolder) {
+            super(context, Broadcasts.AUTHORIZATION);
+            this.iconsHolder = iconHolder;
+        }
+
+        @Override
+        public void onMessageReceive(SettingsActivity activity, Intent message) {
+            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
+            switch (status) {
+                case Broadcasts.FINISHED:
+                    Snackbar.make(activity.findViewById(R.id.settings_parent_layout),
+                            "Successful login", Snackbar.LENGTH_SHORT)
+                            .show();
+                    int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
+                    iconsHolder.setVisible(network);
+                    activity.finishWebView();
+                    break;
+                case Broadcasts.ERROR:
+                    int kind = message.getIntExtra(Broadcasts.ERROR_KIND, -1);
+                    String error = "";
+                    switch (kind) {
+                        case Broadcasts.NETWORK_ERROR:
+                            error = "Problems with network";
+                            break;
+                        case Broadcasts.DATABASE_ERROR:
+                            error = "Can't save your login";
+                    }
+                    if (!error.isEmpty()) {
+                        Snackbar.make(activity.findViewById(R.id.settings_parent_layout),
+                                error, Snackbar.LENGTH_SHORT)
+                                .show();
+                    }
+                    activity.finishWebView();
+                    Log.e("LOGIN", message.getStringExtra(Broadcasts.ERROR_FIELD));
+                    break;
+            }
+            stop();
+            authReceiver = null;
+        }
     }
 }

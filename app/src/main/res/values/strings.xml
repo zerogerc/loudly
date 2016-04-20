@@ -12,5 +12,6 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
-
+    <string name="token_expired_begin">Lost connection to </string>
+    <string name="token_expired_end">. Please, login in settings</string>
 </resources>

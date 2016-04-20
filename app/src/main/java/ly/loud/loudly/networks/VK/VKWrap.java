@@ -2,23 +2,18 @@ package ly.loud.loudly.networks.VK;
 
 import android.util.Pair;
 
+import ly.loud.loudly.base.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.Tasks;
-import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LocalFile;
 import ly.loud.loudly.base.says.Comment;
@@ -33,7 +28,7 @@ import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.parsers.json.ArrayParser;
 import ly.loud.loudly.util.parsers.json.ObjectParser;
 
-
+// ToDo: Use my cool parsers
 public class VKWrap extends Wrap {
     private static final int NETWORK = Networks.VK;
     private static int offset = 0;
@@ -88,6 +83,30 @@ public class VKWrap extends Wrap {
             return "Sorry, we can upload only 1 image";
         }
         return null;
+    }
+
+    @Override
+    public String handleError(InputStream stream) throws IOException {
+        ObjectParser errorParser = new ObjectParser()
+                .parseInt("error_code")
+                .parseString("error_msg");
+        ObjectParser parser = new ObjectParser()
+                .parseObject("error", errorParser);
+        parser.parse(stream);
+        errorParser = parser.getObject();
+        int code = errorParser.getInt(0);
+        String message = errorParser.getString("");
+
+        // See https://vk.com/dev/errors
+        if (code == 14) {
+            // Bad, bad captcha
+            // ToDo: Captcha
+        }
+
+        if (code == 5) {
+            throw new TokenExpiredException();
+        }
+        return message;
     }
 
     @Override
@@ -189,7 +208,7 @@ public class VKWrap extends Wrap {
         ObjectParser parser = new ObjectParser()
                 .parseArray("response", photoParser);
 
-        ArrayParser response = Network.makeGetRequestAndParse(query, parser).getArray();
+        ArrayParser response = Network.makeGetRequestAndParse(query, parser, this).getArray();
         if (response.size() != images.size()) {
             throw new IOException("Can't find image in network " + networkID());
         }
@@ -242,7 +261,7 @@ public class VKWrap extends Wrap {
         ObjectParser responseParser = new ObjectParser()
                 .parseArray("response", postParser);
 
-        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
+        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser, this)
                 .getArray();
 
         Iterator<Post> iterator = posts.listIterator();
@@ -333,7 +352,7 @@ public class VKWrap extends Wrap {
             ObjectParser parser = new ObjectParser()
                     .parseObject("response", responseParser);
 
-            ObjectParser response = Network.makeGetRequestAndParse(query, parser);
+            ObjectParser response = Network.makeGetRequestAndParse(query, parser, this);
 
             ArrayParser arrayParser = response.getObject().getArray();
             if (arrayParser.size() == 0) {
@@ -423,7 +442,7 @@ public class VKWrap extends Wrap {
                 .parseArray("profiles", personParser);
 
         ObjectParser response = Network.makeGetRequestAndParse(query,
-                new ObjectParser().parseObject("response", parser))
+                new ObjectParser().parseObject("response", parser), this)
                 .getObject();
 
         ArrayParser posts = response.getArray();

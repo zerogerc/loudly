@@ -17,6 +17,7 @@ import ly.loud.loudly.base.MultipleNetwork;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.util.Utils;
 
@@ -169,6 +170,17 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
             this.network = network;
         }
 
+        private LoudlyImageProxy(Parcel parcel) {
+            super(parcel);
+            parent = parcel.readParcelable(LoudlyImage.class.getClassLoader());
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeParcelable(parent, flags);
+        }
+
         @Override
         public void setWidth(int width) {
             parent.setWidth(width);
@@ -273,6 +285,18 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
         public long getFileSize() throws IOException {
             return parent.getFileSize();
         }
+
+        public static final Creator<LoudlyImageProxy> CREATOR = new Creator<LoudlyImageProxy>() {
+            @Override
+            public LoudlyImageProxy createFromParcel(Parcel source) {
+                return new LoudlyImageProxy(source);
+            }
+
+            @Override
+            public LoudlyImageProxy[] newArray(int size) {
+                return new LoudlyImageProxy[size];
+            }
+        };
     }
 
     @Override

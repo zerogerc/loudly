@@ -142,7 +142,7 @@ public class PeopleListFragment extends DialogFragment {
                         case Broadcasts.NETWORK_ERROR:
                             error += "no internet connection";
                             break;
-                        case Broadcasts.INVALID_TOKEN:
+                        case Broadcasts.EXPIRED_TOKEN:
                             error += "lost connection to network";
                             break;
                     }

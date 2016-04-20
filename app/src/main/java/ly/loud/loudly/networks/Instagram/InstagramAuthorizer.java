@@ -36,7 +36,6 @@ public class InstagramAuthorizer extends Authorizer {
     @Override
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
         ((InstagramKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
-        keys.expiresIn(24 * 60 * 60);   // ToDo: Instagram doesn't have fixed expiration time
     }
 
     @Override

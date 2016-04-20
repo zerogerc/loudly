@@ -2,6 +2,7 @@ package ly.loud.loudly.ui;
 
 import android.util.Log;
 import android.util.Pair;
+import ly.loud.loudly.base.Link;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Info;
@@ -97,6 +98,9 @@ public class PostsHolder {
                 if (found == null) {
                     dest.add(p);
                 } else {
+                    if (found.getLink(p.getNetwork()) == null) {
+                        found.setLink(p.getNetwork(), new Link(p.getLink().get()));
+                    }
                     found.getLink().setValid(true);
                     found.getLink(p.getNetwork()).setValid(true);
                     found.setInfo(p.getNetwork(), p.getInfo());
@@ -123,7 +127,8 @@ public class PostsHolder {
      *
      * @param networks list of wraps, from where posts were loaded
      */
-    public void cleanUp(List<Integer> networks) {
+    // ToDo: Make more stable
+    public void cleanUp(List<Integer> networks, boolean deleteFromDB) {
         ArrayList<Integer> notLoaded = new ArrayList<>();
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (!(networks.contains(i))) {
@@ -171,7 +176,7 @@ public class PostsHolder {
                     }
                     // Hide post
                     iterator.remove();
-                    if (post instanceof LoudlyPost) {
+                    if (post instanceof LoudlyPost && deleteFromDB) {
                         // And delete from DB
                         try {
                             new LoudlyWrap().delete(post);
@@ -208,5 +213,13 @@ public class PostsHolder {
         }
         adapter.update(updated);
         return summary;
+    }
+
+    public void clear() {
+        if (!posts.isEmpty()) {
+            List<Post> old = posts;
+            posts = new ArrayList<>();
+            adapter.delete(old);
+        }
     }
 }

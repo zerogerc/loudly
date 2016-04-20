@@ -399,6 +399,7 @@ public class Utils {
                 notify(id, notificationCompat.build());
     }
 
+    // ToDo: make it part of LoudlyActivity
     public static void showSnackBar(final String message) {
         MainActivity.executeOnUI(new UIAction<MainActivity>() {
             @Override

@@ -11,12 +11,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import ly.loud.loudly.base.Tasks;
+import ly.loud.loudly.base.TokenExpiredException;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.InvalidTokenException;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 
@@ -61,14 +61,6 @@ public class GetInfoService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (Loudly.getExecutor().getQueue().size() > 0) {
-            // If executor is busy, get info later
-            // TODO: get info for networks which aren't in use
-
-            Loudly.getContext().startGetInfoService();  // Restarting
-            return;
-        }
-
         stopped = false;
         if (Loudly.getPostHolder().getPosts().isEmpty()) {
             return;
@@ -88,9 +80,9 @@ public class GetInfoService extends IntentService {
                 }
                 try {
                     return new Pair<>(w.getPostsInfo(current), w.networkID());
-                } catch (InvalidTokenException e) {
-                    Intent message = BroadcastSendingTask.makeError(Broadcasts.POST_GET_INFO,
-                            Broadcasts.INVALID_TOKEN, e.getMessage());
+                } catch (TokenExpiredException e) {
+                    Intent message = BroadcastSendingTask.makeError(Broadcasts.INTERNAL_MESSAGE,
+                            Broadcasts.EXPIRED_TOKEN, e.getMessage());
                     message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                     Loudly.sendLocalBroadcast(message);
                 } catch (IOException e) {
@@ -126,14 +118,14 @@ public class GetInfoService extends IntentService {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    Loudly.getPostHolder().cleanUp(success);
+                    Loudly.getPostHolder().cleanUp(success, true);
                 }
             });
         }
         Loudly.sendLocalBroadcast(BroadcastSendingTask.makeSuccess(Broadcasts.POST_GET_INFO));
         if (summary.hasPositiveChanges()) {
             String[] strings = makeNewInfoMessages(summary);
-            if (MainActivity.aliveCopy == 0 && SettingsActivity.aliveCopy == 0) {
+            if (Loudly.getCurrentActivity() == null) {
                 Utils.makeNotification(this, strings[0], strings[1], NOTIFICATION_ID);
             } else {
                 Utils.showSnackBar(strings[1]);

@@ -36,8 +36,8 @@ public class VKAuthorizer extends Authorizer {
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
         ((VKKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
         ((VKKeyKeeper) keys).setUserId(response.getParameter(USER_ID));
+        // It's unsafe to store expiration time in KeyKeeper
         int expiration = Integer.parseInt(response.getParameter("expires_in"));
-        keys.expiresIn(expiration);
     }
 
     @Override

@@ -2,24 +2,19 @@ package ly.loud.loudly.networks.Facebook;
 
 import android.util.Pair;
 
+import ly.loud.loudly.base.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.Tasks;
-import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LocalFile;
@@ -35,6 +30,7 @@ import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.parsers.json.ArrayParser;
 import ly.loud.loudly.util.parsers.json.ObjectParser;
 
+// ToDo: Use my cool parsers
 public class FacebookWrap extends Wrap {
     private static final int NETWORK = Networks.FB;
     private static final String MAIN_SERVER = "https://graph.facebook.com/v2.5/";
@@ -77,6 +73,26 @@ public class FacebookWrap extends Wrap {
             return "Sorry, we can upload only 1 image";
         }
         return null;
+    }
+
+    @Override
+    public String handleError(InputStream stream) throws IOException {
+        ObjectParser errorParser = new ObjectParser()
+                .parseInt("code")
+                .parseString("error_user_msg");
+        ObjectParser parser = new ObjectParser()
+                .parseObject("error", errorParser);
+        parser.parse(stream);
+
+        errorParser = parser.getObject();
+        int code = errorParser.getInt(0);
+        String message = errorParser.getString("");
+
+        // See https://developers.facebook.com/docs/graph-api/using-graph-api/
+        if (code == 102 || code == 467) {
+            throw new TokenExpiredException();
+        }
+        return message;
     }
 
     @Override
@@ -175,7 +191,7 @@ public class FacebookWrap extends Wrap {
         query.addParameter("ids", sb);
         query.addParameter("fields", "link,width,height");
 
-        ObjectParser response = Network.makeGetRequestAndParse(query, responseParser);
+        ObjectParser response = Network.makeGetRequestAndParse(query, responseParser, this);
         for (Image image : images) {
             if (image.existsIn(networkID())) {
                 fillImageFromParser(image, response.getObject());
@@ -244,10 +260,10 @@ public class FacebookWrap extends Wrap {
         ObjectParser responseParser = new ObjectParser()
                 .parseArray("data", postParser);
 
-        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
+        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser, this)
                 .getArray();
 
-        List<Post> posts = new LinkedList<>();
+        List<Post> posts = new ArrayList<>();
         for (int i = 0; i < response.size(); i++) {
             postParser = response.getObject(i);
             String text = postParser.getString("");
@@ -362,7 +378,7 @@ public class FacebookWrap extends Wrap {
         ObjectParser responseParser = new ObjectParser()
                 .parseArray("data", commentParser);
 
-        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser)
+        ArrayParser response = Network.makeGetRequestAndParse(query, responseParser, this)
                 .getArray();
 
         LinkedList<Comment> comments = new LinkedList<>();
@@ -436,7 +452,7 @@ public class FacebookWrap extends Wrap {
         query.addParameter("ids", sb);
         query.addParameter("fields", "first_name,last_name,picture");
 
-        ObjectParser response = Network.makeGetRequestAndParse(query, responseParser);
+        ObjectParser response = Network.makeGetRequestAndParse(query, responseParser, this);
 
         LinkedList<Person> result = new LinkedList<>();
         for (int i = 0; i < personsID.size(); i++) {

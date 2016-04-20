@@ -9,16 +9,6 @@ public class LoudlyKeyKeeper extends KeyKeeper {
         super();
     }
 
-    @Override
-    public boolean isValid() {
-        return true;
-    }
-
-    @Override
-    public boolean mayExpire() {
-        return false;
-    }
-
     // Has nothing to save, later should say some keys
     @Override
     protected void fromStrings(String[] strings) {
