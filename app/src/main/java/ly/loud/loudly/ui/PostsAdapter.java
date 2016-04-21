@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import ly.loud.loudly.R;
+import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.base.says.Say;
@@ -58,7 +59,12 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
                 }
             });
 
-            postHolder.setDeleteOnClick(makeDeleteClickListener(post));
+            if (Networks.makeWrap(post.getNetwork()).getDescription().canDelete()) {
+                postHolder.showDeleteButton();
+                postHolder.setDeleteOnClick(makeDeleteClickListener(post));
+            } else {
+                postHolder.hideDeleteButton();
+            }
         }
 
         holder.refresh(post);

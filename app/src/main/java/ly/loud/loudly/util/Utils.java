@@ -41,7 +41,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
@@ -68,8 +70,9 @@ public class Utils {
     public static String getDateFormatted(long date) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(date * 1000);
-        return cal.get(Calendar.DAY_OF_MONTH) + "." + +(cal.get(Calendar.MONTH) + 1) + "." + cal.get(Calendar.YEAR)
-                + " around " + cal.get(Calendar.HOUR_OF_DAY) + " hours";
+        SimpleDateFormat formatter = new SimpleDateFormat("h 'hours', EEEE, d.MM", Locale.getDefault());
+
+        return formatter.format(cal.getTime());
     }
 
     public static int getDefaultScreenHeight() {

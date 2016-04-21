@@ -59,13 +59,13 @@ public class IconsHolder extends View {
     public void prepareView(int mode) {
 //        this.mode = mode;
         if (mode == SHOW_ALL) {
-            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+            for (int i = 1; i < Networks.NETWORK_COUNT; i++) {
                 available[i] = true;
             }
 
         } else {
-            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-                if (Loudly.getContext().getKeyKeeper(i) != null) {
+            for (int i = 1; i < Networks.NETWORK_COUNT; i++) {
+                if (Loudly.getContext().getKeyKeeper(i) != null && Networks.makeWrap(i).getDescription().canPost()) {
                     available[i] = true;
                     isVisible[i] = true;
                 } else {
@@ -89,7 +89,7 @@ public class IconsHolder extends View {
         super(context, attrs);
         this.context = context;
 
-        for (int network = 0; network < Networks.NETWORK_COUNT; network++) {
+        for (int network = 1; network < Networks.NETWORK_COUNT; network++) {
             if (Loudly.getContext().getKeyKeeper(network) != null) {
                 available[network] = true;
                 isVisible[network] = true;
@@ -131,7 +131,7 @@ public class IconsHolder extends View {
         int cur_w = margin;
         int cur_h = marginTopBottom;
         int picNumber = 0;
-        for (int network = 0; network < Networks.NETWORK_COUNT; network++) {
+        for (int network = 1; network < Networks.NETWORK_COUNT; network++) {
             if (!available[network]) continue;
             Bitmap bitmap = null;
             Log.d("ICONS", "image");

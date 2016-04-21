@@ -68,6 +68,7 @@ public class Say implements SingleNetwork {
     }
 
     public Say(String text, long date, int network, Link link) {
+        this();
         this.text = text;
         this.date = date;
         this.network = network;
@@ -76,6 +77,7 @@ public class Say implements SingleNetwork {
     }
 
     public Say(String text, ArrayList<Attachment> attachments, long date, int network, Link link) {
+        this();
         this.text = text;
         this.attachments = attachments;
         this.date = date;

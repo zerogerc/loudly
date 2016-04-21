@@ -163,7 +163,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
         body.setText(comment.getText());
 
         TextView time = ((TextView) commentView.findViewById(R.id.comment_time));
-        time.setText(Long.toString(comment.getDate()));
+        time.setText(Utils.getDateFormatted(comment.getDate()));
 
         if (comment.getInfo().like > 0) {
             commentView.findViewById(R.id.comment_likes_button).setVisibility(View.VISIBLE);
@@ -187,8 +187,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
         icon.setImageResource(Utils.getResourceByNetwork(post.getNetwork()));
 
         TextView time = ((TextView) findViewById(R.id.full_post_info_time));
-        //TODO: replace with human-readable text
-        time.setText(Long.toString(post.getDate()));
+        time.setText(Utils.getDateFormatted(post.getDate()));
 
         TextView postText = ((TextView) findViewById(R.id.full_post_info_post_text));
         postText.setText(post.getText());

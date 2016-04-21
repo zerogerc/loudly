@@ -46,7 +46,7 @@ public class ViewHolderPost extends ViewHolder<Post> {
     private TextView sharesAmount;
     private ImageView repostsButton;
     private ImageView postImageView;
-    private ImageView showMoreOptions;
+    private ImageView deleteButton;
 
     public ViewHolderPost(Activity activity, ViewGroup parent) {
         super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.list_post, parent, false));
@@ -64,7 +64,7 @@ public class ViewHolderPost extends ViewHolder<Post> {
         sharesAmount = (TextView) itemView.findViewById(R.id.post_view_reposts_amount);
         repostsButton = (ImageView) itemView.findViewById(R.id.post_view_reposts_button);
         postImageView = (ImageView) itemView.findViewById(R.id.post_view_post_image);
-        showMoreOptions = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
+        deleteButton = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
 
         geoData.setHeight(0);
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) geoData.getLayoutParams();
@@ -76,8 +76,7 @@ public class ViewHolderPost extends ViewHolder<Post> {
     @Override
     public void refresh(final Post post) {
         text.setText(post.getText());
-//        data.setText(Utils.getDateFormatted(post.getDate()));
-        data.setText(Long.toString(post.getDate()));
+        data.setText(Utils.getDateFormatted(post.getDate()));
 
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -218,6 +217,14 @@ public class ViewHolderPost extends ViewHolder<Post> {
         postImageView.requestLayout();
     }
 
+    public void hideDeleteButton() {
+        deleteButton.setVisibility(View.GONE);
+    }
+
+    public void showDeleteButton() {
+        deleteButton.setVisibility(View.VISIBLE);
+    }
+
     public void setLikesOnClick(View.OnClickListener listener) {
         likesButton.setOnClickListener(listener);
     }
@@ -231,6 +238,6 @@ public class ViewHolderPost extends ViewHolder<Post> {
     }
 
     public void setDeleteOnClick(View.OnClickListener listener) {
-        showMoreOptions.setOnClickListener(listener);
+        deleteButton.setOnClickListener(listener);
     }
 }

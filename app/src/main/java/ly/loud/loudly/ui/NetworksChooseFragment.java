@@ -81,6 +81,7 @@ public class NetworksChooseFragment extends DialogFragment {
                 if (postImages.size() > 0) {
                     post.addAttachment(postImages.get(0));
                 }
+                setShouldPostTo(Networks.LOUDLY, true);
 
                 ArrayList<Wrap> wraps = new ArrayList<>();
                 for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
