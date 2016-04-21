@@ -70,7 +70,7 @@ public class Utils {
     public static String getDateFormatted(long date) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(date * 1000);
-        SimpleDateFormat formatter = new SimpleDateFormat("h 'hours', EEEE, d.MM", Locale.getDefault());
+        SimpleDateFormat formatter = new SimpleDateFormat("h 'hours', EEEE, d.MM", Locale.US);
 
         return formatter.format(cal.getTime());
     }

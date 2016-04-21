@@ -43,6 +43,7 @@ public class GlideImageView extends ImageView {
      */
     private void setScale(double scale) {
         this.scale = scale;
+        requestLayout();
     }
 
     /**
@@ -51,6 +52,10 @@ public class GlideImageView extends ImageView {
      * @param image given image
      */
     public void loadImage(Image image) {
+        if (image == null) {
+            setScale(0);
+            return;
+        }
         if (image.getHeight() == 0 || image.getWidth() == 0) {
             //squared View if image doesn't provide width and height
             setScale(1);

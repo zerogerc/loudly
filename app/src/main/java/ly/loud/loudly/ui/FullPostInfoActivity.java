@@ -36,7 +36,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
 
     private LinearLayout content;
     private LinearLayout likersContent;
-    private CommentsReceiver receiver;
+    private static CommentsReceiver receiver;
 
     private int broadcastReceived;
 
@@ -56,6 +56,23 @@ public class FullPostInfoActivity extends AppCompatActivity {
         receiver = new CommentsReceiver(this);
 
         handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (receiver != null) {
+            receiver.attach(this);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (receiver != null) {
+            receiver.detach();
+        }
+
     }
 
     /**
@@ -84,6 +101,28 @@ public class FullPostInfoActivity extends AppCompatActivity {
         }
     }
 
+    private void setListeners() {
+        if (post.getInfo().like > 0) {
+            View.OnClickListener likeListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    PeopleListFragment.showPersons(FullPostInfoActivity.this, post, Tasks.LIKES);
+                }
+            };
+            findViewById(R.id.full_post_info_likes_button).setOnClickListener(likeListener);
+            findViewById(R.id.full_post_info_likers_avatars).setOnClickListener(likeListener);
+        }
+
+        if (post.getInfo().repost > 0) {
+            findViewById(R.id.full_post_info_shares_button).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    PeopleListFragment.showPersons(FullPostInfoActivity.this, post, Tasks.SHARES);
+                }
+            });
+        }
+    }
+
     /**
      * Inflate footer of post based of {@link #likers}
      */
@@ -109,6 +148,8 @@ public class FullPostInfoActivity extends AppCompatActivity {
             button.setColorFilter(gray_color);
             findViewById(R.id.full_post_info_likes_amount).setVisibility(View.INVISIBLE);
         }
+
+        setListeners();
 
         int added = 0;
         for (Item item : likers) {
@@ -152,7 +193,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
      * @param commentView given view
      * @param comment given View
      */
-    private void loadComment(View commentView, Comment comment) {
+    private void loadComment(View commentView, final Comment comment) {
         GlideImageView avatar = ((GlideImageView) commentView.findViewById(R.id.comment_avatar));
         avatar.loadCircularShapeImageByUrl(comment.getPerson().getPhotoUrl());
 
@@ -169,6 +210,12 @@ public class FullPostInfoActivity extends AppCompatActivity {
             commentView.findViewById(R.id.comment_likes_button).setVisibility(View.VISIBLE);
             TextView likes = ((TextView) commentView.findViewById(R.id.comment_likes_amount));
             likes.setText(Integer.toString(comment.getInfo().like));
+            commentView.findViewById(R.id.comment_likes_button).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    PeopleListFragment.showPersons(FullPostInfoActivity.this, comment, Tasks.LIKES);
+                }
+            });
         } else {
             commentView.findViewById(R.id.comment_likes_button).setVisibility(View.GONE);
             commentView.findViewById(R.id.comment_likes_amount).setVisibility(View.GONE);

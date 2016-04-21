@@ -6,6 +6,10 @@ import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+
+import java.util.Comparator;
+import java.util.List;
+
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
@@ -16,9 +20,6 @@ import ly.loud.loudly.ui.adapter.ModifiableAdapter;
 import ly.loud.loudly.ui.adapter.ViewHolder;
 import ly.loud.loudly.ui.adapter.ViewHolderPost;
 import ly.loud.loudly.util.Utils;
-
-import java.util.Comparator;
-import java.util.List;
 
 public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements ModifiableAdapter<Post> {
     private int lastPosition = -1;
@@ -42,13 +43,6 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
                 @Override
                 public void onClick(View v) {
                     PeopleListFragment.showPersons(activity, post, Tasks.LIKES);
-                }
-            });
-
-            postHolder.setCommentsOnClick(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    PeopleListFragment.showComments(activity, post);
                 }
             });
 
