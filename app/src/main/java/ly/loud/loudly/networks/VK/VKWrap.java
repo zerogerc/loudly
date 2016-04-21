@@ -1,19 +1,7 @@
 package ly.loud.loudly.networks.VK;
 
 import android.util.Pair;
-
 import ly.loud.loudly.base.*;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LocalFile;
 import ly.loud.loudly.base.says.Comment;
@@ -25,14 +13,23 @@ import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Network;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
+import ly.loud.loudly.util.parsers.StringParser;
 import ly.loud.loudly.util.parsers.json.ArrayParser;
 import ly.loud.loudly.util.parsers.json.ObjectParser;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 // ToDo: Use my cool parsers
 public class VKWrap extends Wrap {
     private static final int NETWORK = Networks.VK;
-    private static int offset = 0;
-
     private static final String TAG = "VK_WRAP_TAG";
     private static final String API_VERSION = "5.40";
     private static final String MAIN_SERVER = "https://api.vk.com/method/";
@@ -42,8 +39,8 @@ public class VKWrap extends Wrap {
     private static final String LOAD_POSTS_METHOD = "wall.get";
     private static final String PHOTO_UPLOAD_METHOD = "photos.getWallUploadServer";
     private static final String SAVE_PHOTO_METHOD = "photos.saveWallPhoto";
-
     private static final String ACCESS_TOKEN = "access_token";
+    private static int offset = 0;
 
     @Override
     public int shouldUploadImage() {
@@ -96,7 +93,12 @@ public class VKWrap extends Wrap {
         errorParser = parser.getObject();
         int code = errorParser.getInt(0);
         String message = errorParser.getString("");
+        handleErrorCodes(code);
 
+        return message;
+    }
+
+    private void handleErrorCodes(int code) throws TokenExpiredException {
         // See https://vk.com/dev/errors
         if (code == 14) {
             // Bad, bad captcha
@@ -106,7 +108,6 @@ public class VKWrap extends Wrap {
         if (code == 5) {
             throw new TokenExpiredException();
         }
-        return message;
     }
 
     @Override
@@ -225,10 +226,22 @@ public class VKWrap extends Wrap {
         query.addParameter("owner_id", keys.getUserId());
         query.addParameter("post_id", post.getLink());
 
-        String response = Network.makeGetRequest(query);
+        String response = Network.makeGetRequestAndParse(query, new StringParser(), this);
+        try {
+            JSONObject object = new JSONObject(response);
+            if (object.has("error")) {
+                object = object.getJSONObject("error");
+                int code = object.getInt("error_code");
+                String message = object.getString("error_msg");
+                handleErrorCodes(code);
+                throw new IOException(message);
+            } else {
+                post.cleanIds();
+            }
 
-        // todo: check for delete
-        post.cleanIds();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

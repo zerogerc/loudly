@@ -1,12 +1,11 @@
 package ly.loud.loudly.util.parsers.json;
 
 import android.util.JsonReader;
+import ly.loud.loudly.util.parsers.Parser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
-import ly.loud.loudly.util.parsers.Parser;
 
 /**
  * Parser for JSON file consist of only one token. May be used in ArrayParsers
@@ -59,6 +58,26 @@ public class FieldParser implements Parser<FieldParser>, JsonParser {
             return ((T) value);
         }
         return defaultValue;
+    }
+
+    public int getInt(int defaultValue) {
+        return get(INT, defaultValue);
+    }
+
+    public String getString(String defaultValue) {
+        return get(STRING, defaultValue);
+    }
+
+    public double getDouble(double defaultValue) {
+        return get(DOUBLE, defaultValue);
+    }
+
+    public boolean getInt(boolean defaultValue) {
+        return get(BOOLEAN, defaultValue);
+    }
+
+    public long getLong(long defaultValue) {
+        return get(LONG, defaultValue);
     }
 
     @Override

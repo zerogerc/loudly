@@ -12,6 +12,21 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
-    <string name="token_expired_begin">Lost connection to </string>
+    <string name="token_expired_begin">Lost connection to</string>
     <string name="token_expired_end">. Please, login in settings</string>
+
+    <!-- Networks -->
+    <string name="network_loudly">Loudly</string>
+    <string name="network_facebook">Facebook</string>
+    <string name="network_twitter">Twitter</string>
+    <string name="network_instagram">Instagram</string>
+    <string name="network_vk">В Контакте</string>
+    <string name="network_ok">Одноклассники</string>
+    <string name="network_myworld">Мой Мир</string>
+
+    <!-- Misc -->
+    <string name="feed">Feed</string>
+    <string name="filter_by">Show</string>
+    <string name="no_filters">Everything</string>
+    <string name="cant_delete_from">Can\'t delete from</string>
 </resources>

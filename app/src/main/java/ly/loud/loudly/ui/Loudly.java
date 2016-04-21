@@ -6,12 +6,14 @@ import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.support.v4.content.LocalBroadcastManager;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
+import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.DatabaseActions;
 import ly.loud.loudly.util.database.DatabaseException;
@@ -41,6 +43,7 @@ public class Loudly extends Application {
     private TimeInterval timeInterval;
     private AlarmManager alarmManager;
     private PendingIntent getInfoService;
+    private LocalBroadcastReceiver receiver;
 
     /**
      * Load state of application from database. <br>
@@ -205,6 +208,9 @@ public class Loudly extends Application {
         super.onCreate();
         keyKeepers = new KeyKeeper[Networks.NETWORK_COUNT];
         context = this;
+        receiver = new LocalBroadcastReceiver();
+        LocalBroadcastManager.getInstance(this).
+                registerReceiver(receiver, new IntentFilter(Broadcasts.INTERNAL_MESSAGE));
 
         try {
             loadFromDB();
@@ -220,5 +226,6 @@ public class Loudly extends Application {
         super.onLowMemory();
         stopGetInfoService();
         posts.getPosts().clear();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
     }
 }

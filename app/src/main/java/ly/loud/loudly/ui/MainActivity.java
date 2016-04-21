@@ -164,16 +164,22 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        item.getTitle();
         if (id == R.id.nav_no_filter) {
             setRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
+            getSupportActionBar().setTitle(R.string.feed);
         } else if (id == R.id.nav_loudly) {
             setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.LOUDLY, this));
+            getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_facebook) {
             setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.FB, this));
+            getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_instagram) {
             setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.INSTAGRAM, this));
+            getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_vk) {
             setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.VK, this));
+            getSupportActionBar().setTitle(item.getTitle());
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -450,7 +456,6 @@ public class MainActivity extends AppCompatActivity
                     Snackbar.make(context.findViewById(R.id.fab),
                             "Post deleted", Snackbar.LENGTH_SHORT)
                             .show();
-                    context.floatingActionButton.setVisibility(View.VISIBLE);
                     Loudly.getContext().startGetInfoService();
                     break;
                 case Broadcasts.ERROR:
@@ -469,7 +474,6 @@ public class MainActivity extends AppCompatActivity
                             Snackbar.make(context.findViewById(R.id.fab),
                                     error, Snackbar.LENGTH_SHORT)
                                     .show();
-                            context.floatingActionButton.setVisibility(View.VISIBLE);
                             Log.e("DELETE_POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
                             stop();
                             receivers[POST_DELETE_RECEIVER] = null;

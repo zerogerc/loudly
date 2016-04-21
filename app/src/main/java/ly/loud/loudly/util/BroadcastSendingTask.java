@@ -26,7 +26,9 @@ public abstract class BroadcastSendingTask extends AsyncTask<Object, Intent, Int
 
     @Override
     protected void onPostExecute(Intent intent) {
-        Loudly.sendLocalBroadcast(intent);
+        if (intent != null) {
+            Loudly.sendLocalBroadcast(intent);
+        }
     }
 
     @Override

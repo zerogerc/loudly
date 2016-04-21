@@ -29,7 +29,7 @@ public class LocalBroadcastReceiver extends BroadcastReceiver {
                     if (Loudly.getCurrentActivity() != null) {
                         String begin = Loudly.getContext().getResources().getString(R.string.token_expired_begin);
                         String end = Loudly.getContext().getResources().getString(R.string.token_expired_end);
-                        Utils.showSnackBar(begin + Networks.nameOfNetwork(network) + end);
+                        Utils.showSnackBar(begin + " " + Networks.nameOfNetwork(network) + end);
                     }
                 }
         }

@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
@@ -259,7 +260,8 @@ public final class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
-            final LinkedList<Integer> success = new LinkedList<>();
+            final List<Integer> success = new ArrayList<>();
+            final List<Integer> fail = new ArrayList<>();
             ArrayList<Wrap> goodWraps = new ArrayList<>();
             for (Wrap w : wraps) {
                 if (post.existsIn(w.networkID())) {
@@ -281,10 +283,12 @@ public final class Tasks {
                         Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN, e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
+                        fail.add(w.networkID());
                     } catch (IOException e) {
                         e.printStackTrace();
                         publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.NETWORK_ERROR,
                                 e.getMessage()));
+                        fail.add(w.networkID());
                     }
                     return null;
                 }
@@ -304,7 +308,11 @@ public final class Tasks {
                 }
             });
 
-            return makeSuccess(Broadcasts.POST_DELETE);
+            if (fail.isEmpty()) {
+                return makeSuccess(Broadcasts.POST_DELETE);
+            } else {
+                return null;
+            }
         }
     }
 
