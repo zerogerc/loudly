@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="ly.loud.loudly.ui.FullPostInfo">
+    android:background="@color/white_color"
+    tools:context="ly.loud.loudly.ui.FullPostInfoActivity">
 
-    <android.support.v7.widget.RecyclerView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/full_post_recycler_view">
-    </android.support.v7.widget.RecyclerView>
+        android:layout_height="wrap_content"
+        android:id="@+id/full_post_info_content_list"
+        android:orientation="vertical">
 
-</RelativeLayout>
+        <include
+            android:id="@+id/activity_full_post_layout_post"
+            layout="@layout/full_post_info_post_layout"/>
+    </LinearLayout>
+</ScrollView>

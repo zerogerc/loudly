@@ -22,10 +22,11 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity
-                android:name=".ui.MainActivity"
-                android:label="@string/app_name"
-                android:theme="@style/AppTheme.NoActionBar"
-                android:windowSoftInputMode="adjustNothing">
+            android:name=".ui.MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustNothing"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -44,8 +45,8 @@
 
         <service android:name=".ui.GetInfoService"/>
 
-        <activity android:name=".ui.FullPostInfo"
-                  android:launchMode="singleTask">
+        <activity android:name=".ui.FullPostInfoActivity"
+            android:launchMode="singleTask">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value=".ui.MainActivity"/>

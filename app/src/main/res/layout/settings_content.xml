@@ -38,7 +38,7 @@
                     android:text="Your social networks"
                     android:textSize="17sp" />
 
-                <ly.loud.loudly.ui.IconsHolder
+                <ly.loud.loudly.ui.views.IconsHolder
                     android:id="@+id/settings_icons_holder"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

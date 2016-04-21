@@ -1,4 +1,4 @@
-package ly.loud.loudly.ui;
+package ly.loud.loudly.ui.views;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -12,6 +12,7 @@ import android.view.View;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.says.LoudlyPost;
+import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 

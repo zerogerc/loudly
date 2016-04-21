@@ -25,7 +25,7 @@ import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.FullPostInfo;
+import ly.loud.loudly.ui.FullPostInfoActivity;
 import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.util.Utils;
 
@@ -82,8 +82,8 @@ public class ViewHolderPost extends ViewHolder<Post> {
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), FullPostInfo.class);
-                intent.putExtra(FullPostInfo.POST_KEY, post);
+                Intent intent = new Intent(getActivity(), FullPostInfoActivity.class);
+                intent.putExtra(FullPostInfoActivity.POST_KEY, post);
                 getActivity().startActivity(intent);
             }
         });

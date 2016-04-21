@@ -26,7 +26,7 @@ public class ViewHolderComment extends ViewHolder<Comment> {
     private TextView commentTime;
 
     public ViewHolderComment(Activity activity, ViewGroup parent) {
-        super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.list_comment, parent, false));
+        super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.full_post_info_comment, parent, false));
 
         Comment comment = new Comment();
 

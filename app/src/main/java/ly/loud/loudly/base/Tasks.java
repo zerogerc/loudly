@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import ly.loud.loudly.R;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
@@ -376,7 +375,9 @@ public final class Tasks {
                 }
             }, goodWraps.toArray(new Wrap[goodWraps.size()]));
 
-            return makeSuccess(Broadcasts.GET_PERSONS);
+            Intent message = makeSuccess(Broadcasts.GET_PERSONS);
+            message.putExtra(Broadcasts.ID_FIELD, element.getLink().get());
+            return message;
         }
     }
 
@@ -438,7 +439,9 @@ public final class Tasks {
                 }
             }, goodWraps.toArray(new Wrap[goodWraps.size()]));
 
-            return makeSuccess(Broadcasts.GET_PERSONS);
+            Intent message = makeSuccess(Broadcasts.GET_PERSONS);
+            message.putExtra(Broadcasts.ID_FIELD, element.getLink().get());
+            return message;
         }
     }
 

@@ -212,6 +212,8 @@ public class LoudlyPost extends Post implements MultipleNetwork {
 
     public LoudlyPost(Parcel source) {
         super(source);
+        links = new Link[Networks.NETWORK_COUNT];
+        infos = new Info[Networks.NETWORK_COUNT];
         source.readTypedArray(links, Link.CREATOR);
         source.readTypedArray(infos, Info.CREATOR);
     }

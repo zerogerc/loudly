@@ -31,7 +31,7 @@
             android:tint="@color/white_color"/>
     </RelativeLayout>
 
-    <ly.loud.loudly.ui.IconsHolder
+    <ly.loud.loudly.ui.views.IconsHolder
         android:id="@+id/network_choose_icons_holder"
         android:layout_margin="4dp"
         android:layout_width="wrap_content"

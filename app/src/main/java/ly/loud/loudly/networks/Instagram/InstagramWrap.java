@@ -182,7 +182,11 @@ public class InstagramWrap extends Wrap {
                 maxId = id;
             }
 
-            query = new Query(pagination.getString(""));
+            String next = pagination.getString(null);
+            if (next == null) {
+                break;
+            }
+            query = new Query(next);
         } while (timeInterval.contains(lastDate));
 
         return result;
