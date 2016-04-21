@@ -22,6 +22,7 @@ import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.base.says.Say;
 import ly.loud.loudly.ui.adapter.Item;
+import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import ly.loud.loudly.ui.views.GlideImageView;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
@@ -183,8 +184,13 @@ public class FullPostInfoActivity extends AppCompatActivity {
                 View comment = LayoutInflater.from(this).inflate(R.layout.full_post_info_comment, null, false);
                 content.addView(comment);
                 loadComment(comment, ((Comment) item));
-                content.addView(LayoutInflater.from(this).inflate(R.layout.full_post_info_comment_delimeter, null, false));
+            } else if (item instanceof NetworkDelimiter) {
+                View delimiter = LayoutInflater.from(this).inflate(R.layout.list_delimeter, null, false);
+                content.addView(delimiter);
+                ImageView icon = ((ImageView) delimiter.findViewById(R.id.people_list_delimeter_icon));
+                icon.setImageResource(Utils.getResourceByNetwork(((NetworkDelimiter) item).getNetwork()));
             }
+            content.addView(LayoutInflater.from(this).inflate(R.layout.full_post_info_comment_delimeter, null, false));
         }
     }
 
