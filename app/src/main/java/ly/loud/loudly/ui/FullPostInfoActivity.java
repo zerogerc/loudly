@@ -14,11 +14,13 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import ly.loud.loudly.R;
+import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
+import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.base.says.Say;
 import ly.loud.loudly.ui.adapter.Item;
@@ -158,7 +160,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
                 final GlideImageView avatar = ((GlideImageView) LayoutInflater.from(this).inflate(R.layout.full_post_info_feedback_avatar, likersContent, false));
                 likersContent.addView(avatar);
                 //set width so it not be equal to 0
-//                avatar.getLayoutParams().width = ((int) getResources().getDimension(R.dimen.feedback_icon_size));
+                //avatar.getLayoutParams().width = ((int) getResources().getDimension(R.dimen.feedback_icon_size));
                 avatar.loadCircularShapeImageByUrl(((Person) item).getPhotoUrl());
                 added++;
             }
@@ -181,16 +183,21 @@ public class FullPostInfoActivity extends AppCompatActivity {
 
         for (Item item : elements) {
             if (item instanceof Comment) {
-                View comment = LayoutInflater.from(this).inflate(R.layout.full_post_info_comment, null, false);
+                View comment = LayoutInflater.from(this).inflate(R.layout.full_post_info_comment, content, false);
                 content.addView(comment);
                 loadComment(comment, ((Comment) item));
-            } else if (item instanceof NetworkDelimiter) {
-                View delimiter = LayoutInflater.from(this).inflate(R.layout.list_delimeter, null, false);
+            } else if ((post instanceof LoudlyPost) && (item instanceof NetworkDelimiter)) {
+                content.addView(LayoutInflater.from(this).inflate(R.layout.full_post_info_comment_delimiter, content, false));
+
+                View delimiter = LayoutInflater.from(this).inflate(R.layout.full_post_info_network_delimiter, content, false);
                 content.addView(delimiter);
-                ImageView icon = ((ImageView) delimiter.findViewById(R.id.people_list_delimeter_icon));
+
+                ImageView icon = ((ImageView) delimiter.findViewById(R.id.full_post_info_delimiter_icon));
                 icon.setImageResource(Utils.getResourceByNetwork(((NetworkDelimiter) item).getNetwork()));
+
+                TextView name = ((TextView) delimiter.findViewById(R.id.full_post_info_delimiter_name));
+                name.setText(Networks.nameOfNetwork(((NetworkDelimiter) item).getNetwork()));
             }
-            content.addView(LayoutInflater.from(this).inflate(R.layout.full_post_info_comment_delimeter, null, false));
         }
     }
 

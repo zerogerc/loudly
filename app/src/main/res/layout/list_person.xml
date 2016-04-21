@@ -12,11 +12,9 @@
         android:id="@+id/people_list_person_body">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/Icon"
             android:id="@+id/people_list_person_avatar"
             android:src="@mipmap/ic_launcher"
-            android:layout_margin="8dp"
             android:layout_centerVertical="true" />
 
         <TextView

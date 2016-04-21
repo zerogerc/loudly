@@ -148,6 +148,35 @@ public class Utils {
         return resource;
     }
 
+    public static int getResourceWhiteByNetwork(int network) {
+        int resource;
+        switch (network) {
+            case Networks.LOUDLY:
+                return R.drawable.ic_loudly_white;
+            case Networks.FB:
+                resource = R.drawable.ic_facebook_white;
+                break;
+            case Networks.TWITTER:
+                resource = R.drawable.ic_twitter_white;
+                break;
+            case Networks.INSTAGRAM:
+                resource = R.drawable.ic_instagram_white;
+                break;
+            case Networks.VK:
+                resource = R.drawable.ic_vk_white;
+                break;
+            case Networks.OK:
+                resource = R.drawable.ic_ok_white;
+                break;
+            case Networks.MAILRU:
+                resource = R.drawable.ic_myworld_white;
+                break;
+            default:
+                resource = R.drawable.ic_loudly_white;
+        }
+        return resource;
+    }
+
     public static Bitmap toGrayscale(Bitmap bmpOriginal)
     {
         int width, height;

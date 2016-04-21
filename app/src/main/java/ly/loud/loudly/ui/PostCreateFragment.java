@@ -47,10 +47,10 @@ public class PostCreateFragment extends DialogFragment {
 
     private View rootView;
     private EditText editText;
-    private ImageView postImageView;
+    private static ImageView postImageView;
     private ArrayList<Image> postImages;
 
-    private Uri currentImageUri;
+    private static Uri currentImageUri;
 
     private void galleryAddPic() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, currentImageUri);
@@ -174,7 +174,7 @@ public class PostCreateFragment extends DialogFragment {
         );
 
         if (getArguments() != null) {
-            currentImageUri = getArguments().getParcelable(CURRENT_IMAGE_URI);
+//            currentImageUri = getArguments().getParcelable(CURRENT_IMAGE_URI);
             postImages = getArguments().getParcelableArrayList(POST_IMAGES_KEY);
         } else {
             postImages = new ArrayList<>();
@@ -264,15 +264,18 @@ public class PostCreateFragment extends DialogFragment {
             if (data == null) {
                 Log.e("IMG_LOAD_TAG", "Data to received");
             } else {
+                if (data.getData() == null) {
+                    return;
+                }
                 postImages.add(new LoudlyImage(data.getData()));
                 prepareImageView();
                 Glide.with(Loudly.getContext()).load(data.getData())
                         .fitCenter()
                         .into(postImageView);
-
             }
         }
         if (requestCode == REQUEST_PHOTO_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
+            postImages.clear();
             postImages.add(new LoudlyImage(currentImageUri));
             showImages();
         }

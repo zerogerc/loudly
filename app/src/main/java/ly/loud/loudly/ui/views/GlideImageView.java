@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.ui.Loudly;
 
@@ -57,8 +58,13 @@ public class GlideImageView extends ImageView {
             return;
         }
         if (image.getHeight() == 0 || image.getWidth() == 0) {
-            //squared View if image doesn't provide width and height
-            setScale(1);
+            //TODO: remove this enterprise
+            setScale(0.75);
+//            Glide.with(getContext())
+//                    .load(image.getUri())
+//                    .fitCenter()
+//                    .into(this);
+            setBackgroundResource(R.color.white_color);
         } else {
             setScale(((double) image.getHeight()) / image.getWidth());
         }

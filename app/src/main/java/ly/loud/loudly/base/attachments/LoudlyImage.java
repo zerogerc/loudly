@@ -17,7 +17,6 @@ import ly.loud.loudly.base.MultipleNetwork;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.util.Utils;
 
@@ -47,6 +46,8 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
 
     public LoudlyImage(Parcel source) {
         super(source);
+        ids = new Link[Networks.NETWORK_COUNT];
+        infos = new Info[Networks.NETWORK_COUNT];
         source.readTypedArray(ids, Link.CREATOR);
         source.readTypedArray(infos, Info.CREATOR);
         internalLink = source.readParcelable(Uri.class.getClassLoader());
