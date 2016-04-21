@@ -39,6 +39,13 @@ public abstract class Wrap implements Comparable<Wrap> {
      */
     public abstract int networkID();
 
+    /**
+     * Get description of this network
+     *
+     * @return description
+     * @see NetworkDescription
+     */
+    public abstract NetworkDescription getDescription();
 
     /**
      * Proper flag from this class

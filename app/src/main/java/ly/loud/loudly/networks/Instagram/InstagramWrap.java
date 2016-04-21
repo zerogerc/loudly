@@ -28,6 +28,17 @@ public class InstagramWrap extends Wrap {
     private static final String MAIN_SERVER = "https://api.instagram.com/v1";
     private static String minId = "";
     private static String maxId = "";
+    private static final NetworkDescription DESCRIPTION = new NetworkDescription() {
+        @Override
+        public boolean canPost() {
+            return false;
+        }
+
+        @Override
+        public boolean canDelete() {
+            return false;
+        }
+    };
 
     @Override
     public void resetState() {
@@ -43,6 +54,11 @@ public class InstagramWrap extends Wrap {
     @Override
     public int shouldUploadImage() {
         return Wrap.UPLOAD_LAST;
+    }
+
+    @Override
+    public NetworkDescription getDescription() {
+        return DESCRIPTION;
     }
 
     @Override

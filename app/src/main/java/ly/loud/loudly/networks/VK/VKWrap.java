@@ -40,6 +40,18 @@ public class VKWrap extends Wrap {
     private static final String PHOTO_UPLOAD_METHOD = "photos.getWallUploadServer";
     private static final String SAVE_PHOTO_METHOD = "photos.saveWallPhoto";
     private static final String ACCESS_TOKEN = "access_token";
+    private static final NetworkDescription DESCRIPTION = new NetworkDescription() {
+        @Override
+        public boolean canPost() {
+            return true;
+        }
+
+        @Override
+        public boolean canDelete() {
+            return true;
+        }
+    };
+
     private static int offset = 0;
 
     @Override
@@ -55,6 +67,11 @@ public class VKWrap extends Wrap {
     @Override
     public int networkID() {
         return NETWORK;
+    }
+
+    @Override
+    public NetworkDescription getDescription() {
+        return DESCRIPTION;
     }
 
     @Override

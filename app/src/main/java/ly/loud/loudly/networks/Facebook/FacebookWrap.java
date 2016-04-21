@@ -36,6 +36,17 @@ public class FacebookWrap extends Wrap {
     private static final String MAIN_SERVER = "https://graph.facebook.com/v2.5/";
     private static final String POST_NODE = "me/feed";
     private static final String PHOTO_NODE = "me/photos";
+    private static final NetworkDescription DESCRIPTION = new NetworkDescription() {
+        @Override
+        public boolean canPost() {
+            return true;
+        }
+
+        @Override
+        public boolean canDelete() {
+            return true;
+        }
+    };
 
     @Override
     public int shouldUploadImage() {
@@ -50,6 +61,11 @@ public class FacebookWrap extends Wrap {
     @Override
     public int networkID() {
         return NETWORK;
+    }
+
+    @Override
+    public NetworkDescription getDescription() {
+        return DESCRIPTION;
     }
 
     @Override

@@ -7,11 +7,7 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.Wrap;
+import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LoudlyImage;
 import ly.loud.loudly.base.says.Comment;
@@ -27,6 +23,23 @@ import ly.loud.loudly.util.database.DatabaseActions;
  * Wrap over database
  */
 public class LoudlyWrap extends Wrap {
+    private static final NetworkDescription DESCRIPTION = new NetworkDescription() {
+        @Override
+        public boolean canPost() {
+            return true;
+        }
+
+        @Override
+        public boolean canDelete() {
+            return true;
+        }
+    };
+
+    @Override
+    public NetworkDescription getDescription() {
+        return DESCRIPTION;
+    }
+
     @Override
     protected Query makeAPICall(String url) {
         return null;
