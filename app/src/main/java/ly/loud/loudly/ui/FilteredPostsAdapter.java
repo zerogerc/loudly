@@ -1,11 +1,12 @@
 package ly.loud.loudly.ui;
 
 import com.android.internal.util.Predicate;
+
+import java.util.List;
+
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.util.FilteredListView;
-
-import java.util.List;
 
 /**
  * @author Danil Kolikov
