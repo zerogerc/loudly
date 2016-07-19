@@ -3,6 +3,7 @@ package ly.loud.loudly.ui;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -10,9 +11,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -22,11 +21,14 @@ import android.view.View;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.ui.adapter.SpacesItemDecoration;
+import ly.loud.loudly.ui.feed.FeedView;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
@@ -39,8 +41,11 @@ public class MainActivity extends AppCompatActivity
 
     static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
 
-    private RecyclerView recyclerView;
-    public FloatingActionButton floatingActionButton;
+    @BindView(R.id.content_main_feed_view)
+    FeedView feedView;
+
+    @BindView(R.id.fab)
+    FloatingActionButton floatingActionButton;
 
     static final int LOAD_POSTS_RECEIVER = 0;
     static final int POST_UPLOAD_RECEIVER = 1;
@@ -54,37 +59,26 @@ public class MainActivity extends AppCompatActivity
 
     public static void executeOnUI(final UIAction<MainActivity> action) {
         if (self != null) {
-            self.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    action.execute(self);
-                }
-            });
+            self.runOnUiThread(() -> action.execute(self));
         }
     }
 
     private void init() {
         self = this;
 
-        setRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
+        setFeedView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(R.string.feed);
 
         setSupportActionBar(toolbar);
-
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                callPostCreate(view);
-            }
-        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -99,7 +93,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState != null) {
             int position = savedInstanceState.getInt(BUNDLE_RECYCLER_LAYOUT);
-            recyclerView.getLayoutManager().scrollToPosition(position);
+            feedView.getLayoutManager().scrollToPosition(position);
         }
     }
 
@@ -108,11 +102,11 @@ public class MainActivity extends AppCompatActivity
         super.onSaveInstanceState(outState);
         int position;
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            position = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
-        } else {
             int[] positions = new int[2];
-            ((StaggeredGridLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPositions(positions);
+            ((StaggeredGridLayoutManager) feedView.getLayoutManager()).findFirstVisibleItemPositions(positions);
             position = positions[0];
+        } else {
+            position = ((LinearLayoutManager) feedView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
         }
         outState.putInt(BUNDLE_RECYCLER_LAYOUT, position);
     }
@@ -168,19 +162,19 @@ public class MainActivity extends AppCompatActivity
 
         item.getTitle();
         if (id == R.id.nav_no_filter) {
-            setRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
+            setFeedView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
             getSupportActionBar().setTitle(R.string.feed);
         } else if (id == R.id.nav_loudly) {
-            setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.LOUDLY, this));
+            setFeedView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.LOUDLY, this));
             getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_facebook) {
-            setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.FB, this));
+            setFeedView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.FB, this));
             getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_instagram) {
-            setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.INSTAGRAM, this));
+            setFeedView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.INSTAGRAM, this));
             getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_vk) {
-            setRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.VK, this));
+            setFeedView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.VK, this));
             getSupportActionBar().setTitle(item.getTitle());
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -238,21 +232,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void setRecyclerView(PostsAdapter adapter) {
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+    private void setFeedView(@NonNull PostsAdapter adapter) {
         Loudly.getPostHolder().setAdapter(adapter);
-
-        recyclerView.setHasFixedSize(true); /// HERE
-        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.setAdapter(adapter);
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        } else {
-            recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-            int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.recycler_landscape_margin);
-            recyclerView.addItemDecoration(new SpacesItemDecoration(spacingInPixels));
-        }
-        recyclerView.setItemAnimator(itemAnimator);
+        feedView.setAdapter(adapter);
     }
 
     public void callSettingsActivity() {
@@ -260,7 +242,7 @@ public class MainActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    public void callPostCreate(View v) {
+    public void callPostCreate() {
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
             receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
@@ -277,7 +259,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-
 
     static class PostUploaderReceiver extends AttachableReceiver<MainActivity> {
         public PostUploaderReceiver(MainActivity context) {
@@ -487,5 +468,10 @@ public class MainActivity extends AppCompatActivity
                     break;
             }
         }
+    }
+
+    @OnClick(R.id.fab)
+    public void fabClick() {
+        callPostCreate();
     }
 }
