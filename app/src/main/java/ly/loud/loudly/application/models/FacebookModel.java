@@ -3,11 +3,14 @@ package ly.loud.loudly.application.models;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.base.Person;
+import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
@@ -15,7 +18,6 @@ import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.Facebook.FacebookWrap;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
-import rx.Single;
 
 /**
  * Created by ZeRoGerc on 21/07/16.
@@ -54,18 +56,18 @@ public class FacebookModel implements NetworkContract {
     }
 
     @Override
-    public Single<Long> upload(Image image) {
-        return null;
+    public long upload(Image image) {
+        return 0;
     }
 
     @Override
-    public Single<Long> upload(Post post) {
-        return null;
+    public long upload(Post post) {
+        return 0;
     }
 
     @Override
-    public Single<Long> delete(Post post) {
-        return null;
+    public void delete(Post post) {
+
     }
 
     @Override
@@ -74,13 +76,18 @@ public class FacebookModel implements NetworkContract {
     }
 
     @Override
-    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
-        return null;
+    public List<Person> getPersons(@NonNull SingleNetwork element, @PeopleGetterModel.RequestType int requestType) {
+        return Collections.emptyList();
     }
 
     @Override
-    public Single<Boolean> disconnect() {
-        return null;
+    public boolean connect(@NonNull KeyKeeper keyKeeper) {
+        return false;
+    }
+
+    @Override
+    public boolean disconnect() {
+        return false;
     }
 
     @Override

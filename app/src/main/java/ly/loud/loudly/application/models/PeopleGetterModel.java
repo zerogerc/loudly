@@ -4,14 +4,12 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.Wrap;
 import rx.Single;
 
 /**
@@ -28,34 +26,39 @@ public class PeopleGetterModel {
     @NonNull
     private Loudly loudlyApplication;
 
-    public PeopleGetterModel(@NonNull Loudly loudlyApplication) {
+    @NonNull
+    private CoreModel coreModel;
+
+    public PeopleGetterModel(
+            @NonNull Loudly loudlyApplication,
+            @NonNull CoreModel coreModel
+    ) {
         this.loudlyApplication = loudlyApplication;
+        this.coreModel = coreModel;
     }
 
     @CheckResult
     @NonNull
     private List<PersonsFromNetwork> getListPersonsByType(@NonNull SingleNetwork element, @RequestType int type) {
-        Wrap[] networkWraps = loudlyApplication.getWraps();
 
-        ArrayList<Wrap> goodWraps = new ArrayList<>();
-        for (Wrap w : networkWraps) {
-            if (element.existsIn(w.networkID())) {
-                goodWraps.add(w);
+        ArrayList<NetworkContract> availableModels = new ArrayList<>();
+
+        for (NetworkContract model : coreModel.getNetworksModels()) {
+            if (element.existsIn(model.getId())) {
+                availableModels.add(model);
             }
         }
 
         List<PersonsFromNetwork> result = new ArrayList<>();
-        for (Wrap wrap : goodWraps) {
-            try {
-                result.add(new PersonsFromNetwork(
-                        wrap.getPersons(
-                                type,
-                                element.getNetworkInstance(wrap.networkID())),
-                        wrap.networkID()
-                ));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
+        for (NetworkContract model : availableModels) {
+            result.add(new PersonsFromNetwork(
+                    model.getPersons(
+                            element,
+                            type),
+                    model.getId()
+            ));
+
         }
         return result;
     }

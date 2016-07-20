@@ -40,7 +40,7 @@ public class CoreModel {
     public Single<Boolean> connectToNetworkById(int id, @NonNull KeyKeeper keyKeeper) {
         for (NetworkContract model : networkModels) {
             if (model.getId() == id) {
-                return model.connect(keyKeeper);
+                return Single.fromCallable(() -> model.connect(keyKeeper));
             }
         }
         return Single.fromCallable(() -> false);

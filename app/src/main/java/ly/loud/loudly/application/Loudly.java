@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,9 +27,16 @@ import ly.loud.loudly.ui.LocalBroadcastReceiver;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PostsHolder;
 import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.Network;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.*;
+import ly.loud.loudly.util.database.DaggerDatabaseComponent;
+import ly.loud.loudly.util.database.DatabaseComponent;
+import ly.loud.loudly.util.database.DatabaseException;
+import ly.loud.loudly.util.database.DatabaseUtils;
+import ly.loud.loudly.util.database.KeysDbModule;
+import ly.loud.loudly.util.database.PostDbModule;
+import rx.schedulers.Schedulers;
+
+import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
 /**
  * Core application of Loudly app
@@ -184,6 +192,15 @@ public class Loudly extends Application {
      * @param keyKeeper KeyKeeper, that should be stored
      */
     public void setKeyKeeper(int network, KeyKeeper keyKeeper) {
+        getAppComponent().coreModel().connectToNetworkById(network, keyKeeper)
+                .subscribeOn(Schedulers.io())
+                .observeOn(mainThread())
+                .subscribe(aBoolean -> {
+                    if (!aBoolean) {
+                        Log.e("NETWORK", "Could not connect with keykeeper");
+                    }
+                });
+
         keyKeepers[network] = keyKeeper;
     }
 

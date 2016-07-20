@@ -37,7 +37,10 @@ public class AppModule {
     @Provides
     @Singleton
     PeopleGetterModel providePeopleGetterModel() {
-        return new PeopleGetterModel(loudlyApplication);
+        return new PeopleGetterModel(
+                loudlyApplication,
+                loudlyApplication.getAppComponent().coreModel()
+        );
     }
 
     @Provides

@@ -6,11 +6,14 @@ import android.support.annotation.NonNull;
 import java.util.List;
 
 import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.base.Person;
+import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
-import rx.Single;
+
+import static ly.loud.loudly.application.models.PeopleGetterModel.RequestType;
 
 /**
  * Interface that all Network models must implement.
@@ -24,7 +27,7 @@ public interface NetworkContract {
      * @return id of image in given network
      */
     @CheckResult
-    Single<Long> upload(Image image);
+    long upload(Image image);
 
     /**
      * Upload post to network
@@ -32,14 +35,13 @@ public interface NetworkContract {
      * @return id of post in network
      */
     @CheckResult
-    Single<Long> upload(Post post);
+    long upload(Post post);
 
     /**
      * Delete post from network
-     * @return id of post in network
      */
     @CheckResult
-    Single<Long> delete(Post post);
+    void delete(Post post);
 
     /**
      * Load posts from network
@@ -50,19 +52,25 @@ public interface NetworkContract {
     Observable<List<Post>> loadPosts(TimeInterval timeInterval);
 
     /**
+     * Get persons by request type. For example: peoples that like certain post.
+     */
+    @CheckResult
+    List<Person> getPersons(@NonNull SingleNetwork element, @RequestType int requestType);
+
+    /**
      * Connect this network for proper work.
      * @param keyKeeper - auth token
      * @return  <code>true</code> if connected successfully
      */
     @CheckResult
-    Single<Boolean> connect(@NonNull KeyKeeper keyKeeper);
+    boolean connect(@NonNull KeyKeeper keyKeeper);
 
     /**
      * Disconnect from network
      * @return <code>true</code> if disconnected successfully
      */
     @CheckResult
-    Single<Boolean> disconnect();
+    boolean disconnect();
 
 
     /**
