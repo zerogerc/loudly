@@ -32,10 +32,6 @@ import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import rx.android.schedulers.AndroidSchedulers;
 
-/**
- * Created by ZeRoGerc on 06.12.15.
- * ITMO University
- */
 public class PeopleListFragment extends DialogFragment {
 
     @Inject
@@ -113,12 +109,11 @@ public class PeopleListFragment extends DialogFragment {
         super.onResume();
 
         if (items.isEmpty()) { // First run
-            peopleGetterModel.getPersonsByType(element, requestType, Loudly.getContext().getWraps())
+            peopleGetterModel.getPersonsByType(element, requestType)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(this::loadItems);
         }
     }
-
 
     private void loadItems(@NonNull List<PersonsFromNetwork> persons) {
         for (PersonsFromNetwork list : persons) {

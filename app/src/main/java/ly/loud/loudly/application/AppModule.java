@@ -24,6 +24,6 @@ public class AppModule {
 
     @Provides @Singleton
     PeopleGetterModel providePeopleGetterModel() {
-        return new PeopleGetterModel();
+        return new PeopleGetterModel(loudlyApplication);
     }
 }

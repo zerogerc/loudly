@@ -6,10 +6,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.Wrap;
-import rx.Observable;
+import rx.Single;
 import rx.schedulers.Schedulers;
 
 /**
@@ -17,6 +18,13 @@ import rx.schedulers.Schedulers;
  * For example: get likes to post.
  */
 public class PeopleGetterModel {
+
+    @NonNull
+    private Loudly loudlyApplication;
+
+    public PeopleGetterModel(@NonNull Loudly loudlyApplication) {
+        this.loudlyApplication = loudlyApplication;
+    }
 
     @NonNull
     private List<PersonsFromNetwork> getListPersonsByType(SingleNetwork element, int type, Wrap... networkWraps) {
@@ -44,10 +52,10 @@ public class PeopleGetterModel {
     }
 
     @NonNull
-    public Observable<List<PersonsFromNetwork>> getPersonsByType(@NonNull SingleNetwork element,
-                                                                 int type,
-                                                                 @NonNull Wrap... networkWraps) {
-        return Observable.fromCallable(() -> getListPersonsByType(element, type, networkWraps))
+    public Single<List<PersonsFromNetwork>> getPersonsByType(@NonNull SingleNetwork element,
+                                                             int type) {
+        Wrap[] networkWraps = loudlyApplication.getWraps();
+        return Single.fromCallable(() -> getListPersonsByType(element, type, networkWraps))
                 .subscribeOn(Schedulers.io());
     }
 
