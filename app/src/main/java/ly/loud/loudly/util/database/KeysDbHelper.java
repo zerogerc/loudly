@@ -3,7 +3,7 @@ package ly.loud.loudly.util.database;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.database.KeysContract.KeysEntry;
 
 public class KeysDbHelper extends SQLiteOpenHelper {

@@ -12,7 +12,7 @@ import android.view.View;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 

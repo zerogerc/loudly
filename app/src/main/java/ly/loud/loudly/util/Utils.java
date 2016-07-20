@@ -48,7 +48,7 @@ import java.util.Locale;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.R;
 import ly.loud.loudly.ui.SettingsActivity;

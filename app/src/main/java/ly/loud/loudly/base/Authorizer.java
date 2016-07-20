@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.AttachableTask;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;

@@ -12,7 +12,7 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 
 //TODO: width and height not greater that image,getHeight image.getWidth
 //TODO: setBackGround to white after load (for small images)

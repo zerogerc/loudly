@@ -13,13 +13,16 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+
+import java.util.Collections;
+
 import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Authorizer;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.R;
 import ly.loud.loudly.ui.views.IconsHolder;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
@@ -27,8 +30,6 @@ import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 import ly.loud.loudly.util.database.DatabaseActions;
 import ly.loud.loudly.util.database.DatabaseException;
-
-import java.util.Collections;
 
 public class SettingsActivity extends AppCompatActivity {
     public static String webViewURL;

@@ -17,7 +17,7 @@ import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.LoudlyImage;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.Utils;
 import ly.loud.loudly.util.database.AttachmentsContract.AttachmentsEntry;

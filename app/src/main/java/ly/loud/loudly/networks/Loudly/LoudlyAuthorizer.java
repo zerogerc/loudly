@@ -6,7 +6,7 @@ import android.content.Intent;
 import ly.loud.loudly.base.Authorizer;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.Query;

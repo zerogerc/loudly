@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import java.util.ArrayList;
 
 import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.Wrap;

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LoudlyImage;

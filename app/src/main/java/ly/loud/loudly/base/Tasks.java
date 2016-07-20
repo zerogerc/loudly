@@ -19,7 +19,7 @@ import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PostsAdapter;
 import ly.loud.loudly.ui.adapter.Item;

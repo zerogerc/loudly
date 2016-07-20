@@ -1,7 +1,6 @@
 package ly.loud.loudly.ui;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -25,6 +24,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.Wrap;
@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = "MAIN";
     private static final String BUNDLE_RECYCLER_LAYOUT = "Recycler View State";
 
-    static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
+    public static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
 
     @BindView(R.id.content_main_feed_view)
     FeedView feedView;
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         int position;
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+        if (feedView.getLayoutManager() instanceof StaggeredGridLayoutManager) {
             int[] positions = new int[2];
             ((StaggeredGridLayoutManager) feedView.getLayoutManager()).findFirstVisibleItemPositions(positions);
             position = positions[0];

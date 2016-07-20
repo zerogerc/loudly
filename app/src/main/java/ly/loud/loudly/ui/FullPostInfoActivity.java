@@ -1,5 +1,6 @@
 package ly.loud.loudly.ui;
 
+import android.support.v4.app.DialogFragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.Tasks;
@@ -106,23 +108,20 @@ public class FullPostInfoActivity extends AppCompatActivity {
 
     private void setListeners() {
         if (post.getInfo().like > 0) {
-            View.OnClickListener likeListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    PeopleListFragment.showPersons(FullPostInfoActivity.this, post, Tasks.LIKES);
-                }
+            View.OnClickListener likeListener = v -> {
+                DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.LIKES);
+                fragment.show(getSupportFragmentManager(), fragment.getTag());
             };
             findViewById(R.id.full_post_info_likes_button).setOnClickListener(likeListener);
             findViewById(R.id.full_post_info_likers_avatars).setOnClickListener(likeListener);
         }
 
         if (post.getInfo().repost > 0) {
-            findViewById(R.id.full_post_info_shares_button).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    PeopleListFragment.showPersons(FullPostInfoActivity.this, post, Tasks.SHARES);
-                }
-            });
+            findViewById(R.id.full_post_info_shares_button)
+                    .setOnClickListener(v -> {
+                        DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.SHARES);
+                        fragment.show(getSupportFragmentManager(), fragment.getTag());
+                    });
         }
     }
 
@@ -223,12 +222,11 @@ public class FullPostInfoActivity extends AppCompatActivity {
             commentView.findViewById(R.id.comment_likes_button).setVisibility(View.VISIBLE);
             TextView likes = ((TextView) commentView.findViewById(R.id.comment_likes_amount));
             likes.setText(Integer.toString(comment.getInfo().like));
-            commentView.findViewById(R.id.comment_likes_button).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    PeopleListFragment.showPersons(FullPostInfoActivity.this, comment, Tasks.LIKES);
-                }
-            });
+            commentView.findViewById(R.id.comment_likes_button)
+                    .setOnClickListener(v -> {
+                        DialogFragment fragment = PeopleListFragment.newInstance(comment, Tasks.LIKES);
+                        fragment.show(getSupportFragmentManager(), fragment.getTag());
+                    });
         } else {
             commentView.findViewById(R.id.comment_likes_button).setVisibility(View.GONE);
             commentView.findViewById(R.id.comment_likes_amount).setVisibility(View.GONE);

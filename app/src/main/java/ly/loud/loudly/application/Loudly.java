@@ -1,4 +1,4 @@
-package ly.loud.loudly.ui;
+package ly.loud.loudly.application;
 
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -9,19 +9,25 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.support.v4.content.LocalBroadcastManager;
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
-import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.DatabaseActions;
-import ly.loud.loudly.util.database.DatabaseException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.base.Wrap;
+import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
+import ly.loud.loudly.ui.GetInfoService;
+import ly.loud.loudly.ui.LocalBroadcastReceiver;
+import ly.loud.loudly.ui.MainActivity;
+import ly.loud.loudly.ui.PostsHolder;
+import ly.loud.loudly.util.Broadcasts;
+import ly.loud.loudly.util.TimeInterval;
+import ly.loud.loudly.util.database.DatabaseActions;
+import ly.loud.loudly.util.database.DatabaseException;
 
 /**
  * Core application of Loudly app
@@ -44,6 +50,8 @@ public class Loudly extends Application {
     private AlarmManager alarmManager;
     private PendingIntent getInfoService;
     private LocalBroadcastReceiver receiver;
+
+    private AppComponent appComponent;
 
     /**
      * Load state of application from database. <br>
@@ -149,7 +157,7 @@ public class Loudly extends Application {
         return new int[]{getInfoInterval, loadLast};
     }
 
-    static void savePreferences(int frequency, int loadLast) {
+    public static void savePreferences(int frequency, int loadLast) {
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt(UPDATE_FREQUENCY, frequency);
@@ -204,8 +212,19 @@ public class Loudly extends Application {
     }
 
     @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        stopGetInfoService();
+        posts.getPosts().clear();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
+
+        initInjector();
+
         keyKeepers = new KeyKeeper[Networks.NETWORK_COUNT];
         context = this;
         receiver = new LocalBroadcastReceiver();
@@ -221,11 +240,13 @@ public class Loudly extends Application {
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
     }
 
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        stopGetInfoService();
-        posts.getPosts().clear();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+    private void initInjector() {
+        appComponent = DaggerAppComponent.builder()
+                .appModule(new AppModule(this))
+                .build();
+    }
+
+    public AppComponent getAppComponent() {
+        return appComponent;
     }
 }

@@ -2,19 +2,20 @@ package ly.loud.loudly.base;
 
 import android.support.annotation.NonNull;
 import android.util.Pair;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
 
 /**
  * Base interface for all interactions with particular social network.

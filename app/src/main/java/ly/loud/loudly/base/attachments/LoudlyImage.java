@@ -17,7 +17,7 @@ import ly.loud.loudly.base.MultipleNetwork;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.Utils;
 
 public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {

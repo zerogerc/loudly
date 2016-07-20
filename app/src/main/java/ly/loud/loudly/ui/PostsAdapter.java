@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.support.v4.app.DialogFragment;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
@@ -11,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.says.Post;
@@ -24,8 +26,11 @@ import ly.loud.loudly.util.Utils;
 public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements ModifiableAdapter<Post> {
     private int lastPosition = -1;
 
+    private MainActivity activity;
+
     PostsAdapter(List<Post> posts, MainActivity activity) {
         super(posts, activity);
+        this.activity = activity;
     }
 
     protected Post getPost(int position) {
@@ -39,18 +44,14 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
         if (holder instanceof ViewHolderPost) {
             ViewHolderPost postHolder = (ViewHolderPost) holder;
 
-            postHolder.setLikesOnClick(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    PeopleListFragment.showPersons(activity, post, Tasks.LIKES);
-                }
+            postHolder.setLikesOnClick(v -> {
+                DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.LIKES);
+                fragment.show(activity.getSupportFragmentManager(), fragment.getTag());
             });
 
-            postHolder.setRepostsOnClick(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    PeopleListFragment.showPersons(activity, post, Tasks.SHARES);
-                }
+            postHolder.setRepostsOnClick(v -> {
+                DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.SHARES);
+                fragment.show(activity.getSupportFragmentManager(), fragment.getTag());
             });
 
             if (Networks.makeWrap(post.getNetwork()).getDescription().canDelete()) {
@@ -71,28 +72,23 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
     }
 
     private View.OnClickListener makeDeleteClickListener(final Post post) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new AlertDialog.Builder(activity)
-                        .setIcon(R.mipmap.ic_launcher)
-                        .setTitle("Delete post?")
-                        .setMessage("Do you want to delete this post from all networks?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Loudly.getContext().stopGetInfoService();
-                                activity.floatingActionButton.show();
-                                MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
-                                        new MainActivity.PostDeleteReceiver(activity);
-                                new Tasks.PostDeleter(post, Loudly.getContext().getWraps()).
-                                        executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                            }
-                        })
-                        .setNegativeButton("No", null)
-                        .show();
-            }
-        };
+        return v -> new AlertDialog.Builder(activity)
+                .setIcon(R.mipmap.ic_launcher)
+                .setTitle("Delete post?")
+                .setMessage("Do you want to delete this post from all networks?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Loudly.getContext().stopGetInfoService();
+                        activity.floatingActionButton.show();
+                        MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
+                                new MainActivity.PostDeleteReceiver(activity);
+                        new Tasks.PostDeleter(post, Loudly.getContext().getWraps()).
+                                executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    }
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
 
     private void setItemsAppearingAnimation(View viewToAnimate, int position) {

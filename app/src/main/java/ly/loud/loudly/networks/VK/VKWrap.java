@@ -8,7 +8,7 @@ import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Network;
 import ly.loud.loudly.util.Query;

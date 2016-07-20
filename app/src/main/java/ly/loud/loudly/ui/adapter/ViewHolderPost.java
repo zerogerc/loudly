@@ -17,7 +17,7 @@ import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.ui.FullPostInfoActivity;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.ui.views.GlideImageView;
 import ly.loud.loudly.util.Utils;
 
