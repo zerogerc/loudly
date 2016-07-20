@@ -4,6 +4,7 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import ly.loud.loudly.application.models.CommentsGetterModel;
 import ly.loud.loudly.application.models.PeopleGetterModel;
 
 /**
@@ -17,13 +18,21 @@ public class AppModule {
         this.loudlyApplication = loudlyApplication;
     }
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     Loudly provideLoudlyContext() {
         return loudlyApplication;
     }
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     PeopleGetterModel providePeopleGetterModel() {
         return new PeopleGetterModel(loudlyApplication);
+    }
+
+    @Provides
+    @Singleton
+    CommentsGetterModel provideCommentsGetterModel() {
+        return new CommentsGetterModel(loudlyApplication);
     }
 }

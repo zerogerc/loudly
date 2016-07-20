@@ -1,5 +1,6 @@
 package ly.loud.loudly.application.models;
 
+import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
@@ -12,7 +13,6 @@ import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.Wrap;
 import rx.Single;
-import rx.schedulers.Schedulers;
 
 /**
  * Model for loading persons from different networks.
@@ -32,6 +32,7 @@ public class PeopleGetterModel {
         this.loudlyApplication = loudlyApplication;
     }
 
+    @CheckResult
     @NonNull
     private List<PersonsFromNetwork> getListPersonsByType(@NonNull SingleNetwork element, @RequestType int type) {
         Wrap[] networkWraps = loudlyApplication.getWraps();
@@ -59,14 +60,15 @@ public class PeopleGetterModel {
         return result;
     }
 
+    @CheckResult
     @NonNull
     public Single<List<PersonsFromNetwork>> getPersonsByType(@NonNull SingleNetwork element,
                                                              @RequestType int type) {
-        return Single.fromCallable(() -> getListPersonsByType(element, type))
-                .subscribeOn(Schedulers.io());
+        return Single.fromCallable(() -> getListPersonsByType(element, type));
     }
 
     public class PersonsFromNetwork {
+
         @NonNull
         public List<Person> persons;
 

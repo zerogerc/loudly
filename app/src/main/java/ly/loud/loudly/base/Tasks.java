@@ -14,16 +14,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PostsAdapter;
-import ly.loud.loudly.ui.adapter.Item;
-import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
@@ -312,70 +309,6 @@ public final class Tasks {
             } else {
                 return null;
             }
-        }
-    }
-
-    /**
-     * Throws Broadcasts.POST_GET_PERSON as like as PersonGetter
-     */
-    public static class CommentsGetter extends BroadcastSendingTask {
-        private SingleNetwork element;
-        private List<Item> comments;
-        private Wrap[] wraps;
-
-        public CommentsGetter(SingleNetwork element, List<Item> comments, Wrap... wraps) {
-            this.element = element;
-            this.comments = comments;
-            this.wraps = wraps;
-        }
-
-        @Override
-        protected Intent doInBackground(Object... posts) {
-            ArrayList<Wrap> goodWraps = new ArrayList<>();
-            for (Wrap w : wraps) {
-                if (element.existsIn(w.networkID())) {
-                    goodWraps.add(w);
-                }
-            }
-            doAndWait(element, new ActionWithWrap<SingleNetwork, Pair<List<Comment>, Integer>>() {
-                @Override
-                public Pair<List<Comment>, Integer> apply(SingleNetwork item, Wrap w) {
-                    try {
-                        return new Pair<>(w.getComments(element.getNetworkInstance(w.networkID())),
-                                w.networkID());
-                    } catch (TokenExpiredException e) {
-                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN,
-                                e.getMessage());
-                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        publishProgress(message);
-                    } catch (IOException e) {
-                        Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.NETWORK_ERROR,
-                                e.getMessage());
-                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        publishProgress(message);
-                    }
-                    return null;
-                }
-            }, new ActionWithResult<Pair<List<Comment>, Integer>>() {
-                @Override
-                public void apply(Pair<List<Comment>, Integer> result) {
-                    if (result != null) {
-                        if (!result.first.isEmpty()) {
-                            // ToDO: there is a bug
-                            comments.add(new NetworkDelimiter(result.second));
-                            comments.addAll(result.first);
-                        }
-
-                        Intent message = makeMessage(Broadcasts.GET_PERSONS, Broadcasts.PROGRESS);
-                        message.putExtra(Broadcasts.NETWORK_FIELD, result.second);
-                        publishProgress(message);
-                    }
-                }
-            }, goodWraps.toArray(new Wrap[goodWraps.size()]));
-
-            Intent message = makeSuccess(Broadcasts.GET_PERSONS);
-            message.putExtra(Broadcasts.ID_FIELD, element.getLink().get());
-            return message;
         }
     }
 

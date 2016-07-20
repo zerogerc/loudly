@@ -30,8 +30,9 @@ import ly.loud.loudly.ui.adapter.AfterLoadAdapter;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
-import static ly.loud.loudly.application.models.PeopleGetterModel.*;
+import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
 
 public class PeopleListFragment extends DialogFragment {
 
@@ -111,7 +112,11 @@ public class PeopleListFragment extends DialogFragment {
 
         if (items.isEmpty()) { // First run
             peopleGetterModel.getPersonsByType(element, requestType)
+                    .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .doOnError(throwable -> {
+                        // TODO: show user that something goes wrong
+                    })
                     .subscribe(this::loadItems);
         }
     }
