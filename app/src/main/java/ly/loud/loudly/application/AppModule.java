@@ -7,9 +7,13 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import ly.loud.loudly.application.models.CommentsGetterModel;
+import ly.loud.loudly.application.models.CoreModel;
+import ly.loud.loudly.application.models.FacebookModel;
+import ly.loud.loudly.application.models.InstagramModel;
 import ly.loud.loudly.application.models.PeopleGetterModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
+import ly.loud.loudly.application.models.VKModel;
 
 import static android.os.Looper.getMainLooper;
 
@@ -40,6 +44,17 @@ public class AppModule {
     @Singleton
     CommentsGetterModel provideCommentsGetterModel() {
         return new CommentsGetterModel(loudlyApplication);
+    }
+
+    @Provides
+    @Singleton
+    CoreModel provideCoreModel() {
+        return new CoreModel(
+                loudlyApplication,
+                new FacebookModel(loudlyApplication),
+                new VKModel(loudlyApplication),
+                new InstagramModel(loudlyApplication)
+        );
     }
 
     @Provides
