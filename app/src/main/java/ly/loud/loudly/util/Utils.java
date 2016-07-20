@@ -433,21 +433,11 @@ public class Utils {
 
     // ToDo: make it part of LoudlyActivity
     public static void showSnackBar(final String message) {
-        MainActivity.executeOnUI(new UIAction<MainActivity>() {
-            @Override
-            public void execute(MainActivity mainActivity, Object... params) {
-                Snackbar.make(mainActivity.findViewById(R.id.fab),
-                        message, Snackbar.LENGTH_LONG)
-                        .show();
-            }
-        });
-        SettingsActivity.executeOnUI(new UIAction<SettingsActivity>() {
-            @Override
-            public void execute(SettingsActivity settingsActivity, Object... params) {
-                Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
-                        message, Snackbar.LENGTH_LONG)
-                        .show();
-            }
-        });
+        MainActivity.executeOnUI((mainActivity, params) -> Snackbar.make(mainActivity.findViewById(R.id.fab),
+                message, Snackbar.LENGTH_LONG)
+                .show());
+        SettingsActivity.executeOnUI((settingsActivity, params) -> Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
+                message, Snackbar.LENGTH_LONG)
+                .show());
     }
 }

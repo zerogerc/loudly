@@ -1,11 +1,17 @@
 package ly.loud.loudly.application;
 
+import android.os.Handler;
+
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
 import ly.loud.loudly.application.models.CommentsGetterModel;
 import ly.loud.loudly.application.models.PeopleGetterModel;
+import ly.loud.loudly.application.models.PostDeleterModel;
+import ly.loud.loudly.application.models.PostUploadModel;
+
+import static android.os.Looper.getMainLooper;
 
 /**
  * Created by ZeRoGerc on 20/07/16.
@@ -20,8 +26,8 @@ public class AppModule {
 
     @Provides
     @Singleton
-    Loudly provideLoudlyContext() {
-        return loudlyApplication;
+    Handler provideMainThreadHandler() {
+        return new Handler(getMainLooper());
     }
 
     @Provides
@@ -34,5 +40,17 @@ public class AppModule {
     @Singleton
     CommentsGetterModel provideCommentsGetterModel() {
         return new CommentsGetterModel(loudlyApplication);
+    }
+
+    @Provides
+    @Singleton
+    PostDeleterModel providePostDeleterModel() {
+        return new PostDeleterModel(loudlyApplication);
+    }
+
+    @Provides
+    @Singleton
+    PostUploadModel providePostUploadModel() {
+        return new PostUploadModel(loudlyApplication);
     }
 }
