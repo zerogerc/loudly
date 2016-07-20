@@ -1,5 +1,6 @@
 package ly.loud.loudly.application.models;
 
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
 import java.io.IOException;
@@ -19,6 +20,11 @@ import rx.schedulers.Schedulers;
  */
 public class PeopleGetterModel {
 
+    @IntDef
+    public @interface RequestType {}
+    public static final int LIKES = 0;
+    public static final int SHARES = 1;
+
     @NonNull
     private Loudly loudlyApplication;
 
@@ -27,7 +33,9 @@ public class PeopleGetterModel {
     }
 
     @NonNull
-    private List<PersonsFromNetwork> getListPersonsByType(SingleNetwork element, int type, Wrap... networkWraps) {
+    private List<PersonsFromNetwork> getListPersonsByType(@NonNull SingleNetwork element, @RequestType int type) {
+        Wrap[] networkWraps = loudlyApplication.getWraps();
+
         ArrayList<Wrap> goodWraps = new ArrayList<>();
         for (Wrap w : networkWraps) {
             if (element.existsIn(w.networkID())) {
@@ -53,9 +61,8 @@ public class PeopleGetterModel {
 
     @NonNull
     public Single<List<PersonsFromNetwork>> getPersonsByType(@NonNull SingleNetwork element,
-                                                             int type) {
-        Wrap[] networkWraps = loudlyApplication.getWraps();
-        return Single.fromCallable(() -> getListPersonsByType(element, type, networkWraps))
+                                                             @RequestType int type) {
+        return Single.fromCallable(() -> getListPersonsByType(element, type))
                 .subscribeOn(Schedulers.io());
     }
 

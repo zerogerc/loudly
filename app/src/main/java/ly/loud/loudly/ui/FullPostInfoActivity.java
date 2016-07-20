@@ -1,8 +1,8 @@
 package ly.loud.loudly.ui;
 
-import android.support.v4.app.DialogFragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -14,8 +14,11 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.application.models.PeopleGetterModel;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.Tasks;
@@ -31,8 +34,16 @@ import ly.loud.loudly.ui.views.GlideImageView;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.Utils;
+import rx.schedulers.Schedulers;
+
+import static ly.loud.loudly.application.models.PeopleGetterModel.*;
+import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
 public class FullPostInfoActivity extends AppCompatActivity {
+
+    @Inject
+    PeopleGetterModel peopleGetterModel;
+
     public static final String POST_KEY = "post";
 
     private ArrayList<Item> elements;
@@ -50,6 +61,9 @@ public class FullPostInfoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_full_post_info);
 
+        Loudly.getContext().getAppComponent().inject(this);
+
+        //noinspection ConstantConditions
         getSupportActionBar().setHomeButtonEnabled(true);
 
         elements = new ArrayList<>();
@@ -101,15 +115,45 @@ public class FullPostInfoActivity extends AppCompatActivity {
             taskComments.execute();
 
             //TODO: add peoples who share
-            Tasks.PersonGetter taskPerson = new Tasks.PersonGetter(post, Tasks.LIKES, likers, Loudly.getContext().getWraps());
-            taskPerson.execute();
+            peopleGetterModel.getPersonsByType(post, LIKES)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(mainThread())
+                    .subscribe(personsFromNetworks -> {
+                        likers = new ArrayList<>();
+                        for (PeopleGetterModel.PersonsFromNetwork list : personsFromNetworks) {
+                            likers.addAll(list.persons);
+                        }
+
+                        fillLikers();
+                    });
+        }
+    }
+
+    private void fillLikers() {
+        findViewById(R.id.full_post_info_post_footer).setVisibility(View.VISIBLE);
+
+        int added = 0;
+        for (Item item : likers) {
+            if (item instanceof Person) {
+                final GlideImageView avatar = ((GlideImageView) LayoutInflater.from(this).inflate(R.layout.full_post_info_feedback_avatar, likersContent, false));
+                likersContent.addView(avatar);
+                //set width so it not be equal to 0
+                //avatar.getLayoutParams().width = ((int) getResources().getDimension(R.dimen.feedback_icon_size));
+                avatar.loadCircularShapeImageByUrl(((Person) item).getPhotoUrl());
+                added++;
+            }
+
+            //TODO: do not hardcode
+            if (added > 4) {
+                break;
+            }
         }
     }
 
     private void setListeners() {
         if (post.getInfo().like > 0) {
             View.OnClickListener likeListener = v -> {
-                DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.LIKES);
+                DialogFragment fragment = PeopleListFragment.newInstance(post, LIKES);
                 fragment.show(getSupportFragmentManager(), fragment.getTag());
             };
             findViewById(R.id.full_post_info_likes_button).setOnClickListener(likeListener);
@@ -119,7 +163,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
         if (post.getInfo().repost > 0) {
             findViewById(R.id.full_post_info_shares_button)
                     .setOnClickListener(v -> {
-                        DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.SHARES);
+                        DialogFragment fragment = PeopleListFragment.newInstance(post, SHARES);
                         fragment.show(getSupportFragmentManager(), fragment.getTag());
                     });
         }
@@ -152,23 +196,6 @@ public class FullPostInfoActivity extends AppCompatActivity {
         }
 
         setListeners();
-
-        int added = 0;
-        for (Item item : likers) {
-            if (item instanceof Person) {
-                final GlideImageView avatar = ((GlideImageView) LayoutInflater.from(this).inflate(R.layout.full_post_info_feedback_avatar, likersContent, false));
-                likersContent.addView(avatar);
-                //set width so it not be equal to 0
-                //avatar.getLayoutParams().width = ((int) getResources().getDimension(R.dimen.feedback_icon_size));
-                avatar.loadCircularShapeImageByUrl(((Person) item).getPhotoUrl());
-                added++;
-            }
-
-            //TODO: do not hardcode
-            if (added > 4) {
-                break;
-            }
-        }
     }
 
     /**
@@ -224,7 +251,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
             likes.setText(Integer.toString(comment.getInfo().like));
             commentView.findViewById(R.id.comment_likes_button)
                     .setOnClickListener(v -> {
-                        DialogFragment fragment = PeopleListFragment.newInstance(comment, Tasks.LIKES);
+                        DialogFragment fragment = PeopleListFragment.newInstance(comment, LIKES);
                         fragment.show(getSupportFragmentManager(), fragment.getTag());
                     });
         } else {
@@ -297,7 +324,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
                 if (post.getLink().get().equals(postId)) {
                     broadcastReceived++;
                 }
-                if (broadcastReceived == 2) {
+                if (broadcastReceived == 1) {
                     inflateFooter();
                     inflateComments();
                     stop();

@@ -4,6 +4,7 @@ import javax.inject.Singleton;
 
 import dagger.Component;
 import ly.loud.loudly.application.models.PeopleGetterModel;
+import ly.loud.loudly.ui.FullPostInfoActivity;
 import ly.loud.loudly.ui.PeopleListFragment;
 
 /**
@@ -16,4 +17,5 @@ public interface AppComponent {
     PeopleGetterModel peopleGetterModel();
 
     void inject(PeopleListFragment peopleListFragment);
+    void inject(FullPostInfoActivity fullPostInfoActivity);
 }

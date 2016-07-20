@@ -2,10 +2,10 @@ package ly.loud.loudly.ui;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -26,11 +26,12 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.PeopleGetterModel;
 import ly.loud.loudly.application.models.PeopleGetterModel.PersonsFromNetwork;
 import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.ui.adapter.AfterLoadAdapter;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import rx.android.schedulers.AndroidSchedulers;
+
+import static ly.loud.loudly.application.models.PeopleGetterModel.*;
 
 public class PeopleListFragment extends DialogFragment {
 
@@ -83,7 +84,7 @@ public class PeopleListFragment extends DialogFragment {
         requestType = getArguments().getInt(REQUEST_TYPE_KEY);
 
         int titleRes = R.string.people_fragment_title_likes;
-        if (requestType == Tasks.SHARES) {
+        if (requestType == SHARES) {
             titleRes = R.string.people_fragment_title_shares;
         }
         title.setText(titleRes);

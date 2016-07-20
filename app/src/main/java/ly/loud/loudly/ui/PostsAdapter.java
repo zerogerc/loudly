@@ -23,6 +23,9 @@ import ly.loud.loudly.ui.adapter.ViewHolder;
 import ly.loud.loudly.ui.adapter.ViewHolderPost;
 import ly.loud.loudly.util.Utils;
 
+import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
+import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+
 public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements ModifiableAdapter<Post> {
     private int lastPosition = -1;
 
@@ -45,12 +48,12 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
             ViewHolderPost postHolder = (ViewHolderPost) holder;
 
             postHolder.setLikesOnClick(v -> {
-                DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.LIKES);
+                DialogFragment fragment = PeopleListFragment.newInstance(post, LIKES);
                 fragment.show(activity.getSupportFragmentManager(), fragment.getTag());
             });
 
             postHolder.setRepostsOnClick(v -> {
-                DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.SHARES);
+                DialogFragment fragment = PeopleListFragment.newInstance(post, SHARES);
                 fragment.show(activity.getSupportFragmentManager(), fragment.getTag());
             });
 

@@ -1,21 +1,7 @@
 package ly.loud.loudly.networks.VK;
 
 import android.util.Pair;
-import ly.loud.loudly.base.*;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.attachments.LocalFile;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.util.BackgroundAction;
-import ly.loud.loudly.util.Network;
-import ly.loud.loudly.util.Query;
-import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.parsers.StringParser;
-import ly.loud.loudly.util.parsers.json.ArrayParser;
-import ly.loud.loudly.util.parsers.json.ObjectParser;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,6 +12,32 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.base.Link;
+import ly.loud.loudly.base.NetworkDescription;
+import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.base.Person;
+import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.base.TokenExpiredException;
+import ly.loud.loudly.base.Wrap;
+import ly.loud.loudly.base.attachments.Image;
+import ly.loud.loudly.base.attachments.LocalFile;
+import ly.loud.loudly.base.says.Comment;
+import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.base.says.LoudlyPost;
+import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.util.BackgroundAction;
+import ly.loud.loudly.util.Network;
+import ly.loud.loudly.util.Query;
+import ly.loud.loudly.util.TimeInterval;
+import ly.loud.loudly.util.parsers.StringParser;
+import ly.loud.loudly.util.parsers.json.ArrayParser;
+import ly.loud.loudly.util.parsers.json.ObjectParser;
+
+import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
+import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
 
 // ToDo: Use my cool parsers
 public class VKWrap extends Wrap {
@@ -547,10 +559,10 @@ public class VKWrap extends Wrap {
         query.addParameter("item_id", element.getLink());
         String filter;
         switch (what) {
-            case Tasks.LIKES:
+            case LIKES:
                 filter = "likes";
                 break;
-            case Tasks.SHARES:
+            case SHARES:
                 filter = "copies";
                 break;
             default:
