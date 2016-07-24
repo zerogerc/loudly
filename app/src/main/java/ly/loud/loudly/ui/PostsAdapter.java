@@ -23,8 +23,8 @@ import ly.loud.loudly.ui.adapter.ViewHolder;
 import ly.loud.loudly.ui.adapter.ViewHolderPost;
 import ly.loud.loudly.util.Utils;
 
-import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
-import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+import static ly.loud.loudly.application.models.GetterModel.LIKES;
+import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements ModifiableAdapter<Post> {
     private int lastPosition = -1;

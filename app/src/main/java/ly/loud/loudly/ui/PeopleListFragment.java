@@ -22,20 +22,24 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.application.models.PeopleGetterModel;
+import ly.loud.loudly.application.models.GetterModel;
+import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.ui.adapter.AfterLoadAdapter;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import rx.schedulers.Schedulers;
 
-import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
 public class PeopleListFragment extends DialogFragment {
 
+    private static final String SINGLE_NETWORK_KEY = "single_network";
+    private static final String REQUEST_TYPE_KEY = "request_type";
+
     @Inject
-    PeopleGetterModel peopleGetterModel;
+    GetterModel getterModel;
 
     @BindView(R.id.people_list_recycler_view)
     RecyclerView recyclerView;
@@ -46,9 +50,7 @@ public class PeopleListFragment extends DialogFragment {
     @BindView(R.id.people_list_title)
     TextView title;
 
-    private static final String SINGLE_NETWORK_KEY = "single_network";
-    private static final String REQUEST_TYPE_KEY = "request_type";
-
+    @RequestType
     private int requestType;
 
     @NonNull
@@ -109,7 +111,7 @@ public class PeopleListFragment extends DialogFragment {
         super.onResume();
 
         if (items.isEmpty()) { // First run
-            peopleGetterModel.getPersonsByType(element, requestType)
+            getterModel.getPersonsByType(element, requestType)
                     .subscribeOn(Schedulers.io())
                     .observeOn(mainThread())
                     .doOnNext(personsFromNetwork -> {
@@ -127,7 +129,8 @@ public class PeopleListFragment extends DialogFragment {
                     })
                     .doOnCompleted(() -> {
                         progress.setVisibility(View.GONE);
-                    }).subscribe();
+                    })
+                    .subscribe();
         }
     }
 }
