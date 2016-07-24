@@ -7,6 +7,7 @@ import javax.inject.Singleton;
 
 import dagger.Component;
 import ly.loud.loudly.application.models.CommentsGetterModel;
+import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.PeopleGetterModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
@@ -24,6 +25,9 @@ import ly.loud.loudly.util.database.PostDbModule;
 public interface AppComponent {
 
     @NonNull
+    Loudly loudlyApplication();
+
+    @NonNull
     Handler mainThreadHandler();
 
     @NonNull
@@ -37,6 +41,9 @@ public interface AppComponent {
 
     @NonNull
     PostUploadModel postUploadModel();
+
+    @NonNull
+    CoreModel coreModel();
 
     void inject(MainActivity mainActivity);
     void inject(FullPostInfoActivity fullPostInfoActivity);

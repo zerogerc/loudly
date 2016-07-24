@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.Wrap;
@@ -21,6 +23,7 @@ public class CommentsGetterModel {
     @NonNull
     private Loudly loudlyApplication;
 
+    @Inject
     public CommentsGetterModel(@NonNull Loudly loudlyApplication) {
         this.loudlyApplication = loudlyApplication;
     }
