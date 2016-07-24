@@ -24,10 +24,10 @@ public class TimeInterval {
     }
 
     public boolean contains(long x) {
-        if (to == -1) {
+        if (to == Long.MIN_VALUE) {
             return from < x;
         }
-        if (from == -1) {
+        if (from == Long.MAX_VALUE) {
             return x < to;
         }
         return from < x && x < to;

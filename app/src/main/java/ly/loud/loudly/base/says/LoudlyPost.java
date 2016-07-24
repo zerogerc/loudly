@@ -5,11 +5,7 @@ import android.os.Parcel;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Location;
-import ly.loud.loudly.base.MultipleNetwork;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Attachment;
 
 /**
@@ -249,6 +245,10 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         if (link == null) {
             setInfo(network, new Info());   // Delete old info
         }
+    }
+
+    public void setLinks(Link[] links) {
+        this.links = links;
     }
 
     @Override

@@ -10,7 +10,7 @@ import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.UIAction;
-import ly.loud.loudly.util.database.DatabaseActions;
+import ly.loud.loudly.util.database.DatabaseUtils;
 import ly.loud.loudly.util.database.DatabaseException;
 
 /**
@@ -131,7 +131,7 @@ public abstract class Authorizer {
                 Loudly.getContext().setKeyKeeper(network(), keyKeeper);
 
                 try {
-                    DatabaseActions.updateKey(network(), Loudly.getContext().getKeyKeeper(network()));
+                    DatabaseUtils.updateKey(network(), Loudly.getContext().getKeyKeeper(network()));
                 } catch (DatabaseException e) {
                     Loudly.getContext().setKeyKeeper(network(), null);
                     return makeError(Broadcasts.AUTHORIZATION,

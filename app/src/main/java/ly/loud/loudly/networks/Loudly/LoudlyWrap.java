@@ -9,7 +9,6 @@ import java.util.List;
 
 import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.attachments.LoudlyImage;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.LoudlyPost;
@@ -17,7 +16,7 @@ import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.DatabaseActions;
+import ly.loud.loudly.util.database.DatabaseUtils;
 
 /**
  * Wrap over database
@@ -52,12 +51,12 @@ public class LoudlyWrap extends Wrap {
 
     @Override
     protected void upload(Post post, KeyKeeper keyKeeper) throws IOException {
-        DatabaseActions.savePost(((LoudlyPost) post));
+        DatabaseUtils.savePost(((LoudlyPost) post));
     }
 
     @Override
     protected void upload(Image image, BackgroundAction progress, KeyKeeper keyKeeper) throws IOException {
-        DatabaseActions.saveAttachment((LoudlyImage) image);
+        // Now it's not like other networks, it saves attachments after uploading
     }
 
     @Override
@@ -70,12 +69,13 @@ public class LoudlyWrap extends Wrap {
                 return;
             }
         }
-        DatabaseActions.deletePost(loudlyPost);
+        DatabaseUtils.deletePost(loudlyPost);
+        loudlyPost.getLink(Networks.LOUDLY).setValid(false);
     }
 
     @Override
     protected List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException {
-        return DatabaseActions.loadPosts(timeInterval);
+        return DatabaseUtils.loadPosts(timeInterval);
     }
 
     @Override

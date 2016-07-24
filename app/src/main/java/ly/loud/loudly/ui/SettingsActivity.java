@@ -28,7 +28,7 @@ import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
-import ly.loud.loudly.util.database.DatabaseActions;
+import ly.loud.loudly.util.database.DatabaseUtils;
 import ly.loud.loudly.util.database.DatabaseException;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -228,7 +228,7 @@ public class SettingsActivity extends AppCompatActivity {
                 int network = params[0];
                 if (Loudly.getContext().getKeyKeeper(network) != null) {
                     try {
-                        DatabaseActions.deleteKey(network);
+                        DatabaseUtils.deleteKey(network);
                         Utils.clearCookies(Networks.domainByNetwork(network));
                     } catch (DatabaseException e) {
                         e.printStackTrace();

@@ -2,6 +2,8 @@ package ly.loud.loudly.base;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.io.IOException;
 
@@ -10,14 +12,17 @@ import java.io.IOException;
  */
 public abstract class KeyKeeper implements Parcelable {
     private static final char SEPARATOR = '&';
-    private volatile int instances;
 
     public KeyKeeper() {
     }
 
-    public static KeyKeeper fromStringBundle(int network, String bundle) {
+    @Nullable
+    public static KeyKeeper fromStringBundle(int network, @NonNull String bundle) {
         String[] strings = bundle.split(String.valueOf(SEPARATOR));
         KeyKeeper result = Networks.makeKeyKeeper(network);
+        if (result == null) {
+            return null;
+        }
         result.fromStrings(strings);
         return result;
     }
@@ -28,18 +33,6 @@ public abstract class KeyKeeper implements Parcelable {
     protected abstract String[] toStrings();
 
     protected abstract void fromStrings(String[] strings);
-
-    // ToDo: Maybe it's possible to simplify this?
-    public <T> T doWithKeys(Action<T> action) throws IOException {
-        instances++;
-        T result = action.execute(this);
-        instances--;
-        return result;
-    }
-
-    public boolean isBusy() {
-        return instances != 0;
-    }
 
     public String toStringBundle() {
         String[] strings = toStrings();
@@ -63,9 +56,4 @@ public abstract class KeyKeeper implements Parcelable {
             dest.writeString(s);
         }
     }
-
-    public static abstract class Action<T> {
-        public abstract T execute(KeyKeeper keyKeeper) throws IOException;
-    }
-
 }

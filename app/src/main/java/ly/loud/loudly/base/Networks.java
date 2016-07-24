@@ -20,7 +20,7 @@ import ly.loud.loudly.networks.VK.VKWrap;
  */
 public class Networks {
 
-    // It's important to add new network to the LinksContract, so we could save it to DB
+    // It's important to add new network to the Links.Contract, so we could save it to DB
     public static final int LOUDLY = 0;
     public static final int FB = 1;
     public static final int TWITTER = 2;

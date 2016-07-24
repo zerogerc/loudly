@@ -3,12 +3,15 @@ package ly.loud.loudly.base;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
 
 public class Location implements Parcelable {
-    public double latitude, longitude;
+    public final double latitude, longitude;
+
+    @Nullable
     public String name;
 
-    public Location(double latitude, double longitude, String name) {
+    public Location(double latitude, double longitude, @Nullable String name) {
         this.latitude = latitude;
         this.longitude = longitude;
         this.name = name;
@@ -48,4 +51,16 @@ public class Location implements Parcelable {
         }
     };
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Location)) {
+            return false;
+        }
+        Location casted = ((Location) obj);
+        return latitude == casted.latitude && longitude == casted.longitude &&
+                (name == null && casted.name == null || name != null && name.equals(((Location) obj).name));
+    }
 }

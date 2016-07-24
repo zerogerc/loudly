@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
@@ -25,9 +26,9 @@ import ly.loud.loudly.ui.LocalBroadcastReceiver;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PostsHolder;
 import ly.loud.loudly.util.Broadcasts;
+import ly.loud.loudly.util.Network;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.DatabaseActions;
-import ly.loud.loudly.util.database.DatabaseException;
+import ly.loud.loudly.util.database.*;
 
 /**
  * Core application of Loudly app
@@ -52,6 +53,7 @@ public class Loudly extends Application {
     private LocalBroadcastReceiver receiver;
 
     private AppComponent appComponent;
+    private DatabaseComponent databaseComponent;
 
     /**
      * Load state of application from database. <br>
@@ -60,7 +62,7 @@ public class Loudly extends Application {
      * @throws DatabaseException If error with database occured
      */
     public static void loadFromDB() throws DatabaseException {
-        DatabaseActions.loadKeys();
+        DatabaseUtils.loadKeys();
 
         // Loading preferences
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, MODE_PRIVATE);
@@ -130,7 +132,9 @@ public class Loudly extends Application {
 
     private void resetState() {
         for (Wrap w : getWraps()) {
-            w.resetState();
+            if (w != null) {
+                w.resetState();
+            }
         }
         getPostHolder().clear();
         Arrays.fill(MainActivity.loadedNetworks, false);
@@ -139,7 +143,7 @@ public class Loudly extends Application {
     private static void setPreferences(int updateFreq, int loadLast) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, -loadLast);
-        Loudly.getContext().timeInterval = new TimeInterval(calendar.getTimeInMillis() / 1000, -1L);
+        Loudly.getContext().timeInterval = TimeInterval.since(calendar.getTimeInMillis() / 1000);
 
         if (Loudly.loadLast != loadLast) {
             // ToDo: fix this crutch
@@ -170,6 +174,7 @@ public class Loudly extends Application {
      * @param network ID of the network
      * @return KeyKeeper or null
      */
+    @Nullable
     public KeyKeeper getKeyKeeper(int network) {
         return keyKeepers[network];
     }
@@ -244,9 +249,17 @@ public class Loudly extends Application {
         appComponent = DaggerAppComponent.builder()
                 .appModule(new AppModule(this))
                 .build();
+        databaseComponent = DaggerDatabaseComponent.builder()
+                .keysDbModule(new KeysDbModule())
+                .postDbModule(new PostDbModule())
+                .build();
     }
 
     public AppComponent getAppComponent() {
         return appComponent;
+    }
+
+    public DatabaseComponent getDatabaseComponent() {
+        return databaseComponent;
     }
 }

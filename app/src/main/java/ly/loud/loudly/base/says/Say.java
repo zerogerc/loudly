@@ -145,6 +145,10 @@ public class Say implements SingleNetwork {
         return attachments;
     }
 
+    public void setAttachments(ArrayList<Attachment> attachments) {
+        this.attachments = attachments;
+    }
+
     public void addAttachment(Attachment attachment) {
         attachments.add(attachment);
     }
