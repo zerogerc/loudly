@@ -138,25 +138,22 @@ public class FullPostInfoActivity extends AppCompatActivity {
                         inflateComments();
                     });
 
+            likers = new ArrayList<>();
             peopleGetterModel.getPersonsByType(post, LIKES)
                     .subscribeOn(Schedulers.io())
                     .observeOn(mainThread())
                     .doOnError(throwable -> {
                         // TODO: say user that something goes wrong
                     })
-                    .subscribe(personsFromNetworks -> {
-                        likers = new ArrayList<>();
-                        for (PeopleGetterModel.PersonsFromNetwork list : personsFromNetworks) {
-                            likers.addAll(list.persons);
-                        }
-
-                        fillLikers();
-                    });
+                    .doOnNext(personsFromNetwork -> {
+                        likers.addAll(personsFromNetwork.persons);
+                    })
+                    .doOnCompleted(this::fillLikers);
         }
     }
 
     private void fillLikers() {
-        findViewById(R.id.full_post_info_post_footer).setVisibility(View.VISIBLE);
+        postFooter.setVisibility(View.VISIBLE);
 
         int added = 0;
         for (Item item : likers) {

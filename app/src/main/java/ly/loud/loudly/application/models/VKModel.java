@@ -2,7 +2,6 @@ package ly.loud.loudly.application.models;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,6 +11,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.KeyKeeper;
@@ -26,7 +27,7 @@ import ly.loud.loudly.networks.VK.VKKeyKeeper;
 import ly.loud.loudly.util.Network;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
-import rx.Observable;
+import rx.Single;
 
 import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
 import static ly.loud.loudly.application.models.PeopleGetterModel.RequestType;
@@ -63,11 +64,17 @@ public class VKModel implements NetworkContract {
     @NonNull
     private Loudly loudlyApplication;
 
-    @Nullable
-    private VKKeyKeeper keyKeeper;
+    @NonNull
+    private KeysModel keysModel;
 
-    public VKModel(@NonNull Loudly loudlyApplication) {
+    @Inject
+    public VKModel(
+            @NonNull Loudly loudlyApplication,
+            @NonNull KeysModel keysModel
+
+    ) {
         this.loudlyApplication = loudlyApplication;
+        this.keysModel = keysModel;
         loadFromDB();
     }
 
@@ -80,157 +87,158 @@ public class VKModel implements NetworkContract {
 
     @Override
     @CheckResult
-    public long upload(Image image) {
-        return 0;
+    public Single<Long> upload(Image image) {
+        return Single.just(0L);
     }
 
     @Override
     @CheckResult
-    public long upload(Post post) {
-        return 0;
+    public Single<Long> upload(Post post) {
+        return Single.just(0L);
     }
 
     @Override
     @CheckResult
-    public void delete(Post post) {
+    public Single<Boolean> delete(Post post) {
+        return Single.just(false);
     }
 
     @Override
     @CheckResult
-    public Observable<List<Post>> loadPosts(TimeInterval timeInterval) {
+    public Single<List<Post>> loadPosts(TimeInterval timeInterval) {
         return null;
     }
 
     @Override
     @CheckResult
-    public List<Person> getPersons(@NonNull SingleNetwork element, @RequestType int requestType) {
-        if (!isConnected()) {
-            return Collections.emptyList();
-        }
-        // Here KeyKeeper is already non null because network is connected
-        assert keyKeeper != null;
+    public Single<List<Person>> getPersons(@NonNull SingleNetwork element, @RequestType int requestType) {
+        return isConnected()
+                .map(isConnected -> {
+                    if (!isConnected) {
+                        return Collections.emptyList();
+                    }
 
-        try {
-            Query query = makeSignedAPICall("likes.getList", keyKeeper);
-            String type;
-            if (element instanceof Post) {
-                type = "post";
-            } else if (element instanceof Image) {
-                type = "photo";
-            } else if (element instanceof Comment) {
-                type = "comment";
-            } else {
-                return new LinkedList<>();
-            }
+                    final VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+                    assert keyKeeper != null;
+                    // TODO: handle errors from keykeeper
 
-            query.addParameter("type", type);
-            query.addParameter("owner_id", keyKeeper.getUserId());
-            query.addParameter("item_id", element.getLink());
-            String filter;
-            switch (requestType) {
-                case LIKES:
-                    filter = "likes";
-                    break;
-                case SHARES:
-                    filter = "copies";
-                    break;
-                default:
-                    filter = "";
-                    break;
-            }
-            query.addParameter("filter", filter);
-            query.addParameter("extended", 1);
-            // TODO: 12/3/2015 Add offset here
+                    try {
+                        Query query = makeSignedAPICall("likes.getList", keyKeeper);
+                        String type;
+                        if (element instanceof Post) {
+                            type = "post";
+                        } else if (element instanceof Image) {
+                            type = "photo";
+                        } else if (element instanceof Comment) {
+                            type = "comment";
+                        } else {
+                            return new LinkedList<>();
+                        }
 
-            String response = Network.makeGetRequest(query);
+                        query.addParameter("type", type);
+                        query.addParameter("owner_id", keyKeeper.getUserId());
+                        query.addParameter("item_id", element.getLink());
+                        String filter;
+                        switch (requestType) {
+                            case LIKES:
+                                filter = "likes";
+                                break;
+                            case SHARES:
+                                filter = "copies";
+                                break;
+                            default:
+                                filter = "";
+                                break;
+                        }
+                        query.addParameter("filter", filter);
+                        query.addParameter("extended", 1);
+                        // TODO: 12/3/2015 Add offset here
 
-            Query getPeopleQuery = makeSignedAPICall("users.get", keyKeeper);
+                        String response = Network.makeGetRequest(query);
 
-            JSONObject parser;
-            try {
-                parser = new JSONObject(response).getJSONObject("response");
-                JSONArray likers = parser.getJSONArray("items");
+                        Query getPeopleQuery = makeSignedAPICall("users.get", keyKeeper);
 
-                if (likers.length() == 0) {
-                    return Collections.emptyList();
-                }
+                        JSONObject parser;
+                        try {
+                            parser = new JSONObject(response).getJSONObject("response");
+                            JSONArray likers = parser.getJSONArray("items");
 
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < likers.length(); i++) {
-                    long id = likers.getJSONObject(i).getLong("id");
-                    sb.append(id);
-                    sb.append(',');
-                }
-                sb.delete(sb.length() - 1, sb.length());
+                            if (likers.length() == 0) {
+                                return Collections.emptyList();
+                            }
 
-                getPeopleQuery.addParameter("user_ids", sb);
-                getPeopleQuery.addParameter("fields", "photo_50");
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return Collections.emptyList();
-            }
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 0; i < likers.length(); i++) {
+                                long id = likers.getJSONObject(i).getLong("id");
+                                sb.append(id);
+                                sb.append(',');
+                            }
+                            sb.delete(sb.length() - 1, sb.length());
 
-            response = Network.makeGetRequest(getPeopleQuery);
+                            getPeopleQuery.addParameter("user_ids", sb);
+                            getPeopleQuery.addParameter("fields", "photo_50");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            return Collections.emptyList();
+                        }
 
-            LinkedList<Person> result = new LinkedList<>();
+                        response = Network.makeGetRequest(getPeopleQuery);
 
-            JSONArray people;
-            try {
-                people = new JSONObject(response).getJSONArray("response");
-                for (int i = 0; i < people.length(); i++) {
-                    JSONObject person = people.getJSONObject(i);
-                    String id = person.getString("id");
-                    String firstName = person.getString("first_name");
-                    String lastName = person.getString("last_name");
-                    String photoURL = person.getString("photo_50");
+                        LinkedList<Person> result = new LinkedList<>();
 
-                    Person person1 = new Person(firstName, lastName, photoURL, getId());
-                    person1.setId(id);
-                    result.add(person1);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return new LinkedList<>();
-            }
+                        JSONArray people;
+                        try {
+                            people = new JSONObject(response).getJSONArray("response");
+                            for (int i = 0; i < people.length(); i++) {
+                                JSONObject person = people.getJSONObject(i);
+                                String id = person.getString("id");
+                                String firstName = person.getString("first_name");
+                                String lastName = person.getString("last_name");
+                                String photoURL = person.getString("photo_50");
 
-            return result;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return Collections.emptyList();
-        }
+                                Person person1 = new Person(firstName, lastName, photoURL, getId());
+                                person1.setId(id);
+                                result.add(person1);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            return new LinkedList<>();
+                        }
+
+                        return result;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return Collections.emptyList();
+                    }
+                });
     }
 
     @Override
     @CheckResult
-    public boolean connect(@NonNull KeyKeeper keyKeeper) {
+    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
         if (!(keyKeeper instanceof ly.loud.loudly.networks.VK.VKKeyKeeper))
             throw new AssertionError("KeyKeeper must be VkKeyKeeper");
 
-        this.keyKeeper = ((VKKeyKeeper) keyKeeper);
-        return true;
+        keysModel.setVKKeyKeeper((VKKeyKeeper) keyKeeper);
+        return Single.just(true);
     }
 
     @Override
     @CheckResult
-    public boolean disconnect() {
-        deleteKeyKeeperFromDB();
-        this.keyKeeper = null;
-        return true;
+    public Single<Boolean> disconnect() {
+        return keysModel.disconnectFromNetwork(Networks.VK);
     }
 
     @Override
     @CheckResult
-    public boolean isConnected() {
-        return keyKeeper != null;
+    public Single<Boolean> isConnected() {
+        // TODO: change this
+        return Single.just(true);
     }
 
     @Override
     public int getId() {
         return Networks.VK;
-    }
-
-    private void deleteKeyKeeperFromDB() {
-        // TODO: implement
     }
 
     private Query makeAPICall(String method) {

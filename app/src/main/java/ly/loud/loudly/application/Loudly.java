@@ -34,7 +34,6 @@ import ly.loud.loudly.util.database.DatabaseException;
 import ly.loud.loudly.util.database.DatabaseUtils;
 import ly.loud.loudly.util.database.KeysDbModule;
 import ly.loud.loudly.util.database.PostDbModule;
-import rx.schedulers.Schedulers;
 
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
@@ -192,14 +191,18 @@ public class Loudly extends Application {
      * @param keyKeeper KeyKeeper, that should be stored
      */
     public void setKeyKeeper(int network, KeyKeeper keyKeeper) {
-        getAppComponent().coreModel().connectToNetworkById(network, keyKeeper)
-                .subscribeOn(Schedulers.io())
-                .observeOn(mainThread())
-                .subscribe(aBoolean -> {
-                    if (!aBoolean) {
-                        Log.e("NETWORK", "Could not connect with keykeeper");
-                    }
-                });
+        if (keyKeeper != null) {
+            getAppComponent().coreModel().connectToNetworkById(network, keyKeeper)
+                    .subscribeOn(mainThread())
+                    .observeOn(mainThread())
+                    .subscribe(aBoolean -> {
+                        if (!aBoolean) {
+                            Log.e("NETWORK", "Could not connect with keykeeper");
+                        }
+                    });
+        } else {
+            // TODO: disconnect
+        }
 
         keyKeepers[network] = keyKeeper;
     }
