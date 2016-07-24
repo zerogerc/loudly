@@ -9,11 +9,12 @@ import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.attachments.Image;
+import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Single;
 
-import static ly.loud.loudly.application.models.PeopleGetterModel.RequestType;
+import static ly.loud.loudly.application.models.GetterModel.RequestType;
 
 /**
  * Interface that all Network models must implement.
@@ -56,6 +57,12 @@ public interface NetworkContract {
      */
     @CheckResult
     Single<List<Person>> getPersons(@NonNull SingleNetwork element, @RequestType int requestType);
+
+    /**
+     * Get comments for element of {@link SingleNetwork}.
+     */
+    @CheckResult
+    Single<List<Comment>> getComments(@NonNull SingleNetwork element);
 
     /**
      * Connect this network for proper work.

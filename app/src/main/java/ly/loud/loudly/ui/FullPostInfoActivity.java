@@ -21,8 +21,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.application.models.CommentsGetterModel;
-import ly.loud.loudly.application.models.PeopleGetterModel;
+import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.attachments.Attachment;
@@ -37,8 +36,8 @@ import ly.loud.loudly.ui.views.GlideImageView;
 import ly.loud.loudly.util.Utils;
 import rx.schedulers.Schedulers;
 
-import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
-import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+import static ly.loud.loudly.application.models.GetterModel.LIKES;
+import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
 public class FullPostInfoActivity extends AppCompatActivity {
@@ -84,12 +83,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
     @SuppressWarnings("NullableProblems") // Inject
     @Inject
     @NonNull
-    PeopleGetterModel peopleGetterModel;
-
-    @SuppressWarnings("NullableProblems") // Inject
-    @Inject
-    @NonNull
-    CommentsGetterModel commentsGetterModel;
+    GetterModel getterModel;
 
     private ArrayList<Item> comments;
 
@@ -122,24 +116,24 @@ public class FullPostInfoActivity extends AppCompatActivity {
         if (prev == null || Say.COMPARATOR.compare(prev, post) != 0) {
             loadPostView();
 
-            commentsGetterModel.getComments(post)
+            comments = new ArrayList<>();
+            getterModel.getComments(post)
                     .subscribeOn(Schedulers.io())
                     .observeOn(mainThread())
-                    .subscribe(commentsFromNetworks -> {
-                        comments = new ArrayList<>();
-                        for (CommentsGetterModel.CommentsFromNetwork networkComments : commentsFromNetworks) {
-                            if (!networkComments.comments.isEmpty()) {
-                                comments.add(new NetworkDelimiter(networkComments.network));
-                                comments.addAll(networkComments.comments);
-                            }
+                    .doOnNext(commentsFromNetwork -> {
+                        if (!commentsFromNetwork.comments.isEmpty()) {
+                            comments.add(new NetworkDelimiter(commentsFromNetwork.network));
+                            comments.addAll(commentsFromNetwork.comments);
                         }
-
+                    })
+                    .doOnCompleted(() -> {
                         inflateFooter();
                         inflateComments();
-                    });
+                    })
+                    .subscribe();
 
             likers = new ArrayList<>();
-            peopleGetterModel.getPersonsByType(post, LIKES)
+            getterModel.getPersonsByType(post, LIKES)
                     .subscribeOn(Schedulers.io())
                     .observeOn(mainThread())
                     .doOnError(throwable -> {

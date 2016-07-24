@@ -36,8 +36,8 @@ import ly.loud.loudly.util.parsers.StringParser;
 import ly.loud.loudly.util.parsers.json.ArrayParser;
 import ly.loud.loudly.util.parsers.json.ObjectParser;
 
-import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
-import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+import static ly.loud.loudly.application.models.GetterModel.LIKES;
+import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 // ToDo: Use my cool parsers
 public class VKWrap extends Wrap {
