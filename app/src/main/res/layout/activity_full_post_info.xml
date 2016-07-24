@@ -15,5 +15,13 @@
         <include
             android:id="@+id/activity_full_post_layout_post"
             layout="@layout/full_post_info_post_layout"/>
+
+        <ProgressBar
+            android:id="@+id/activity_full_post_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="8dp"
+            android:visibility="visible"/>
     </LinearLayout>
 </ScrollView>

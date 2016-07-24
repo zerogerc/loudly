@@ -1,16 +1,18 @@
 package ly.loud.loudly.application.models;
 
+import android.support.annotation.CheckResult;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.Wrap;
-import rx.Observable;
-import rx.schedulers.Schedulers;
+import rx.Single;
 
 /**
  * Model for loading persons from different networks.
@@ -18,8 +20,23 @@ import rx.schedulers.Schedulers;
  */
 public class PeopleGetterModel {
 
+    @IntDef
+    public @interface RequestType {}
+    public static final int LIKES = 0;
+    public static final int SHARES = 1;
+
     @NonNull
-    private List<PersonsFromNetwork> getListPersonsByType(SingleNetwork element, int type, Wrap... networkWraps) {
+    private Loudly loudlyApplication;
+
+    public PeopleGetterModel(@NonNull Loudly loudlyApplication) {
+        this.loudlyApplication = loudlyApplication;
+    }
+
+    @CheckResult
+    @NonNull
+    private List<PersonsFromNetwork> getListPersonsByType(@NonNull SingleNetwork element, @RequestType int type) {
+        Wrap[] networkWraps = loudlyApplication.getWraps();
+
         ArrayList<Wrap> goodWraps = new ArrayList<>();
         for (Wrap w : networkWraps) {
             if (element.existsIn(w.networkID())) {
@@ -43,15 +60,15 @@ public class PeopleGetterModel {
         return result;
     }
 
+    @CheckResult
     @NonNull
-    public Observable<List<PersonsFromNetwork>> getPersonsByType(@NonNull SingleNetwork element,
-                                                                 int type,
-                                                                 @NonNull Wrap... networkWraps) {
-        return Observable.fromCallable(() -> getListPersonsByType(element, type, networkWraps))
-                .subscribeOn(Schedulers.io());
+    public Single<List<PersonsFromNetwork>> getPersonsByType(@NonNull SingleNetwork element,
+                                                             @RequestType int type) {
+        return Single.fromCallable(() -> getListPersonsByType(element, type));
     }
 
     public class PersonsFromNetwork {
+
         @NonNull
         public List<Person> persons;
 

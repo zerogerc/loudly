@@ -68,7 +68,7 @@ public class GlideImageView extends ImageView {
         } else {
             setScale(((double) image.getHeight()) / image.getWidth());
         }
-        Glide.with(getContext())
+        Glide.with(Loudly.getContext())
                 .load(image.getUri())
                 .fitCenter()
                 .into(this);
@@ -80,7 +80,7 @@ public class GlideImageView extends ImageView {
      */
     public void loadCircularShapeImageByUrl(String url) {
         setScale(1);
-        Glide.with(getContext())
+        Glide.with(Loudly.getContext())
                 .load(url)
                 .asBitmap()
                 .fitCenter()

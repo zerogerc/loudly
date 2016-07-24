@@ -2,10 +2,10 @@ package ly.loud.loudly.ui;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -26,16 +26,14 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.PeopleGetterModel;
 import ly.loud.loudly.application.models.PeopleGetterModel.PersonsFromNetwork;
 import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.ui.adapter.AfterLoadAdapter;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
-/**
- * Created by ZeRoGerc on 06.12.15.
- * ITMO University
- */
+import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+
 public class PeopleListFragment extends DialogFragment {
 
     @Inject
@@ -87,7 +85,7 @@ public class PeopleListFragment extends DialogFragment {
         requestType = getArguments().getInt(REQUEST_TYPE_KEY);
 
         int titleRes = R.string.people_fragment_title_likes;
-        if (requestType == Tasks.SHARES) {
+        if (requestType == SHARES) {
             titleRes = R.string.people_fragment_title_shares;
         }
         title.setText(titleRes);
@@ -113,12 +111,15 @@ public class PeopleListFragment extends DialogFragment {
         super.onResume();
 
         if (items.isEmpty()) { // First run
-            peopleGetterModel.getPersonsByType(element, requestType, Loudly.getContext().getWraps())
+            peopleGetterModel.getPersonsByType(element, requestType)
+                    .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .doOnError(throwable -> {
+                        // TODO: show user that something goes wrong
+                    })
                     .subscribe(this::loadItems);
         }
     }
-
 
     private void loadItems(@NonNull List<PersonsFromNetwork> persons) {
         for (PersonsFromNetwork list : persons) {

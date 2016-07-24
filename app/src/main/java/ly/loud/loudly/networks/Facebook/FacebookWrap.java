@@ -2,7 +2,6 @@ package ly.loud.loudly.networks.Facebook;
 
 import android.util.Pair;
 
-import ly.loud.loudly.base.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +14,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 
+import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.base.Link;
+import ly.loud.loudly.base.NetworkDescription;
+import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.base.Person;
+import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.base.TokenExpiredException;
+import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LocalFile;
@@ -29,6 +36,9 @@ import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.parsers.json.ArrayParser;
 import ly.loud.loudly.util.parsers.json.ObjectParser;
+
+import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
+import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
 
 // ToDo: Use my cool parsers
 public class FacebookWrap extends Wrap {
@@ -490,10 +500,10 @@ public class FacebookWrap extends Wrap {
     protected LinkedList<Person> getPersons(int what, SingleNetwork element, KeyKeeper keyKeeper) throws IOException {
         String node;
         switch (what) {
-            case Tasks.LIKES:
+            case LIKES:
                 node = "/likes";
                 break;
-            case Tasks.SHARES:
+            case SHARES:
                 node = "/sharedposts";
                 break;
             default:

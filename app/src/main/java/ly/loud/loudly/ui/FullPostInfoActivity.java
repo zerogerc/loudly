@@ -1,8 +1,9 @@
 package ly.loud.loudly.ui;
 
-import android.support.v4.app.DialogFragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -14,11 +15,16 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.application.models.CommentsGetterModel;
+import ly.loud.loudly.application.models.PeopleGetterModel;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
@@ -28,56 +34,82 @@ import ly.loud.loudly.base.says.Say;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import ly.loud.loudly.ui.views.GlideImageView;
-import ly.loud.loudly.util.AttachableReceiver;
-import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.Utils;
+import rx.schedulers.Schedulers;
+
+import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
+import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
 public class FullPostInfoActivity extends AppCompatActivity {
+
     public static final String POST_KEY = "post";
 
-    private ArrayList<Item> elements;
+    @BindView(R.id.full_post_info_post_footer)
+    View postFooter;
+
+    @BindView(R.id.full_post_info_content_list)
+    LinearLayout content;
+
+    @BindView(R.id.full_post_info_likers_avatars)
+    LinearLayout likersContent;
+
+    @BindView(R.id.full_post_info_network_icon)
+    ImageView postIcon;
+
+    @BindView(R.id.full_post_info_time)
+    TextView timeView;
+
+    @BindView(R.id.full_post_info_post_text)
+    TextView postText;
+
+    @BindView(R.id.full_post_info_post_image)
+    GlideImageView postImage;
+
+    @BindView(R.id.full_post_info_shares_amount)
+    TextView sharesAmount;
+
+    @BindView(R.id.full_post_info_shares_button)
+    ImageView sharesButton;
+
+    @BindView(R.id.full_post_info_likes_amount)
+    TextView likesAmount;
+
+    @BindView(R.id.full_post_info_likes_button)
+    ImageView likesButton;
+
+    @BindView(R.id.activity_full_post_progress)
+    ProgressBar progressBar;
+
+    @SuppressWarnings("NullableProblems") // Inject
+    @Inject
+    @NonNull
+    PeopleGetterModel peopleGetterModel;
+
+    @SuppressWarnings("NullableProblems") // Inject
+    @Inject
+    @NonNull
+    CommentsGetterModel commentsGetterModel;
+
+    private ArrayList<Item> comments;
+
     private ArrayList<Item> likers;
+
     private Post post;
 
-    private LinearLayout content;
-    private LinearLayout likersContent;
-    private static CommentsReceiver receiver;
-
-    private int broadcastReceived;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_full_post_info);
 
+        ButterKnife.bind(this);
+        Loudly.getContext().getAppComponent().inject(this);
+
+        //noinspection ConstantConditions
         getSupportActionBar().setHomeButtonEnabled(true);
 
-        elements = new ArrayList<>();
-        likers = new ArrayList<>();
-
-        content = ((LinearLayout) findViewById(R.id.full_post_info_content_list));
-        likersContent = ((LinearLayout) findViewById(R.id.full_post_info_likers_avatars));
-
-        receiver = new CommentsReceiver(this);
-
         handleIntent(getIntent());
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (receiver != null) {
-            receiver.attach(this);
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (receiver != null) {
-            receiver.detach();
-        }
-
     }
 
     /**
@@ -88,70 +120,43 @@ public class FullPostInfoActivity extends AppCompatActivity {
         Post prev = post;
         post = intent.getParcelableExtra(POST_KEY);
         if (prev == null || Say.COMPARATOR.compare(prev, post) != 0) {
-            //set elements to new array list in order not to receive comments from previous query
-            //previous query just load comments to null list
-            elements = new ArrayList<>();
-            likers = new ArrayList<>();
-
             loadPostView();
 
-            broadcastReceived = 0;
+            commentsGetterModel.getComments(post)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(mainThread())
+                    .subscribe(commentsFromNetworks -> {
+                        comments = new ArrayList<>();
+                        for (CommentsGetterModel.CommentsFromNetwork networkComments : commentsFromNetworks) {
+                            if (!networkComments.comments.isEmpty()) {
+                                comments.add(new NetworkDelimiter(networkComments.network));
+                                comments.addAll(networkComments.comments);
+                            }
+                        }
 
-            Tasks.CommentsGetter taskComments = new Tasks.CommentsGetter(post, elements, Loudly.getContext().getWraps());
-            taskComments.execute();
+                        inflateFooter();
+                        inflateComments();
+                    });
 
-            //TODO: add peoples who share
-            Tasks.PersonGetter taskPerson = new Tasks.PersonGetter(post, Tasks.LIKES, likers, Loudly.getContext().getWraps());
-            taskPerson.execute();
-        }
-    }
+            peopleGetterModel.getPersonsByType(post, LIKES)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(mainThread())
+                    .doOnError(throwable -> {
+                        // TODO: say user that something goes wrong
+                    })
+                    .subscribe(personsFromNetworks -> {
+                        likers = new ArrayList<>();
+                        for (PeopleGetterModel.PersonsFromNetwork list : personsFromNetworks) {
+                            likers.addAll(list.persons);
+                        }
 
-    private void setListeners() {
-        if (post.getInfo().like > 0) {
-            View.OnClickListener likeListener = v -> {
-                DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.LIKES);
-                fragment.show(getSupportFragmentManager(), fragment.getTag());
-            };
-            findViewById(R.id.full_post_info_likes_button).setOnClickListener(likeListener);
-            findViewById(R.id.full_post_info_likers_avatars).setOnClickListener(likeListener);
-        }
-
-        if (post.getInfo().repost > 0) {
-            findViewById(R.id.full_post_info_shares_button)
-                    .setOnClickListener(v -> {
-                        DialogFragment fragment = PeopleListFragment.newInstance(post, Tasks.SHARES);
-                        fragment.show(getSupportFragmentManager(), fragment.getTag());
+                        fillLikers();
                     });
         }
     }
 
-    /**
-     * Inflate footer of post based of {@link #likers}
-     */
-    private void inflateFooter() {
+    private void fillLikers() {
         findViewById(R.id.full_post_info_post_footer).setVisibility(View.VISIBLE);
-
-        int gray_color = ContextCompat.getColor(this, R.color.light_grey_color);
-
-        if (post.getInfo().repost > 0) {
-            TextView amount = ((TextView) findViewById(R.id.full_post_info_shares_amount));
-            amount.setText(Integer.toString(post.getInfo().repost));
-        } else {
-            ImageView button = ((ImageView) findViewById(R.id.full_post_info_shares_button));
-            button.setColorFilter(gray_color);
-            findViewById(R.id.full_post_info_shares_amount).setVisibility(View.INVISIBLE);
-        }
-
-        if (post.getInfo().like > 0) {
-            TextView amount = ((TextView) findViewById(R.id.full_post_info_likes_amount));
-            amount.setText(Integer.toString(post.getInfo().like));
-        } else {
-            ImageView button = ((ImageView) findViewById(R.id.full_post_info_likes_button));
-            button.setColorFilter(gray_color);
-            findViewById(R.id.full_post_info_likes_amount).setVisibility(View.INVISIBLE);
-        }
-
-        setListeners();
 
         int added = 0;
         for (Item item : likers) {
@@ -171,16 +176,57 @@ public class FullPostInfoActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Inflate content with comments from {@link #elements}
-     */
-    private void inflateComments() {
-        //Remove all view except Post
-        for (int i = 1; i < content.getChildCount(); i++) {
-            content.removeViewAt(i);
+    private void setListeners() {
+        if (post.getInfo().like > 0) {
+            View.OnClickListener likeListener = v -> {
+                DialogFragment fragment = PeopleListFragment.newInstance(post, LIKES);
+                fragment.show(getSupportFragmentManager(), fragment.getTag());
+            };
+            findViewById(R.id.full_post_info_likes_button).setOnClickListener(likeListener);
+            findViewById(R.id.full_post_info_likers_avatars).setOnClickListener(likeListener);
         }
 
-        for (Item item : elements) {
+        if (post.getInfo().repost > 0) {
+            findViewById(R.id.full_post_info_shares_button)
+                    .setOnClickListener(v -> {
+                        DialogFragment fragment = PeopleListFragment.newInstance(post, SHARES);
+                        fragment.show(getSupportFragmentManager(), fragment.getTag());
+                    });
+        }
+    }
+
+    /**
+     * Inflate footer of post based of {@link #likers}
+     */
+    private void inflateFooter() {
+        postFooter.setVisibility(View.VISIBLE);
+
+        int gray_color = ContextCompat.getColor(this, R.color.light_grey_color);
+
+        if (post.getInfo().repost > 0) {
+            sharesAmount.setText(Integer.toString(post.getInfo().repost));
+        } else {
+            sharesButton.setColorFilter(gray_color);
+            sharesButton.setVisibility(View.INVISIBLE);
+        }
+
+        if (post.getInfo().like > 0) {
+            likesAmount.setText(Integer.toString(post.getInfo().like));
+        } else {
+            likesButton.setColorFilter(gray_color);
+            likesButton.setVisibility(View.INVISIBLE);
+        }
+
+        setListeners();
+    }
+
+    /**
+     * Inflate content with comments from {@link #comments}
+     */
+    private void inflateComments() {
+        progressBar.setVisibility(View.GONE);
+
+        for (Item item : comments) {
             if (item instanceof Comment) {
                 View comment = LayoutInflater.from(this).inflate(R.layout.full_post_info_comment, content, false);
                 content.addView(comment);
@@ -224,7 +270,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
             likes.setText(Integer.toString(comment.getInfo().like));
             commentView.findViewById(R.id.comment_likes_button)
                     .setOnClickListener(v -> {
-                        DialogFragment fragment = PeopleListFragment.newInstance(comment, Tasks.LIKES);
+                        DialogFragment fragment = PeopleListFragment.newInstance(comment, LIKES);
                         fragment.show(getSupportFragmentManager(), fragment.getTag());
                     });
         } else {
@@ -234,33 +280,25 @@ public class FullPostInfoActivity extends AppCompatActivity {
     }
 
     /**
-     * Set the UI elements of Post using given {@link #post}
+     * Set the UI comments of Post using given {@link #post}
      */
     private void loadPostView() {
         if (post == null) {
             return;
         }
 
-        ImageView icon = ((ImageView) findViewById(R.id.full_post_info_network_icon));
-        icon.setImageResource(Utils.getResourceByNetwork(post.getNetwork()));
-
-        TextView time = ((TextView) findViewById(R.id.full_post_info_time));
-        time.setText(Utils.getDateFormatted(post.getDate()));
-
-        TextView postText = ((TextView) findViewById(R.id.full_post_info_post_text));
+        postIcon.setImageResource(Utils.getResourceByNetwork(post.getNetwork()));
+        timeView.setText(Utils.getDateFormatted(post.getDate()));
         postText.setText(post.getText());
 
         for (Attachment attachment : post.getAttachments()) {
             if (attachment instanceof Image) {
-                GlideImageView image = ((GlideImageView) findViewById(R.id.full_post_info_post_image));
-                image.loadImage(((Image) attachment));
+                postImage.loadImage(((Image) attachment));
             }
         }
 
         //Set footer visibility to GONE while we don't receive persons who like and share
-        findViewById(R.id.full_post_info_post_footer).setVisibility(View.GONE);
-
-        content.addView(new ProgressBar(this));
+        postFooter.setVisibility(View.GONE);
     }
 
 
@@ -273,36 +311,5 @@ public class FullPostInfoActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         handleIntent(intent);
-    }
-
-    /**
-     * Receiver that listen for {@link Broadcasts#FINISHED}.
-     * After {@link Broadcasts#FINISHED} received content would be inflated by comments.
-     */
-    private class CommentsReceiver extends AttachableReceiver<FullPostInfoActivity> {
-        /**
-         * Constructor from initial context and list of filters
-         *
-         * @param context initial context
-         */
-        public CommentsReceiver(FullPostInfoActivity context) {
-            super(context, Broadcasts.GET_PERSONS);
-        }
-
-        @Override
-        public void onMessageReceive(FullPostInfoActivity context, Intent message) {
-            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, -1);
-            if (status == Broadcasts.FINISHED) {
-                final String postId = message.getStringExtra(Broadcasts.ID_FIELD);
-                if (post.getLink().get().equals(postId)) {
-                    broadcastReceived++;
-                }
-                if (broadcastReceived == 2) {
-                    inflateFooter();
-                    inflateComments();
-                    stop();
-                }
-            }
-        }
     }
 }
