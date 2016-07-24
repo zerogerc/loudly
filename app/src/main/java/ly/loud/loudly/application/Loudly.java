@@ -35,8 +35,6 @@ import ly.loud.loudly.util.database.DatabaseUtils;
 import ly.loud.loudly.util.database.KeysDbModule;
 import ly.loud.loudly.util.database.PostDbModule;
 
-import static rx.android.schedulers.AndroidSchedulers.mainThread;
-
 /**
  * Core application of Loudly app
  * Stores run-time variables
@@ -193,8 +191,6 @@ public class Loudly extends Application {
     public void setKeyKeeper(int network, KeyKeeper keyKeeper) {
         if (keyKeeper != null) {
             getAppComponent().coreModel().connectToNetworkById(network, keyKeeper)
-                    .subscribeOn(mainThread())
-                    .observeOn(mainThread())
                     .subscribe(aBoolean -> {
                         if (!aBoolean) {
                             Log.e("NETWORK", "Could not connect with keykeeper");

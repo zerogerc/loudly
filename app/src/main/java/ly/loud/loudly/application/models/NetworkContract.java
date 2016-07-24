@@ -27,7 +27,7 @@ public interface NetworkContract {
      * @return id of image in given network
      */
     @CheckResult
-    Single<Long> upload(Image image);
+    Single<String> upload(@NonNull Image image);
 
     /**
      * Upload post to network
@@ -35,13 +35,13 @@ public interface NetworkContract {
      * @return id of post in network
      */
     @CheckResult
-    Single<Long> upload(Post post);
+    Single<String> upload(@NonNull Post post);
 
     /**
      * Delete post from network
      */
     @CheckResult
-    Single<Boolean> delete(Post post);
+    Single<Boolean> delete(@NonNull Post post);
 
     /**
      * Load posts from network
@@ -49,7 +49,7 @@ public interface NetworkContract {
      * @return loaded posts
      */
     @CheckResult
-    Single<List<Post>> loadPosts(TimeInterval timeInterval);
+    Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval);
 
     /**
      * Get persons by request type. For example: peoples that like certain post.

@@ -41,15 +41,8 @@ public class FacebookModel implements NetworkContract {
     @Inject
     public FacebookModel(@NonNull Loudly loudlyApplication) {
         this.loudlyApplication = loudlyApplication;
-        loadFromDB();
     }
 
-    /**
-     * Load wrap from DataBase
-     */
-    private void loadFromDB() {
-
-    }
 
     public FacebookWrap getWrap() {
         if (wrap == null) {
@@ -59,22 +52,22 @@ public class FacebookModel implements NetworkContract {
     }
 
     @Override
-    public Single<Long> upload(Image image) {
-        return Single.just(0L);
+    public Single<String> upload(@NonNull Image image) {
+        return Single.just("");
     }
 
     @Override
-    public Single<Long> upload(Post post) {
-        return Single.just(0L);
+    public Single<String> upload(@NonNull Post post) {
+        return Single.just("");
     }
 
     @Override
-    public Single<Boolean> delete(Post post) {
+    public Single<Boolean> delete(@NonNull Post post) {
         return Single.just(false);
     }
 
     @Override
-    public Single<List<Post>> loadPosts(TimeInterval timeInterval) {
+    public Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval) {
         return null;
     }
 
