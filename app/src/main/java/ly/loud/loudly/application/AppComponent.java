@@ -25,6 +25,9 @@ import ly.loud.loudly.util.database.PostDbModule;
 public interface AppComponent {
 
     @NonNull
+    Loudly loudlyApplication();
+
+    @NonNull
     Handler mainThreadHandler();
 
     @NonNull

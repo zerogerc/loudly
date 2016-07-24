@@ -192,14 +192,18 @@ public class Loudly extends Application {
      * @param keyKeeper KeyKeeper, that should be stored
      */
     public void setKeyKeeper(int network, KeyKeeper keyKeeper) {
-        getAppComponent().coreModel().connectToNetworkById(network, keyKeeper)
-                .subscribeOn(Schedulers.io())
-                .observeOn(mainThread())
-                .subscribe(aBoolean -> {
-                    if (!aBoolean) {
-                        Log.e("NETWORK", "Could not connect with keykeeper");
-                    }
-                });
+        if (keyKeeper != null) {
+            getAppComponent().coreModel().connectToNetworkById(network, keyKeeper)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(mainThread())
+                    .subscribe(aBoolean -> {
+                        if (!aBoolean) {
+                            Log.e("NETWORK", "Could not connect with keykeeper");
+                        }
+                    });
+        } else {
+            // TODO: disconnect
+        }
 
         keyKeepers[network] = keyKeeper;
     }

@@ -6,6 +6,8 @@ import android.support.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
@@ -17,7 +19,7 @@ import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.Facebook.FacebookWrap;
 import ly.loud.loudly.util.TimeInterval;
-import rx.Observable;
+import rx.Single;
 
 /**
  * Created by ZeRoGerc on 21/07/16.
@@ -36,6 +38,7 @@ public class FacebookModel implements NetworkContract {
     @Nullable
     private FacebookWrap wrap;
 
+    @Inject
     public FacebookModel(@NonNull Loudly loudlyApplication) {
         this.loudlyApplication = loudlyApplication;
         loadFromDB();
@@ -56,43 +59,43 @@ public class FacebookModel implements NetworkContract {
     }
 
     @Override
-    public long upload(Image image) {
-        return 0;
+    public Single<Long> upload(Image image) {
+        return Single.just(0L);
     }
 
     @Override
-    public long upload(Post post) {
-        return 0;
+    public Single<Long> upload(Post post) {
+        return Single.just(0L);
     }
 
     @Override
-    public void delete(Post post) {
-
+    public Single<Boolean> delete(Post post) {
+        return Single.just(false);
     }
 
     @Override
-    public Observable<List<Post>> loadPosts(TimeInterval timeInterval) {
+    public Single<List<Post>> loadPosts(TimeInterval timeInterval) {
         return null;
     }
 
     @Override
-    public List<Person> getPersons(@NonNull SingleNetwork element, @PeopleGetterModel.RequestType int requestType) {
-        return Collections.emptyList();
+    public Single<List<Person>> getPersons(@NonNull SingleNetwork element, @PeopleGetterModel.RequestType int requestType) {
+        return Single.just(Collections.emptyList());
+    }
+    
+    @Override
+    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
+        return Single.just(false);
     }
 
     @Override
-    public boolean connect(@NonNull KeyKeeper keyKeeper) {
-        return false;
+    public Single<Boolean> disconnect() {
+        return Single.just(false);
     }
 
     @Override
-    public boolean disconnect() {
-        return false;
-    }
-
-    @Override
-    public boolean isConnected() {
-        return false;
+    public Single<Boolean> isConnected() {
+        return Single.just(false);
     }
 
     @Override

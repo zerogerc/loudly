@@ -15,7 +15,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.LinkedList;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -24,15 +23,14 @@ import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.PeopleGetterModel;
-import ly.loud.loudly.application.models.PeopleGetterModel.PersonsFromNetwork;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.ui.adapter.AfterLoadAdapter;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
 public class PeopleListFragment extends DialogFragment {
 
@@ -113,24 +111,23 @@ public class PeopleListFragment extends DialogFragment {
         if (items.isEmpty()) { // First run
             peopleGetterModel.getPersonsByType(element, requestType)
                     .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
+                    .observeOn(mainThread())
+                    .doOnNext(personsFromNetwork -> {
+                        if (!personsFromNetwork.persons.isEmpty()) {
+                            items.add(new NetworkDelimiter(personsFromNetwork.network));
+                            items.addAll(personsFromNetwork.persons);
+                        }
+
+                        if (recyclerView.getAdapter() != null) {
+                            recyclerView.getAdapter().notifyDataSetChanged();
+                        }
+                    })
                     .doOnError(throwable -> {
                         // TODO: show user that something goes wrong
                     })
-                    .subscribe(this::loadItems);
-        }
-    }
-
-    private void loadItems(@NonNull List<PersonsFromNetwork> persons) {
-        for (PersonsFromNetwork list : persons) {
-            if (!list.persons.isEmpty()) {
-                items.add(new NetworkDelimiter(list.network));
-                items.addAll(list.persons);
-            }
-        }
-
-        if (recyclerView.getAdapter() != null) {
-            recyclerView.getAdapter().notifyDataSetChanged();
+                    .doOnCompleted(() -> {
+                        progress.setVisibility(View.GONE);
+                    }).subscribe();
         }
     }
 }

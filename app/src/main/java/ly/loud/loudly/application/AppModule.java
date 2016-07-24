@@ -1,6 +1,7 @@
 package ly.loud.loudly.application;
 
 import android.os.Handler;
+import android.support.annotation.NonNull;
 
 import javax.inject.Singleton;
 
@@ -10,6 +11,7 @@ import ly.loud.loudly.application.models.CommentsGetterModel;
 import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.FacebookModel;
 import ly.loud.loudly.application.models.InstagramModel;
+import ly.loud.loudly.application.models.KeysModel;
 import ly.loud.loudly.application.models.PeopleGetterModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
@@ -30,16 +32,22 @@ public class AppModule {
 
     @Provides
     @Singleton
+    Loudly provideLoudlyApplication() {
+        return loudlyApplication;
+    }
+
+    @Provides
+    @Singleton
     Handler provideMainThreadHandler() {
         return new Handler(getMainLooper());
     }
 
     @Provides
     @Singleton
-    PeopleGetterModel providePeopleGetterModel() {
+    PeopleGetterModel providePeopleGetterModel(@NonNull CoreModel coreModel) {
         return new PeopleGetterModel(
                 loudlyApplication,
-                loudlyApplication.getAppComponent().coreModel()
+                coreModel
         );
     }
 
@@ -51,13 +59,23 @@ public class AppModule {
 
     @Provides
     @Singleton
-    CoreModel provideCoreModel() {
+    CoreModel provideCoreModel(
+            @NonNull FacebookModel facebookModel,
+            @NonNull VKModel vkModel,
+            @NonNull InstagramModel instagramModel
+    ) {
         return new CoreModel(
                 loudlyApplication,
-                new FacebookModel(loudlyApplication),
-                new VKModel(loudlyApplication),
-                new InstagramModel(loudlyApplication)
+                facebookModel,
+                vkModel,
+                instagramModel
         );
+    }
+
+    @Provides
+    @Singleton
+    KeysModel provideKeysModel(@NonNull Loudly loudlyApplication) {
+        return new KeysModel(loudlyApplication);
     }
 
     @Provides

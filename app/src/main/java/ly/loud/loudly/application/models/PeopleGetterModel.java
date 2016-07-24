@@ -7,10 +7,12 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.SingleNetwork;
-import rx.Single;
+import rx.Observable;
 
 /**
  * Model for loading persons from different networks.
@@ -19,7 +21,9 @@ import rx.Single;
 public class PeopleGetterModel {
 
     @IntDef
-    public @interface RequestType {}
+    public @interface RequestType {
+    }
+
     public static final int LIKES = 0;
     public static final int SHARES = 1;
 
@@ -29,6 +33,7 @@ public class PeopleGetterModel {
     @NonNull
     private CoreModel coreModel;
 
+    @Inject
     public PeopleGetterModel(
             @NonNull Loudly loudlyApplication,
             @NonNull CoreModel coreModel
@@ -39,7 +44,7 @@ public class PeopleGetterModel {
 
     @CheckResult
     @NonNull
-    private List<PersonsFromNetwork> getListPersonsByType(@NonNull SingleNetwork element, @RequestType int type) {
+    private Observable<PersonsFromNetwork> getListPersonsByType(@NonNull SingleNetwork element, @RequestType int type) {
 
         ArrayList<NetworkContract> availableModels = new ArrayList<>();
 
@@ -49,25 +54,22 @@ public class PeopleGetterModel {
             }
         }
 
-        List<PersonsFromNetwork> result = new ArrayList<>();
-
-        for (NetworkContract model : availableModels) {
-            result.add(new PersonsFromNetwork(
-                    model.getPersons(
-                            element,
-                            type),
-                    model.getId()
-            ));
+        Observable<PersonsFromNetwork>[] peoples = ((Observable<PersonsFromNetwork>[]) new Observable[availableModels.size()]);
+        for (int i = 0; i < peoples.length; i++) {
+            final NetworkContract model = availableModels.get(i);
+            peoples[i] = model.getPersons(element, type)
+                    .map(persons -> new PersonsFromNetwork(persons, model.getId()))
+                    .toObservable();
 
         }
-        return result;
+        return Observable.merge(peoples);
     }
 
     @CheckResult
     @NonNull
-    public Single<List<PersonsFromNetwork>> getPersonsByType(@NonNull SingleNetwork element,
-                                                             @RequestType int type) {
-        return Single.fromCallable(() -> getListPersonsByType(element, type));
+    public Observable<PersonsFromNetwork> getPersonsByType(@NonNull SingleNetwork element,
+                                                           @RequestType int type) {
+        return getListPersonsByType(element, type);
     }
 
     public class PersonsFromNetwork {
