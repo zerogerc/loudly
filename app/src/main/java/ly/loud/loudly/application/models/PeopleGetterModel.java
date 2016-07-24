@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.base.Networks.Network;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.Wrap;
@@ -72,9 +73,10 @@ public class PeopleGetterModel {
         @NonNull
         public List<Person> persons;
 
+        @Network
         public int network;
 
-        public PersonsFromNetwork(@NonNull List<Person> persons, int network) {
+        public PersonsFromNetwork(@NonNull List<Person> persons, @Network int network) {
             this.persons = persons;
             this.network = network;
         }
