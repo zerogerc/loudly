@@ -8,16 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Wrap;
@@ -28,12 +22,13 @@ import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PostsHolder;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.DaggerDatabaseComponent;
-import ly.loud.loudly.util.database.DatabaseComponent;
-import ly.loud.loudly.util.database.DatabaseException;
-import ly.loud.loudly.util.database.DatabaseUtils;
-import ly.loud.loudly.util.database.KeysDbModule;
-import ly.loud.loudly.util.database.PostDbModule;
+import ly.loud.loudly.util.database.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Core application of Loudly app
@@ -59,6 +54,7 @@ public class Loudly extends Application {
 
     private AppComponent appComponent;
     private DatabaseComponent databaseComponent;
+
 
     /**
      * Load state of application from database. <br>
@@ -88,15 +84,6 @@ public class Loudly extends Application {
     }
 
     /**
-     * Store current visible activity into Loudly
-     *
-     * @param activity current activity
-     */
-    public synchronized static void setCurrentActivity(Activity activity) {
-        Loudly.activity = activity;
-    }
-
-    /**
      * Reset stored visible activity
      *
      * @param old The stored activity
@@ -114,6 +101,15 @@ public class Loudly extends Application {
      */
     public synchronized static Activity getCurrentActivity() {
         return Loudly.activity;
+    }
+
+    /**
+     * Store current visible activity into Loudly
+     *
+     * @param activity current activity
+     */
+    public synchronized static void setCurrentActivity(@NonNull Activity activity) {
+        Loudly.activity = activity;
     }
 
     public static PostsHolder getPostHolder() {
@@ -135,16 +131,6 @@ public class Loudly extends Application {
         LocalBroadcastManager.getInstance(getContext()).sendBroadcast(message);
     }
 
-    private void resetState() {
-        for (Wrap w : getWraps()) {
-            if (w != null) {
-                w.resetState();
-            }
-        }
-        getPostHolder().clear();
-        Arrays.fill(MainActivity.loadedNetworks, false);
-    }
-
     private static void setPreferences(int updateFreq, int loadLast) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, -loadLast);
@@ -157,7 +143,6 @@ public class Loudly extends Application {
         Loudly.loadLast = loadLast;
         Loudly.getInfoInterval = updateFreq;
     }
-
 
     /**
      * @return Frequency of updates and posts interval
@@ -173,6 +158,16 @@ public class Loudly extends Application {
         editor.putInt(LOAD_LAST, loadLast);
         editor.apply();
         setPreferences(frequency, loadLast);
+    }
+
+    private void resetState() {
+        for (Wrap w : getWraps()) {
+            if (w != null) {
+                w.resetState();
+            }
+        }
+        getPostHolder().clear();
+        Arrays.fill(MainActivity.loadedNetworks, false);
     }
 
     /**
@@ -278,4 +273,5 @@ public class Loudly extends Application {
     public DatabaseComponent getDatabaseComponent() {
         return databaseComponent;
     }
+
 }

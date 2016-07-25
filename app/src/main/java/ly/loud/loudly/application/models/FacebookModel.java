@@ -22,9 +22,6 @@ import ly.loud.loudly.networks.Facebook.FacebookWrap;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Single;
 
-/**
- * Created by ZeRoGerc on 21/07/16.
- */
 public class FacebookModel implements NetworkContract {
 
     @NonNull
@@ -44,6 +41,11 @@ public class FacebookModel implements NetworkContract {
         this.loudlyApplication = loudlyApplication;
     }
 
+    @NonNull
+    @Override
+    public Single<Boolean> reset() {
+        return Single.just(true);
+    }
 
     public FacebookWrap getWrap() {
         if (wrap == null) {
@@ -52,49 +54,58 @@ public class FacebookModel implements NetworkContract {
         return wrap;
     }
 
+    @NonNull
     @Override
     public Single<String> upload(@NonNull Image image) {
         return Single.just("");
     }
 
+    @NonNull
     @Override
     public Single<String> upload(@NonNull Post post) {
         return Single.just("");
     }
 
+    @NonNull
     @Override
     public Single<Boolean> delete(@NonNull Post post) {
         return Single.just(false);
     }
 
+    @NonNull
     @Override
     public Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Single.just(Collections.emptyList());
     }
 
+    @NonNull
     @Override
     public Single<List<Person>> getPersons(@NonNull SingleNetwork element, @GetterModel.RequestType int requestType) {
         return Single.just(Collections.emptyList());
     }
 
+    @NonNull
     @Override
     public Single<List<Comment>> getComments(@NonNull SingleNetwork element) {
         return Single.just(Collections.emptyList());
     }
 
+    @NonNull
     @Override
     public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
         return Single.just(false);
     }
 
+    @NonNull
     @Override
     public Single<Boolean> disconnect() {
         return Single.just(false);
     }
 
     @Override
-    public Single<Boolean> isConnected() {
-        return Single.just(false);
+    public boolean isConnected() {
+        // ToDo: fix
+        return true;
     }
 
     @Override

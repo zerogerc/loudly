@@ -21,6 +21,14 @@ import static ly.loud.loudly.application.models.GetterModel.RequestType;
  */
 //TODO: nonnull annoations
 public interface NetworkContract {
+    /**
+     * Reset inner counters of modules
+     *
+     * @return True, if reset, False otherwise
+     */
+    @CheckResult
+    @NonNull
+    Single<Boolean> reset();
 
     /**
      * Upload image to network
@@ -28,6 +36,7 @@ public interface NetworkContract {
      * @return id of image in given network
      */
     @CheckResult
+    @NonNull
     Single<String> upload(@NonNull Image image);
 
     /**
@@ -36,12 +45,14 @@ public interface NetworkContract {
      * @return id of post in network
      */
     @CheckResult
+    @NonNull
     Single<String> upload(@NonNull Post post);
 
     /**
      * Delete post from network
      */
     @CheckResult
+    @NonNull
     Single<Boolean> delete(@NonNull Post post);
 
     /**
@@ -50,18 +61,21 @@ public interface NetworkContract {
      * @return loaded posts
      */
     @CheckResult
+    @NonNull
     Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval);
 
     /**
      * Get persons by request type. For example: peoples that like certain post.
      */
     @CheckResult
+    @NonNull
     Single<List<Person>> getPersons(@NonNull SingleNetwork element, @RequestType int requestType);
 
     /**
      * Get comments for element of {@link SingleNetwork}.
      */
     @CheckResult
+    @NonNull
     Single<List<Comment>> getComments(@NonNull SingleNetwork element);
 
     /**
@@ -70,6 +84,7 @@ public interface NetworkContract {
      * @return  <code>true</code> if connected successfully
      */
     @CheckResult
+    @NonNull
     Single<Boolean> connect(@NonNull KeyKeeper keyKeeper);
 
     /**
@@ -77,6 +92,7 @@ public interface NetworkContract {
      * @return <code>true</code> if disconnected successfully
      */
     @CheckResult
+    @NonNull
     Single<Boolean> disconnect();
 
 
@@ -84,11 +100,12 @@ public interface NetworkContract {
      * @return <code>true</code> if this network connected.
      */
     @CheckResult
-    Single<Boolean> isConnected();
+    boolean isConnected();
 
     /**
      * @return id of network.
      */
     // TODO: intDef
+    @CheckResult
     int getId();
 }

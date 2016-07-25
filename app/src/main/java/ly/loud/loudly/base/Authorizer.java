@@ -47,7 +47,7 @@ public abstract class Authorizer {
      * Add fields such as access_token from response to KeyKeeper
      *
      * @param keys     Keys, generated during beginAuthorize
-     * @param response Response from server
+     * @param response VKResponse from server
      */
     public abstract void addFieldsFromQuery(KeyKeeper keys, Query response);
 

@@ -10,6 +10,7 @@ import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
+import ly.loud.loudly.networks.VK.VKClientModule;
 import ly.loud.loudly.ui.FullPostInfoActivity;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PeopleListFragment;
@@ -18,7 +19,7 @@ import ly.loud.loudly.ui.brand_new.FeedActivity;
 /**
  * Created by ZeRoGerc on 20/07/16.
  */
-@Singleton @Component (modules = AppModule.class)
+@Singleton @Component (modules = {AppModule.class, VKClientModule.class})
 public interface AppComponent {
 
     @NonNull
