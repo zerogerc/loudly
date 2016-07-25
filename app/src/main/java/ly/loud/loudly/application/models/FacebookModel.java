@@ -44,6 +44,10 @@ public class FacebookModel implements NetworkContract {
         this.loudlyApplication = loudlyApplication;
     }
 
+    @Override
+    public Single<Boolean> reset() {
+        return Single.just(true);
+    }
 
     public FacebookWrap getWrap() {
         if (wrap == null) {
@@ -93,8 +97,9 @@ public class FacebookModel implements NetworkContract {
     }
 
     @Override
-    public Single<Boolean> isConnected() {
-        return Single.just(false);
+    public boolean isConnected() {
+        // ToDo: fix
+        return true;
     }
 
     @Override

@@ -5,6 +5,8 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 /**
+ * Post / comment in VK api
+ *
  * @author Danil Kolikov
  */
 public class Say {

@@ -3,6 +3,8 @@ package ly.loud.loudly.networks.VK.entities;
 import com.google.gson.annotations.SerializedName;
 
 /**
+ * Photo for VK api
+ *
  * @author Danil Kolikov
  */
 public class Photo {

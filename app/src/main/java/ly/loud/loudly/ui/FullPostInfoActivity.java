@@ -142,7 +142,8 @@ public class FullPostInfoActivity extends AppCompatActivity {
                     .doOnNext(personsFromNetwork -> {
                         likers.addAll(personsFromNetwork.persons);
                     })
-                    .doOnCompleted(this::fillLikers);
+                    .doOnCompleted(this::fillLikers)
+                    .subscribe();
         }
     }
 

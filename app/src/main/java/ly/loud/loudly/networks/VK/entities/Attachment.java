@@ -1,6 +1,8 @@
 package ly.loud.loudly.networks.VK.entities;
 
 /**
+ * Attachment for VK api
+ *
  * @author Danil Kolikov
  */
 public class Attachment {

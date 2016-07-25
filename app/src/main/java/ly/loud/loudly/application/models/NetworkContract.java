@@ -21,6 +21,13 @@ import static ly.loud.loudly.application.models.GetterModel.RequestType;
  */
 //TODO: nonnull annoations
 public interface NetworkContract {
+    /**
+     * Reset inner counters of modules
+     *
+     * @return True, if reset, False otherwise
+     */
+    @CheckResult
+    Single<Boolean> reset();
 
     /**
      * Upload image to network
@@ -84,7 +91,7 @@ public interface NetworkContract {
      * @return <code>true</code> if this network connected.
      */
     @CheckResult
-    Single<Boolean> isConnected();
+    boolean isConnected();
 
     /**
      * @return id of network.

@@ -33,6 +33,13 @@ public class Image implements Attachment, SingleNetwork, Parcelable {
         this.id = id;
     }
 
+    public Image(String externalLink, Point size, int network, Link id) {
+        this.externalLink = externalLink;
+        this.size = size;
+        this.network = network;
+        this.id = id;
+    }
+
     public Image(Parcel source) {
         externalLink = source.readString();
         size = source.readParcelable(Point.class.getClassLoader());

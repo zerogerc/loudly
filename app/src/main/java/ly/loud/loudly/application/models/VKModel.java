@@ -1,80 +1,66 @@
 package ly.loud.loudly.application.models;
 
+import android.graphics.Point;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.inject.Inject;
-
+import android.support.annotation.Nullable;
+import android.util.Log;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.NetworkDescription;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
+import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.networks.VK.VKClient;
 import ly.loud.loudly.networks.VK.VKKeyKeeper;
-import ly.loud.loudly.util.Network;
-import ly.loud.loudly.util.Query;
+import ly.loud.loudly.networks.VK.entities.*;
 import ly.loud.loudly.util.TimeInterval;
+import retrofit2.Call;
+import retrofit2.Response;
 import rx.Single;
+import rx.functions.Func1;
 
-import static ly.loud.loudly.application.models.GetterModel.LIKES;
-import static ly.loud.loudly.application.models.GetterModel.RequestType;
-import static ly.loud.loudly.application.models.GetterModel.SHARES;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static ly.loud.loudly.application.models.GetterModel.*;
 
 /**
  * Created by ZeRoGerc on 21/07/16.
  */
 public class VKModel implements NetworkContract {
+    private static final String TAG = "VK_MODEL";
 
-    private static final int NETWORK = Networks.VK;
-    private static final String TAG = "VK_WRAP_TAG";
-    private static final String API_VERSION = "5.40";
-    private static final String MAIN_SERVER = "https://api.vk.com/method/";
-    private static final String POST_METHOD = "wall.post";
-    private static final String GET_METHOD = "wall.getById";
-    private static final String DELETE_METHOD = "wall.delete";
-    private static final String LOAD_POSTS_METHOD = "wall.get";
-    private static final String PHOTO_UPLOAD_METHOD = "photos.getWallUploadServer";
-    private static final String SAVE_PHOTO_METHOD = "photos.saveWallPhoto";
-    private static final String ACCESS_TOKEN = "access_token";
-    private static final NetworkDescription DESCRIPTION = new NetworkDescription() {
-        @Override
-        public boolean canPost() {
-            return true;
-        }
-
-        @Override
-        public boolean canDelete() {
-            return true;
-        }
-    };
-
+    private int offset;
     @NonNull
     private Loudly loudlyApplication;
 
     @NonNull
     private KeysModel keysModel;
 
+    @NonNull
+    private VKClient client;
+
     @Inject
     public VKModel(
             @NonNull Loudly loudlyApplication,
-            @NonNull KeysModel keysModel
+            @NonNull KeysModel keysModel,
+            @NonNull VKClient client
     ) {
         this.loudlyApplication = loudlyApplication;
         this.keysModel = keysModel;
+        this.client = client;
         loadFromDB();
+        offset = 0;
+    }
+
+    @Override
+    public Single<Boolean> reset() {
+        offset = 0;
+        return Single.just(true);
     }
 
     /**
@@ -105,124 +91,217 @@ public class VKModel implements NetworkContract {
     @Override
     @CheckResult
     public Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return Single.just(Collections.emptyList());
+        return Single.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: handle
+                return Collections.emptyList();
+            }
+            List<Post> posts = new ArrayList<>();
+            Call<VKResponse<VKItems<Say>>> call;
+            long currentTime = 0;
+            do {
+                call = client.getPosts(keyKeeper.getUserId(), offset, keyKeeper.getAccessToken());
+                try {
+                    Response<VKResponse<VKItems<Say>>> execute = call.execute();
+                    VKResponse<VKItems<Say>> body = execute.body();
+                    if (body.error != null) {
+                        // ToDo: Handle
+                        Log.e(TAG, body.error.errorMessage);
+                        return Collections.emptyList();
+                    }
+                    if (body.response.items.isEmpty()) {
+                        break;
+                    }
+                    for (Say say : body.response.items) {
+                        currentTime = say.date;
+                        if (!timeInterval.contains(currentTime)) {
+                            break;
+                        }
+                        offset++;
+                        Post post = new Post(say.text, say.date, null, Networks.VK, new Link(say.id));
+                        post.setInfo(getInfo(say));
+                        setAttachments(post, say);
+                        posts.add(post);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return posts;
+                }
+            } while (timeInterval.contains(currentTime));
+            return posts;
+        });
+    }
+
+    @NonNull
+    private String toCommaSeparated(@NonNull List<String> strings) {
+        StringBuilder sb = new StringBuilder();
+        for (String string : strings) {
+            sb.append(string);
+            sb.append(',');
+        }
+        if (sb.length() > 0) {
+            sb.delete(sb.length() - 1, sb.length());
+        }
+        return sb.toString();
     }
 
     @Override
     @CheckResult
     public Single<List<Person>> getPersons(@NonNull SingleNetwork element, @RequestType int requestType) {
-        return isConnected()
-                .map(isConnected -> {
-                    if (!isConnected) {
-                        return Collections.emptyList();
-                    }
+        return Single.fromCallable(() -> {
+            final VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: Handle
+                return Collections.emptyList();
+            }
 
-                    final VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
-                    assert keyKeeper != null;
-                    // TODO: handle errors from keykeeper
+            String type, filter;
+            if (element instanceof Post) {
+                type = "post";
+            } else if (element instanceof Image) {
+                type = "photo";
+            } else if (element instanceof Comment) {
+                type = "comment";
+            } else {
+                return Collections.emptyList();
+            }
+            switch (requestType) {
+                case LIKES:
+                    filter = "likes";
+                    break;
+                case SHARES:
+                    filter = "copies";
+                    break;
+                default:
+                    return Collections.emptyList();
+            }
+            if (element.getLink() == null) {
+                return Collections.emptyList();
+            }
 
-                    try {
-                        Query query = makeSignedAPICall("likes.getList", keyKeeper);
-                        String type;
-                        if (element instanceof Post) {
-                            type = "post";
-                        } else if (element instanceof Image) {
-                            type = "photo";
-                        } else if (element instanceof Comment) {
-                            type = "comment";
-                        } else {
-                            return new LinkedList<>();
-                        }
+            Call<VKResponse<VKItems<Profile>>> likersIds = client.getLikersIds(keyKeeper.getUserId(),
+                    element.getLink().get(), type, filter, keyKeeper.getAccessToken());
+            try {
+                Response<VKResponse<VKItems<Profile>>> executed = likersIds.execute();
+                VKResponse<VKItems<Profile>> body = executed.body();
+                if (body.error != null) {
+                    // ToDo: Handle
+                    Log.e(TAG, body.error.errorMessage);
+                    return Collections.emptyList();
+                }
 
-                        query.addParameter("type", type);
-                        query.addParameter("owner_id", keyKeeper.getUserId());
-                        query.addParameter("item_id", element.getLink());
-                        String filter;
-                        switch (requestType) {
-                            case LIKES:
-                                filter = "likes";
-                                break;
-                            case SHARES:
-                                filter = "copies";
-                                break;
-                            default:
-                                filter = "";
-                                break;
-                        }
-                        query.addParameter("filter", filter);
-                        query.addParameter("extended", 1);
-                        // TODO: 12/3/2015 Add offset here
+                VKItems<Profile> response = body.response;
+                List<String> ids = new ArrayList<>();
+                for (Profile profile : response.items) {
+                    ids.add(profile.id);
+                }
+                Call<VKResponse<List<Profile>>> profiles = client.getProfiles(toCommaSeparated(ids),
+                        keyKeeper.getAccessToken());
+                Response<VKResponse<List<Profile>>> gotPerson = profiles.execute();
+                VKResponse<List<Profile>> personsBody = gotPerson.body();
+                if (personsBody.error != null) {
+                    // ToDo: Handle
+                    Log.e(TAG, personsBody.error.errorMessage);
+                    return Collections.emptyList();
+                }
+                List<Person> persons = new ArrayList<>();
+                for (Profile profile : personsBody.response) {
+                    persons.add(toPerson(profile));
+                }
+                return persons;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return Collections.emptyList();
+            }
+        });
+    }
 
-                        String response = Network.makeGetRequest(query);
+    @NonNull
+    private Person toPerson(Profile profile) {
+        return new Person(profile.firstName, profile.lastName, profile.photo50, Networks.VK);
+    }
 
-                        Query getPeopleQuery = makeSignedAPICall("users.get", keyKeeper);
+    private int get(@Nullable Counter counter) {
+        return counter == null ? 0 : counter.count;
+    }
 
-                        JSONObject parser;
-                        try {
-                            parser = new JSONObject(response).getJSONObject("response");
-                            JSONArray likers = parser.getJSONArray("items");
+    private Info getInfo(@NonNull Say say) {
+        return new Info(get(say.likes), get(say.reposts), get(say.comments));
+    }
 
-                            if (likers.length() == 0) {
-                                return Collections.emptyList();
-                            }
+    @Nullable
+    private ly.loud.loudly.base.attachments.Attachment toAttachment(@NonNull Attachment attachment) {
+        Photo photo = attachment.photo;
+        if (photo != null) {
+            return new Image(attachment.photo.photo604, new Point(photo.width, photo.height),
+                    Networks.VK, new Link(photo.id));
+        }
+        return null;
+    }
 
-                            StringBuilder sb = new StringBuilder();
-                            for (int i = 0; i < likers.length(); i++) {
-                                long id = likers.getJSONObject(i).getLong("id");
-                                sb.append(id);
-                                sb.append(',');
-                            }
-                            sb.delete(sb.length() - 1, sb.length());
-
-                            getPeopleQuery.addParameter("user_ids", sb);
-                            getPeopleQuery.addParameter("fields", "photo_50");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            return Collections.emptyList();
-                        }
-
-                        response = Network.makeGetRequest(getPeopleQuery);
-
-                        LinkedList<Person> result = new LinkedList<>();
-
-                        JSONArray people;
-                        try {
-                            people = new JSONObject(response).getJSONArray("response");
-                            for (int i = 0; i < people.length(); i++) {
-                                JSONObject person = people.getJSONObject(i);
-                                String id = person.getString("id");
-                                String firstName = person.getString("first_name");
-                                String lastName = person.getString("last_name");
-                                String photoURL = person.getString("photo_50");
-
-                                Person person1 = new Person(firstName, lastName, photoURL, getId());
-                                person1.setId(id);
-                                result.add(person1);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            return new LinkedList<>();
-                        }
-
-                        return result;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return Collections.emptyList();
-                    }
-                });
+    private void setAttachments(@NonNull ly.loud.loudly.base.says.Say say, @NonNull Say loaded) {
+        if (loaded.attachments == null) {
+            return;
+        }
+        for (Attachment attachment : loaded.attachments) {
+            ly.loud.loudly.base.attachments.Attachment filled = toAttachment(attachment);
+            if (filled == null) {
+                continue;
+            }
+            say.addAttachment(filled);
+        }
     }
 
     @Override
     public Single<List<Comment>> getComments(@NonNull SingleNetwork element) {
-        return isConnected()
-                .map(isConnected -> {
-                    if (!isConnected) {
-                        return Collections.emptyList();
-                    }
+        return Single.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: Handle
+                return Collections.emptyList();
+            }
 
-                    // TODO: implement
+            if (element.getLink() == null) {
+                return Collections.emptyList();
+            }
+            Call<VKResponse<VKItems<Say>>> call = client.getComments(
+                    keyKeeper.getUserId(), element.getLink().get(),
+                    keyKeeper.getAccessToken());
+            try {
+                Response<VKResponse<VKItems<Say>>> executed = call.execute();
+                VKResponse<VKItems<Say>> body = executed.body();
+                if (body.error != null) {
+                    // ToDo: Handle
+                    Log.e(TAG, body.error.errorMessage);
                     return Collections.emptyList();
-                });
+                }
+                List<Comment> comments = new ArrayList<>();
+                List<Profile> profiles = body.response.profiles;
+                Func1<String, Profile> getProfile = id -> {
+                    for (Profile profile : profiles) {
+                        if (profile.id.equals(id)) {
+                            return profile;
+                        }
+                    }
+                    return null;
+                };
+                for (Say say : body.response.items) {
+                    Profile profile = getProfile.call(say.fromId);
+
+                    Comment comment = new Comment(say.text, say.date,
+                            toPerson(profile), Networks.VK, new Link(say.id));
+                    comment.setInfo(getInfo(say));
+                    setAttachments(comment, say);
+
+                    comments.add(comment);
+                }
+                return comments;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return Collections.emptyList();
+            }
+        });
     }
 
     @Override
@@ -243,26 +322,13 @@ public class VKModel implements NetworkContract {
 
     @Override
     @CheckResult
-    public Single<Boolean> isConnected() {
-        // TODO: change this
-        return Single.just(true);
+    public boolean isConnected() {
+        return keysModel.getVKKeyKeeper() != null;
     }
 
     @Override
     public int getId() {
         return Networks.VK;
-    }
-
-    private Query makeAPICall(String method) {
-        Query query = new Query(MAIN_SERVER + method);
-        query.addParameter("v", API_VERSION);
-        return query;
-    }
-
-    private Query makeSignedAPICall(String method, KeyKeeper keyKeeper) {
-        Query query = makeAPICall(method);
-        query.addParameter(ACCESS_TOKEN, ((VKKeyKeeper) keyKeeper).getAccessToken());
-        return query;
     }
 }
 

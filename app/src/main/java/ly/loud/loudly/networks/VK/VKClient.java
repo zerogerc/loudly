@@ -53,31 +53,31 @@ public interface VKClient {
      * @see <a href=https://new.vk.com/dev/likes.getList>VK api</a>
      */
     @GET("likes.getList?extended=1")
-    Call<VKResponse<VKItems<String>>> getLikersIds(@Query("owner_id") String ownerId, @Query("item_id") String itemId,
+    Call<VKResponse<VKItems<Profile>>> getLikersIds(@Query("owner_id") String ownerId, @Query("item_id") String itemId,
                                                    @Query("type") String type, @Query("filter") String filter,
                                                    @Query("access_token") String token);
 
     /**
      * Get user's info
      *
-     * @param ids   IDs of users
+     * @param ids   IDs of users, comma-separated
      * @param token Access token
      * @return Response from network
      * @see <a href=https://new.vk.com/dev/users.get>VK api</a>
      */
     @GET("users.get?fields=photo_50")
-    Call<VKResponse<List<Profile>>> getProfiles(@Query("user_ids") List<String> ids, @Query("access_token") String token);
+    Call<VKResponse<List<Profile>>> getProfiles(@Query("user_ids") String ids, @Query("access_token") String token);
 
     /**
      * Get information about posts
      *
-     * @param ids   IDs of posts in format [userId]_[postId]
+     * @param ids   IDs of posts in format [userId]_[postId], comma-separated
      * @param token Access token
      * @return Response from network
      * @see <a href=https://new.vk.com/dev/wall.getById>VK api</a>
      */
     @GET("wall.getById")
-    Call<VKResponse<List<Say>>> getPostsByIds(@Query("posts") List<String> ids, @Query("access_token") String token);
+    Call<VKResponse<List<Say>>> getPostsByIds(@Query("posts") String ids, @Query("access_token") String token);
 
     /**
      * Delete post
@@ -96,12 +96,12 @@ public interface VKClient {
      * Upload post
      *
      * @param message       Message
-     * @param attachmentIds Ids of attachments in format [type][userId]_[attachmentId]
+     * @param attachmentIds Ids of attachments in format [type][userId]_[attachmentId], comma-separated
      * @param token         Access token
      * @return Response from network, ID of uploaded post if succeeded
      * @see <a href=https://new.vk.com/dev/wall.post>VK api</a>
      */
     @POST("wall.post")
-    Call<VKResponse<Post>> uploadPost(@Query("message") @Nullable String message, @Query("attachment") List<String> attachmentIds,
+    Call<VKResponse<Post>> uploadPost(@Query("message") @Nullable String message, @Query("attachment") String attachmentIds,
                                       @Query("access_token") String token);
 }

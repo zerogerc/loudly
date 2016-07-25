@@ -7,6 +7,7 @@ import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.KeyKeeper;
+import rx.Observable;
 import rx.Single;
 
 /**
@@ -33,8 +34,8 @@ public class CoreModel {
         networkModels.add(instagramModel);
     }
 
-    public List<NetworkContract> getNetworksModels() {
-        return this.networkModels;
+    public Observable<NetworkContract> getNetworksModels() {
+        return Observable.from(networkModels).filter(NetworkContract::isConnected);
     }
 
     public Single<Boolean> connectToNetworkById(int id, @NonNull KeyKeeper keyKeeper) {

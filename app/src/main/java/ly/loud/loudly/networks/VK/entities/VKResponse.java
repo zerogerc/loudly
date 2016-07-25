@@ -7,4 +7,5 @@ package ly.loud.loudly.networks.VK.entities;
  */
 public class VKResponse<T> {
     public T response;
+    public Error error;
 }

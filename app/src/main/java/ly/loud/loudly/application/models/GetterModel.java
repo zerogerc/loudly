@@ -48,17 +48,7 @@ public class GetterModel {
      * Get models where given {@link SingleNetwork} exists in.
      */
     private Observable<NetworkContract> elementsExistInList(@NonNull SingleNetwork element) {
-        return Observable.create(new Observable.OnSubscribe<NetworkContract>() {
-            @Override
-            public void call(Subscriber<? super NetworkContract> subscriber) {
-                for (NetworkContract model : coreModel.getNetworksModels()) {
-                    if (element.existsIn(model.getId())) {
-                        subscriber.onNext(model);
-                    }
-                }
-                subscriber.onCompleted();
-            }
-        });
+        return coreModel.getNetworksModels().filter(n -> element.existsIn(n.getId()));
     }
 
     @CheckResult

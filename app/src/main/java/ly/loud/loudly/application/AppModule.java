@@ -5,16 +5,10 @@ import android.support.annotation.NonNull;
 
 import javax.inject.Singleton;
 
+import android.util.Log;
 import dagger.Module;
 import dagger.Provides;
-import ly.loud.loudly.application.models.CoreModel;
-import ly.loud.loudly.application.models.FacebookModel;
-import ly.loud.loudly.application.models.GetterModel;
-import ly.loud.loudly.application.models.InstagramModel;
-import ly.loud.loudly.application.models.KeysModel;
-import ly.loud.loudly.application.models.PostDeleterModel;
-import ly.loud.loudly.application.models.PostUploadModel;
-import ly.loud.loudly.application.models.VKModel;
+import ly.loud.loudly.application.models.*;
 
 import static android.os.Looper.getMainLooper;
 
@@ -73,13 +67,19 @@ public class AppModule {
 
     @Provides
     @Singleton
-    PostDeleterModel providePostDeleterModel() {
-        return new PostDeleterModel(loudlyApplication);
+    PostDeleterModel providePostDeleterModel(@NonNull CoreModel coreModel) {
+        return new PostDeleterModel(loudlyApplication, coreModel);
     }
 
     @Provides
     @Singleton
-    PostUploadModel providePostUploadModel() {
-        return new PostUploadModel(loudlyApplication);
+    PostUploadModel providePostUploadModel(@NonNull CoreModel coreModel) {
+        return new PostUploadModel(loudlyApplication, coreModel);
+    }
+
+    @Provides
+    @Singleton
+    PostLoadModel providePostLoadModel(@NonNull CoreModel coreModel) {
+        return new PostLoadModel(loudlyApplication, coreModel);
     }
 }

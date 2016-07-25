@@ -44,6 +44,11 @@ public class InstagramModel implements NetworkContract {
         this.loudlyApplication = loudlyApplication;
     }
 
+    @Override
+    public Single<Boolean> reset() {
+        return Single.just(true);
+    }
+
     public InstagramWrap getWrap() {
         if (wrap == null) {
             this.wrap = new InstagramWrap();
@@ -92,8 +97,9 @@ public class InstagramModel implements NetworkContract {
     }
 
     @Override
-    public Single<Boolean> isConnected() {
-        return Single.just(false);
+    public boolean isConnected() {
+        // ToDo: fix
+        return true;
     }
 
     @Override
