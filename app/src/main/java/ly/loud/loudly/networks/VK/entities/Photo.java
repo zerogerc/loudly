@@ -9,7 +9,13 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Photo {
     public String id;
+
     @SerializedName("photo_604")
     public String photo604;
-    public int width, height;
+
+    @SerializedName("width")
+    public int widthPx;
+
+    @SerializedName("height")
+    public int heightPx;
 }

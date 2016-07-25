@@ -11,6 +11,8 @@ import javax.inject.Inject;
 import java.util.List;
 
 /**
+ * Model for post loading
+ *
  * @author Danil Kolikov
  */
 public class PostLoadModel {
@@ -27,7 +29,7 @@ public class PostLoadModel {
 
     @CheckResult
     @NonNull
-    public Observable<List<Post>> loadPosts(TimeInterval interval) {
+    public Observable<List<Post>> loadPosts(@NonNull TimeInterval interval) {
         return coreModel.getNetworksModels().flatMap(n -> n.loadPosts(interval).toObservable());
     }
 }

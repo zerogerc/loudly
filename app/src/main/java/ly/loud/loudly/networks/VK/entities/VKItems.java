@@ -1,5 +1,7 @@
 package ly.loud.loudly.networks.VK.entities;
 
+import android.support.annotation.Nullable;
+
 import java.util.List;
 
 /**
@@ -9,5 +11,7 @@ import java.util.List;
  */
 public class VKItems<T> {
     public List<T> items;
+
+    @Nullable
     public List<Profile> profiles;
 }

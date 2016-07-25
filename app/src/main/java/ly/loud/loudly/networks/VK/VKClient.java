@@ -1,5 +1,6 @@
 package ly.loud.loudly.networks.VK;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.networks.VK.entities.*;
 import retrofit2.Call;
@@ -25,8 +26,10 @@ public interface VKClient {
      * @see <a href=https://new.vk.com/dev/wall.getComments>VK api</a>
      */
     @GET("wall.getComments?need_likes=1&count=20&sort=asc&preview_length=0&extended=1")
-    Call<VKResponse<VKItems<Say>>> getComments(@Query("owner_id") String ownerId, @Query("post_id") String postId,
-                                               @Query("access_token") String token);
+    @NonNull
+    Call<VKResponse<VKItems<Say>>> getComments(@Query("owner_id") @NonNull String ownerId,
+                                               @Query("post_id") @NonNull String postId,
+                                               @Query("access_token") @NonNull String token);
 
     /**
      * Get posts of user
@@ -38,8 +41,10 @@ public interface VKClient {
      * @see <a href=https://new.vk.com/dev/wall.get>VK api</a>
      */
     @GET("wall.get?filter=owner&count=10")
-    Call<VKResponse<VKItems<Say>>> getPosts(@Query("owner_id") String ownerId, @Query("offset") int offset,
-                                            @Query("access_token") String token);
+    @NonNull
+    Call<VKResponse<VKItems<Say>>> getPosts(@Query("owner_id") @NonNull String ownerId,
+                                            @Query("offset") int offset,
+                                            @Query("access_token") @NonNull String token);
 
     /**
      * Get ids of people who liked/shared post/image/etc
@@ -53,9 +58,12 @@ public interface VKClient {
      * @see <a href=https://new.vk.com/dev/likes.getList>VK api</a>
      */
     @GET("likes.getList?extended=1")
-    Call<VKResponse<VKItems<Profile>>> getLikersIds(@Query("owner_id") String ownerId, @Query("item_id") String itemId,
-                                                   @Query("type") String type, @Query("filter") String filter,
-                                                   @Query("access_token") String token);
+    @NonNull
+    Call<VKResponse<VKItems<Profile>>> getLikersIds(@Query("owner_id") @NonNull String ownerId,
+                                                    @Query("item_id") @NonNull String itemId,
+                                                    @Query("type") @NonNull String type,
+                                                    @Query("filter") @Nullable String filter,
+                                                    @Query("access_token") @NonNull String token);
 
     /**
      * Get user's info
@@ -66,7 +74,9 @@ public interface VKClient {
      * @see <a href=https://new.vk.com/dev/users.get>VK api</a>
      */
     @GET("users.get?fields=photo_50")
-    Call<VKResponse<List<Profile>>> getProfiles(@Query("user_ids") String ids, @Query("access_token") String token);
+    @NonNull
+    Call<VKResponse<List<Profile>>> getProfiles(@Query("user_ids") @NonNull String ids,
+                                                @Query("access_token") @NonNull String token);
 
     /**
      * Get information about posts
@@ -77,7 +87,9 @@ public interface VKClient {
      * @see <a href=https://new.vk.com/dev/wall.getById>VK api</a>
      */
     @GET("wall.getById")
-    Call<VKResponse<List<Say>>> getPostsByIds(@Query("posts") String ids, @Query("access_token") String token);
+    @NonNull
+    Call<VKResponse<List<Say>>> getPostsByIds(@Query("posts") @NonNull String ids,
+                                              @Query("access_token") @NonNull String token);
 
     /**
      * Delete post
@@ -89,8 +101,10 @@ public interface VKClient {
      * @see <a href=https://new.vk.com/dev/wall.delete>VK api</a>
      */
     @GET("wall.delete")
-    Call<VKResponse<Integer>> deletePost(@Query("owner_id") String ownerId, @Query("post_id") String postId,
-                                         @Query("access_token") String token);
+    @NonNull
+    Call<VKResponse<Integer>> deletePost(@Query("owner_id") @NonNull String ownerId,
+                                         @Query("post_id") @NonNull String postId,
+                                         @Query("access_token") @NonNull String token);
 
     /**
      * Upload post
@@ -102,6 +116,8 @@ public interface VKClient {
      * @see <a href=https://new.vk.com/dev/wall.post>VK api</a>
      */
     @POST("wall.post")
-    Call<VKResponse<Post>> uploadPost(@Query("message") @Nullable String message, @Query("attachment") String attachmentIds,
-                                      @Query("access_token") String token);
+    @NonNull
+    Call<VKResponse<Post>> uploadPost(@Query("message") @Nullable String message,
+                                      @Query("attachment") @Nullable String attachmentIds,
+                                      @Query("access_token") @NonNull String token);
 }

@@ -1,5 +1,6 @@
 package ly.loud.loudly.application.models;
 
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import ly.loud.loudly.application.Loudly;
@@ -12,9 +13,6 @@ import rx.schedulers.Schedulers;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by ZeRoGerc on 21/07/16.
- */
 public class PostUploadModel {
     @NonNull
     private Loudly loudlyApplication;
@@ -27,7 +25,9 @@ public class PostUploadModel {
     }
 
     // Save to DB after uploading to networks
-    public Observable<Pair<Integer, String>> uploadPost(LoudlyPost post, List<Integer> networks) {
+    @CheckResult
+    @NonNull
+    public Observable<Pair<Integer, String>> uploadPost(@NonNull LoudlyPost post, @NonNull List<Integer> networks) {
         return coreModel.getNetworksModels()
                 .filter(network -> networks.contains(network.getId()))
                 .flatMap(network -> network.upload(post).map(id -> new Pair<>(network.getId(), id)).toObservable());
