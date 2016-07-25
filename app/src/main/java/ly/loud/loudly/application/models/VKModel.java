@@ -29,9 +29,9 @@ import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Single;
 
-import static ly.loud.loudly.application.models.PeopleGetterModel.LIKES;
-import static ly.loud.loudly.application.models.PeopleGetterModel.RequestType;
-import static ly.loud.loudly.application.models.PeopleGetterModel.SHARES;
+import static ly.loud.loudly.application.models.GetterModel.LIKES;
+import static ly.loud.loudly.application.models.GetterModel.RequestType;
+import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 /**
  * Created by ZeRoGerc on 21/07/16.
@@ -105,7 +105,7 @@ public class VKModel implements NetworkContract {
     @Override
     @CheckResult
     public Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return null;
+        return Single.just(Collections.emptyList());
     }
 
     @Override
@@ -209,6 +209,19 @@ public class VKModel implements NetworkContract {
                         e.printStackTrace();
                         return Collections.emptyList();
                     }
+                });
+    }
+
+    @Override
+    public Single<List<Comment>> getComments(@NonNull SingleNetwork element) {
+        return isConnected()
+                .map(isConnected -> {
+                    if (!isConnected) {
+                        return Collections.emptyList();
+                    }
+
+                    // TODO: implement
+                    return Collections.emptyList();
                 });
     }
 

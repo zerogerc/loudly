@@ -14,6 +14,7 @@ import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.attachments.Image;
+import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.networks.Instagram.InstagramAuthorizer;
 import ly.loud.loudly.networks.Instagram.InstagramKeyKeeper;
@@ -67,11 +68,16 @@ public class InstagramModel implements NetworkContract {
 
     @Override
     public Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return null;
+        return Single.just(Collections.emptyList());
     }
 
     @Override
-    public Single<List<Person>> getPersons(@NonNull SingleNetwork element, @PeopleGetterModel.RequestType int requestType) {
+    public Single<List<Person>> getPersons(@NonNull SingleNetwork element, @GetterModel.RequestType int requestType) {
+        return Single.just(Collections.emptyList());
+    }
+
+    @Override
+    public Single<List<Comment>> getComments(@NonNull SingleNetwork element) {
         return Single.just(Collections.emptyList());
     }
 

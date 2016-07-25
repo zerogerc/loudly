@@ -6,17 +6,13 @@ import android.support.annotation.NonNull;
 import javax.inject.Singleton;
 
 import dagger.Component;
-import ly.loud.loudly.application.models.CommentsGetterModel;
 import ly.loud.loudly.application.models.CoreModel;
-import ly.loud.loudly.application.models.PeopleGetterModel;
+import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.ui.FullPostInfoActivity;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PeopleListFragment;
-import ly.loud.loudly.util.database.DatabaseComponent;
-import ly.loud.loudly.util.database.KeysDbModule;
-import ly.loud.loudly.util.database.PostDbModule;
 
 /**
  * Created by ZeRoGerc on 20/07/16.
@@ -31,10 +27,7 @@ public interface AppComponent {
     Handler mainThreadHandler();
 
     @NonNull
-    PeopleGetterModel peopleGetterModel();
-
-    @NonNull
-    CommentsGetterModel commentsGetterModel();
+    GetterModel peopleGetterModel();
 
     @NonNull
     PostDeleterModel postDeleterModel();
