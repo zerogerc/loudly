@@ -21,7 +21,10 @@ import java.util.concurrent.Executors;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Wrap;
+import ly.loud.loudly.networks.DaggerNetworksComponent;
 import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
+import ly.loud.loudly.networks.NetworksComponent;
+import ly.loud.loudly.networks.VK.VKClientModule;
 import ly.loud.loudly.ui.GetInfoService;
 import ly.loud.loudly.ui.LocalBroadcastReceiver;
 import ly.loud.loudly.ui.MainActivity;
@@ -59,6 +62,8 @@ public class Loudly extends Application {
 
     private AppComponent appComponent;
     private DatabaseComponent databaseComponent;
+    private NetworksComponent networksComponent;
+
 
     /**
      * Load state of application from database. <br>
@@ -269,6 +274,9 @@ public class Loudly extends Application {
                 .keysDbModule(new KeysDbModule())
                 .postDbModule(new PostDbModule())
                 .build();
+        networksComponent = DaggerNetworksComponent.builder()
+                .vKClientModule(new VKClientModule())
+                .build();
     }
 
     public AppComponent getAppComponent() {
@@ -277,5 +285,9 @@ public class Loudly extends Application {
 
     public DatabaseComponent getDatabaseComponent() {
         return databaseComponent;
+    }
+
+    public NetworksComponent getNetworksComponent() {
+        return networksComponent;
     }
 }
