@@ -13,6 +13,7 @@ import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.ui.FullPostInfoActivity;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PeopleListFragment;
+import ly.loud.loudly.ui.brand_new.FeedActivity;
 
 /**
  * Created by ZeRoGerc on 20/07/16.
@@ -38,6 +39,7 @@ public interface AppComponent {
     @NonNull
     CoreModel coreModel();
 
+    void inject(FeedActivity feedActivity);
     void inject(MainActivity mainActivity);
     void inject(FullPostInfoActivity fullPostInfoActivity);
 
