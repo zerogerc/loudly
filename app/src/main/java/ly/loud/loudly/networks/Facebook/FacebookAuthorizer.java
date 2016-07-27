@@ -17,11 +17,6 @@ public class FacebookAuthorizer extends Authorizer {
     }
 
     @Override
-    protected FacebookKeyKeeper beginAuthorize() {
-        return new FacebookKeyKeeper();
-    }
-
-    @Override
     public String successToken() {
         return ACCESS_TOKEN;
     }
@@ -35,7 +30,6 @@ public class FacebookAuthorizer extends Authorizer {
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
         ((FacebookKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
         int expiration = Integer.parseInt(response.getParameter("expires_in"));
-        keys.expiresIn(expiration);
     }
 
     @Override

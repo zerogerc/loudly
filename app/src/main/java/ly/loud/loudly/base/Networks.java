@@ -1,8 +1,13 @@
 package ly.loud.loudly.base;
 
+import android.support.annotation.IntDef;
+
 import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.Facebook.FacebookWrap;
+import ly.loud.loudly.networks.Instagram.InstagramAuthorizer;
+import ly.loud.loudly.networks.Instagram.InstagramKeyKeeper;
+import ly.loud.loudly.networks.Instagram.InstagramWrap;
 import ly.loud.loudly.networks.Loudly.LoudlyAuthorizer;
 import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
 import ly.loud.loudly.networks.Loudly.LoudlyWrap;
@@ -17,7 +22,11 @@ import ly.loud.loudly.networks.VK.VKWrap;
  */
 public class Networks {
 
-    // It's important to add new network to the LinksContract, so we could say it in DB
+    public static final int NETWORK_COUNT = 7;
+
+    // It's important to add new network to the LinksContract, so we could save it to DB
+    @IntDef
+    public @interface Network {}
     public static final int LOUDLY = 0;
     public static final int FB = 1;
     public static final int TWITTER = 2;
@@ -26,9 +35,8 @@ public class Networks {
     public static final int OK = 5;
     public static final int MAILRU = 6;
 
-    public static final int NETWORK_COUNT = 7;
 
-    public static String nameOfNetwork(int network) {
+    public static String nameOfNetwork(@Network int network) {
         switch (network) {
             case LOUDLY:
                 return "Loudly";
@@ -49,18 +57,20 @@ public class Networks {
         }
     }
 
-    public static String domainByNetwork(int network) {
+    public static String domainByNetwork(@Network int network) {
         switch (network) {
             case FB:
                 return "www.facebook.com";
             case VK:
                 return "www.vk.com";
+            case INSTAGRAM:
+                return "www.instagram.com";
             default:
                 return "";
         }
     }
 
-    public static Wrap makeWrap(int network) {
+    public static Wrap makeWrap(@Network int network) {
         switch (network) {
             case LOUDLY:
                 return new LoudlyWrap();
@@ -68,12 +78,14 @@ public class Networks {
                 return new FacebookWrap();
             case VK:
                 return new VKWrap();
+            case INSTAGRAM:
+                return new InstagramWrap();
             default:
                 return null;
         }
     }
 
-    public static Authorizer makeAuthorizer(int network) {
+    public static Authorizer makeAuthorizer(@Network int network) {
         //TODO other networks
         switch (network) {
             case LOUDLY:
@@ -84,6 +96,8 @@ public class Networks {
                 return new VKAuthorizer();
             case MAILRU:
                 return new MailRuAuthoriser();
+            case INSTAGRAM:
+                return new InstagramAuthorizer();
             default:
                 return null;
 
@@ -95,7 +109,7 @@ public class Networks {
      * @param network ID of the network
      * @return KeyKeeper for the network
      */
-    public static KeyKeeper makeKeyKeeper(int network) {
+    public static KeyKeeper makeKeyKeeper(@Network int network) {
         switch (network) {
             case LOUDLY:
                 return new LoudlyKeyKeeper();
@@ -103,6 +117,8 @@ public class Networks {
                 return new FacebookKeyKeeper();
             case VK:
                 return new VKKeyKeeper();
+            case INSTAGRAM:
+                return new InstagramKeyKeeper();
             case MAILRU:
                 return new MailRuKeyKeeper();
             default:

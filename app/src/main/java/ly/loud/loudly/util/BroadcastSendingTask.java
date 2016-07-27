@@ -3,7 +3,7 @@ package ly.loud.loudly.util;
 import android.content.Intent;
 import android.os.AsyncTask;
 
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 
 public abstract class BroadcastSendingTask extends AsyncTask<Object, Intent, Intent> {
     public static Intent makeMessage(String action, int status) {
@@ -26,7 +26,9 @@ public abstract class BroadcastSendingTask extends AsyncTask<Object, Intent, Int
 
     @Override
     protected void onPostExecute(Intent intent) {
-        Loudly.sendLocalBroadcast(intent);
+        if (intent != null) {
+            Loudly.sendLocalBroadcast(intent);
+        }
     }
 
     @Override

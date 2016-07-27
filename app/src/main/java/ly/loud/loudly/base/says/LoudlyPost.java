@@ -1,15 +1,11 @@
 package ly.loud.loudly.base.says;
 
-import android.support.annotation.NonNull;
+import android.os.Parcel;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Location;
-import ly.loud.loudly.base.MultipleNetwork;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Attachment;
 
 /**
@@ -22,12 +18,17 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     /**
      * Proxy class that allows thread-safer work with LoudlyPost
      */
-    private class LoudlyPostProxy extends Post {
+    private static class LoudlyPostProxy extends Post {
         private LoudlyPost parent;
 
         LoudlyPostProxy(LoudlyPost parent, int network) {
             this.parent = parent;
             this.network = network;
+        }
+
+        private LoudlyPostProxy(Parcel parcel) {
+            super(parcel);
+            parent = parcel.readParcelable(LoudlyPost.class.getClassLoader());
         }
 
         @Override
@@ -137,14 +138,34 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         }
 
         @Override
-        public int compareTo(@NonNull Say another) {
-            return parent.compareTo(another);
+        public boolean equals(Object o) {
+            if (!(o instanceof Post)) {
+                return false;
+            }
+            if (o == this) {
+                return true;
+            }
+            SingleNetwork say = ((Say)o).getNetworkInstance(getNetwork());
+            return say != null && say.getLink().equals(getLink());
         }
 
         @Override
-        public boolean equals(Object o) {
-            return super.equals(o);
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeParcelable(parent, flags);
         }
+
+        public static final Creator<LoudlyPostProxy> CREATOR = new Creator<LoudlyPostProxy>() {
+            @Override
+            public LoudlyPostProxy createFromParcel(Parcel source) {
+                return new LoudlyPostProxy(source);
+            }
+
+            @Override
+            public LoudlyPostProxy[] newArray(int size) {
+                return new LoudlyPostProxy[size];
+            }
+        };
     }
 
     public LoudlyPost(
@@ -185,12 +206,23 @@ public class LoudlyPost extends Post implements MultipleNetwork {
         super(text, date, location, 0, null);
     }
 
+    public LoudlyPost(Parcel source) {
+        super(source);
+        links = new Link[Networks.NETWORK_COUNT];
+        infos = new Info[Networks.NETWORK_COUNT];
+        source.readTypedArray(links, Link.CREATOR);
+        source.readTypedArray(infos, Info.CREATOR);
+    }
+
     @Override
     public SingleNetwork getNetworkInstance(int network) {
         if (network == Networks.LOUDLY) {
             return this;
         }
-        return new LoudlyPostProxy(this, network);
+        if (links[network] != null) {
+            return new LoudlyPostProxy(this, network);
+        }
+        return null;
     }
 
     public Link[] getLinks() {
@@ -203,11 +235,20 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     }
 
     @Override
+    public Link getLink() {
+        return links[Networks.LOUDLY];
+    }
+
+    @Override
     public void setLink(int network, Link link) {
         links[network] = link;
         if (link == null) {
             setInfo(network, new Info());   // Delete old info
         }
+    }
+
+    public void setLinks(Link[] links) {
+        this.links = links;
     }
 
     @Override
@@ -225,7 +266,7 @@ public class LoudlyPost extends Post implements MultipleNetwork {
     }
 
     @Override
-    public void setInfo(int network, Info info) {
+    public synchronized void setInfo(int network, Info info) {
         infos[network] = info;
         infos[Networks.LOUDLY] = new Info();
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -270,13 +311,38 @@ public class LoudlyPost extends Post implements MultipleNetwork {
 
     @Override
     public boolean equals(Object o) {
+        if (!(o instanceof Post)) {
+            return false;
+        }
         if (o instanceof LoudlyPost) {
             return links[Networks.LOUDLY].equals(((LoudlyPost) o).links[Networks.LOUDLY]);
         }
-        if (o instanceof Post) {
-            Post post = (Post) o;
-            return links[post.getNetwork()] != null && links[post.getNetwork()].equals(post.getLink());
-        }
-        return false;
+        Post post = (Post) o;
+        return links[post.getNetwork()] != null && links[post.getNetwork()].equals(post.getLink());
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeTypedArray(links, flags);
+        dest.writeTypedArray(infos, flags);
+    }
+
+    public static final Creator<LoudlyPost> CREATOR = new Creator<LoudlyPost>() {
+        @Override
+        public LoudlyPost createFromParcel(Parcel source) {
+            return new LoudlyPost(source);
+        }
+
+        @Override
+        public LoudlyPost[] newArray(int size) {
+            return new LoudlyPost[size];
+        }
+    };
+
 }

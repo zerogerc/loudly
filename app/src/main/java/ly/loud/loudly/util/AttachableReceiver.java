@@ -8,7 +8,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import java.lang.ref.WeakReference;
 
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 
 /**
  * Receiver for local broadcasts.

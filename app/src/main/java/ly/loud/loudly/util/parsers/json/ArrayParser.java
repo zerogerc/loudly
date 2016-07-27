@@ -13,20 +13,17 @@ import ly.loud.loudly.util.parsers.Parser;
 /** Parser of JSON arrays <br>
  */
 public class ArrayParser implements Parser<ArrayParser>, JsonParser {
-    JsonParser[] parsers;
-    int parseOnly;
-    ArrayList<JsonParser> result;
+    private JsonParser parser;
+    private int parseOnly;
+    private ArrayList<JsonParser> result;
 
     /**
      * Default constructor
      * @param parseOnly Parse only N first objects. If parseOnly == -1, parse everything
-     * @param parsers List of parsers. First parses first element, second - second and so on.
-     *                If the number of element is greater than the amount of parsers,
-     *                last parser will be used
      */
-    public ArrayParser(int parseOnly, JsonParser... parsers) {
-        this.parseOnly = parseOnly == -1 ? Integer.MAX_VALUE : parseOnly;
-        this.parsers = parsers;
+    public ArrayParser(JsonParser parser, int parseOnly) {
+        this.parseOnly = parseOnly;
+        this.parser = parser;
         result = new ArrayList<>();
     }
 
@@ -35,10 +32,14 @@ public class ArrayParser implements Parser<ArrayParser>, JsonParser {
      * @param parseOnly Parse only N first objects. If parseOnly == -1, parse everything
      * @param type type of elements from JsonParser class
      */
-    public ArrayParser(int parseOnly, int type) {
-        this.parseOnly = parseOnly == -1 ? Integer.MAX_VALUE : parseOnly;
-        this.parsers = new JsonParser[] {new FieldParser(type)};
+    public ArrayParser(int type, int parseOnly) {
+        this.parseOnly = parseOnly;
+        this.parser = new FieldParser(type);
         result = new ArrayList<>();
+    }
+
+    public ArrayParser(JsonParser parser) {
+        this(parser, Integer.MAX_VALUE);
     }
 
     @Override
@@ -49,12 +50,7 @@ public class ArrayParser implements Parser<ArrayParser>, JsonParser {
             if (reader.peek() == JsonToken.END_ARRAY) {
                 break;
             }
-            JsonParser parser;
-            if (i < parsers.length) {
-                parser = parsers[i].copyStructure();
-            } else {
-                parser = parsers[parsers.length - 1].copyStructure();
-            }
+            JsonParser parser = this.parser.copyStructure();
             parser.parse(reader);
             result.add(parser);
             i++;
@@ -73,7 +69,6 @@ public class ArrayParser implements Parser<ArrayParser>, JsonParser {
         return result.get(i);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T get(int type, int i, T defaultValue) {
         JsonParser parser = get(i);
         if (parser instanceof FieldParser) {
@@ -94,20 +89,19 @@ public class ArrayParser implements Parser<ArrayParser>, JsonParser {
         return get(STRING, i, defaultValue);
     }
 
-    // Make more safe
-    public Integer getInt(int i, Integer defaultValue) {
+    public int getInt(int i, Integer defaultValue) {
         return get(INT, i, defaultValue);
     }
 
-    public Long getLong(int i, Long defaultValue) {
+    public long getLong(int i, Long defaultValue) {
         return get(LONG, i, defaultValue);
     }
 
-    public Double getDouble(int i, Double defaultValue) {
+    public double getDouble(int i, Double defaultValue) {
         return get(DOUBLE, i, defaultValue);
     }
 
-    public Boolean getBoolean(int i, Boolean defaultValue) {
+    public boolean getBoolean(int i, Boolean defaultValue) {
         return get(BOOLEAN, i, defaultValue);
     }
 
@@ -129,10 +123,6 @@ public class ArrayParser implements Parser<ArrayParser>, JsonParser {
 
     @Override
     public JsonParser copyStructure() {
-        JsonParser[] temp = new JsonParser[parsers.length];
-        for (int i = 0; i < parsers.length; i++) {
-            temp[i] = parsers[i].copyStructure();
-        }
-        return new ArrayParser(parseOnly, temp);
+        return new ArrayParser(parser.copyStructure(), parseOnly);
     }
 }

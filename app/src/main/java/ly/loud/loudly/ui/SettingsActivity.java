@@ -4,7 +4,6 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,36 +14,33 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
-import java.util.Iterator;
+import java.util.Collections;
 
+import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Authorizer;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
+import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.R;
+import ly.loud.loudly.ui.views.IconsHolder;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
-import ly.loud.loudly.util.database.DatabaseActions;
+import ly.loud.loudly.util.database.DatabaseUtils;
 import ly.loud.loudly.util.database.DatabaseException;
 
 public class SettingsActivity extends AppCompatActivity {
-    private static SettingsActivity self;
-    private static AttachableReceiver<SettingsActivity> authReceiver = null;
-    static int aliveCopy = 0;
-
-    private IconsHolder iconsHolder;
-
-    private AuthFragment webViewFragment;
-    private View webViewFragmentView;
-    private EditText loadLastText, frequencyText;
-
     public static String webViewURL;
     public static Authorizer webViewAuthorizer;
     public static KeyKeeper webViewKeyKeeper;
+    private static SettingsActivity self;
+    private static AttachableReceiver<SettingsActivity> authReceiver = null;
+    private IconsHolder iconsHolder;
+    private AuthFragment webViewFragment;
+    private View webViewFragmentView;
+    private EditText loadLastText, frequencyText;
 
     public static void executeOnUI(final UIAction<SettingsActivity> action) {
         if (self != null) {
@@ -63,7 +59,7 @@ public class SettingsActivity extends AppCompatActivity {
             public void execute(SettingsActivity context, Object... params) {
                 int network = ((int) params[0]);
                 //TODO remove when all networks will have been implemented
-                if (network == Networks.VK || network == Networks.FB) {
+                if (Networks.makeAuthorizer(network) != null) {
                     startReceiver();
                     Authorizer authorizer = Networks.makeAuthorizer(network);
                     authorizer.createAsyncTask(context, new UIAction<SettingsActivity>() {
@@ -153,13 +149,13 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        aliveCopy++;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         self = this;
+        Loudly.setCurrentActivity(this);
         if (authReceiver != null) {
             authReceiver.attach(this);
         }
@@ -183,32 +179,81 @@ public class SettingsActivity extends AppCompatActivity {
             authReceiver.detach();
         }
         self = null;
+
+        int frequency = Integer.parseInt(frequencyText.getText().toString());
+        int loadLast = Integer.parseInt(loadLastText.getText().toString());
+
+        Loudly.savePreferences(frequency, loadLast);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        aliveCopy--;
+        Loudly.clearCurrentActivity(this);
 
-        if (aliveCopy == 0) {
-            int frequency = Integer.parseInt(frequencyText.getText().toString());
-            int loadLast = Integer.parseInt(loadLastText.getText().toString());
-
-            savePreferences(frequency, loadLast);
-        }
         if (authReceiver != null) {
             authReceiver.stop();
         }
         authReceiver = null;
     }
 
-    private void savePreferences(int frequency, int loadLast) {
-        SharedPreferences preferences = getSharedPreferences(Loudly.PREFERENCES, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt(Loudly.UPDATE_FREQUENCY, frequency);
-        editor.putInt(Loudly.LOAD_LAST, loadLast);
-        editor.apply();
+    private void startReceiver() {
+        authReceiver = new AuthReceiver(this, iconsHolder);
+    }
+
+    public void startWebView() {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.show(webViewFragment);
+        ft.addToBackStack(null);
+        ft.commit();
+    }
+
+    // ToDo: make buttons not clickable during authorization
+
+    public void finishWebView() {
+        webViewFragment.clearWebView();
+    }
+
+    public void LogoutClick(int network) {
+        Loudly.getContext().stopGetInfoService();
+        if (MainActivity.loadPosts != null) {
+            MainActivity.loadPosts.stop();
+        }
+        Networks.makeWrap(network).resetState();
+
+        new AsyncTask<Integer, Void, Integer>() {
+            @Override
+            protected Integer doInBackground(Integer... params) {
+                int network = params[0];
+                if (Loudly.getContext().getKeyKeeper(network) != null) {
+                    try {
+                        DatabaseUtils.deleteKey(network);
+                        Utils.clearCookies(Networks.domainByNetwork(network));
+                    } catch (DatabaseException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return params[0];
+            }
+
+            @Override
+            protected void onPostExecute(Integer network) {
+                Networks.makeWrap(network).resetState();
+
+                Loudly.getContext().setKeyKeeper(network, null);
+                // Clean posts from this network
+                for (Post p : Loudly.getPostHolder().getPosts()) {
+                    SingleNetwork singleNetwork = p.getNetworkInstance(network);
+                    if (singleNetwork != null) {
+                        singleNetwork.getLink().setValid(false);
+                    }
+                }
+
+                Loudly.getPostHolder().cleanUp(Collections.singletonList(network), false);
+                MainActivity.loadedNetworks[network] = false;
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, network);
     }
 
     private static class AuthReceiver extends AttachableReceiver<SettingsActivity> {
@@ -230,7 +275,6 @@ public class SettingsActivity extends AppCompatActivity {
                     int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
                     iconsHolder.setVisible(network);
                     activity.finishWebView();
-
                     break;
                 case Broadcasts.ERROR:
                     int kind = message.getIntExtra(Broadcasts.ERROR_KIND, -1);
@@ -254,101 +298,5 @@ public class SettingsActivity extends AppCompatActivity {
             stop();
             authReceiver = null;
         }
-    }
-
-    private void startReceiver() {
-        authReceiver = new AuthReceiver(this, iconsHolder);
-    }
-
-    // ToDo: make buttons not clickable during authorization
-
-    public void startWebView() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.show(webViewFragment);
-        ft.addToBackStack(null);
-        ft.commit();
-    }
-
-    public void finishWebView() {
-        webViewFragment.clearWebView();
-    }
-
-
-    public void LogoutClick(int network) {
-        Loudly.getContext().stopGetInfoService();
-        if (MainActivity.loadPosts != null) {
-            MainActivity.loadPosts.stop();
-        }
-        Networks.makeWrap(network).resetState();
-
-        new AsyncTask<Integer, Void, Integer>() {
-            @Override
-            protected Integer doInBackground(Integer... params) {
-                int network = params[0];
-                if (Loudly.getContext().getKeyKeeper(network) != null) {
-                    try {
-                        DatabaseActions.deleteKey(network);
-                        Utils.clearCookies(Networks.domainByNetwork(network));
-                    } catch (DatabaseException e) {
-                        e.printStackTrace();
-                    }
-                }
-                return params[0];
-            }
-
-            @Override
-            protected void onPostExecute(Integer network) {
-                Loudly.getContext().setKeyKeeper(network, null);
-                // Clean posts from this network
-                Iterator<Post> iterator = MainActivity.posts.listIterator();
-                int ind = 0;
-                while (iterator.hasNext()) {
-                    Post post = iterator.next();
-                    if (post.existsIn(network)) {
-                        if (post instanceof LoudlyPost) {
-                            Info oldInfo = post.getInfo();
-                            ((LoudlyPost) post).setInfo(network, new Info());
-                            boolean visible = false;
-                            for (int j = 0; j < Networks.NETWORK_COUNT; j++) {
-                                if (post.existsIn(j)) {
-                                    visible = true;
-                                    break;
-                                }
-                            }
-                            if (!visible) {
-                                iterator.remove();
-                                final int fixed = ind;
-                                MainActivity.executeOnUI(new UIAction() {
-                                    @Override
-                                    public void execute(Context context, Object... params) {
-                                        ((MainActivity) context).mainActivityPostsAdapter.notifyDeletedAtPosition(fixed);
-                                    }
-                                });
-                            } else {
-                                if (!oldInfo.equals(post.getInfo())) {
-                                    final int fixed = ind;
-                                    MainActivity.executeOnUI(new UIAction() {
-                                        @Override
-                                        public void execute(Context context, Object... params) {
-                                            ((MainActivity) context).mainActivityPostsAdapter.notifyItemChanged(fixed);
-                                        }
-                                    });
-                                }
-                            }
-                        } else {
-                            iterator.remove();
-                            final int fixed = ind;
-                            MainActivity.executeOnUI(new UIAction() {
-                                @Override
-                                public void execute(Context context, Object... params) {
-                                    ((MainActivity) context).mainActivityPostsAdapter.notifyDeletedAtPosition(fixed);
-                                }
-                            });
-                        }
-                    }
-                }
-                MainActivity.loadedNetworks[network] = false;
-            }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, network);
     }
 }

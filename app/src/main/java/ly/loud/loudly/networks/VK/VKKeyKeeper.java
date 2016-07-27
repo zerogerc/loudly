@@ -34,14 +34,13 @@ public class VKKeyKeeper extends KeyKeeper {
 
     @Override
     protected String[] toStrings() {
-        return new String[] {accessToken, userId, Long.toString(validThrough)};
+        return new String[] {accessToken, userId};
     }
 
     @Override
     protected void fromStrings(String[] strings) {
         accessToken = strings[0];
         userId = strings[1];
-        validThrough = Long.parseLong(strings[2]);
     }
 
     public static final Creator<VKKeyKeeper> CREATOR = new Creator<VKKeyKeeper>() {

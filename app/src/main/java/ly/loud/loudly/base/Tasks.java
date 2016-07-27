@@ -9,23 +9,21 @@ import android.util.Pair;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Comment;
+import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.Loudly;
 import ly.loud.loudly.ui.MainActivity;
-import ly.loud.loudly.ui.MainActivityPostsAdapter;
-import ly.loud.loudly.ui.adapter.Item;
-import ly.loud.loudly.ui.adapter.NetworkDelimiter;
+import ly.loud.loudly.ui.PostsAdapter;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.InvalidTokenException;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.UIAction;
 
@@ -86,7 +84,7 @@ public final class Tasks {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (ExecutionException e) {
-                    Log.e("ly/loud/loudly/networks/Loudly", "doAndWait: Execution exception", e);
+                    Log.e("Loudly", "doAndWait: Execution exception", e);
                     e.printStackTrace();
                 }
             }
@@ -162,11 +160,9 @@ public final class Tasks {
     public static class PostUploader extends BroadcastSendingTask {
         private Post post;
         private Wrap[] wraps;
-        private List<Post> posts;
 
-        public PostUploader(Post post, List<Post> posts, Wrap... wraps) {
+        public PostUploader(Post post, Wrap... wraps) {
             this.post = post;
-            this.posts = posts;
             this.wraps = wraps;
 
             Arrays.sort(this.wraps);
@@ -174,16 +170,20 @@ public final class Tasks {
 
         @Override
         protected Intent doInBackground(Object... params) {
+            Loudly.getContext().stopGetInfoService();
+
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    posts.add(0, post);
-                    context.mainActivityPostsAdapter.notifyItemInserted(0);
                     Loudly.getContext().stopGetInfoService();
                 }
             });
 
             publishProgress(makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.STARTED));
+
+            for (Wrap w : wraps) {
+                ((LoudlyPost)post).setLink(w.networkID(), new Link());
+            }
 
             doAndWait(post, new ActionWithWrap<Post, Integer>() {
                 @Override
@@ -212,8 +212,8 @@ public final class Tasks {
 
                         w.upload(post);
                         return w.networkID();
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.POST_UPLOAD, Broadcasts.INVALID_TOKEN, e.getMessage());
+                    } catch (TokenExpiredException e) {
+                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN, e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
                     } catch (IOException e) {
@@ -225,34 +225,39 @@ public final class Tasks {
                 }
             }, new ActionWithResult<Integer>() {
                 @Override
-                public void apply(Integer result) {
+                public void apply(final Integer result) {
                     if (result != null) {
+                        MainActivity.executeOnUI(new UIAction<MainActivity>() {
+                            @Override
+                            public void execute(MainActivity context, Object... params) {
+                                Loudly.getPostHolder().merge(Collections.singletonList((Post) post.getNetworkInstance(result)),
+                                        result);
+                            }
+                        });
                         Intent message = makeMessage(Broadcasts.POST_UPLOAD, Broadcasts.PROGRESS);
                         message.putExtra(Broadcasts.NETWORK_FIELD, result);
                         publishProgress(message);
                     }
                 }
             }, wraps);
-
             return makeSuccess(Broadcasts.POST_UPLOAD);
         }
     }
 
     public static class PostDeleter extends BroadcastSendingTask {
         private Post post;
-        LinkedList<Post> posts;
         private Wrap[] wraps;
 
-        public PostDeleter(Post post, LinkedList<Post> posts, Wrap... wraps) {
+        public PostDeleter(Post post, Wrap... wraps) {
             this.post = post;
             this.wraps = wraps;
-            this.posts = posts;
             Arrays.sort(wraps); // todo not good
         }
 
         @Override
         protected Intent doInBackground(Object... params) {
-            final LinkedList<Integer> success = new LinkedList<>();
+            final List<Integer> success = new ArrayList<>();
+            final List<Integer> fail = new ArrayList<>();
             ArrayList<Wrap> goodWraps = new ArrayList<>();
             for (Wrap w : wraps) {
                 if (post.existsIn(w.networkID())) {
@@ -270,14 +275,16 @@ public final class Tasks {
 
                         w.delete((Post) post.getNetworkInstance(w.networkID()));
                         return w.networkID();
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.POST_DELETE, Broadcasts.INVALID_TOKEN, e.getMessage());
+                    } catch (TokenExpiredException e) {
+                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN, e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
+                        fail.add(w.networkID());
                     } catch (IOException e) {
                         e.printStackTrace();
                         publishProgress(makeError(Broadcasts.POST_DELETE, Broadcasts.NETWORK_ERROR,
                                 e.getMessage()));
+                        fail.add(w.networkID());
                     }
                     return null;
                 }
@@ -293,147 +300,15 @@ public final class Tasks {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    context.mainActivityPostsAdapter.cleanUp(success);
+                    Loudly.getPostHolder().cleanUp(success, true);
                 }
             });
 
-            return makeSuccess(Broadcasts.POST_DELETE);
-        }
-    }
-
-    public static final int LIKES = 0;
-    public static final int SHARES = 1;
-
-    public static class PersonGetter extends BroadcastSendingTask {
-        private int ID;
-        private SingleNetwork element;
-        private int what;
-        private List<Item> persons;
-        private Wrap[] wraps;
-
-        public PersonGetter(int ID, SingleNetwork element, int what, List<Item> persons, Wrap... wraps) {
-            this.element = element;
-            this.what = what;
-            this.persons = persons;
-            this.wraps = wraps;
-            this.ID = ID;
-        }
-
-        @Override
-        protected Intent doInBackground(Object... posts) {
-            ArrayList<Wrap> goodWraps = new ArrayList<>();
-            for (Wrap w : wraps) {
-                if (element.existsIn(w.networkID())) {
-                    goodWraps.add(w);
-                }
+            if (fail.isEmpty()) {
+                return makeSuccess(Broadcasts.POST_DELETE);
+            } else {
+                return null;
             }
-            doAndWait(element, new ActionWithWrap<SingleNetwork, Pair<List<Person>, Integer>>() {
-                @Override
-                public Pair<List<Person>, Integer> apply(SingleNetwork item, Wrap w) {
-                    try {
-                        return new Pair<>(w.getPersons(what, element.getNetworkInstance(w.networkID())),
-                                w.networkID());
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.INVALID_TOKEN,
-                                e.getMessage());
-                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
-                        publishProgress(message);
-                    } catch (IOException e) {
-                        Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.NETWORK_ERROR,
-                                e.getMessage());
-                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
-                        publishProgress(message);
-                    }
-                    return null;
-                }
-            }, new ActionWithResult<Pair<List<Person>, Integer>>() {
-                @Override
-                public void apply(Pair<List<Person>, Integer> result) {
-                    if (result != null) {
-                        if (!result.first.isEmpty()) {
-                            // ToDO: there is a bug
-                            persons.add(new NetworkDelimiter(result.second));
-                            persons.addAll(result.first);
-                        }
-
-                        Intent message = makeMessage(Broadcasts.GET_PERSONS, Broadcasts.PROGRESS);
-                        message.putExtra(Broadcasts.NETWORK_FIELD, result.second);
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
-                        publishProgress(message);
-                    }
-                }
-            }, goodWraps.toArray(new Wrap[goodWraps.size()]));
-
-            return makeSuccess(Broadcasts.GET_PERSONS);
-        }
-    }
-
-    /**
-     * Throws Broadcasts.POST_GET_PERSON as like as PersonGetter
-     */
-    public static class CommentsGetter extends BroadcastSendingTask {
-        private int ID;
-        private SingleNetwork element;
-        private List<Item> comments;
-        private Wrap[] wraps;
-
-        public CommentsGetter(int ID, SingleNetwork element, List<Item> comments, Wrap... wraps) {
-            this.ID = ID;
-            this.element = element;
-            this.comments = comments;
-            this.wraps = wraps;
-        }
-
-        @Override
-        protected Intent doInBackground(Object... posts) {
-            ArrayList<Wrap> goodWraps = new ArrayList<>();
-            for (Wrap w : wraps) {
-                if (element.existsIn(w.networkID())) {
-                    goodWraps.add(w);
-                }
-            }
-            doAndWait(element, new ActionWithWrap<SingleNetwork, Pair<List<Comment>, Integer>>() {
-                @Override
-                public Pair<List<Comment>, Integer> apply(SingleNetwork item, Wrap w) {
-                    try {
-                        return new Pair<>(w.getComments(element.getNetworkInstance(w.networkID())),
-                                w.networkID());
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.INVALID_TOKEN,
-                                e.getMessage());
-                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
-                        publishProgress(message);
-                    } catch (IOException e) {
-                        Intent message = makeError(Broadcasts.GET_PERSONS, Broadcasts.NETWORK_ERROR,
-                                e.getMessage());
-                        message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
-                        publishProgress(message);
-                    }
-                    return null;
-                }
-            }, new ActionWithResult<Pair<List<Comment>, Integer>>() {
-                @Override
-                public void apply(Pair<List<Comment>, Integer> result) {
-                    if (result != null) {
-                        if (!result.first.isEmpty()) {
-                            // ToDO: there is a bug
-                            comments.add(new NetworkDelimiter(result.second));
-                            comments.addAll(result.first);
-                        }
-
-                        Intent message = makeMessage(Broadcasts.GET_PERSONS, Broadcasts.PROGRESS);
-                        message.putExtra(Broadcasts.NETWORK_FIELD, result.second);
-                        message.putExtra(Broadcasts.ID_FIELD, ID);
-                        publishProgress(message);
-                    }
-                }
-            }, goodWraps.toArray(new Wrap[goodWraps.size()]));
-
-            return makeSuccess(Broadcasts.GET_PERSONS);
         }
     }
 
@@ -444,9 +319,9 @@ public final class Tasks {
     @Deprecated
     public static class FixAttachmentsLinks extends AsyncTask<Object, Object, Object> {
         Post post;
-        MainActivityPostsAdapter adapter;
+        PostsAdapter adapter;
 
-        public FixAttachmentsLinks(Post post, MainActivityPostsAdapter adapter) {
+        public FixAttachmentsLinks(Post post, PostsAdapter adapter) {
             this.post = post;
             this.adapter = adapter;
         }
@@ -549,8 +424,8 @@ public final class Tasks {
                         publishProgress(message);
                         return new Pair<>(w.loadPosts(time), w.networkID());
 
-                    } catch (InvalidTokenException e) {
-                        Intent message = makeError(Broadcasts.POST_LOAD, Broadcasts.INVALID_TOKEN,
+                    } catch (TokenExpiredException e) {
+                        Intent message = makeError(Broadcasts.INTERNAL_MESSAGE, Broadcasts.EXPIRED_TOKEN,
                                 e.getMessage());
                         message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
                         publishProgress(message);
@@ -569,7 +444,7 @@ public final class Tasks {
                         MainActivity.executeOnUI(new UIAction<MainActivity>() {
                             @Override
                             public void execute(MainActivity context, Object... params) {
-                                context.mainActivityPostsAdapter.merge(result.first, result.second);
+                                Loudly.getPostHolder().merge(result.first, result.second);
                             }
                         });
 
@@ -581,7 +456,7 @@ public final class Tasks {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    context.mainActivityPostsAdapter.cleanUp(successfullyLoaded);
+                    Loudly.getPostHolder().cleanUp(successfullyLoaded, true);
                 }
             });
 

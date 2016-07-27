@@ -12,7 +12,7 @@ public class FacebookKeyKeeper extends KeyKeeper {
         super();
     }
 
-    public FacebookKeyKeeper(String accessToken) {
+    private FacebookKeyKeeper(String accessToken) {
         this.accessToken = accessToken;
     }
 
@@ -26,13 +26,12 @@ public class FacebookKeyKeeper extends KeyKeeper {
 
     @Override
     protected String[] toStrings() {
-        return new String[]{accessToken, Long.toString(validThrough)};
+        return new String[]{accessToken};
     }
 
     @Override
     protected void fromStrings(String[] strings) {
         accessToken = strings[0];
-        validThrough = Long.parseLong(strings[1]);
     }
 
     public static final Creator<FacebookKeyKeeper> CREATOR = new Creator<FacebookKeyKeeper>() {

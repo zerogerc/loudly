@@ -3,6 +3,7 @@ package ly.loud.loudly.base.attachments;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.Parcel;
 import android.provider.OpenableColumns;
 
 import java.io.File;
@@ -16,7 +17,7 @@ import ly.loud.loudly.base.MultipleNetwork;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.Utils;
 
 public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
@@ -24,120 +25,6 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
     private Info[] infos;
 
     private Uri internalLink;
-
-    private class LoudlyImageProxy extends Image implements LocalFile {
-        LoudlyImage parent;
-
-        public LoudlyImageProxy(LoudlyImage parent, int network) {
-            this.parent = parent;
-            this.network = network;
-        }
-
-        @Override
-        public void setWidth(int width) {
-            parent.setWidth(width);
-        }
-
-        @Override
-        public void setHeight(int height) {
-            parent.setHeight(height);
-        }
-
-        @Override
-        public int getWidth() {
-            return parent.getWidth();
-        }
-
-        @Override
-        public int getHeight() {
-            return parent.getHeight();
-        }
-
-        @Override
-        public Point getSize() {
-            return parent.getSize();
-        }
-
-        @Override
-        public void setSize(Point size) {
-            parent.setSize(size);
-        }
-
-        @Override
-        public String getExternalLink() {
-            return parent.getExternalLink();
-        }
-
-        @Override
-        public void setExternalLink(String externalLink) {
-            parent.setExternalLink(externalLink);
-        }
-
-        @Override
-        public Uri getUri() {
-            return parent.getUri();
-        }
-
-        @Override
-        public int getNetwork() {
-            return super.getNetwork();
-        }
-
-        @Override
-        public boolean exists() {
-            return existsIn(network);
-        }
-
-        @Override
-        public boolean existsIn(int network) {
-            return parent.existsIn(network);
-        }
-
-        @Override
-        public Link getLink() {
-            return parent.getLink(network);
-        }
-
-        @Override
-        public void setLink(Link id) {
-            parent.setLink(network, id);
-        }
-
-        @Override
-        public Info getInfo() {
-            return parent.getInfo(network);
-        }
-
-        @Override
-        public void setInfo(Info info) {
-            parent.setInfo(network, info);
-        }
-
-        @Override
-        public int getType() {
-            return parent.getType();
-        }
-
-        @Override
-        public String getExtra() {
-            return parent.getExtra();
-        }
-
-        @Override
-        public String getMIMEType() {
-            return parent.getMIMEType();
-        }
-
-        @Override
-        public InputStream getContent() throws IOException {
-            return parent.getContent();
-        }
-
-        @Override
-        public long getFileSize() throws IOException {
-            return parent.getFileSize();
-        }
-    }
 
     public LoudlyImage() {
         super();
@@ -155,6 +42,15 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
     public LoudlyImage(Uri internalLink) {
         this();
         this.internalLink = internalLink;
+    }
+
+    public LoudlyImage(Parcel source) {
+        super(source);
+        ids = new Link[Networks.NETWORK_COUNT];
+        infos = new Info[Networks.NETWORK_COUNT];
+        source.readTypedArray(ids, Link.CREATOR);
+        source.readTypedArray(infos, Info.CREATOR);
+        internalLink = source.readParcelable(Uri.class.getClassLoader());
     }
 
     public void deleteInternalLink() {
@@ -266,4 +162,166 @@ public class LoudlyImage extends Image implements MultipleNetwork, LocalFile {
             Utils.closeQuietly(cursor);
         }
     }
+
+    private static class LoudlyImageProxy extends Image implements LocalFile {
+        LoudlyImage parent;
+
+        public LoudlyImageProxy(LoudlyImage parent, int network) {
+            this.parent = parent;
+            this.network = network;
+        }
+
+        private LoudlyImageProxy(Parcel parcel) {
+            super(parcel);
+            parent = parcel.readParcelable(LoudlyImage.class.getClassLoader());
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeParcelable(parent, flags);
+        }
+
+        @Override
+        public void setWidth(int width) {
+            parent.setWidth(width);
+        }
+
+        @Override
+        public void setHeight(int height) {
+            parent.setHeight(height);
+        }
+
+        @Override
+        public int getWidth() {
+            return parent.getWidth();
+        }
+
+        @Override
+        public int getHeight() {
+            return parent.getHeight();
+        }
+
+        @Override
+        public Point getSize() {
+            return parent.getSize();
+        }
+
+        @Override
+        public void setSize(Point size) {
+            parent.setSize(size);
+        }
+
+        @Override
+        public String getExternalLink() {
+            return parent.getExternalLink();
+        }
+
+        @Override
+        public void setExternalLink(String externalLink) {
+            parent.setExternalLink(externalLink);
+        }
+
+        @Override
+        public Uri getUri() {
+            return parent.getUri();
+        }
+
+        @Override
+        public int getNetwork() {
+            return super.getNetwork();
+        }
+
+        @Override
+        public boolean exists() {
+            return existsIn(network);
+        }
+
+        @Override
+        public boolean existsIn(int network) {
+            return parent.existsIn(network);
+        }
+
+        @Override
+        public Link getLink() {
+            return parent.getLink(network);
+        }
+
+        @Override
+        public void setLink(Link id) {
+            parent.setLink(network, id);
+        }
+
+        @Override
+        public Info getInfo() {
+            return parent.getInfo(network);
+        }
+
+        @Override
+        public void setInfo(Info info) {
+            parent.setInfo(network, info);
+        }
+
+        @Override
+        public int getType() {
+            return parent.getType();
+        }
+
+        @Override
+        public String getExtra() {
+            return parent.getExtra();
+        }
+
+        @Override
+        public String getMIMEType() {
+            return parent.getMIMEType();
+        }
+
+        @Override
+        public InputStream getContent() throws IOException {
+            return parent.getContent();
+        }
+
+        @Override
+        public long getFileSize() throws IOException {
+            return parent.getFileSize();
+        }
+
+        public static final Creator<LoudlyImageProxy> CREATOR = new Creator<LoudlyImageProxy>() {
+            @Override
+            public LoudlyImageProxy createFromParcel(Parcel source) {
+                return new LoudlyImageProxy(source);
+            }
+
+            @Override
+            public LoudlyImageProxy[] newArray(int size) {
+                return new LoudlyImageProxy[size];
+            }
+        };
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeTypedArray(ids, flags);
+        dest.writeTypedArray(infos, flags);
+        dest.writeParcelable(internalLink, flags);
+    }
+
+    public static final Creator<LoudlyImage> CREATOR = new Creator<LoudlyImage>() {
+        @Override
+        public LoudlyImage createFromParcel(Parcel source) {
+            return new LoudlyImage(source);
+        }
+
+        @Override
+        public LoudlyImage[] newArray(int size) {
+            return new LoudlyImage[size];
+        }
+    };
 }

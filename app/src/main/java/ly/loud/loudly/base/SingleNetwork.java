@@ -1,11 +1,13 @@
 package ly.loud.loudly.base;
 
+import android.os.Parcelable;
+
 import ly.loud.loudly.base.says.Info;
 
 /**
  * Interface for objects which are in some network
  */
-public interface SingleNetwork {
+public interface SingleNetwork extends Parcelable {
     void setNetwork(int network);
     int getNetwork();
 

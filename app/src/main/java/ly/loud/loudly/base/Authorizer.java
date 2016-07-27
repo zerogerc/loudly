@@ -4,13 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.AttachableTask;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.UIAction;
-import ly.loud.loudly.util.database.DatabaseActions;
+import ly.loud.loudly.util.database.DatabaseUtils;
 import ly.loud.loudly.util.database.DatabaseException;
 
 /**
@@ -29,7 +29,9 @@ public abstract class Authorizer {
      *
      * @return keys that we use to interact with social network
      */
-    protected abstract KeyKeeper beginAuthorize();
+    protected KeyKeeper beginAuthorize() {
+        return Networks.makeKeyKeeper(network());
+    }
 
     /**
      * @return Token that determines that response is successful
@@ -45,7 +47,7 @@ public abstract class Authorizer {
      * Add fields such as access_token from response to KeyKeeper
      *
      * @param keys     Keys, generated during beginAuthorize
-     * @param response Response from server
+     * @param response VKResponse from server
      */
     public abstract void addFieldsFromQuery(KeyKeeper keys, Query response);
 
@@ -129,7 +131,7 @@ public abstract class Authorizer {
                 Loudly.getContext().setKeyKeeper(network(), keyKeeper);
 
                 try {
-                    DatabaseActions.updateKey(network(), Loudly.getContext().getKeyKeeper(network()));
+                    DatabaseUtils.updateKey(network(), Loudly.getContext().getKeyKeeper(network()));
                 } catch (DatabaseException e) {
                     Loudly.getContext().setKeyKeeper(network(), null);
                     return makeError(Broadcasts.AUTHORIZATION,

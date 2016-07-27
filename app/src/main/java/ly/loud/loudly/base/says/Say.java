@@ -1,15 +1,17 @@
 package ly.loud.loudly.base.says;
 
-import android.support.annotation.NonNull;
+import android.os.Parcel;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import ly.loud.loudly.base.Link;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.base.attachments.Image;
 
-public class Say implements SingleNetwork, Comparable<Say> {
+public class Say implements SingleNetwork {
     // Main part
     protected String text;
     protected ArrayList<Attachment> attachments;
@@ -21,6 +23,33 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     // Likes, shares, comments
     protected Info info;
+
+    public static final Comparator<Say> COMPARATOR = new Comparator<Say>() {
+        @Override
+        public int compare(Say lhs, Say rhs) {
+            // Compare says by date
+            if (lhs.getDate() < rhs.getDate()) {
+                return -1;
+            }
+            if (lhs.getDate() > rhs.getDate()) {
+                return 1;
+            }
+
+            if (lhs.getNetwork() == rhs.getNetwork()) {
+                return lhs.getLink().compareTo(rhs.getLink());
+            }
+            // If says are from different networks, compare by network ID
+            if (lhs.getNetwork() < rhs.getNetwork()) {
+                return -1;
+            }
+            if (lhs.getNetwork() > rhs.getNetwork()) {
+                return 1;
+            }
+            return 0;
+        }
+    };
+
+    public static final Comparator<Say> FEED_ORDER = Collections.reverseOrder(COMPARATOR);
 
     public Say() {
         text = null;
@@ -39,6 +68,7 @@ public class Say implements SingleNetwork, Comparable<Say> {
     }
 
     public Say(String text, long date, int network, Link link) {
+        this();
         this.text = text;
         this.date = date;
         this.network = network;
@@ -47,12 +77,23 @@ public class Say implements SingleNetwork, Comparable<Say> {
     }
 
     public Say(String text, ArrayList<Attachment> attachments, long date, int network, Link link) {
+        this();
         this.text = text;
         this.attachments = attachments;
         this.date = date;
         this.network = network;
         this.info = new Info();
         this.link = link;
+    }
+
+    public Say(Parcel source) {
+        text = source.readString();
+        //TODO: check this
+        attachments = source.readArrayList(Image.class.getClassLoader());
+        date = source.readLong();
+        network = source.readInt();
+        link = source.readParcelable(Link.class.getClassLoader());
+        info = source.readParcelable(Info.class.getClassLoader());
     }
 
     // Methods from SingleNetwork
@@ -70,7 +111,7 @@ public class Say implements SingleNetwork, Comparable<Say> {
 
     @Override
     public SingleNetwork getNetworkInstance(int network) {
-        if (network == this.network) {
+        if (network == this.network && link != null) {
             return this;
         }
         return null;
@@ -102,6 +143,10 @@ public class Say implements SingleNetwork, Comparable<Say> {
      */
     public ArrayList<Attachment> getAttachments() {
         return attachments;
+    }
+
+    public void setAttachments(ArrayList<Attachment> attachments) {
+        this.attachments = attachments;
     }
 
     public void addAttachment(Attachment attachment) {
@@ -156,25 +201,41 @@ public class Say implements SingleNetwork, Comparable<Say> {
     }
 
     @Override
-    public int compareTo(@NonNull Say another) {
-        if (getDate() < another.getDate()) {
-            return -1;
-        }
-        if (getDate() > another.getDate()) {
-            return 1;
-        }
-        return 0;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (!(o instanceof Say)) {
             return false;
         }
-        Say say = (Say)o;
-        if (say.getLink() == null) {
-            return false;
+        if (this == o) {
+            return true;
         }
-        return say.getLink().equals(getLink());
+        SingleNetwork say = ((Say)o).getNetworkInstance(getNetwork());
+        return say != null && getLink().equals(say.getLink());
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(text);
+        dest.writeList(attachments);
+        dest.writeLong(date);
+        dest.writeInt(network);
+        dest.writeParcelable(link, flags);
+        dest.writeParcelable(info, flags);
+    }
+
+    public static final Creator<Say> CREATOR = new Creator<Say>() {
+        @Override
+        public Say createFromParcel(Parcel source) {
+            return new Say(source);
+        }
+
+        @Override
+        public Say[] newArray(int size) {
+            return new Say[size];
+        }
+    };
 }

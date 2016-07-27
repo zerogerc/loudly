@@ -2,33 +2,47 @@ package ly.loud.loudly.base;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import ly.loud.loudly.util.Equality;
 
-public class Link implements Parcelable {
+import java.util.Comparator;
+
+public class Link implements Parcelable, Comparable<Link> {
+    @Nullable
     private String link;
     private boolean valid;
 
     public Link() {
-        this(null, false);
+        this("", false);
     }
 
-    public Link(String link) {
-        this(link, true);
+    public Link(@Nullable Object link) {
+        if (link == null) {
+            this.link = null;
+            valid = false;
+        } else {
+            this.link = link.toString();
+            valid = true;
+        }
     }
 
-    public Link(Object link) {
-        this(link == null ? null : link.toString());
-    }
-
-    public Link(String link, boolean valid) {
+    public Link(@Nullable String link, boolean valid) {
         this.link = link;
         this.valid = valid;
     }
 
+    @Nullable
+    public static String getLink(Link link) {
+        return link == null ? null : link.isValid() ? link.get() : null;
+    }
+
+    @Nullable
     public String get() {
         return link;
     }
 
-    void set(String link) {
+    void set(@Nullable String link) {
         this.link = link;
     }
 
@@ -44,9 +58,9 @@ public class Link implements Parcelable {
     @Override
     public boolean equals(Object o) {
         if (! (o instanceof Link)) {
-            return link.equals(o);
+            return Equality.equal(link, o == null ? null : o.toString());
         }
-        return link.equals(((Link) o).link);
+        return Equality.equal(link, ((Link) o).link);
     }
 
     @Override
@@ -71,6 +85,14 @@ public class Link implements Parcelable {
             return new Link[size];
         }
     };
+
+    @Override
+    public int compareTo(@NonNull Link another) {
+        if (link == null && another.link == null) {
+            return 0;
+        }
+        return link.compareTo(another.link);
+    }
 
     @Override
     public String toString() {

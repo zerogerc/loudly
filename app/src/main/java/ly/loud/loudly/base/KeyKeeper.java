@@ -2,56 +2,37 @@ package ly.loud.loudly.base;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.io.IOException;
-import java.util.Calendar;
 
 /**
  * Store keys, that we need in order to interact with social network
  */
 public abstract class KeyKeeper implements Parcelable {
-    protected long validThrough;
-    private volatile int instances;
-
     private static final char SEPARATOR = '&';
+
     public KeyKeeper() {
+    }
+
+    @Nullable
+    public static KeyKeeper fromStringBundle(int network, @NonNull String bundle) {
+        String[] strings = bundle.split(String.valueOf(SEPARATOR));
+        KeyKeeper result = Networks.makeKeyKeeper(network);
+        if (result == null) {
+            return null;
+        }
+        result.fromStrings(strings);
+        return result;
     }
 
     /**
      * @return content of KeyKeeper as list of strings
      */
     protected abstract String[] toStrings();
+
     protected abstract void fromStrings(String[] strings);
-
-    public static abstract class Action<T> {
-        public abstract T execute(KeyKeeper keyKeeper) throws IOException;
-    }
-
-    public <T> T doWithKeys(Action<T> action) throws IOException {
-        instances++;
-        T result = action.execute(this);
-        instances--;
-        return result;
-    }
-
-    public boolean isBusy() {
-        return instances != 0;
-    }
-
-    public void expiresIn(long time) {
-        validThrough = Calendar.getInstance().getTimeInMillis() / 1000 + time - 60 * 5;
-    }
-
-    /**
-     * May the token expire in hour?
-     */
-    public boolean mayExpire() {
-        return validThrough - Calendar.getInstance().getTimeInMillis() / 1000 < 60 * 60;
-    }
-
-    public boolean isValid() {
-        return Calendar.getInstance().getTimeInMillis() / 1000 < validThrough;
-    }
 
     public String toStringBundle() {
         String[] strings = toStrings();
@@ -61,13 +42,6 @@ public abstract class KeyKeeper implements Parcelable {
             sb.append(SEPARATOR);
         }
         return sb.toString();
-    }
-
-    public static KeyKeeper fromStringBundle(int network, String bundle) {
-        String[] strings = bundle.split(String.valueOf(SEPARATOR));
-        KeyKeeper result = Networks.makeKeyKeeper(network);
-        result.fromStrings(strings);
-        return result;
     }
 
     @Override
@@ -82,5 +56,4 @@ public abstract class KeyKeeper implements Parcelable {
             dest.writeString(s);
         }
     }
-
 }

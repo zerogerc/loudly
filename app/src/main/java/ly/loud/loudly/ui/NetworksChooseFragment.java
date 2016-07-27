@@ -1,104 +1,141 @@
 package ly.loud.loudly.ui;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
-import ly.loud.loudly.base.Networks;
+import java.util.ArrayList;
+
 import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.base.Tasks;
+import ly.loud.loudly.base.Wrap;
+import ly.loud.loudly.base.attachments.Image;
+import ly.loud.loudly.base.says.LoudlyPost;
+import ly.loud.loudly.ui.views.IconsHolder;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 
 /**
  * Created by ZeRoGerc on 11.12.15.
  */
-public class NetworksChooseFragment extends Fragment {
-    private View rootView;
-    private IconsHolder iconsHolder;
+public class NetworksChooseFragment extends DialogFragment {
+    public static String TAG = "Networks Choose Fragment";
+    private static final String POST_TEXT_KEY = "post_text";
+    private static final String POST_IMAGES_KEY = "post_images";
+
+    private static IconsHolder iconsHolder;
+    private static boolean[] shouldPost;
+    private static int mode = IconsHolder.SHOW_ALL;
+
     private ImageView postButton;
-    private UIAction buttonClick;
-    private boolean[] shouldPost = new boolean[Networks.NETWORK_COUNT];
+    private String postText;
+    private ArrayList<Image> postImages;
 
-    private int mode = IconsHolder.SHOW_ALL;
 
-    private UIAction hideAction = null;
-    private UIAction showAction = null;
+    public static NetworksChooseFragment newInstance(String text, ArrayList<Image> images) {
+        Bundle args = new Bundle();
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        args.putString(POST_TEXT_KEY, text);
+        args.putParcelableArrayList(POST_IMAGES_KEY, images);
 
-        rootView = inflater.inflate(R.layout.network_choose_fragment, container, false);
-        iconsHolder = (IconsHolder)rootView.findViewById(R.id.network_choose_icons_holder);
+        NetworksChooseFragment fragment = new NetworksChooseFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
-        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
-        Utils.hidePhoneKeyboard(getActivity());
+    private void setListeners(final View rootView) {
+        iconsHolder.setGrayItemClick(new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                int network = ((int) params[0]);
+                if (Loudly.getContext().getKeyKeeper(network) == null)
+                    return;
+                setShouldPostTo(network, true);
+            }
+        });
 
-        iconsHolder.prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
+        iconsHolder.setColorItemsClick(new UIAction() {
+            @Override
+            public void execute(Context context, Object... params) {
+                int network = ((int) params[0]);
+                if (Loudly.getContext().getKeyKeeper(network) == null)
+                    return;
+                setShouldPostTo(network, false);
+            }
+        });
 
         postButton = (ImageView)rootView.findViewById(R.id.network_choose_button);
 
         postButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (buttonClick != null) {
-                    buttonClick.execute(Loudly.getContext());
-                    getActivity().getFragmentManager().popBackStack();
+                LoudlyPost post = new LoudlyPost(postText);
+                if (postImages.size() > 0) {
+                    post.addAttachment(postImages.get(0));
                 }
-            }
-        });
+                setShouldPostTo(Networks.LOUDLY, true);
 
-        rootView.findViewById(R.id.network_choose_card).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return true;
-            }
-        });
-
-        rootView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (!rootView.findViewById(R.id.network_choose_card).onTouchEvent(event)) {
-                        getActivity().getFragmentManager().popBackStack();
+                ArrayList<Wrap> wraps = new ArrayList<>();
+                for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                    if (Loudly.getContext().getKeyKeeper(i) != null && shouldPost[i]) {
+                        wraps.add(Networks.makeWrap(i));
                     }
-                    return true;
                 }
-                return false;
+
+                Tasks.PostUploader uploader = new Tasks.PostUploader(post,
+                        wraps.toArray(new Wrap[0]));
+                uploader.execute(post);
+
+                PostCreateFragment.self.dismiss();
+                dismiss();
             }
         });
-
-        return rootView;
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        if (showAction != null) {
-            showAction.execute(getActivity());
-        }
-    }
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (hideAction != null) {
-            hideAction.execute(getActivity());
-        }
-    }
+        LayoutInflater inflater = getActivity().getLayoutInflater();
 
-    public void setPostButtonClick(UIAction action) {
-        this.buttonClick = action;
+        View rootView = inflater.inflate(R.layout.network_choose_fragment, null);
+
+        iconsHolder = (IconsHolder)rootView.findViewById(R.id.network_choose_icons_holder);
+
+        //TODO: remove
+        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+        Utils.hidePhoneKeyboard(getActivity());
+
+        iconsHolder.prepareView(IconsHolder.SHOW_ONLY_AVAILABLE);
+
+        if (savedInstanceState == null) {
+            shouldPost = new boolean[Networks.NETWORK_COUNT];
+            for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
+                shouldPost[i] = true;
+            }
+        }
+
+        for (int i = 0; i < shouldPost.length; i++) {
+            setShouldPostTo(i, shouldPost[i]);
+        }
+
+        postText = getArguments().getString(POST_TEXT_KEY);
+        postImages = getArguments().getParcelableArrayList(POST_IMAGES_KEY);
+
+        setListeners(rootView);
+
+        builder.setView(rootView);
+
+        return builder.create();
     }
 
     public void setShouldPostTo(int network, boolean state) {
@@ -110,93 +147,24 @@ public class NetworksChooseFragment extends Fragment {
         shouldPost[network] = state;
     }
 
-    public boolean shouldPostTo(int network) {
-        return shouldPost[network];
-    }
-
-    public void hide() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.hide(this);
-        ft.commit();
-    }
-
-    public void setVisible(int network) {
-        iconsHolder.setVisible(network);
-    }
-
-    public void setInvisible(int network) {
-        iconsHolder.setInvisible(network);
-    }
-
-    public void setColorItemsClick(UIAction action) {
-        iconsHolder.setColorItemsClick(action);
-    }
-
-    public void setGrayItemClick(UIAction action) {
-        iconsHolder.setGrayItemClick(action);
-    }
-
-    public void setHideAction(UIAction action) {
-        this.hideAction = action;
-    }
-
-    public void setShowAction(UIAction action) {
-        this.showAction = action;
-    }
-
-    public IconsHolder getIconsHolder() {
-        return this.iconsHolder;
-    }
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d("NETWORK", "START");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d("NETWORK", "RESUME");
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        Log.d("NETWORK", "STOP");
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d("NETWORK", "PAUSE");
-    }
-
-    private static void show(Activity activity, NetworksChooseFragment fragment) {
-        FragmentTransaction transaction = activity.getFragmentManager().beginTransaction();
-        transaction.addToBackStack(null);
-        transaction.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_left,
-                R.anim.slide_in_left, R.anim.slide_out_left);
-        transaction.replace(R.id.new_post_fragment_container, fragment);
-        transaction.commit();
-
-        fragment.setMode(IconsHolder.SHOW_ONLY_AVAILABLE);
-
-        activity.getFragmentManager().executePendingTransactions();
-    }
-
-    public static NetworksChooseFragment showNetworksChoose(Activity activity, UIAction showAction, UIAction hideAction) {
-        NetworksChooseFragment newFragment = new NetworksChooseFragment();
-        newFragment.showAction = showAction;
-        newFragment.hideAction = hideAction;
-        show(activity, newFragment);
-        return newFragment;
-    }
-
     public int getMode() {
         return mode;
     }
 
     public void setMode(int mode) {
         this.mode = mode;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putString(POST_TEXT_KEY, postText);
+        outState.putParcelableArrayList(POST_IMAGES_KEY, postImages);
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
     }
 }
