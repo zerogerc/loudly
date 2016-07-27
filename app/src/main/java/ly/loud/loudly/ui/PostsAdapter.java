@@ -1,20 +1,15 @@
 package ly.loud.loudly.ui;
 
 import android.animation.ObjectAnimator;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.os.AsyncTask;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
 import java.util.Comparator;
 import java.util.List;
 
-import ly.loud.loudly.R;
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.base.says.Say;
 import ly.loud.loudly.ui.adapter.BaseAdapter;
@@ -26,12 +21,12 @@ import ly.loud.loudly.util.Utils;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
-public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements ModifiableAdapter<Post> {
+public class PostsAdapter extends BaseAdapter<AppCompatActivity, Post> implements ModifiableAdapter<Post> {
     private int lastPosition = -1;
 
-    private MainActivity activity;
+    private AppCompatActivity activity;
 
-    PostsAdapter(List<Post> posts, MainActivity activity) {
+    public PostsAdapter(List<Post> posts, AppCompatActivity activity) {
         super(posts, activity);
         this.activity = activity;
     }
@@ -59,7 +54,8 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
 
             if (Networks.makeWrap(post.getNetwork()).getDescription().canDelete()) {
                 postHolder.showDeleteButton();
-                postHolder.setDeleteOnClick(makeDeleteClickListener(post));
+                // TODO: ability to delete posts
+//                postHolder.setDeleteOnClick(makeDeleteClickListener(post));
             } else {
                 postHolder.hideDeleteButton();
             }
@@ -74,25 +70,25 @@ public class PostsAdapter extends BaseAdapter<MainActivity, Post> implements Mod
         notifyItemRangeChanged(pos, items.size());
     }
 
-    private View.OnClickListener makeDeleteClickListener(final Post post) {
-        return v -> new AlertDialog.Builder(activity)
-                .setIcon(R.mipmap.ic_launcher)
-                .setTitle("Delete post?")
-                .setMessage("Do you want to delete this post from all networks?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Loudly.getContext().stopGetInfoService();
-                        activity.floatingActionButton.show();
-                        MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
-                                new MainActivity.PostDeleteReceiver(activity);
-                        new Tasks.PostDeleter(post, Loudly.getContext().getWraps()).
-                                executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                    }
-                })
-                .setNegativeButton("No", null)
-                .show();
-    }
+//    private View.OnClickListener makeDeleteClickListener(final Post post) {
+//        return v -> new AlertDialog.Builder(activity)
+//                .setIcon(R.mipmap.ic_launcher)
+//                .setTitle("Delete post?")
+//                .setMessage("Do you want to delete this post from all networks?")
+//                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        Loudly.getContext().stopGetInfoService();
+//                        activity.floatingActionButton.show();
+//                        MainActivity.receivers[MainActivity.POST_DELETE_RECEIVER] =
+//                                new MainActivity.PostDeleteReceiver(activity);
+//                        new Tasks.PostDeleter(post, Loudly.getContext().getWraps()).
+//                                executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//                    }
+//                })
+//                .setNegativeButton("No", null)
+//                .show();
+//    }
 
     private void setItemsAppearingAnimation(View viewToAnimate, int position) {
         // If the bound view wasn't previously displayed on screen, it's animated
