@@ -8,6 +8,7 @@ import android.util.Log;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Image;
+import ly.loud.loudly.base.attachments.LocalFile;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.Post;
@@ -15,11 +16,15 @@ import ly.loud.loudly.networks.VK.VKClient;
 import ly.loud.loudly.networks.VK.VKKeyKeeper;
 import ly.loud.loudly.networks.VK.entities.*;
 import ly.loud.loudly.util.TimeInterval;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Single;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,14 +76,109 @@ public class VKModel implements NetworkContract {
     @Override
     @CheckResult
     public Single<String> upload(@NonNull Image image) {
-        return Single.just("");
+        return Single.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                return null;
+            }
+            if (!(image instanceof LocalFile)) {
+                // Can't upload such image
+                return null;
+            }
+            Call<VKResponse<PhotoUploadServer>> getServerCall =
+                    client.getPhotoUploadServer(keyKeeper.getUserId(), keyKeeper.getAccessToken());
+            try {
+                Response<VKResponse<PhotoUploadServer>> serverGot = getServerCall.execute();
+                VKResponse<PhotoUploadServer> serverGotBody = serverGot.body();
+                if (serverGotBody.error != null) {
+                    // ToDo: Handle
+                    Log.e(TAG, serverGotBody.error.errorMessage);
+                    return null;
+                }
+                if (serverGotBody.response == null) {
+                    // Impossible
+                    return null;
+                }
+
+                File file = new File(/* ToDo: get file path from URI */ "");
+
+                RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+                MultipartBody.Part part = MultipartBody.Part.createFormData("photo", file.getName(), requestBody);
+                Call<PhotoUploadServerResponse> uploadPhotoCall = client.uploadPhoto(
+                        serverGotBody.response.uploadUrl, part);
+                Response<PhotoUploadServerResponse> photoUploaded = uploadPhotoCall.execute();
+                PhotoUploadServerResponse serverResponse = photoUploaded.body();
+                if (serverResponse == null) {
+                    return null;
+                }
+                Call<VKResponse<List<Photo>>> savePhotoCall = client.saveWallPhoto(
+                        keyKeeper.getUserId(), serverResponse.photo, serverResponse.server, serverResponse.hash,
+                        keyKeeper.getAccessToken());
+
+                Response<VKResponse<List<Photo>>> executed = savePhotoCall.execute();
+                VKResponse<List<Photo>> body = executed.body();
+                if (body.error != null) {
+                    // ToDo: handle
+                    Log.e(TAG, body.error.errorMessage);
+                    return null;
+                }
+                if (body.response != null) {
+                    Photo photo = body.response.get(0);
+
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+    }
+
+    @Nullable
+    private String describeAttachments(@NonNull List<ly.loud.loudly.base.attachments.Attachment> attachments,
+                                       @NonNull String userId) {
+        List<String> result = new ArrayList<>();
+        for (ly.loud.loudly.base.attachments.Attachment attachment : attachments) {
+            String link = userId + "_" + attachment.getLink();
+            if (attachment instanceof Image) {
+                link = "photo" + link;
+            }
+            result.add(link);
+        }
+        if (result.isEmpty()) {
+            return null;
+        }
+        return toCommaSeparated(result);
     }
 
     @NonNull
     @Override
     @CheckResult
     public Single<String> upload(@NonNull Post post) {
-        return Single.just("");
+        return Single.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                return null;
+            }
+            Call<VKResponse<ly.loud.loudly.networks.VK.entities.Post>> call = client
+                    .uploadPost(post.getText(), describeAttachments(post.getAttachments(), keyKeeper.getUserId()),
+                            keyKeeper.getAccessToken());
+            try {
+                Response<VKResponse<ly.loud.loudly.networks.VK.entities.Post>> executed = call.execute();
+                VKResponse<ly.loud.loudly.networks.VK.entities.Post> body = executed.body();
+                if (body.error != null) {
+                    // ToDo: handle
+                    Log.e(TAG, body.error.errorMessage);
+                    return null;
+                }
+                if (body.response != null) {
+                    return body.response.postId;
+                }
+            } catch (IOException e) {
+                // ToDo: handle
+                e.printStackTrace();
+            }
+            return null;
+        });
     }
 
     @NonNull

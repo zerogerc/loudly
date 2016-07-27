@@ -3,11 +3,11 @@ package ly.loud.loudly.networks.VK.entities;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Id of post
+ * URL of photo upload server
  *
  * @author Danil Kolikov
  */
-public class Post {
-    @SerializedName("post_id")
-    public String postId;
+public class PhotoUploadServer {
+    @SerializedName("upload_url")
+    public String uploadUrl;
 }
