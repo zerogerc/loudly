@@ -11,5 +11,5 @@ import ly.loud.loudly.base.says.Post;
 
 @UiThread
 public interface FeedView extends MvpView {
-    void showLoadedPosts(@NonNull List<Post> posts);
+    void onNewLoadedPosts(@NonNull List<Post> posts);
 }

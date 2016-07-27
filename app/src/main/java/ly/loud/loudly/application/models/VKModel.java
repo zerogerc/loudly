@@ -5,32 +5,50 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.*;
+import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.base.Link;
+import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.base.Person;
+import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.networks.VK.VKClient;
 import ly.loud.loudly.networks.VK.VKKeyKeeper;
-import ly.loud.loudly.networks.VK.entities.*;
+import ly.loud.loudly.networks.VK.entities.Attachment;
+import ly.loud.loudly.networks.VK.entities.Counter;
+import ly.loud.loudly.networks.VK.entities.Photo;
+import ly.loud.loudly.networks.VK.entities.Profile;
+import ly.loud.loudly.networks.VK.entities.Say;
+import ly.loud.loudly.networks.VK.entities.VKItems;
+import ly.loud.loudly.networks.VK.entities.VKResponse;
 import ly.loud.loudly.util.TimeInterval;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Single;
 
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static ly.loud.loudly.application.models.GetterModel.*;
+import static ly.loud.loudly.application.models.GetterModel.LIKES;
+import static ly.loud.loudly.application.models.GetterModel.RequestType;
+import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
 
+    @NonNull
+    private final List<Post> posts = new ArrayList<>();
+
     private int offset;
+
     @NonNull
     private Loudly loudlyApplication;
 
@@ -98,7 +116,6 @@ public class VKModel implements NetworkContract {
                 // ToDo: handle
                 return Collections.emptyList();
             }
-            List<Post> posts = new ArrayList<>();
             Call<VKResponse<VKItems<Say>>> call;
             long currentTime = 0;
             do {
