@@ -2,7 +2,11 @@ package ly.loud.loudly.base.says;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
+/**
+ * Information about likes, shares and comments in social network
+ */
 public class Info implements Parcelable {
     public int like, repost, comment;
 
@@ -24,13 +28,15 @@ public class Info implements Parcelable {
         this.comment = source.readInt();
     }
 
-    public void add(Info info) {
+    @NonNull
+    public void add(@NonNull Info info) {
         like += info.like;
         repost += info.repost;
         comment += info.comment;
     }
 
-    public Info subtract(Info info) {
+    @NonNull
+    public Info subtract(@NonNull Info info) {
         return new Info(like - info.like, repost - info.repost, comment - info.comment);
     }
 
