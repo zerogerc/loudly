@@ -60,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_camera"
-                android:tint="@color/grey_color"/>
+                android:tint="@color/gray_color"/>
         </FrameLayout>
 
         <FrameLayout
@@ -79,7 +79,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_collections"
-                android:tint="@color/grey_color"/>
+                android:tint="@color/gray_color"/>
         </FrameLayout>
     </LinearLayout>
 

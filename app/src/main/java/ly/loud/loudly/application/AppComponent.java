@@ -16,6 +16,7 @@ import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PeopleListFragment;
 import ly.loud.loudly.ui.brand_new.feed.FeedActivity;
 import ly.loud.loudly.ui.brand_new.feed.FeedFragment;
+import ly.loud.loudly.ui.brand_new.post.NetworksChooseFragment;
 
 /**
  * Created by ZeRoGerc on 20/07/16.
@@ -46,5 +47,6 @@ public interface AppComponent {
     void inject(FullPostInfoActivity fullPostInfoActivity);
 
     void inject(PeopleListFragment peopleListFragment);
+    void inject(NetworksChooseFragment networksChooseFragment);
     void inject(FeedFragment feedFragment);
 }

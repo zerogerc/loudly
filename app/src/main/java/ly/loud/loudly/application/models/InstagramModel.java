@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
@@ -103,6 +104,12 @@ public class InstagramModel implements NetworkContract {
     @Override
     public Single<Boolean> disconnect() {
         return Single.just(false);
+    }
+
+    @NonNull
+    @Override
+    public String getFullName() {
+        return loudlyApplication.getString(R.string.network_instagram);
     }
 
     @Override

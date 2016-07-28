@@ -5,12 +5,8 @@ import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
 import rx.Observable;
-import rx.Single;
-import rx.schedulers.Schedulers;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PostUploadModel {
@@ -28,7 +24,7 @@ public class PostUploadModel {
     @CheckResult
     @NonNull
     public Observable<Pair<Integer, String>> uploadPost(@NonNull LoudlyPost post, @NonNull List<Integer> networks) {
-        return coreModel.getNetworksModels()
+        return coreModel.getConnectedNetworksModels()
                 .filter(network -> networks.contains(network.getId()))
                 .flatMap(network -> network.upload(post).map(id -> new Pair<>(network.getId(), id)).toObservable());
     }
