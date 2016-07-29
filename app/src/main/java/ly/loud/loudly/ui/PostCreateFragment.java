@@ -3,17 +3,19 @@ package ly.loud.loudly.ui;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.support.v4.app.DialogFragment;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -32,6 +34,7 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.attachments.LoudlyImage;
+import ly.loud.loudly.ui.brand_new.post.NetworkChooseFragment;
 import ly.loud.loudly.util.Utils;
 
 
@@ -109,18 +112,21 @@ public class PostCreateFragment extends DialogFragment {
     }
 
     public void setListeners() {
-        rootView.findViewById(R.id.new_post_send_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (existsAvailableNetworks()) {
-                    showNetworksChooseFragment();
-                } else {
-                    Snackbar.make(getActivity().findViewById(R.id.main_layout),
-                            "You must be logged in at least one network", Snackbar.LENGTH_SHORT)
-                            .show();
+        rootView.findViewById(R.id.new_post_send_button).setOnClickListener(v -> {
+            if (existsAvailableNetworks()) {
+                View view = getActivity().getCurrentFocus();
+                if (view != null) {
+                    InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                 }
-
+                DialogFragment dialogFragment = new NetworkChooseFragment();
+                dialogFragment.show(getActivity().getSupportFragmentManager(), dialogFragment.getTag());
+            } else {
+                Snackbar.make(getActivity().findViewById(R.id.main_layout),
+                        "You must be logged in at least one network", Snackbar.LENGTH_SHORT)
+                        .show();
             }
+
         });
 
         rootView.findViewById(R.id.new_post_gallery_button).setOnClickListener(new View.OnClickListener() {
@@ -154,6 +160,7 @@ public class PostCreateFragment extends DialogFragment {
         fragment.setArguments(args);
         return fragment;
     }
+
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -162,9 +169,9 @@ public class PostCreateFragment extends DialogFragment {
 
         rootView = inflater.inflate(R.layout.new_post_fragment, null);
 
-        editText = (EditText)rootView.findViewById(R.id.new_post_edit_text);
-        postImageView = (ImageView)rootView.findViewById(R.id.picture_with_cross_image);
-        ImageView deleteImageButton = (ImageView)rootView.findViewById(R.id.picture_with_cross_clear);
+        editText = (EditText) rootView.findViewById(R.id.new_post_edit_text);
+        postImageView = (ImageView) rootView.findViewById(R.id.picture_with_cross_image);
+        ImageView deleteImageButton = (ImageView) rootView.findViewById(R.id.picture_with_cross_clear);
         deleteImageButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
@@ -213,7 +220,7 @@ public class PostCreateFragment extends DialogFragment {
         LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
         layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
 
-        RelativeLayout layout = (RelativeLayout)rootView.findViewById(R.id.new_post_list_item);
+        RelativeLayout layout = (RelativeLayout) rootView.findViewById(R.id.new_post_list_item);
         layoutParams = (LinearLayout.LayoutParams) layout.getLayoutParams();
         layoutParams.width = 0;
         layoutParams.height = 0;
@@ -224,7 +231,7 @@ public class PostCreateFragment extends DialogFragment {
     }
 
     private void clearImageView() {
-        RelativeLayout layout = (RelativeLayout)rootView.findViewById(R.id.new_post_list_item);
+        RelativeLayout layout = (RelativeLayout) rootView.findViewById(R.id.new_post_list_item);
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) layout.getLayoutParams();
         layoutParams.width = 0;
         layoutParams.height = 0;
@@ -239,7 +246,7 @@ public class PostCreateFragment extends DialogFragment {
         LinearLayout.LayoutParams layoutParams = ((LinearLayout.LayoutParams) editText.getLayoutParams());
         layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
 
-        RelativeLayout layout = (RelativeLayout)rootView.findViewById(R.id.new_post_list_item);
+        RelativeLayout layout = (RelativeLayout) rootView.findViewById(R.id.new_post_list_item);
         layoutParams = (LinearLayout.LayoutParams) layout.getLayoutParams();
         layoutParams.width = postImageView.getLayoutParams().width;
         layoutParams.height = RelativeLayout.LayoutParams.WRAP_CONTENT;

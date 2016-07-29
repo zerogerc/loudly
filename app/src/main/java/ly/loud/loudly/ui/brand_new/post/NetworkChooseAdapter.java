@@ -4,9 +4,9 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SwitchCompat;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import java.util.List;
@@ -55,9 +55,9 @@ public class NetworkChooseAdapter extends RecyclerView.Adapter<NetworkChooseAdap
     public class NetworkChooseHolder extends RecyclerView.ViewHolder {
 
         @SuppressWarnings("NullableProblems") // Butterknife
-        @BindView(R.id.network_choose_list_item_switch)
+        @BindView(R.id.network_choose_list_item_check)
         @NonNull
-        SwitchCompat switchCompat;
+        CheckBox checkBox;
 
         @SuppressWarnings("NullableProblems") // Butterknife
         @BindView(R.id.network_choose_list_item_text)
@@ -73,10 +73,11 @@ public class NetworkChooseAdapter extends RecyclerView.Adapter<NetworkChooseAdap
             textView.setText(models.getFullName());
         }
 
-        @OnClick(R.id.network_choose_list_item_switch)
+        @OnClick(R.id.network_choose_list_item_root)
         public void onClick() {
+            checkBox.setChecked(!checkBox.isChecked());
             if (onItemStateChangeListener != null) {
-                onItemStateChangeListener.onItemStateChange(getAdapterPosition(), switchCompat.isChecked());
+                onItemStateChangeListener.onItemStateChange(getAdapterPosition(), checkBox.isChecked());
             }
         }
     }

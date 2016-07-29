@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -20,10 +21,11 @@ import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.ui.SettingsActivity;
-import ly.loud.loudly.ui.brand_new.post.NetworksChooseFragment;
+import ly.loud.loudly.ui.brand_new.FragmentInvoker;
+import ly.loud.loudly.ui.brand_new.post.NewPostFragment;
 
 public class FeedActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, FragmentInvoker {
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.toolbar)
@@ -100,10 +102,13 @@ public class FeedActivity extends AppCompatActivity
 
     @OnClick(R.id.fab)
     public void onNewPostClicked() {
-//        DialogFragment fragment = PostCreateFragment.newInstance();
-//        fragment.show(getSupportFragmentManager(), fragment.getTag());
+        startFragment(new NewPostFragment());
+    }
+
+    @Override
+    public void startFragment(@NonNull Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new NetworksChooseFragment())
+                .replace(R.id.fragment_container, fragment)
                 .addToBackStack(null)
                 .commit();
     }

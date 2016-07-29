@@ -110,8 +110,7 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:id="@+id/new_post_list_item"
-                layout="@layout/picture_with_cross"
-                />
+                layout="@layout/picture_with_cross" />
         </LinearLayout>
 
     </ScrollView>
