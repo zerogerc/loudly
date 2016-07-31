@@ -50,11 +50,11 @@ public class CoreModel {
      * Get models where given {@link SingleNetwork} exists in.
      */
     public Observable<NetworkContract> elementExistsIn(@NonNull SingleNetworkElement element) {
-        return getNetworksConnectedNetworksModels().filter(network -> element.getNetwork() == network.getId());
+        return getConnectedNetworksModels().filter(network -> element.getNetwork() == network.getId());
     }
 
     public Observable<NetworkContract> elementExistsIn(@NonNull MultipleNetworkElement element) {
-        return getNetworksModels()
+        return getConnectedNetworksModels()
                 .filter(networkContract ->  element.getSingleNetworkInstance(networkContract.getId()) != null);
     }
 

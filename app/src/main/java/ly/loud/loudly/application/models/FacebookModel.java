@@ -2,6 +2,7 @@ package ly.loud.loudly.application.models;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;

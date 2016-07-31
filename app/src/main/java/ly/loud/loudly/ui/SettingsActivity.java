@@ -23,6 +23,7 @@ import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.views.IconsHolder;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
@@ -217,9 +218,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     public void LogoutClick(int network) {
         Loudly.getContext().stopGetInfoService();
-        if (MainActivity.loadPosts != null) {
-            MainActivity.loadPosts.stop();
-        }
         Networks.makeWrap(network).resetState();
 
         new AsyncTask<Integer, Void, Integer>() {
@@ -243,11 +241,8 @@ public class SettingsActivity extends AppCompatActivity {
 
                 Loudly.getContext().setKeyKeeper(network, null);
                 // Clean posts from this network
-                for (Post p : Loudly.getPostHolder().getPosts()) {
-                    SingleNetwork singleNetwork = p.getNetworkInstance(network);
-                    if (singleNetwork != null) {
-                        singleNetwork.getLink().setValid(false);
-                    }
+                for (PlainPost p : Loudly.getPostHolder().getPosts()) {
+                    // ToDo: Here was some code
                 }
 
                 Loudly.getPostHolder().cleanUp(Collections.singletonList(network), false);

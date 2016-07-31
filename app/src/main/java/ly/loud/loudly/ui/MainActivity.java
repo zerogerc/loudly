@@ -29,7 +29,6 @@ import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.ui.brand_new.views.FeedRecyclerView;
 import ly.loud.loudly.util.AttachableReceiver;
@@ -59,7 +58,6 @@ public class MainActivity extends AppCompatActivity
     static final int RECEIVER_COUNT = 4;
 
     static AttachableReceiver[] receivers = null;
-    static Tasks.LoadPostsTask loadPosts = null;
 
     private static MainActivity self;
 
@@ -205,9 +203,6 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }
-        if (loadPosts == null) {
-            loadPosts();
-        }
     }
 
     @Override
@@ -232,9 +227,6 @@ public class MainActivity extends AppCompatActivity
         // Loading posts
         if (loadFrom.size() > 0) {
             receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(self);
-            loadPosts = new Tasks.LoadPostsTask(Loudly.getContext().getTimeInterval(),
-                    loadFrom.toArray(new Wrap[loadFrom.size()]));
-            loadPosts.execute();
         } else {
             Loudly.getContext().startGetInfoService();
         }
@@ -377,7 +369,6 @@ public class MainActivity extends AppCompatActivity
                                 .show();
                         stop();
                         receivers[LOAD_POSTS_RECEIVER] = null;
-                        loadPosts = null;
                     } else {
                         Snackbar.make(context.findViewById(R.id.fab),
                                 "Loudly posts loaded",
@@ -400,7 +391,6 @@ public class MainActivity extends AppCompatActivity
                             .show();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
-                    loadPosts = null; // Posts loaded
 
                     Loudly.getContext().startGetInfoService(); // Let's get info about posts
                     break;

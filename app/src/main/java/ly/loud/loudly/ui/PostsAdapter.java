@@ -8,10 +8,6 @@ import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
-import ly.loud.loudly.R;
-import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.SinglePost;
 import ly.loud.loudly.new_base.plain.PlainPost;
@@ -28,7 +24,7 @@ import java.util.List;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
-public class PostsAdapter extends BaseAdapter<AppCompatActivity, PlainPost> implements ModifiableAdapter<Post> {
+public class PostsAdapter extends BaseAdapter<AppCompatActivity, PlainPost> implements ModifiableAdapter<PlainPost> {
     private int lastPosition = -1;
 
     private AppCompatActivity activity;
@@ -38,7 +34,7 @@ public class PostsAdapter extends BaseAdapter<AppCompatActivity, PlainPost> impl
         this.activity = activity;
     }
 
-    protected Post getPost(int position) {
+    protected PlainPost getPost(int position) {
         return items.get(position);
     }
 

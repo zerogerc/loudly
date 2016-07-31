@@ -1,18 +1,11 @@
 package ly.loud.loudly.ui;
 
-import android.util.Log;
 import android.util.Pair;
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.Say;
-import ly.loud.loudly.networks.Loudly.LoudlyWrap;
 import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.adapter.ModifiableAdapter;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -78,46 +71,11 @@ public class PostsHolder {
         return new Pair<>(result, added);
     }
 
-    private void addLinks(List<? extends Post> posts) {
-        for (Post p : posts) {
-            LoudlyPost loudlyPost = (LoudlyPost)p;
-            for (int i = 1; i < Networks.NETWORK_COUNT; i++) {
-                if (loudlyPost.getLink(i) != null) {
-                    hiddenPosts.put(new Pair<>(i, loudlyPost.getLink(i).get()), loudlyPost);
-                }
-            }
-        }
+    private void addWithoutDuplicates(List<? extends PlainPost> from, List<PlainPost> dest) {
     }
 
-    private void addWithoutDuplicates(List<? extends Post> from, List<Post> dest) {
-        for (Post p : from) {
-            if (p instanceof LoudlyPost) {
-                dest.add(p);
-            } else {
-                LoudlyPost found = hiddenPosts.get(new Pair<>(p.getNetwork(), p.getLink().get()));
-                if (found == null) {
-                    dest.add(p);
-                } else {
-                    if (found.getLink(p.getNetwork()) == null) {
-                        found.setLink(p.getNetwork(), new Link(p.getLink().get()));
-                    }
-                    found.getLink().setValid(true);
-                    found.getLink(p.getNetwork()).setValid(true);
-                    found.setInfo(p.getNetwork(), p.getInfo());
-                }
-            }
-        }
-    }
-
-    public void merge(List<? extends Post> newPosts, final int network) {
-        if (network == Networks.LOUDLY) {
-            addLinks(newPosts);
-        }
-        Pair<List<Post>, List<Post>> merged = merge(posts, newPosts, Say.FEED_ORDER);
-        posts.clear();
-        addWithoutDuplicates(merged.first, posts);
-        adapter.insert(merged.second);
-        adapter.update(merged.second);
+    public void merge(List<? extends PlainPost> newPosts, final int network) {
+        // ToDo: here was merge
     }
 
     /**
@@ -129,95 +87,15 @@ public class PostsHolder {
      */
     // ToDo: Make more stable
     public void cleanUp(List<Integer> networks, boolean deleteFromDB) {
-        ArrayList<Integer> notLoaded = new ArrayList<>();
-        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            if (!(networks.contains(i))) {
-                notLoaded.add(i);
-            }
-        }
-
-        Iterator<Post> iterator = posts.iterator();
-        List<Post> deleted = new ArrayList<>();
-
-        while (iterator.hasNext()) {
-            Post post = iterator.next();
-
-            // Post is valid if it exists in any network
-            boolean valid = false;
-            for (int id : networks) {
-                SingleNetwork instance = post.getNetworkInstance(id);
-                if (instance != null) {
-                    if (instance.exists()) {
-                        valid = true;
-                    }
-                    if (instance.getLink() != null && !instance.getLink().isValid()) {
-                        instance.setLink(null);
-                        if (!deleted.contains(post)) {
-                            deleted.add(post);
-                        }
-                    }
-                }
-            }
-            if (!valid) {
-                // Check if post has links in network, from which posts wasn't loaded
-                boolean existsSomewhere = false;
-                for (int id : notLoaded) {
-                    SingleNetwork instance = post.getNetworkInstance(id);
-                    if (instance != null && instance.getLink() != null) {
-                        existsSomewhere = true;
-                        break;
-                    }
-                }
-
-                // If post doesn't exist in any network
-                if (!existsSomewhere) {
-                    if (!deleted.contains(post)) {
-                        deleted.add(post);
-                    }
-                    // Hide post
-                    iterator.remove();
-                    if (post instanceof LoudlyPost && deleteFromDB) {
-                        // And delete from DB
-                        try {
-                            new LoudlyWrap().delete(post);
-                        } catch (IOException e) {
-                            Log.e("cleanUp", "can't delete post from DB", e);
-                        }
-
-                    }
-                }
-            }
-        }
-        adapter.delete(deleted);
     }
 
-    public Info updateInfo(List<Pair<Post, Info>> pairs, int network) {
-        Iterator<Post> iterator = posts.iterator();
-        Info summary = new Info();
-        List<Post> updated = new ArrayList<>();
-
-        for (Pair<Post, Info> pair : pairs) {
-            while (iterator.hasNext()) {
-                Post post = (Post) iterator.next().getNetworkInstance(network);
-                if (post != null && post.equals(pair.first.getNetworkInstance(network))) {
-                    Info oldInfo = post.getInfo();
-                    if (pair.second != null && !oldInfo.equals(pair.second)) {
-                        summary.add(pair.second.subtract(post.getInfo()));
-                        post.setInfo(pair.second);
-
-                        updated.add(post);
-                    }
-                    break;
-                }
-            }
-        }
-        adapter.update(updated);
-        return summary;
+    public Info updateInfo(List<Pair<PlainPost, Info>> pairs, int network) {
+        return new Info();
     }
 
     public void clear() {
         if (!posts.isEmpty()) {
-            List<Post> old = posts;
+            List<PlainPost> old = posts;
             posts = new ArrayList<>();
             adapter.delete(old);
         }
