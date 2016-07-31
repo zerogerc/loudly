@@ -4,8 +4,6 @@ import android.graphics.Point;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.new_base.interfaces.attachments.LocalFile;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
@@ -13,7 +11,6 @@ import ly.loud.loudly.new_base.plain.PlainImage;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 
 
 /**

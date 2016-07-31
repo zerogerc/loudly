@@ -46,8 +46,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
+import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.new_base.SinglePost;

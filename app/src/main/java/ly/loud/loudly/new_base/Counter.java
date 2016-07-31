@@ -1,4 +1,4 @@
-package ly.loud.loudly.base.says;
+package ly.loud.loudly.new_base;
 
 public class Counter {
     public int imageCount, linkCount;

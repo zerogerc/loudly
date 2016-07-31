@@ -5,9 +5,9 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import ly.loud.loudly.base.Link;
+import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.new_base.Info;
 
 /**
  * Image from the internet. Exists in only one network

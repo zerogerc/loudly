@@ -3,7 +3,7 @@ package ly.loud.loudly.ui;
 import android.app.IntentService;
 import android.content.Intent;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.new_base.Info;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;

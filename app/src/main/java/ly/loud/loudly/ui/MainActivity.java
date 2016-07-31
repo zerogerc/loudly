@@ -28,7 +28,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.ui.brand_new.views.FeedRecyclerView;
 import ly.loud.loudly.util.AttachableReceiver;

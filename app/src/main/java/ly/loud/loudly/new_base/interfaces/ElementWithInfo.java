@@ -1,7 +1,7 @@
 package ly.loud.loudly.new_base.interfaces;
 
 import android.support.annotation.NonNull;
-import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.new_base.Info;
 
 /**
  * Interface for elements with information

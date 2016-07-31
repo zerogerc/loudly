@@ -3,15 +3,11 @@ package ly.loud.loudly.new_base;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.base.Location;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.plain.PlainPost;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Danil Kolikov

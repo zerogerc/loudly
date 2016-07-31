@@ -3,7 +3,7 @@ package ly.loud.loudly.util.database.entities.links;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import com.pushtorefresh.storio.sqlite.operations.get.DefaultGetResolver;
-import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.new_base.Networks;
 
 /**
  * Get resolver for Links

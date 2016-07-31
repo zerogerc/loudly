@@ -12,8 +12,8 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.Authorizer;
-import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.new_base.Authorizer;
+import ly.loud.loudly.new_base.KeyKeeper;
 import ly.loud.loudly.R;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.new_base.KeyKeeper;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;

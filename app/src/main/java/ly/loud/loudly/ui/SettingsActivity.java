@@ -18,11 +18,9 @@ import java.util.Collections;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.Authorizer;
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.Authorizer;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.views.IconsHolder;
 import ly.loud.loudly.util.AttachableReceiver;

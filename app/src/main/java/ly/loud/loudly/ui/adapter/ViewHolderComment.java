@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import ly.loud.loudly.base.Person;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.base.says.Comment;
 import ly.loud.loudly.R;
 import ly.loud.loudly.util.Utils;

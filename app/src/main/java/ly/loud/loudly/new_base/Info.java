@@ -1,4 +1,4 @@
-package ly.loud.loudly.base.says;
+package ly.loud.loudly.new_base;
 
 import android.os.Parcel;
 import android.os.Parcelable;

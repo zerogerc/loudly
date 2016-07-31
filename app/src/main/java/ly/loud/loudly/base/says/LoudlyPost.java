@@ -7,6 +7,7 @@ import java.util.Calendar;
 
 import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Attachment;
+import ly.loud.loudly.new_base.*;
 
 /**
  * Сlass that stores text and attachments to post.

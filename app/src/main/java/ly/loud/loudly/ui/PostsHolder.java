@@ -1,7 +1,7 @@
 package ly.loud.loudly.ui;
 
 import android.util.Pair;
-import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.new_base.Info;
 import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.adapter.ModifiableAdapter;

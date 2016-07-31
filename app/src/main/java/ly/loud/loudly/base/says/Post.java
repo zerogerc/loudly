@@ -5,8 +5,8 @@ import android.os.Parcel;
 import java.util.ArrayList;
 
 import android.support.annotation.Nullable;
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Location;
+import ly.loud.loudly.new_base.Link;
+import ly.loud.loudly.new_base.Location;
 import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.ui.adapter.Item;
 

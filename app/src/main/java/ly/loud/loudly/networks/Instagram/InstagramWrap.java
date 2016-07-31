@@ -11,7 +11,7 @@ import java.util.List;
 import ly.loud.loudly.base.*;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.new_base.*;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.util.BackgroundAction;

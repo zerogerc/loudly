@@ -2,7 +2,7 @@ package ly.loud.loudly.networks.Loudly;
 
 import android.os.Parcel;
 
-import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.new_base.KeyKeeper;
 
 public class LoudlyKeyKeeper extends KeyKeeper {
     public LoudlyKeyKeeper() {

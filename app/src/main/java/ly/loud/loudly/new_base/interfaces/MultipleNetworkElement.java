@@ -3,7 +3,7 @@ package ly.loud.loudly.new_base.interfaces;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.base.Networks.Network;
+import ly.loud.loudly.new_base.Networks.Network;
 
 import java.util.ArrayList;
 

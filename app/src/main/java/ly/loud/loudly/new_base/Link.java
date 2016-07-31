@@ -1,12 +1,10 @@
-package ly.loud.loudly.base;
+package ly.loud.loudly.new_base;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.util.Equality;
-
-import java.util.Comparator;
 
 public class Link implements Parcelable, Comparable<Link> {
     @Nullable

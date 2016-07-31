@@ -1,7 +1,8 @@
-package ly.loud.loudly.base;
+package ly.loud.loudly.new_base;
 
 import android.support.annotation.IntDef;
 
+import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.Facebook.FacebookWrap;

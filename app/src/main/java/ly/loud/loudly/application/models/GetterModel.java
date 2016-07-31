@@ -9,14 +9,10 @@ import java.util.List;
 import javax.inject.Inject;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.Networks.Network;
-import ly.loud.loudly.base.Person;
+import ly.loud.loudly.new_base.Networks.Network;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.new_base.Comment;
-import ly.loud.loudly.new_base.SinglePost;
-import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
-import ly.loud.loudly.new_base.plain.PlainPost;
 import rx.Observable;
 
 /**

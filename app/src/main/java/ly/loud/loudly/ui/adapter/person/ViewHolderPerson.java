@@ -10,7 +10,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import ly.loud.loudly.R;
-import ly.loud.loudly.base.Person;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.ui.adapter.ViewHolder;
 import ly.loud.loudly.util.Utils;
 

@@ -5,9 +5,9 @@ import android.support.annotation.NonNull;
 
 import java.util.List;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Networks.Network;
-import ly.loud.loudly.base.Person;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Networks.Network;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.new_base.Comment;
 import ly.loud.loudly.new_base.SingleImage;
 import ly.loud.loudly.new_base.SinglePost;

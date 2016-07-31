@@ -3,7 +3,7 @@ package ly.loud.loudly.new_base.plain;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.base.Location;
+import ly.loud.loudly.new_base.Location;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.ui.adapter.Item;
 

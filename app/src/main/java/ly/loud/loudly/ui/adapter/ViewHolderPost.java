@@ -13,9 +13,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import ly.loud.loudly.R;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.Info;
 import ly.loud.loudly.new_base.interfaces.ElementWithInfo;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;

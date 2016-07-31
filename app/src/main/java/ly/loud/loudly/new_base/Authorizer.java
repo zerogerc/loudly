@@ -1,4 +1,4 @@
-package ly.loud.loudly.base;
+package ly.loud.loudly.new_base;
 
 import android.content.Context;
 import android.content.Intent;

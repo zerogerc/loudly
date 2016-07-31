@@ -1,8 +1,8 @@
 package ly.loud.loudly.networks.MailRu;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Authorizer;
-import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Authorizer;
+import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.util.Query;
 
 public class MailRuAuthoriser extends Authorizer {
