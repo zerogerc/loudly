@@ -48,9 +48,10 @@
                 android:value=".ui.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.brand_new.FeedActivity"
+            android:name=".ui.brand_new.feed.FeedActivity"
             android:label="@string/loudly"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

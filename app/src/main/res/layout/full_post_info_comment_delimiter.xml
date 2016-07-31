@@ -4,4 +4,4 @@
     android:layout_height="1px"
     android:layout_marginLeft="64dp"
     android:layout_marginRight="@dimen/activity_horizontal_margin"
-    android:background="@color/grey_color"/>
+    android:background="@color/gray_color"/>

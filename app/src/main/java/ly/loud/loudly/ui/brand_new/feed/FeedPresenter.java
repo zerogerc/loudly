@@ -1,10 +1,11 @@
-package ly.loud.loudly.ui.brand_new;
+package ly.loud.loudly.ui.brand_new.feed;
 
 import android.support.annotation.NonNull;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
+import ly.loud.loudly.ui.brand_new.BasePresenter;
 import rx.Subscription;
 import rx.schedulers.Schedulers;
 

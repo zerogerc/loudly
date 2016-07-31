@@ -87,7 +87,7 @@
                 android:layout_toStartOf="@id/comment_likes_button"
                 android:layout_centerVertical="true"
                 android:text="11.12.2015 around 2 hours"
-                android:textColor="@color/grey_color"/>
+                android:textColor="@color/gray_color"/>
 
         </RelativeLayout>
     </RelativeLayout>

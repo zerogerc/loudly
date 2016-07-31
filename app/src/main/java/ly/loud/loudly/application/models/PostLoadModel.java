@@ -30,6 +30,6 @@ public class PostLoadModel {
     @CheckResult
     @NonNull
     public Observable<List<Post>> loadPosts(@NonNull TimeInterval interval) {
-        return coreModel.getNetworksModels().flatMap(n -> n.loadPosts(interval).toObservable());
+        return coreModel.getConnectedNetworksModels().flatMap(n -> n.loadPosts(interval).toObservable());
     }
 }

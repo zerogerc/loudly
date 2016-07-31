@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
             receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
-        PostCreateFragment.newInstance().show(getFragmentManager(), PostCreateFragment.TAG);
+//        PostCreateFragment.newInstance().show(getFragmentManager(), PostCreateFragment.TAG);
     }
 
     @Override

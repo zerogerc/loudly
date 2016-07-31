@@ -1,4 +1,4 @@
-package ly.loud.loudly.ui.brand_new;
+package ly.loud.loudly.ui.brand_new.feed;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;

@@ -13,6 +13,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Link;
@@ -358,6 +359,12 @@ public class VKModel implements NetworkContract {
     @CheckResult
     public Single<Boolean> disconnect() {
         return keysModel.disconnectFromNetwork(Networks.VK);
+    }
+
+    @NonNull
+    @Override
+    public String getFullName() {
+        return loudlyApplication.getString(R.string.network_vk);
     }
 
     @Override
