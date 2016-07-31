@@ -27,9 +27,7 @@ import ly.loud.loudly.ui.SettingsActivity;
 import ly.loud.loudly.ui.brand_new.FragmentInvoker;
 import ly.loud.loudly.ui.brand_new.views.ScrimCoordinatorLayout;
 
-import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
 import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
-import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 public class FeedActivity extends AppCompatActivity
@@ -82,9 +80,6 @@ public class FeedActivity extends AppCompatActivity
             switch (newState) {
                 case STATE_EXPANDED:
                     newPostRoot.setVisibility(VISIBLE);
-                    break;
-                case STATE_COLLAPSED:
-                    newPostRoot.setVisibility(GONE);
                     break;
                 default:
                     break;

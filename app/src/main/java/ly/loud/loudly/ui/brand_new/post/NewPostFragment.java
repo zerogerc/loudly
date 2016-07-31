@@ -3,15 +3,11 @@ package ly.loud.loudly.ui.brand_new.post;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
 
-import com.bumptech.glide.Glide;
 import com.hannesdorfmann.mosby.mvp.MvpFragment;
 
 import java.util.List;
@@ -25,8 +21,8 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.NetworkContract;
 import ly.loud.loudly.application.models.PostUploadModel;
-import ly.loud.loudly.base.attachments.Attachment;
-import solid.collections.SolidList;
+import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
+import ly.loud.loudly.ui.brand_new.views.TextPlusAttachmentsView;
 
 public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     implements NewPostView {
@@ -37,14 +33,9 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     Button sendButton;
 
     @SuppressWarnings("NullableProblems") // Butterknife
-    @BindView(R.id.material_new_post_fragment_edit_text)
+    @BindView(R.id.material_new_post_fragment_text_plus_attachments)
     @NonNull
-    EditText postText;
-
-    @SuppressWarnings("NullableProblems") // Butterknife
-    @BindView(R.id.material_new_post_fragment_image)
-    @NonNull
-    ImageView imageView;
+    TextPlusAttachmentsView textPlusAttachmentsView;
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.material_new_post_fragment_gallery_button)
@@ -81,13 +72,8 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     }
 
     @Override
-    public void showImage(@NonNull String url) {
-        Glide.with(this).load(url).into(imageView);
-    }
-
-    @Override
     public void showNewAttachment(@NonNull Attachment attachment) {
-
+        textPlusAttachmentsView.addAttachment(attachment);
     }
 
     @Override
@@ -98,18 +84,22 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     @OnClick(R.id.material_new_post_fragment_send_button)
     public void onSendClicked() {
         // Activity knows the networks chosen by user
-        List<NetworkContract> models = ((NetworksGetter) getActivity()).getChoosenNetworks();
+//        List<NetworkContract> models = ((NetworksGetter) getActivity()).getChoosenNetworks();
 
-        presenter.uploadPost(
-                postText.getText().toString(),
-                SolidList.empty(),
-                models
-                );
+//        presenter.uploadPost(
+//                textPlusAttachmentsView.getText(),
+//                SolidList.empty(),
+//                models
+//                );
+    }
+
+    @OnClick(R.id.material_new_post_fragment_camera_button)
+    public void onTakePhotoClicked() {
+        presenter.takePhoto(this);
     }
 
     @OnClick(R.id.material_new_post_fragment_gallery_button)
-    public void onPickFromGallery() {
-        Log.e("NEWPOSTRX", "CLICK");
+    public void onPickFromGalleryClicker() {
         presenter.loadImageFromGallery(this);
     }
 
