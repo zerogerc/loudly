@@ -4,8 +4,9 @@ import com.android.internal.util.Predicate;
 
 import java.util.List;
 
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.FilteredListView;
 
 /**
@@ -13,43 +14,47 @@ import ly.loud.loudly.util.FilteredListView;
  */
 public class FilteredPostsAdapter extends PostsAdapter {
     private int network;
-    private Predicate<Post> predicate;
+    private Predicate<PlainPost> predicate;
 
-    public FilteredPostsAdapter(List<Post> posts, final int networkFilter, MainActivity activity) {
-        super(new FilteredListView<>(posts, new Predicate<Post>(){
-            @Override
-            public boolean apply(Post post) {
-                SingleNetwork network = post.getNetworkInstance(networkFilter);
-                return network != null;
+    public FilteredPostsAdapter(List<PlainPost> posts, final int networkFilter, MainActivity activity) {
+        super(new FilteredListView<>(posts, post -> {
+            if (post instanceof SinglePost) {
+                return ((SinglePost) post).getNetwork() == networkFilter;
             }
+            if (post instanceof LoudlyPost) {
+                return ((LoudlyPost) post).getSingleNetworkInstance(networkFilter) != null;
+            }
+            return false;
         }), activity);
         network = networkFilter;
-        predicate = new Predicate<Post>() {
-            @Override
-            public boolean apply(Post post) {
-                SingleNetwork network = post.getNetworkInstance(networkFilter);
-                return network != null;
+        predicate = post -> {
+            if (post instanceof SinglePost) {
+                return ((SinglePost) post).getNetwork() == networkFilter;
             }
+            if (post instanceof LoudlyPost) {
+                return ((LoudlyPost) post).getSingleNetworkInstance(networkFilter) != null;
+            }
+            return false;
         };
     }
 
     @Override
-    protected Post getPost(int position) {
-        return (Post)super.getPost(position).getNetworkInstance(network);
+    protected PlainPost getPost(int position) {
+        return super.getPost(position);
     }
 
     @Override
-    public void update(List<? extends Post> updated) {
+    public void update(List<? extends PlainPost> updated) {
         super.update(new FilteredListView<>(updated, predicate));
     }
 
     @Override
-    public void insert(List<? extends Post> inserted) {
+    public void insert(List<? extends PlainPost> inserted) {
         super.insert(new FilteredListView<>(inserted, predicate));
     }
 
     @Override
-    public void delete(List<? extends Post> deleted) {
+    public void delete(List<? extends PlainPost> deleted) {
         super.delete(deleted);
     }
 }

@@ -9,5 +9,5 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Post {
     @SerializedName("post_id")
-    String postId;
+    public String postId;
 }

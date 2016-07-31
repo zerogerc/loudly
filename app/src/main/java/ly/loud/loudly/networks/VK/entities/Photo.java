@@ -1,5 +1,6 @@
 package ly.loud.loudly.networks.VK.entities;
 
+import android.support.annotation.Nullable;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -18,4 +19,9 @@ public class Photo {
 
     @SerializedName("height")
     public int heightPx;
+
+    @Nullable
+    public String text;
+
+    public long date;
 }

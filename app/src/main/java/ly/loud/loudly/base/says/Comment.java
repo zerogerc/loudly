@@ -2,8 +2,8 @@ package ly.loud.loudly.base.says;
 
 import android.os.Parcel;
 
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Person;
+import ly.loud.loudly.new_base.Link;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.ui.adapter.Item;
 
 public class Comment extends Say implements Item {

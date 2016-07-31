@@ -1,8 +1,8 @@
 package ly.loud.loudly.base;
 
 import android.os.Parcelable;
-
-import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.new_base.Info;
+import ly.loud.loudly.new_base.Link;
 
 /**
  * Interface for objects which are in some network

@@ -3,7 +3,7 @@ package ly.loud.loudly.application.models;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
 
@@ -29,7 +29,7 @@ public class PostLoadModel {
 
     @CheckResult
     @NonNull
-    public Observable<List<Post>> loadPosts(@NonNull TimeInterval interval) {
+    public Observable<List<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
         return coreModel.getConnectedNetworksModels().flatMap(n -> n.loadPosts(interval).toObservable());
     }
 }

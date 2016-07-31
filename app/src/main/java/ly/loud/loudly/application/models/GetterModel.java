@@ -9,10 +9,10 @@ import java.util.List;
 import javax.inject.Inject;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.Networks.Network;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.says.Comment;
+import ly.loud.loudly.new_base.Networks.Network;
+import ly.loud.loudly.new_base.Person;
+import ly.loud.loudly.new_base.Comment;
+import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import rx.Observable;
 
 /**
@@ -45,7 +45,8 @@ public class GetterModel {
 
     @CheckResult
     @NonNull
-    public Observable<PersonsFromNetwork> getPersonsByType(@NonNull SingleNetwork element, @RequestType int type) {
+    public Observable<PersonsFromNetwork> getPersonsByType(@NonNull SingleNetworkElement element,
+                                                           @RequestType int type) {
         return coreModel.elementExistsIn(element)
                 .flatMap(model ->
                         model.getPersons(element, type)
@@ -56,7 +57,7 @@ public class GetterModel {
 
     @CheckResult
     @NonNull
-    public Observable<CommentsFromNetwork> getComments(@NonNull SingleNetwork element) {
+    public Observable<CommentsFromNetwork> getComments(@NonNull SingleNetworkElement element) {
         return coreModel.elementExistsIn(element)
                 .flatMap(model ->
                         model.getComments(element)

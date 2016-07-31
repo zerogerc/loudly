@@ -3,10 +3,9 @@ package ly.loud.loudly.networks.VK;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.networks.VK.entities.*;
+import okhttp3.MultipartBody;
 import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.Query;
+import retrofit2.http.*;
 
 import java.util.List;
 
@@ -120,4 +119,48 @@ public interface VKClient {
     Call<VKResponse<Post>> uploadPost(@Query("message") @Nullable String message,
                                       @Query("attachment") @Nullable String attachmentIds,
                                       @Query("access_token") @NonNull String token);
+
+    /**
+     * Get url of server for uploading photos
+     *
+     * @param userId ID of user
+     * @param token  Access token
+     * @return Response from network
+     * @see <a href="https://new.vk.com/dev/photos.getWallUploadServer">VK api</a>
+     */
+    @GET("photos.getWallUploadServer ")
+    Call<VKResponse<PhotoUploadServer>> getPhotoUploadServer(@Query("user_id") String userId,
+                                                             @Query("access_token") String token);
+
+    /**
+     * Upload photo to VK server
+     * @param url Url, previously got with {@link VKClient#getPhotoUploadServer(String, String)}
+     * @param file File, encoded with multipart/form-data
+     * @return Response from api
+     * @see <a href="https://new.vk.com/dev/upload_files">VK api</a>
+     */
+    @Multipart
+    @POST
+    Call<PhotoUploadServerResponse> uploadPhoto(@Url String url, @Part MultipartBody.Part file);
+
+
+    /**
+     * Get information about photo, uploaded to server
+     *
+     * @param userId ID of user
+     * @param photo Photo info
+     * @param server Photo upload server
+     * @param hash Photo hash
+     * @param token Access token
+     * @return Response from api
+     * @see VKClient#uploadPost(String, String, String)
+     * @see PhotoUploadServerResponse
+     * @see <a href="https://new.vk.com/dev/photos.saveWallPhoto">VK api</a>
+     */
+    @GET("photos.saveWallPhoto")
+    Call<VKResponse<List<Photo>>> saveWallPhoto(@Query("user_id") String userId,
+                                                @Query("photo") String photo,
+                                                @Query("server") String server,
+                                                @Query("hash") String hash,
+                                                @Query("access_token") String token);
 }

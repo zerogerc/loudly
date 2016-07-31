@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.Utils;
 

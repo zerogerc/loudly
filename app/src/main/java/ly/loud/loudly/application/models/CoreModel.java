@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.new_base.KeyKeeper;
 import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
+import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import rx.Observable;
 import rx.Single;
 
@@ -47,10 +49,14 @@ public class CoreModel {
     /**
      * Get models where given {@link SingleNetwork} exists in.
      */
-    public Observable<NetworkContract> elementExistsIn(@NonNull SingleNetwork element) {
-        return getConnectedNetworksModels().filter(network -> element.existsIn(network.getId()));
+    public Observable<NetworkContract> elementExistsIn(@NonNull SingleNetworkElement element) {
+        return getConnectedNetworksModels().filter(network -> element.getNetwork() == network.getId());
     }
 
+    public Observable<NetworkContract> elementExistsIn(@NonNull MultipleNetworkElement element) {
+        return getConnectedNetworksModels()
+                .filter(networkContract ->  element.getSingleNetworkInstance(networkContract.getId()) != null);
+    }
 
     public Single<Boolean> connectToNetworkById(int id, @NonNull KeyKeeper keyKeeper) {
         for (NetworkContract model : networkModels) {

@@ -5,48 +5,46 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Link;
+import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.new_base.Person;
+import ly.loud.loudly.new_base.Info;
+import ly.loud.loudly.networks.VK.VKClient;
+import ly.loud.loudly.networks.VK.VKKeyKeeper;
+import ly.loud.loudly.networks.VK.entities.*;
+import ly.loud.loudly.new_base.Comment;
+import ly.loud.loudly.new_base.SingleImage;
+import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.new_base.interfaces.attachments.LocalFile;
+import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.new_base.plain.PlainImage;
+import ly.loud.loudly.new_base.plain.PlainPost;
+import ly.loud.loudly.util.TimeInterval;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Response;
+import rx.Single;
 
+import javax.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
-
-import ly.loud.loudly.R;
-import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Link;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.networks.VK.VKClient;
-import ly.loud.loudly.networks.VK.VKKeyKeeper;
-import ly.loud.loudly.networks.VK.entities.Attachment;
-import ly.loud.loudly.networks.VK.entities.Counter;
-import ly.loud.loudly.networks.VK.entities.Photo;
-import ly.loud.loudly.networks.VK.entities.Profile;
-import ly.loud.loudly.networks.VK.entities.Say;
-import ly.loud.loudly.networks.VK.entities.VKItems;
-import ly.loud.loudly.networks.VK.entities.VKResponse;
-import ly.loud.loudly.util.TimeInterval;
-import retrofit2.Call;
-import retrofit2.Response;
-import rx.Single;
-
-import static ly.loud.loudly.application.models.GetterModel.LIKES;
-import static ly.loud.loudly.application.models.GetterModel.RequestType;
-import static ly.loud.loudly.application.models.GetterModel.SHARES;
+import static ly.loud.loudly.application.models.GetterModel.*;
 
 public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
 
     @NonNull
-    private final List<Post> posts = new ArrayList<>();
+    private final List<PlainPost> posts = new ArrayList<>();
 
     private int offset;
 
@@ -89,28 +87,116 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Single<String> upload(@NonNull Image image) {
-        return Single.just("");
+    public Single<SingleImage> upload(@NonNull PlainImage image) {
+        return Single.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                return null;
+            }
+            if (!(image instanceof LocalFile)) {
+                // Can't upload such image
+                return null;
+            }
+            Call<VKResponse<PhotoUploadServer>> getServerCall =
+                    client.getPhotoUploadServer(keyKeeper.getUserId(), keyKeeper.getAccessToken());
+            Response<VKResponse<PhotoUploadServer>> serverGot = getServerCall.execute();
+            VKResponse<PhotoUploadServer> serverGotBody = serverGot.body();
+            if (serverGotBody.error != null) {
+                // ToDo: Handle
+                Log.e(TAG, serverGotBody.error.errorMessage);
+                return null;
+            }
+            if (serverGotBody.response == null) {
+                // Impossible
+                return null;
+            }
+
+            File file = new File(/* ToDo: get file path from URI */ "");
+
+            RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+            MultipartBody.Part part = MultipartBody.Part.createFormData("photo", file.getName(), requestBody);
+            Call<PhotoUploadServerResponse> uploadPhotoCall =
+                    client.uploadPhoto(serverGotBody.response.uploadUrl, part);
+            Response<PhotoUploadServerResponse> photoUploaded = uploadPhotoCall.execute();
+            PhotoUploadServerResponse serverResponse = photoUploaded.body();
+            if (serverResponse == null) {
+                return null;
+            }
+            Call<VKResponse<List<Photo>>> savePhotoCall = client.saveWallPhoto(
+                    keyKeeper.getUserId(), serverResponse.photo, serverResponse.server, serverResponse.hash,
+                    keyKeeper.getAccessToken());
+
+            Response<VKResponse<List<Photo>>> executed = savePhotoCall.execute();
+            VKResponse<List<Photo>> body = executed.body();
+            if (body.error != null) {
+                // ToDo: handle
+                Log.e(TAG, body.error.errorMessage);
+                return null;
+            }
+            if (body.response != null) {
+                Photo photo = body.response.get(0);
+                return new SingleImage(photo.photo604, new Point(photo.widthPx, photo.heightPx),
+                        getId(), new Link(photo.id));
+            }
+            // ToDo: Null? really?
+            return null;
+        });
+    }
+
+    @Nullable
+    private String describeAttachments(@NonNull List<SingleAttachment> attachments,
+                                       @NonNull String userId) {
+        List<String> result = new ArrayList<>();
+        for (SingleAttachment attachment : attachments) {
+            String link = userId + "_" + attachment.getLink();
+            if (attachment instanceof SingleImage) {
+                link = "photo" + link;
+            }
+            result.add(link);
+        }
+        if (result.isEmpty()) {
+            return null;
+        }
+        return toCommaSeparated(result);
     }
 
     @NonNull
     @Override
     @CheckResult
-    public Single<String> upload(@NonNull Post post) {
-        return Single.just("");
+    public Single<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
+        return Single.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                return null;
+            }
+            Call<VKResponse<ly.loud.loudly.networks.VK.entities.Post>> call = client
+                    .uploadPost(post.getText(), describeAttachments(post.getAttachments(), keyKeeper.getUserId()),
+                            keyKeeper.getAccessToken());
+            Response<VKResponse<ly.loud.loudly.networks.VK.entities.Post>> executed = call.execute();
+            VKResponse<ly.loud.loudly.networks.VK.entities.Post> body = executed.body();
+            if (body.error != null) {
+                // ToDo: handle
+                Log.e(TAG, body.error.errorMessage);
+                return null;
+            }
+            if (body.response != null) {
+                return new SinglePost(post, getId(), new Link(body.response.postId));
+            }
+            return null;
+        });
     }
 
     @NonNull
     @Override
     @CheckResult
-    public Single<Boolean> delete(@NonNull Post post) {
+    public Single<Boolean> delete(@NonNull SinglePost post) {
         return Single.just(false);
     }
 
     @NonNull
     @Override
     @CheckResult
-    public Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval) {
+    public Single<List<PlainPost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Single.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
@@ -121,33 +207,27 @@ public class VKModel implements NetworkContract {
             long currentTime = 0;
             do {
                 call = client.getPosts(keyKeeper.getUserId(), offset, keyKeeper.getAccessToken());
-                try {
-                    Response<VKResponse<VKItems<Say>>> execute = call.execute();
-                    VKResponse<VKItems<Say>> body = execute.body();
-                    if (body.error != null) {
-                        // ToDo: Handle
-                        Log.e(TAG, body.error.errorMessage);
-                        return Collections.emptyList();
+                Response<VKResponse<VKItems<Say>>> execute = call.execute();
+                VKResponse<VKItems<Say>> body = execute.body();
+                if (body.error != null) {
+                    // ToDo: Handle
+                    Log.e(TAG, body.error.errorMessage);
+                    return Collections.emptyList();
+                }
+                if (body.response != null) {
+                    if (body.response.items.isEmpty()) {
+                        break;
                     }
-                    if (body.response != null) {
-                        if (body.response.items.isEmpty()) {
+                    for (Say say : body.response.items) {
+                        currentTime = say.date;
+                        if (!timeInterval.contains(currentTime)) {
                             break;
                         }
-                        for (Say say : body.response.items) {
-                            currentTime = say.date;
-                            if (!timeInterval.contains(currentTime)) {
-                                break;
-                            }
-                            offset++;
-                            Post post = new Post(say.text, say.date, null, Networks.VK, new Link(say.id));
-                            post.setInfo(getInfo(say));
-                            setAttachments(post, say);
-                            posts.add(post);
-                        }
+                        offset++;
+                        SinglePost post = new SinglePost(say.text, say.date, toAttachments(say),
+                                null, getId(), new Link(say.id), getInfo(say));
+                        posts.add(post);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return posts;
                 }
             } while (timeInterval.contains(currentTime));
             return posts;
@@ -170,7 +250,7 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Single<List<Person>> getPersons(@NonNull SingleNetwork element, @RequestType int requestType) {
+    public Single<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
         return Single.fromCallable(() -> {
             final VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
@@ -181,7 +261,7 @@ public class VKModel implements NetworkContract {
             String type, filter;
             if (element instanceof Post) {
                 type = "post";
-            } else if (element instanceof Image) {
+            } else if (element instanceof SingleImage) {
                 type = "photo";
             } else if (element instanceof Comment) {
                 type = "comment";
@@ -199,9 +279,6 @@ public class VKModel implements NetworkContract {
                     return Collections.emptyList();
             }
             Link elementLink = element.getLink();
-            if (elementLink == null) {
-                return Collections.emptyList();
-            }
             String elementId = elementLink.get();
             if (elementId == null) {
                 return Collections.emptyList();
@@ -249,7 +326,7 @@ public class VKModel implements NetworkContract {
 
     @NonNull
     private Person toPerson(Profile profile) {
-        return new Person(profile.firstName, profile.lastName, profile.photo50, Networks.VK);
+        return new Person(profile.firstName, profile.lastName, profile.photo50, getId());
     }
 
     private int get(@Nullable Counter counter) {
@@ -261,26 +338,28 @@ public class VKModel implements NetworkContract {
     }
 
     @Nullable
-    private ly.loud.loudly.base.attachments.Attachment toAttachment(@NonNull Attachment attachment) {
+    private SingleAttachment toAttachment(@NonNull Attachment attachment) {
         Photo photo = attachment.photo;
         if (photo != null) {
-            return new Image(attachment.photo.photo604, new Point(photo.widthPx, photo.heightPx),
-                    Networks.VK, new Link(photo.id));
+            return new SingleImage(attachment.photo.photo604, new Point(photo.widthPx, photo.heightPx),
+                    getId(), new Link(photo.id));
         }
         return null;
     }
 
-    private void setAttachments(@NonNull ly.loud.loudly.base.says.Say say, @NonNull Say loaded) {
+    private ArrayList<SingleAttachment> toAttachments(@NonNull Say loaded) {
         if (loaded.attachments == null) {
-            return;
+            return new ArrayList<>();
         }
+        ArrayList<SingleAttachment> attachments = new ArrayList<>();
         for (Attachment attachment : loaded.attachments) {
-            ly.loud.loudly.base.attachments.Attachment filled = toAttachment(attachment);
+            SingleAttachment filled = toAttachment(attachment);
             if (filled == null) {
                 continue;
             }
-            say.addAttachment(filled);
+            attachments.add(filled);
         }
+        return attachments;
     }
 
     @Nullable
@@ -295,7 +374,7 @@ public class VKModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<List<Comment>> getComments(@NonNull SingleNetwork element) {
+    public Single<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Single.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
@@ -303,9 +382,6 @@ public class VKModel implements NetworkContract {
                 return Collections.emptyList();
             }
 
-            if (element.getLink() == null) {
-                return Collections.emptyList();
-            }
             String id = Link.getLink(element.getLink());
             if (id == null) {
                 return Collections.emptyList();
@@ -327,10 +403,9 @@ public class VKModel implements NetworkContract {
                     for (Say say : body.response.items) {
                         Profile profile = getProfileById(profiles, say.fromId);
 
-                        Comment comment = new Comment(say.text, say.date,
-                                toPerson(profile), Networks.VK, new Link(say.id));
+                        Comment comment = new Comment(say.text, say.date, toAttachments(say),
+                                toPerson(profile), getId(), new Link(say.id));
                         comment.setInfo(getInfo(say));
-                        setAttachments(comment, say);
 
                         comments.add(comment);
                     }
@@ -347,7 +422,7 @@ public class VKModel implements NetworkContract {
     @Override
     @CheckResult
     public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
-        if (!(keyKeeper instanceof ly.loud.loudly.networks.VK.VKKeyKeeper))
+        if (!(keyKeeper instanceof VKKeyKeeper))
             throw new AssertionError("KeyKeeper must be VkKeyKeeper");
 
         keysModel.setVKKeyKeeper((VKKeyKeeper) keyKeeper);
@@ -358,7 +433,7 @@ public class VKModel implements NetworkContract {
     @Override
     @CheckResult
     public Single<Boolean> disconnect() {
-        return keysModel.disconnectFromNetwork(Networks.VK);
+        return keysModel.disconnectFromNetwork(getId());
     }
 
     @NonNull

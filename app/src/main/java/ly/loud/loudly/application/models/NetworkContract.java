@@ -5,12 +5,16 @@ import android.support.annotation.NonNull;
 
 import java.util.List;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Networks.Network;
+import ly.loud.loudly.new_base.Person;
+import ly.loud.loudly.new_base.Comment;
+import ly.loud.loudly.new_base.SingleImage;
+import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.new_base.plain.PlainImage;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Single;
 
@@ -37,7 +41,7 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<String> upload(@NonNull Image image);
+    Single<SingleImage> upload(@NonNull PlainImage image);
 
     /**
      * Upload post to network
@@ -46,14 +50,14 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<String> upload(@NonNull Post post);
+    Single<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post);
 
     /**
      * Delete post from network
      */
     @CheckResult
     @NonNull
-    Single<Boolean> delete(@NonNull Post post);
+    Single<Boolean> delete(@NonNull SinglePost post);
 
     /**
      * Load posts from network
@@ -62,21 +66,21 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval);
+    Single<List<PlainPost>> loadPosts(@NonNull TimeInterval timeInterval);
 
     /**
      * Get persons by request type. For example: peoples that like certain post.
      */
     @CheckResult
     @NonNull
-    Single<List<Person>> getPersons(@NonNull SingleNetwork element, @RequestType int requestType);
+    Single<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType);
 
     /**
-     * Get comments for element of {@link SingleNetwork}.
+     * Get comments for element of {@link SingleNetworkElement}.
      */
     @CheckResult
     @NonNull
-    Single<List<Comment>> getComments(@NonNull SingleNetwork element);
+    Single<List<Comment>> getComments(@NonNull SingleNetworkElement element);
 
     /**
      * Connect this network for proper work.
@@ -111,7 +115,7 @@ public interface NetworkContract {
     /**
      * @return id of network.
      */
-    // TODO: intDef
     @CheckResult
+    @Network
     int getId();
 }

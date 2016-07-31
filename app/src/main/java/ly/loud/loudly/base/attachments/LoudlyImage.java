@@ -12,11 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
 
-import ly.loud.loudly.base.Link;
+import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.base.MultipleNetwork;
-import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.new_base.Info;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.Utils;
 

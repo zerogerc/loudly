@@ -23,6 +23,7 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.PostsAdapter;
 import ly.loud.loudly.ui.brand_new.views.FeedRecyclerView;
 
@@ -54,7 +55,7 @@ public class FeedFragment extends MvpViewStateFragment<FeedView, FeedPresenter>
     private PostsAdapter postsAdapter;
 
     @NonNull
-    private final List<Post> postsList = new ArrayList<>();
+    private final List<PlainPost> postsList = new ArrayList<>();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -84,7 +85,7 @@ public class FeedFragment extends MvpViewStateFragment<FeedView, FeedPresenter>
     }
 
     @Override
-    public void onNewLoadedPosts(@NonNull List<Post> posts) {
+    public void onNewLoadedPosts(@NonNull List<PlainPost> posts) {
         postsList.addAll(posts);
         postsAdapter.notifyDataSetChanged();
     }
