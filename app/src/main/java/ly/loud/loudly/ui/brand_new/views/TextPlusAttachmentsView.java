@@ -85,24 +85,13 @@ public class TextPlusAttachmentsView extends LinearLayout {
 
     public void addAttachment(@NonNull Attachment attachment) {
         attachmentList.add(attachment);
-
         setEditTextParams();
         setAttachmentsParams();
-
-        invalidate();
-        requestLayout();
         adapter.notifyDataSetChanged();
 
         if (onAttachmentListener != null) {
             onAttachmentListener.onAttachmentAdded(attachment);
         }
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        setEditTextParams();
-        setAttachmentsParams();
-        super.onLayout(changed, l, t, r, b);
     }
 
     private void setEditTextParams() {
