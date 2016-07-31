@@ -35,7 +35,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
                 android:src="@drawable/ic_clear"
-                android:tint="@color/grey_color"
+                android:tint="@color/gray_color"
                 android:background="@null"
                 android:padding="3dp" />
 

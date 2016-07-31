@@ -99,6 +99,12 @@ public interface NetworkContract {
     @NonNull
     Single<Boolean> disconnect();
 
+    /**
+     * User-readable full name of network
+     */
+    @CheckResult
+    @NonNull
+    String getFullName();
 
     /**
      * @return <code>true</code> if this network connected.

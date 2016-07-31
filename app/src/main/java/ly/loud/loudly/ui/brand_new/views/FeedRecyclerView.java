@@ -1,4 +1,4 @@
-package ly.loud.loudly.ui.feed;
+package ly.loud.loudly.ui.brand_new.views;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -17,18 +17,17 @@ import ly.loud.loudly.ui.adapter.SpacesItemDecoration;
 /**
  * Base class representing feed on the screen.
  */
-public class FeedView extends RecyclerView {
-    public FeedView(@NonNull Context context) {
+public class FeedRecyclerView extends RecyclerView {
+    public FeedRecyclerView(@NonNull Context context) {
         this(context, null);
     }
 
-    public FeedView(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public FeedRecyclerView(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public FeedView(@NonNull Context context, @Nullable AttributeSet attrs, @StyleRes int defStyle) {
+    public FeedRecyclerView(@NonNull Context context, @Nullable AttributeSet attrs, @StyleRes int defStyle) {
         super(context, attrs, defStyle);
-
         init();
     }
 

@@ -103,6 +103,12 @@ public class FacebookModel implements NetworkContract {
         return Single.just(false);
     }
 
+    @NonNull
+    @Override
+    public String getFullName() {
+        return loudlyApplication.getString(R.string.network_facebook);
+    }
+
     @Override
     public boolean isConnected() {
         // ToDo: fix

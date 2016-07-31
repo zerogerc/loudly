@@ -68,4 +68,8 @@ dependencies {
     compile 'com.pushtorefresh.storio:sqlite:1.9.1'
     compile 'com.pushtorefresh.storio:sqlite-annotations:1.9.1'
     apt 'com.pushtorefresh.storio:sqlite-annotations-processor:1.9.1'
+
+    def solidVersion = '2.0.3'
+    compile "info.android15.solid:streams:$solidVersion"
+    compile "info.android15.solid:collections:$solidVersion"
 }

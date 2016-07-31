@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ly.loud.loudly.ui.brand_new.post.NetworksChooseLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="@string/networks_choose_title"
+        android:textAllCaps="true"
+        android:textColor="@color/gray_color"
+        android:textSize="15sp" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/networks_choose_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</ly.loud.loudly.ui.brand_new.post.NetworksChooseLayout>

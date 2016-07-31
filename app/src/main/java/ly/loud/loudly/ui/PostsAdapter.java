@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import ly.loud.loudly.R;
@@ -27,30 +28,17 @@ import java.util.List;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
-public class PostsAdapter extends BaseAdapter<MainActivity, PlainPost> implements ModifiableAdapter<PlainPost> {
+public class PostsAdapter extends BaseAdapter<AppCompatActivity, PlainPost> implements ModifiableAdapter<Post> {
     private int lastPosition = -1;
 
-    private MainActivity activity;
+    private AppCompatActivity activity;
 
-    PostsAdapter(List<PlainPost> posts, MainActivity activity) {
+    public PostsAdapter(List<PlainPost> posts, AppCompatActivity activity) {
         super(posts, activity);
         this.activity = activity;
     }
 
-    private static <T> int linearSearch(List<? extends T> items, T element, Comparator<? super T> comparator) {
-        int pos = 0;
-        for (T e : items) {
-            int cmp = comparator.compare(e, element);
-            if (cmp < 0) {
-                pos++;
-                continue;
-            }
-            break;
-        }
-        return pos;
-    }
-
-    protected PlainPost getPost(int position) {
+    protected Post getPost(int position) {
         return items.get(position);
     }
 
@@ -127,6 +115,19 @@ public class PostsAdapter extends BaseAdapter<MainActivity, PlainPost> implement
             animator.start();
             lastPosition = position;
         }
+    }
+
+    private static <T> int linearSearch(List<? extends T> items, T element, Comparator<? super T> comparator) {
+        int pos = 0;
+        for (T e : items) {
+            int cmp = comparator.compare(e, element);
+            if (cmp < 0) {
+                pos++;
+                continue;
+            }
+            break;
+        }
+        return pos;
     }
 
     @Override

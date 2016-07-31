@@ -31,7 +31,7 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Tasks;
 import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.ui.feed.FeedView;
+import ly.loud.loudly.ui.brand_new.views.FeedRecyclerView;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity
     public static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
 
     @BindView(R.id.content_main_feed_view)
-    FeedView feedView;
+    FeedRecyclerView feedRecyclerView;
 
     @BindView(R.id.fab)
     FloatingActionButton floatingActionButton;
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity
     private void init() {
         self = this;
 
-        setFeedView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
+        setFeedRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
     }
 
     @Override
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState != null) {
             int position = savedInstanceState.getInt(BUNDLE_RECYCLER_LAYOUT);
-            feedView.getLayoutManager().scrollToPosition(position);
+            feedRecyclerView.getLayoutManager().scrollToPosition(position);
         }
     }
 
@@ -109,12 +109,12 @@ public class MainActivity extends AppCompatActivity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         int position;
-        if (feedView.getLayoutManager() instanceof StaggeredGridLayoutManager) {
+        if (feedRecyclerView.getLayoutManager() instanceof StaggeredGridLayoutManager) {
             int[] positions = new int[2];
-            ((StaggeredGridLayoutManager) feedView.getLayoutManager()).findFirstVisibleItemPositions(positions);
+            ((StaggeredGridLayoutManager) feedRecyclerView.getLayoutManager()).findFirstVisibleItemPositions(positions);
             position = positions[0];
         } else {
-            position = ((LinearLayoutManager) feedView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+            position = ((LinearLayoutManager) feedRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
         }
         outState.putInt(BUNDLE_RECYCLER_LAYOUT, position);
     }
@@ -170,19 +170,19 @@ public class MainActivity extends AppCompatActivity
 
         item.getTitle();
         if (id == R.id.nav_no_filter) {
-            setFeedView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
+            setFeedRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
             getSupportActionBar().setTitle(R.string.feed);
         } else if (id == R.id.nav_loudly) {
-            setFeedView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.LOUDLY, this));
+            setFeedRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.LOUDLY, this));
             getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_facebook) {
-            setFeedView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.FB, this));
+            setFeedRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.FB, this));
             getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_instagram) {
-            setFeedView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.INSTAGRAM, this));
+            setFeedRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.INSTAGRAM, this));
             getSupportActionBar().setTitle(item.getTitle());
         } else if (id == R.id.nav_vk) {
-            setFeedView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.VK, this));
+            setFeedRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.VK, this));
             getSupportActionBar().setTitle(item.getTitle());
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -240,9 +240,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void setFeedView(@NonNull PostsAdapter adapter) {
+    private void setFeedRecyclerView(@NonNull PostsAdapter adapter) {
         Loudly.getPostHolder().setAdapter(adapter);
-        feedView.setAdapter(adapter);
+        feedRecyclerView.setAdapter(adapter);
     }
 
     public void callSettingsActivity() {
@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
             receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
-        PostCreateFragment.newInstance().show(getFragmentManager(), PostCreateFragment.TAG);
+//        PostCreateFragment.newInstance().show(getFragmentManager(), PostCreateFragment.TAG);
     }
 
     @Override

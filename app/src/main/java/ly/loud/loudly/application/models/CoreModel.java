@@ -37,8 +37,12 @@ public class CoreModel {
         networkModels.add(instagramModel);
     }
 
-    public Observable<NetworkContract> getNetworksModels() {
-        return Observable.from(networkModels).filter(NetworkContract::isConnected);
+    public Observable<NetworkContract> getAllNetworksModels() {
+        return Observable.from(networkModels);
+    }
+
+    public Observable<NetworkContract> getConnectedNetworksModels() {
+        return getAllNetworksModels().filter(NetworkContract::isConnected);
     }
 
 
@@ -46,7 +50,7 @@ public class CoreModel {
      * Get models where given {@link SingleNetwork} exists in.
      */
     public Observable<NetworkContract> elementExistsIn(@NonNull SingleNetworkElement element) {
-        return getNetworksModels().filter(network -> element.getNetwork() == network.getId());
+        return getNetworksConnectedNetworksModels().filter(network -> element.getNetwork() == network.getId());
     }
 
     public Observable<NetworkContract> elementExistsIn(@NonNull MultipleNetworkElement element) {

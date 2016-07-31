@@ -42,7 +42,11 @@ import static ly.loud.loudly.application.models.GetterModel.*;
 public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
 
+    @NonNull
+    private final List<PlainPost> posts = new ArrayList<>();
+
     private int offset;
+
     @NonNull
     private Loudly loudlyApplication;
 
@@ -198,7 +202,6 @@ public class VKModel implements NetworkContract {
                 // ToDo: handle
                 return Collections.emptyList();
             }
-            List<PlainPost> posts = new ArrayList<>();
             Call<VKResponse<VKItems<Say>>> call;
             long currentTime = 0;
             do {
@@ -430,6 +433,12 @@ public class VKModel implements NetworkContract {
     @CheckResult
     public Single<Boolean> disconnect() {
         return keysModel.disconnectFromNetwork(getId());
+    }
+
+    @NonNull
+    @Override
+    public String getFullName() {
+        return loudlyApplication.getString(R.string.network_vk);
     }
 
     @Override

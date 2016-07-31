@@ -106,6 +106,12 @@ public class InstagramModel implements NetworkContract {
         return Single.just(false);
     }
 
+    @NonNull
+    @Override
+    public String getFullName() {
+        return loudlyApplication.getString(R.string.network_instagram);
+    }
+
     @Override
     public boolean isConnected() {
         // ToDo: fix
