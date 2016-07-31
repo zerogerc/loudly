@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.Button;
 
 import com.hannesdorfmann.mosby.mvp.MvpFragment;
 
@@ -23,9 +23,9 @@ import ly.loud.loudly.util.Utils;
 public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter> {
 
     @SuppressWarnings("NullableProblems") // Butterknife
-    @BindView(R.id.new_post_send_button)
+    @BindView(R.id.material_new_post_fragment_send_button)
     @NonNull
-    ImageView sendButton;
+    Button sendButton;
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @Inject
@@ -41,7 +41,7 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter> 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.new_post_fragment, container, false);
+        return inflater.inflate(R.layout.material_new_post_fragment, container, false);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter> 
         return new NewPostPresenter(postUploadModel);
     }
 
-    @OnClick(R.id.new_post_send_button)
+    @OnClick(R.id.material_new_post_fragment_send_button)
     public void onSendClicked() {
         Utils.hidePhoneKeyboard(getActivity());
         // TODO: remove this crunch

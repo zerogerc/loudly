@@ -129,7 +129,7 @@ public class PostCreateFragment extends DialogFragment {
 
         });
 
-        rootView.findViewById(R.id.new_post_gallery_button).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.material_new_post_fragment_gallery_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -139,7 +139,7 @@ public class PostCreateFragment extends DialogFragment {
             }
         });
 
-        rootView.findViewById(R.id.new_post_camera_button).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.material_new_post_fragment_camera_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Utils.hidePhoneKeyboard(getActivity());
@@ -169,7 +169,7 @@ public class PostCreateFragment extends DialogFragment {
 
         rootView = inflater.inflate(R.layout.new_post_fragment, null);
 
-        editText = (EditText) rootView.findViewById(R.id.new_post_edit_text);
+        editText = (EditText) rootView.findViewById(R.id.material_new_post_fragment_edit_text);
         postImageView = (ImageView) rootView.findViewById(R.id.picture_with_cross_image);
         ImageView deleteImageButton = (ImageView) rootView.findViewById(R.id.picture_with_cross_clear);
         deleteImageButton.setOnClickListener(

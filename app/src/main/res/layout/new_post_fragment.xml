@@ -38,7 +38,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:id="@+id/new_post_footer"
+        android:id="@+id/material_new_post_fragment_footer"
         android:background="@color/light_grey_color"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
@@ -52,7 +52,7 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:id="@+id/new_post_camera_button"
+                android:id="@+id/material_new_post_fragment_camera_button"
                 android:background="?android:attr/selectableItemBackground"/>
 
             <ImageView
@@ -71,7 +71,7 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:id="@+id/new_post_gallery_button"
+                android:id="@+id/material_new_post_fragment_gallery_button"
                 android:background="?android:attr/selectableItemBackground"/>
 
             <ImageView
@@ -87,7 +87,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/new_post_header"
-        android:layout_above="@id/new_post_footer"
+        android:layout_above="@id/material_new_post_fragment_footer"
         android:fillViewport="true">
 
         <LinearLayout
@@ -98,7 +98,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:inputType="textMultiLine"
-                android:id="@+id/new_post_edit_text"
+                android:id="@+id/material_new_post_fragment_edit_text"
                 android:minLines="2"
                 android:padding="12dp"
                 android:textSize="17sp"
