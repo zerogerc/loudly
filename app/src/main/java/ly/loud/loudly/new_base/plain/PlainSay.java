@@ -9,9 +9,12 @@ import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import java.util.ArrayList;
 
 /**
+ * Just say
+ *
  * @author Danil Kolikov
  */
 public class PlainSay<T extends Attachment> implements Parcelable {
+    @NonNull
     public static final Creator<PlainSay> CREATOR = new Creator<PlainSay>() {
         @Override
         public PlainSay createFromParcel(Parcel source) {
@@ -65,7 +68,7 @@ public class PlainSay<T extends Attachment> implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
         parcel.writeString(text);
         parcel.writeList(attachments);
         parcel.writeLong(date);

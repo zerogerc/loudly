@@ -4,6 +4,7 @@ import android.graphics.Point;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import ly.loud.loudly.new_base.Networks.Network;
 import ly.loud.loudly.new_base.interfaces.attachments.LocalFile;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
  * @author Danil Kolikov
  */
 public class LoudlyImage extends PlainImage implements MultipleAttachment, LocalFile {
+    @NonNull
     public static final Creator<LoudlyImage> CREATOR = new Creator<LoudlyImage>() {
         @Override
         public LoudlyImage createFromParcel(Parcel parcel) {
@@ -39,19 +41,19 @@ public class LoudlyImage extends PlainImage implements MultipleAttachment, Local
         elements = new SingleImage[Networks.NETWORK_COUNT];
     }
 
-    private LoudlyImage(Parcel source) {
+    private LoudlyImage(@NonNull Parcel source) {
         super(source);
         elements = source.createTypedArray(SingleImage.CREATOR);
     }
 
     @Nullable
     @Override
-    public SingleImage getSingleNetworkInstance(@Networks.Network int network) {
+    public SingleImage getSingleNetworkInstance(@Network int network) {
         return elements[network];
     }
 
     @Override
-    public void setSingleNetworkInstance(@Networks.Network int network, @Nullable SingleAttachment instance) {
+    public void setSingleNetworkInstance(@Network int network, @Nullable SingleAttachment instance) {
         if (instance == null) {
             elements[network] = null;
             return;
@@ -91,7 +93,7 @@ public class LoudlyImage extends PlainImage implements MultipleAttachment, Local
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
         super.writeToParcel(parcel, i);
         parcel.writeTypedArray(elements, i);
     }

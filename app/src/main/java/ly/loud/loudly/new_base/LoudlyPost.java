@@ -3,6 +3,7 @@ package ly.loud.loudly.new_base;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import ly.loud.loudly.new_base.Networks.Network;
 import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.plain.PlainPost;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
  */
 public class LoudlyPost extends PlainPost<MultipleAttachment>
         implements MultipleNetworkElement<SinglePost> {
+    @NonNull
     public static final Creator<LoudlyPost> CREATOR = new Creator<LoudlyPost>() {
         @Override
         public LoudlyPost createFromParcel(Parcel parcel) {
@@ -29,26 +31,27 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
     @NonNull
     private final SinglePost[] elements;
 
-    public LoudlyPost(@Nullable String text, long date,
+    public LoudlyPost(@Nullable String text,
+                      long date,
                       @NonNull ArrayList<MultipleAttachment> attachments,
                       @Nullable Location location) {
         super(text, date, attachments, location);
         elements = new SinglePost[Networks.NETWORK_COUNT];
     }
 
-    private LoudlyPost(Parcel source) {
+    private LoudlyPost(@NonNull Parcel source) {
         super(source);
         elements = source.createTypedArray(SinglePost.CREATOR);
     }
 
     @Nullable
     @Override
-    public SinglePost getSingleNetworkInstance(@Networks.Network int network) {
+    public SinglePost getSingleNetworkInstance(@Network int network) {
         return elements[network];
     }
 
     @Override
-    public void setSingleNetworkInstance(@Networks.Network int network, @Nullable SinglePost instance) {
+    public void setSingleNetworkInstance(@Network int network, @Nullable SinglePost instance) {
         // Now single post is always post
         elements[network] = instance;
     }
@@ -83,7 +86,7 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
         super.writeToParcel(parcel, i);
         parcel.writeTypedArray(elements, i);
     }

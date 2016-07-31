@@ -12,6 +12,7 @@ import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
  * @author Danil Kolikov
  */
 public class PlainImage implements Attachment {
+    @NonNull
     public static final Creator<PlainImage> CREATOR = new Creator<PlainImage>() {
         @Override
         public PlainImage createFromParcel(Parcel parcel) {
@@ -35,7 +36,7 @@ public class PlainImage implements Attachment {
         this.size = size;
     }
 
-    protected PlainImage(Parcel parcel) {
+    protected PlainImage(@NonNull Parcel parcel) {
         url = parcel.readString();
         size = Point.CREATOR.createFromParcel(parcel);
     }
@@ -67,7 +68,7 @@ public class PlainImage implements Attachment {
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
         parcel.writeString(url);
         parcel.writeParcelable(size, i);
     }

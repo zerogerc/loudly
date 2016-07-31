@@ -11,9 +11,12 @@ import ly.loud.loudly.new_base.plain.PlainPost;
 import java.util.ArrayList;
 
 /**
+ * Post that exists in one network
+ *
  * @author Danil Kolikov
  */
 public class SinglePost extends PlainPost<SingleAttachment> implements SingleNetworkElement {
+    @NonNull
     public static final Creator<SinglePost> CREATOR = new Creator<SinglePost>() {
         @Override
         public SinglePost createFromParcel(Parcel parcel) {
@@ -26,6 +29,7 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
         }
     };
 
+    @Network
     private final int network;
 
     @NonNull
@@ -34,16 +38,25 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     @NonNull
     private Info info;
 
-    public SinglePost(@Nullable String text, long date, @NonNull ArrayList<SingleAttachment> attachments,
-                      @Nullable Location location, int network, @NonNull Link link, @NonNull Info info) {
+    public SinglePost(@Nullable String text,
+                      long date,
+                      @NonNull ArrayList<SingleAttachment> attachments,
+                      @Nullable Location location,
+                      int network,
+                      @NonNull Link link,
+                      @NonNull Info info) {
         super(text, date, attachments, location);
         this.network = network;
         this.link = link;
         this.info = info;
     }
 
-    private SinglePost(@Nullable String text, long date, @NonNull ArrayList<SingleAttachment> attachments,
-                      @Nullable Location location, int network, @NonNull Link link) {
+    private SinglePost(@Nullable String text,
+                       long date,
+                       @NonNull ArrayList<SingleAttachment> attachments,
+                      @Nullable Location location,
+                       int network,
+                       @NonNull Link link) {
         super(text, date, attachments, location);
         this.network = network;
         this.link = link;
@@ -51,12 +64,13 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     }
 
     public SinglePost(@NonNull PlainPost<SingleAttachment> plainPost,
-                      @Network int network, @NonNull Link link) {
+                      @Network int network,
+                      @NonNull Link link) {
         this(plainPost.getText(), plainPost.getDate(), plainPost.getAttachments(), plainPost.getLocation(),
                 network, link);
     }
 
-    private SinglePost(Parcel parcel) {
+    private SinglePost(@NonNull Parcel parcel) {
         super(parcel);
         network = parcel.readInt();
         link = Link.CREATOR.createFromParcel(parcel);
@@ -86,7 +100,7 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
         super.writeToParcel(parcel, i);
         parcel.writeInt(network);
         parcel.writeParcelable(link, i);

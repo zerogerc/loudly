@@ -28,7 +28,6 @@ public class Info implements Parcelable {
         this.comment = source.readInt();
     }
 
-    @NonNull
     public void add(@NonNull Info info) {
         like += info.like;
         repost += info.repost;

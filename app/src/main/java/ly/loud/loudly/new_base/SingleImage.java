@@ -14,6 +14,7 @@ import ly.loud.loudly.new_base.plain.PlainImage;
  * @author Danil Kolikov
  */
 public class SingleImage extends PlainImage implements SingleAttachment {
+    @NonNull
     public static final Creator<SingleImage> CREATOR = new Creator<SingleImage>() {
         @Override
         public SingleImage createFromParcel(Parcel parcel) {
@@ -42,12 +43,16 @@ public class SingleImage extends PlainImage implements SingleAttachment {
         info = new Info();
     }
 
-    public SingleImage(@Nullable String url, @NonNull Point size, int network, @NonNull Link link, @NonNull Info info) {
+    public SingleImage(@Nullable String url,
+                       @NonNull Point size,
+                       int network,
+                       @NonNull Link link,
+                       @NonNull Info info) {
         this(url, size, network, link);
         this.info = info;
     }
 
-    private SingleImage(Parcel parcel) {
+    private SingleImage(@NonNull Parcel parcel) {
         super(parcel);
         network = parcel.readInt();
         link = parcel.readParcelable(Link.class.getClassLoader());
@@ -82,7 +87,7 @@ public class SingleImage extends PlainImage implements SingleAttachment {
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
         super.writeToParcel(parcel, i);
         parcel.writeInt(network);
         parcel.writeParcelable(link, i);

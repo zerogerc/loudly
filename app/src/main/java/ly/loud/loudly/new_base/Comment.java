@@ -16,6 +16,7 @@ import java.util.ArrayList;
  * @author Danil Kolikov
  */
 public class Comment extends PlainSay<SingleAttachment> implements SingleNetworkElement, Item {
+    @NonNull
     public final static Creator<Comment> CREATOR = new Creator<Comment>() {
         @Override
         public Comment createFromParcel(Parcel parcel) {
@@ -39,8 +40,12 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
     @NonNull
     private Info info;
 
-    public Comment(@Nullable String text, long date, @NonNull ArrayList<SingleAttachment> attachments,
-                   @NonNull Person person, int network, @NonNull Link link) {
+    public Comment(@Nullable String text,
+                   long date,
+                   @NonNull ArrayList<SingleAttachment> attachments,
+                   @NonNull Person person,
+                   int network,
+                   @NonNull Link link) {
         super(text, date, attachments);
         this.person = person;
         this.network = network;
@@ -48,13 +53,18 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
         this.info = new Info();
     }
 
-    public Comment(@Nullable String text, long date, @NonNull ArrayList<SingleAttachment> attachments,
-                   @NonNull Person person, int network, @NonNull Link link, @NonNull Info info) {
+    public Comment(@Nullable String text,
+                   long date,
+                   @NonNull ArrayList<SingleAttachment> attachments,
+                   @NonNull Person person,
+                   int network,
+                   @NonNull Link link,
+                   @NonNull Info info) {
         this(text, date, attachments, person, network, link);
         this.info = info;
     }
 
-    protected Comment(Parcel parcel) {
+    protected Comment(@NonNull Parcel parcel) {
         super(parcel);
         network = parcel.readInt();
         link = Link.CREATOR.createFromParcel(parcel);
@@ -95,7 +105,7 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         dest.writeInt(network);
         dest.writeParcelable(link, flags);

@@ -10,9 +10,11 @@ import ly.loud.loudly.ui.adapter.Item;
 import java.util.ArrayList;
 
 /**
+ * Just post - say + location
  * @author Danil Kolikov
  */
 public class PlainPost<T extends Attachment> extends PlainSay<T> implements Item {
+    @NonNull
     public static final Creator<PlainPost> CREATOR = new Creator<PlainPost>() {
         @Override
         public PlainPost createFromParcel(Parcel parcel) {
@@ -27,13 +29,15 @@ public class PlainPost<T extends Attachment> extends PlainSay<T> implements Item
     @Nullable
     private final Location location;
 
-    public PlainPost(@Nullable String text, long date, @NonNull ArrayList<T> attachments,
+    public PlainPost(@Nullable String text,
+                     long date,
+                     @NonNull ArrayList<T> attachments,
                      @Nullable Location location) {
         super(text, date, attachments);
         this.location = location;
     }
 
-    protected PlainPost(Parcel parcel) {
+    protected PlainPost(@NonNull Parcel parcel) {
         super(parcel);
         location = Location.CREATOR.createFromParcel(parcel);
     }
@@ -49,7 +53,7 @@ public class PlainPost<T extends Attachment> extends PlainSay<T> implements Item
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
         super.writeToParcel(parcel, i);
         parcel.writeParcelable(location, i);
     }
