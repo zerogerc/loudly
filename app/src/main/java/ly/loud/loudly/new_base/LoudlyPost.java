@@ -3,88 +3,70 @@ package ly.loud.loudly.new_base;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.base.Link;
 import ly.loud.loudly.base.Location;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
+import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
-import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
-import ly.loud.loudly.new_base.interfaces.says.MultiplePost;
-import ly.loud.loudly.new_base.interfaces.says.SinglePost;
+import ly.loud.loudly.new_base.plain.PlainPost;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Danil Kolikov
  */
-public class LoudlyPost implements MultiplePost {
+public class LoudlyPost extends PlainPost<MultipleAttachment>
+        implements MultipleNetworkElement<SinglePost> {
+    public static final Creator<LoudlyPost> CREATOR = new Creator<LoudlyPost>() {
+        @Override
+        public LoudlyPost createFromParcel(Parcel parcel) {
+            return new LoudlyPost(parcel);
+        }
+
+        @Override
+        public LoudlyPost[] newArray(int i) {
+            return new LoudlyPost[i];
+        }
+    };
+
     @NonNull
-    private Post[] elements;
-    @Nullable
-    private String text;
-    private long date;
-    @NonNull
-    private ArrayList<MultipleAttachment> attachments;
-    @Nullable
-    private Location location;
+    private final SinglePost[] elements;
 
     public LoudlyPost(@Nullable String text, long date,
                       @NonNull ArrayList<MultipleAttachment> attachments,
                       @Nullable Location location) {
-        this.text = text;
-        this.date = date;
-        this.attachments = attachments;
-        this.location = location;
-        elements = new Post[Networks.NETWORK_COUNT];
+        super(text, date, attachments, location);
+        elements = new SinglePost[Networks.NETWORK_COUNT];
     }
 
     private LoudlyPost(Parcel source) {
-        text = source.readString();
-        date = source.readLong();
-        attachments = source.readArrayList(getClass().getClassLoader());
-        location = Location.CREATOR.createFromParcel(source);
-        elements = source.createTypedArray(Post.CREATOR);
-    }
-
-    public void setText(@Nullable String text) {
-        this.text = text;
+        super(source);
+        elements = source.createTypedArray(SinglePost.CREATOR);
     }
 
     @Nullable
     @Override
-    public Post getSingleNetworkInstance(@Networks.Network int network) {
+    public SinglePost getSingleNetworkInstance(@Networks.Network int network) {
         return elements[network];
     }
 
     @Override
     public void setSingleNetworkInstance(@Networks.Network int network, @Nullable SinglePost instance) {
         // Now single post is always post
-        elements[network] = (Post)instance;
-    }
-
-    @Nullable
-    @Override
-    public Location getLocation() {
-        return location;
-    }
-
-    @Nullable
-    @Override
-    public String getText() {
-        return text;
-    }
-
-    @Override
-    public long getDate() {
-        return date;
+        elements[network] = instance;
     }
 
     @NonNull
     @Override
-    public ArrayList<MultipleAttachment> getAttachments() {
-        return attachments;
+    public ArrayList<SinglePost> getNetworkInstances() {
+        ArrayList<SinglePost> instances = new ArrayList<>();
+        for (SinglePost post : elements) {
+            if (post != null) {
+                instances.add(post);
+            }
+        }
+        return instances;
     }
 
     @NonNull
@@ -106,22 +88,7 @@ public class LoudlyPost implements MultiplePost {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(text);
-        parcel.writeLong(date);
-        parcel.writeList(attachments);
-        parcel.writeParcelable(location, i);
+        super.writeToParcel(parcel, i);
         parcel.writeTypedArray(elements, i);
     }
-
-    public static final Creator<LoudlyPost> CREATOR = new Creator<LoudlyPost>() {
-        @Override
-        public LoudlyPost createFromParcel(Parcel parcel) {
-            return new LoudlyPost(parcel);
-        }
-
-        @Override
-        public LoudlyPost[] newArray(int i) {
-            return new LoudlyPost[i];
-        }
-    };
 }

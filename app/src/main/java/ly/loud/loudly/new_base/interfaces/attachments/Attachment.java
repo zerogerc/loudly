@@ -1,5 +1,6 @@
 package ly.loud.loudly.new_base.interfaces.attachments;
 
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 
 /**
@@ -7,7 +8,7 @@ import android.support.annotation.Nullable;
  *
  * @author Danil Kolikov
  */
-public interface Attachment {
+public interface Attachment extends Parcelable {
     int TYPE_IMAGE = 0;
 
     /**
@@ -19,7 +20,8 @@ public interface Attachment {
 
     /**
      * Get extra for saving in database
-     * @return
+     *
+     * @return Strings that can be saved into database
      */
     @Nullable
     String getExtra();

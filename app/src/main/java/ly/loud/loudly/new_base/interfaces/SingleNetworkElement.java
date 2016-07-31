@@ -12,15 +12,28 @@ import static ly.loud.loudly.base.Networks.*;
  *
  * @author Danil Kolikov
  */
-public interface SingleNetworkElement extends Parcelable {
+public interface SingleNetworkElement extends Parcelable, ElementWithInfo {
+    /**
+     * Get ID of network, where this element exists
+     *
+     * @return ID of network
+     */
     @Network
     int getNetwork();
 
+    /**
+     * Get link of this element in network
+     *
+     * @return Link
+     * @see Link
+     */
     @NonNull
     Link getLink();
 
-    @NonNull
-    Info getInfo();
-
+    /**
+     * Set new information
+     *
+     * @param newInfo New information
+     */
     void setInfo(@NonNull Info newInfo);
 }

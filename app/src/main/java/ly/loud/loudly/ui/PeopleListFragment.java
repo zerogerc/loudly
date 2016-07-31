@@ -14,7 +14,9 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -24,10 +26,11 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
-import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.ui.adapter.AfterLoadAdapter;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
+import rx.Observable;
 import rx.schedulers.Schedulers;
 
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
@@ -54,15 +57,16 @@ public class PeopleListFragment extends DialogFragment {
     private int requestType;
 
     @NonNull
-    private SingleNetwork element;
+    private ArrayList<? extends SingleNetworkElement> instances;
 
     @NonNull
     private final LinkedList<Item> items = new LinkedList<>();
 
-    public static PeopleListFragment newInstance(@NonNull SingleNetwork element, int requestType) {
+    public static PeopleListFragment newInstance(@NonNull ArrayList<? extends SingleNetworkElement> element,
+                                                 int requestType) {
         PeopleListFragment frag = new PeopleListFragment();
         Bundle args = new Bundle();
-        args.putParcelable(SINGLE_NETWORK_KEY, element);
+        args.putParcelableArrayList(SINGLE_NETWORK_KEY, element);
         args.putInt(REQUEST_TYPE_KEY, requestType);
         frag.setArguments(args);
         return frag;
@@ -81,7 +85,7 @@ public class PeopleListFragment extends DialogFragment {
         ButterKnife.bind(this, rootView);
 
         //noinspection ConstantConditions
-        element = getArguments().getParcelable(SINGLE_NETWORK_KEY);
+        instances = getArguments().getParcelableArrayList(SINGLE_NETWORK_KEY);
         requestType = getArguments().getInt(REQUEST_TYPE_KEY);
 
         int titleRes = R.string.people_fragment_title_likes;
@@ -111,7 +115,8 @@ public class PeopleListFragment extends DialogFragment {
         super.onResume();
 
         if (items.isEmpty()) { // First run
-            getterModel.getPersonsByType(element, requestType)
+            Observable.from(instances)
+                    .flatMap(instance -> getterModel.getPersonsByType(instance, requestType))
                     .subscribeOn(Schedulers.io())
                     .observeOn(mainThread())
                     .doOnNext(personsFromNetwork -> {

@@ -2,25 +2,26 @@ package ly.loud.loudly.application.models;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
-import java.util.Collections;
-import java.util.List;
-
-import javax.inject.Inject;
-
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.KeyKeeper;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.Facebook.FacebookWrap;
+import ly.loud.loudly.new_base.Comment;
+import ly.loud.loudly.new_base.SingleImage;
+import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.new_base.plain.PlainImage;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Single;
+
+import javax.inject.Inject;
+import java.util.Collections;
+import java.util.List;
 
 public class FacebookModel implements NetworkContract {
 
@@ -56,37 +57,37 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<String> upload(@NonNull Image image) {
-        return Single.just("");
+    public Single<SingleImage> upload(@NonNull PlainImage image) {
+        return Single.just(null);
     }
 
     @NonNull
     @Override
-    public Single<String> upload(@NonNull Post post) {
-        return Single.just("");
+    public Single<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
+        return Single.just(null);
     }
 
     @NonNull
     @Override
-    public Single<Boolean> delete(@NonNull Post post) {
+    public Single<Boolean> delete(@NonNull SinglePost post) {
         return Single.just(false);
     }
 
     @NonNull
     @Override
-    public Single<List<Post>> loadPosts(@NonNull TimeInterval timeInterval) {
+    public Single<List<Person>> getPersons(@NonNull SingleNetworkElement element, @GetterModel.RequestType int requestType) {
         return Single.just(Collections.emptyList());
     }
 
     @NonNull
     @Override
-    public Single<List<Person>> getPersons(@NonNull SingleNetwork element, @GetterModel.RequestType int requestType) {
+    public Single<List<PlainPost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Single.just(Collections.emptyList());
     }
 
     @NonNull
     @Override
-    public Single<List<Comment>> getComments(@NonNull SingleNetwork element) {
+    public Single<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Single.just(Collections.emptyList());
     }
 

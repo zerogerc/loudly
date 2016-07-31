@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 import java.io.File;
 
 /**
+ * File that stored on local device
+ *
  * @author Danil Kolikov
  */
 public interface LocalFile {

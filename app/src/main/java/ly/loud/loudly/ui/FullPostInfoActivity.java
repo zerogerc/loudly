@@ -12,11 +12,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-
-import javax.inject.Inject;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ly.loud.loudly.R;
@@ -24,17 +19,21 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.attachments.Attachment;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.base.says.Say;
+import ly.loud.loudly.new_base.Comment;
+import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.interfaces.ElementWithInfo;
+import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.new_base.plain.PlainImage;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import ly.loud.loudly.ui.views.GlideImageView;
 import ly.loud.loudly.util.Utils;
+import rx.Observable;
 import rx.schedulers.Schedulers;
+
+import javax.inject.Inject;
+import java.util.ArrayList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
@@ -43,6 +42,7 @@ import static rx.android.schedulers.AndroidSchedulers.mainThread;
 public class FullPostInfoActivity extends AppCompatActivity {
 
     public static final String POST_KEY = "post";
+    public static final String INSTANCES_KEY = "instances";
 
     @BindView(R.id.full_post_info_post_footer)
     View postFooter;
@@ -89,7 +89,8 @@ public class FullPostInfoActivity extends AppCompatActivity {
 
     private ArrayList<Item> likers;
 
-    private Post post;
+    private PlainPost post;
+    private ArrayList<SingleNetworkElement> instances;
 
 
     @Override
@@ -108,16 +109,20 @@ public class FullPostInfoActivity extends AppCompatActivity {
 
     /**
      * Handling of given intent
+     *
      * @param intent given intent
      */
     private void handleIntent(Intent intent) {
-        Post prev = post;
+        PlainPost prev = post;
         post = intent.getParcelableExtra(POST_KEY);
-        if (prev == null || Say.COMPARATOR.compare(prev, post) != 0) {
+        instances = intent.getParcelableArrayListExtra(INSTANCES_KEY);
+
+        if (prev == null || post != prev) {
             loadPostView();
 
             comments = new ArrayList<>();
-            getterModel.getComments(post)
+            Observable.from(instances)
+                    .flatMap(instance -> getterModel.getComments(instance))
                     .subscribeOn(Schedulers.io())
                     .observeOn(mainThread())
                     .doOnNext(commentsFromNetwork -> {
@@ -133,7 +138,8 @@ public class FullPostInfoActivity extends AppCompatActivity {
                     .subscribe();
 
             likers = new ArrayList<>();
-            getterModel.getPersonsByType(post, LIKES)
+            Observable.from(instances)
+                    .flatMap(instance -> getterModel.getPersonsByType(instance, LIKES))
                     .subscribeOn(Schedulers.io())
                     .observeOn(mainThread())
                     .doOnError(throwable -> {
@@ -169,21 +175,24 @@ public class FullPostInfoActivity extends AppCompatActivity {
     }
 
     private void setListeners() {
-        if (post.getInfo().like > 0) {
-            View.OnClickListener likeListener = v -> {
-                DialogFragment fragment = PeopleListFragment.newInstance(post, LIKES);
-                fragment.show(getSupportFragmentManager(), fragment.getTag());
-            };
-            findViewById(R.id.full_post_info_likes_button).setOnClickListener(likeListener);
-            findViewById(R.id.full_post_info_likers_avatars).setOnClickListener(likeListener);
-        }
+        if (post instanceof ElementWithInfo) {
+            ElementWithInfo withInfo = ((ElementWithInfo) post);
+            if (withInfo.getInfo().like > 0) {
+                View.OnClickListener likeListener = v -> {
+                    DialogFragment fragment = PeopleListFragment.newInstance(instances, LIKES);
+                    fragment.show(getSupportFragmentManager(), fragment.getTag());
+                };
+                findViewById(R.id.full_post_info_likes_button).setOnClickListener(likeListener);
+                findViewById(R.id.full_post_info_likers_avatars).setOnClickListener(likeListener);
+            }
 
-        if (post.getInfo().repost > 0) {
-            findViewById(R.id.full_post_info_shares_button)
-                    .setOnClickListener(v -> {
-                        DialogFragment fragment = PeopleListFragment.newInstance(post, SHARES);
-                        fragment.show(getSupportFragmentManager(), fragment.getTag());
-                    });
+            if (withInfo.getInfo().repost > 0) {
+                findViewById(R.id.full_post_info_shares_button)
+                        .setOnClickListener(v -> {
+                            DialogFragment fragment = PeopleListFragment.newInstance(instances, SHARES);
+                            fragment.show(getSupportFragmentManager(), fragment.getTag());
+                        });
+            }
         }
     }
 
@@ -194,21 +203,22 @@ public class FullPostInfoActivity extends AppCompatActivity {
         postFooter.setVisibility(View.VISIBLE);
 
         int gray_color = ContextCompat.getColor(this, R.color.light_grey_color);
+        if (post instanceof ElementWithInfo) {
+            ElementWithInfo withInfo = ((ElementWithInfo) post);
+            if (withInfo.getInfo().repost > 0) {
+                sharesAmount.setText(Integer.toString(withInfo.getInfo().repost));
+            } else {
+                sharesButton.setColorFilter(gray_color);
+                sharesButton.setVisibility(View.INVISIBLE);
+            }
 
-        if (post.getInfo().repost > 0) {
-            sharesAmount.setText(Integer.toString(post.getInfo().repost));
-        } else {
-            sharesButton.setColorFilter(gray_color);
-            sharesButton.setVisibility(View.INVISIBLE);
+            if (withInfo.getInfo().like > 0) {
+                likesAmount.setText(Integer.toString(withInfo.getInfo().like));
+            } else {
+                likesButton.setColorFilter(gray_color);
+                likesButton.setVisibility(View.INVISIBLE);
+            }
         }
-
-        if (post.getInfo().like > 0) {
-            likesAmount.setText(Integer.toString(post.getInfo().like));
-        } else {
-            likesButton.setColorFilter(gray_color);
-            likesButton.setVisibility(View.INVISIBLE);
-        }
-
         setListeners();
     }
 
@@ -240,8 +250,9 @@ public class FullPostInfoActivity extends AppCompatActivity {
 
     /**
      * Load <code>comment</code> content to given <code>commentView</code>.
+     *
      * @param commentView given view
-     * @param comment given View
+     * @param comment     given View
      */
     private void loadComment(View commentView, final Comment comment) {
         GlideImageView avatar = ((GlideImageView) commentView.findViewById(R.id.comment_avatar));
@@ -262,7 +273,8 @@ public class FullPostInfoActivity extends AppCompatActivity {
             likes.setText(Integer.toString(comment.getInfo().like));
             commentView.findViewById(R.id.comment_likes_button)
                     .setOnClickListener(v -> {
-                        DialogFragment fragment = PeopleListFragment.newInstance(comment, LIKES);
+                        DialogFragment fragment = PeopleListFragment.newInstance(Utils.asArrayList(comment),
+                                LIKES);
                         fragment.show(getSupportFragmentManager(), fragment.getTag());
                     });
         } else {
@@ -279,13 +291,13 @@ public class FullPostInfoActivity extends AppCompatActivity {
             return;
         }
 
-        postIcon.setImageResource(Utils.getResourceByNetwork(post.getNetwork()));
+        postIcon.setImageResource(Utils.getResourceByPost(post));
         timeView.setText(Utils.getDateFormatted(post.getDate()));
         postText.setText(post.getText());
 
-        for (Attachment attachment : post.getAttachments()) {
-            if (attachment instanceof Image) {
-                postImage.loadImage(((Image) attachment));
+        for (Object attachment : post.getAttachments()) {
+            if (attachment instanceof PlainImage) {
+                postImage.loadImage(((PlainImage) attachment));
             }
         }
 
@@ -297,6 +309,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
     /**
      * As this Activity launched in <code>singleTask</code> mode we need to listen for intents,
      * and not create new instance of activity every time.
+     *
      * @param intent given intent
      */
     @Override

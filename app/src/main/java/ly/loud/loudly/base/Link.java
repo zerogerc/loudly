@@ -13,6 +13,7 @@ public class Link implements Parcelable, Comparable<Link> {
     private String link;
     private boolean valid;
 
+    @Deprecated
     public Link() {
         this("", false);
     }

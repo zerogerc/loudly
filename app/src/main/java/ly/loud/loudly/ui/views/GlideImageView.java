@@ -2,6 +2,7 @@ package ly.loud.loudly.ui.views;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.AttributeSet;
@@ -11,8 +12,8 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 
 import ly.loud.loudly.R;
-import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.new_base.plain.PlainImage;
 
 //TODO: width and height not greater that image,getHeight image.getWidth
 //TODO: setBackGround to white after load (for small images)
@@ -52,12 +53,13 @@ public class GlideImageView extends ImageView {
      * based on <code>image.getHeight()</code> and <code>image.getWidth()</code> first.
      * @param image given image
      */
-    public void loadImage(Image image) {
+    public void loadImage(PlainImage image) {
         if (image == null) {
             setScale(0);
             return;
         }
-        if (image.getHeight() == 0 || image.getWidth() == 0) {
+        Point size = image.getSize();
+        if (size.x == 0 || size.y == 0) {
             //TODO: remove this enterprise
             setScale(0.75);
 //            Glide.with(getContext())
@@ -66,10 +68,10 @@ public class GlideImageView extends ImageView {
 //                    .into(this);
             setBackgroundResource(R.color.white_color);
         } else {
-            setScale(((double) image.getHeight()) / image.getWidth());
+            setScale(((double) size.y) / size.x);
         }
         Glide.with(Loudly.getContext())
-                .load(image.getUri())
+                .load(image.getUrl())
                 .fitCenter()
                 .into(this);
     }
@@ -99,9 +101,9 @@ public class GlideImageView extends ImageView {
      * Load given image and apply CircledTransformation to it.
      * @param image given image
      */
-    public void loadCircularShapeImage(Image image) {
+    public void loadCircularShapeImage(PlainImage image) {
         setScale(1); //always has equal dimensions
-        loadCircularShapeImageByUrl(image.getUri().toString()); //TODO: needs testing
+        loadCircularShapeImageByUrl(image.getUrl()); //TODO: needs testing
     }
 
     @Override

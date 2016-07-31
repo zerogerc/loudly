@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -49,12 +50,31 @@ import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.Person;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.R;
 import ly.loud.loudly.ui.SettingsActivity;
 
 public class Utils {
     private static final String TAG = "UTIL_TAG";
+    private static ArrayList EMPTY_ARRAY_LIST;
+
+    public static <T> ArrayList<T> asArrayList(T... objects) {
+        ArrayList<T> result = new ArrayList<>();
+        for (T object : objects) {
+            result.add(object);
+        }
+        return result;
+    }
+
+    public static <T> ArrayList<T> emptyArrayList() {
+        if (EMPTY_ARRAY_LIST == null) {
+            EMPTY_ARRAY_LIST = new ArrayList();
+        }
+        //noinspection unchecked
+        return EMPTY_ARRAY_LIST;
+    }
 
     public static int dipToPixels(float dipValue) {
         DisplayMetrics metrics = Loudly.getContext().getResources().getDisplayMetrics();
@@ -119,33 +139,34 @@ public class Utils {
         return BitmapFactory.decodeResource(Loudly.getContext().getResources(), getResourceByNetwork(network));
     }
 
+    @NonNull
+    public static int getResourceByPost(@NonNull PlainPost post) {
+        if (post instanceof SinglePost) {
+            return getResourceByNetwork(((SinglePost) post).getNetwork());
+        } else {
+            return getResourceByNetwork(Networks.LOUDLY);
+        }
+    }
+
     public static int getResourceByNetwork(int network) {
-        int resource;
         switch (network) {
             case Networks.LOUDLY:
                 return R.mipmap.ic_launcher;
             case Networks.FB:
-                resource = R.mipmap.ic_facebook_round;
-                break;
+                return R.mipmap.ic_facebook_round;
             case Networks.TWITTER:
-                resource = R.mipmap.ic_twitter_round;
-                break;
+                return R.mipmap.ic_twitter_round;
             case Networks.INSTAGRAM:
-                resource = R.mipmap.ic_instagram_round;
-                break;
+                return R.mipmap.ic_instagram_round;
             case Networks.VK:
-                resource = R.mipmap.ic_vk_round;
-                break;
+                return R.mipmap.ic_vk_round;
             case Networks.OK:
-                resource = R.mipmap.ic_ok_round;
-                break;
+                return R.mipmap.ic_ok_round;
             case Networks.MAILRU:
-                resource = R.mipmap.ic_mail_ru_round;
-                break;
+                return R.mipmap.ic_mail_ru_round;
             default:
-                resource = R.mipmap.ic_launcher;
+                return R.mipmap.ic_launcher;
         }
-        return resource;
     }
 
     public static int getResourceWhiteByNetwork(int network) {

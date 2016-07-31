@@ -2,6 +2,8 @@ package ly.loud.loudly.ui.adapter;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,10 +14,11 @@ import android.widget.TextView;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.interfaces.ElementWithInfo;
+import ly.loud.loudly.new_base.plain.PlainImage;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.FullPostInfoActivity;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.ui.views.GlideImageView;
@@ -26,7 +29,7 @@ import ly.loud.loudly.util.Utils;
  * ITMO University
  */
 
-public class ViewHolderPost extends ViewHolder<Post> {
+public class ViewHolderPost extends ViewHolder<PlainPost> {
     private ImageView socialIcon;
     private TextView text;
     private TextView data;
@@ -43,8 +46,6 @@ public class ViewHolderPost extends ViewHolder<Post> {
     public ViewHolderPost(Activity activity, ViewGroup parent) {
         super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.list_post, parent, false));
         
-        Post post = new Post();
-
         socialIcon = (ImageView) itemView.findViewById(R.id.post_view_social_network_icon);
         text = (TextView) itemView.findViewById(R.id.post_view_post_text);
         data = (TextView) itemView.findViewById(R.id.post_view_data_text);
@@ -62,11 +63,16 @@ public class ViewHolderPost extends ViewHolder<Post> {
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) geoData.getLayoutParams();
         params.setMargins(0, 0, 0, 0);
         geoData.setLayoutParams(params);
-        refresh(post);
+        refresh(null);
     }
 
     @Override
-    public void refresh(final Post post) {
+    public void refresh(@Nullable final PlainPost post) {
+        if (post == null) {
+            text.setText("");
+            data.setText("");
+            return;
+        }
         text.setText(post.getText());
         data.setText(Utils.getDateFormatted(post.getDate()));
 
@@ -82,22 +88,21 @@ public class ViewHolderPost extends ViewHolder<Post> {
         handleButtons(post);
     }
 
-    private void loadPictures(final Post post) {
-        int resource = Utils.getResourceByNetwork(post.getNetwork());
+    private void loadPictures(@NonNull final PlainPost post) {
+        int resource = Utils.getResourceByPost(post);
         socialIcon.setImageResource(resource);
 
         if (post.getAttachments().size() != 0) {
-            final Image image = (Image) post.getAttachments().get(0);
+            final PlainImage image = (PlainImage) post.getAttachments().get(0);
             postImageView.loadImage(image);
         } else {
             postImageView.loadImage(null);
         }
     }
 
-    private void handleButtons(final Post post) {
+    private void handleButtons(@NonNull final PlainPost post) {
         int like, comment, shares;
-        Info info = (post instanceof LoudlyPost) ? ((LoudlyPost) post).getInfo(Networks.LOUDLY) :
-                post.getInfo();
+        Info info = post instanceof ElementWithInfo ? ((ElementWithInfo) post).getInfo() : null;
 
         if (info != null) {
             like = info.like;

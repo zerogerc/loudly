@@ -6,10 +6,10 @@ import ly.loud.loudly.base.Link;
 import ly.loud.loudly.base.Networks;
 import ly.loud.loudly.base.SingleNetwork;
 import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.base.says.Say;
 import ly.loud.loudly.networks.Loudly.LoudlyWrap;
+import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.adapter.ModifiableAdapter;
 
 import java.io.IOException;
@@ -19,20 +19,20 @@ import java.util.*;
  * @author Danil Kolikov
  */
 public class PostsHolder {
-    private List<Post> posts;
+    private List<PlainPost> posts;
     private Map<Pair<Integer, String>, LoudlyPost> hiddenPosts;
-    private ModifiableAdapter<Post> adapter;
+    private ModifiableAdapter<PlainPost> adapter;
 
     public PostsHolder() {
         this.posts = new ArrayList<>();
         hiddenPosts = new HashMap<>();
     }
 
-    public List<Post> getPosts() {
+    public List<PlainPost> getPosts() {
         return posts;
     }
 
-    public void setAdapter(ModifiableAdapter<Post> adapter) {
+    public void setAdapter(ModifiableAdapter<PlainPost> adapter) {
         this.adapter = adapter;
     }
 
