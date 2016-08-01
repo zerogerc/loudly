@@ -27,7 +27,9 @@ import ly.loud.loudly.ui.SettingsActivity;
 import ly.loud.loudly.ui.brand_new.FragmentInvoker;
 import ly.loud.loudly.ui.brand_new.views.ScrimCoordinatorLayout;
 
+import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
 import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
+import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 public class FeedActivity extends AppCompatActivity
@@ -52,7 +54,6 @@ public class FeedActivity extends AppCompatActivity
     @BindView(R.id.app_bar_feed_networks_choose_scroll)
     @NonNull
     View networkChooseScroll;
-
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.toolbar)
@@ -79,6 +80,7 @@ public class FeedActivity extends AppCompatActivity
         public void onStateChanged(@NonNull View bottomSheet, int newState) {
             switch (newState) {
                 case STATE_EXPANDED:
+                    background.setOpacity(1);
                     newPostRoot.setVisibility(VISIBLE);
                     break;
                 default:
@@ -94,8 +96,6 @@ public class FeedActivity extends AppCompatActivity
             CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams) newPostFragmentView.getLayoutParams());
             params.height = allHeight - visibleHeight;
             newPostFragmentView.setLayoutParams(params);
-
-            background.setOpacity(slideOffset);
         }
     };
 
@@ -134,6 +134,8 @@ public class FeedActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
+        } else if (newPostRoot.getVisibility() == VISIBLE){
+            hidePostCreateFragment();
         } else {
             super.onBackPressed();
         }
@@ -175,5 +177,11 @@ public class FeedActivity extends AppCompatActivity
                 .replace(R.id.fragment_container, fragment, fragment.getTag())
                 .addToBackStack(null)
                 .commit();
+    }
+
+    private void hidePostCreateFragment() {
+        bottomSheetBehavior.setState(STATE_COLLAPSED);
+        newPostRoot.setVisibility(GONE);
+        background.setOpacity(0);
     }
 }

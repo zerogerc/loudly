@@ -57,7 +57,7 @@ public class AttachmentAdapter extends RecyclerView.Adapter<AttachmentAdapter.At
         public void refresh(@NonNull Attachment attachment) {
             if (attachment instanceof PlainImage) {
                 PlainImage image = (PlainImage) attachment;
-                Glide.with(itemView.getContext()).load(image.getUrl()).into(imageView);
+                Glide.with(itemView.getContext()).load(image.getUrl()).centerCrop().into(imageView);
             } else {
                 Log.e("ATTACHMENT_HOLDER", "Attachment is not an instance of " + PlainImage.class.getName());
             }

@@ -32,6 +32,9 @@ public class TextPlusAttachmentsView extends LinearLayout {
     @NonNull
     RecyclerView attachmentsView;
 
+    @NonNull
+    private final int attachmentsHeight = getResources().getDimensionPixelOffset(R.dimen.text_with_attachment_attachment_size);
+
     @Nullable
     private OnAttachmentListener onAttachmentListener;
 
@@ -85,8 +88,8 @@ public class TextPlusAttachmentsView extends LinearLayout {
 
     public void addAttachment(@NonNull Attachment attachment) {
         attachmentList.add(attachment);
-        setEditTextParams();
         setAttachmentsParams();
+        setEditTextParams();
         adapter.notifyDataSetChanged();
 
         if (onAttachmentListener != null) {
@@ -109,7 +112,7 @@ public class TextPlusAttachmentsView extends LinearLayout {
         if (attachmentList.isEmpty()) {
             params.height = 0;
         } else {
-            params.height = getContext().getResources().getDimensionPixelSize(R.dimen.text_with_attachment_attachment_size);
+            params.height = attachmentsHeight;
         }
         attachmentsView.setLayoutParams(params);
     }
