@@ -1,5 +1,6 @@
 package ly.loud.loudly.util.database;
 
+import android.support.annotation.NonNull;
 import android.support.test.runner.AndroidJUnit4;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import ly.loud.loudly.application.Loudly;
@@ -26,7 +27,7 @@ public class KeyTest {
     private StorIOSQLite keysDatabase;
     private Random random;
 
-    private static void checkKeys(List<KeyKeeper> keys) {
+    private static void checkKeys(@NonNull List<KeyKeeper> keys) {
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             KeyKeeper saved = Loudly.getContext().getKeyKeeper(i);
             KeyKeeper expected = keys.get(i);
@@ -48,6 +49,7 @@ public class KeyTest {
         random = new Random(1234567890L);
     }
 
+    @NonNull
     private List<KeyKeeper> initRandomKeys() {
         List<KeyKeeper> result = new ArrayList<>();
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {

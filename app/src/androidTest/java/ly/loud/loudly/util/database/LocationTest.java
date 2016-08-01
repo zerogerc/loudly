@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.Location;
 import ly.loud.loudly.util.Equality;
 import ly.loud.loudly.test.Generators;
@@ -34,7 +35,7 @@ public class LocationTest extends DatabaseTest<Location> {
     }
 
     @Override
-    protected boolean equals(Location a, Location b) {
+    protected boolean equals(@Nullable Location a, @Nullable Location b) {
         return Equality.equal(a, b);
     }
 }

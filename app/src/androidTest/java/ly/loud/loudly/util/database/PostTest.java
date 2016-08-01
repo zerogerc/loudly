@@ -1,10 +1,10 @@
 package ly.loud.loudly.util.database;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.new_base.SinglePost;
-import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.util.Equality;
 import ly.loud.loudly.test.Generators;
 import ly.loud.loudly.util.TimeInterval;
@@ -41,7 +41,7 @@ public class PostTest extends DatabaseTest<LoudlyPost> {
     }
 
     @Override
-    protected boolean equals(LoudlyPost a, LoudlyPost b) {
+    protected boolean equals(@Nullable LoudlyPost a, @Nullable LoudlyPost b) {
         return Equality.equal(a, b);
     }
 

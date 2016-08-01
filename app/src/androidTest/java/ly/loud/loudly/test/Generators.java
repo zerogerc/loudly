@@ -31,6 +31,7 @@ public class Generators {
         return new String(chars);
     }
 
+    @NonNull
     public static Link randomLink(int linkLength, @NonNull Random random) {
         return new Link(randomString(linkLength, random));
     }
@@ -88,6 +89,7 @@ public class Generators {
         return result;
     }
 
+    @NonNull
     public static LoudlyPost randomLoudlyPost(int textLength, int locationLength, int attachmentCount, int linkLength,
                                             @NonNull Random random) {
         ArrayList<MultipleAttachment> attachments = generateArrayList(attachmentCount,
@@ -109,6 +111,7 @@ public class Generators {
         return post;
     }
 
+    @NonNull
     public static SinglePost randomSinglePost(int textLength, int locationLength, int attachmentCount, int linkLength,
                                   @NonNull Random random) {
         return new SinglePost(randomString(textLength, random),
@@ -119,6 +122,7 @@ public class Generators {
                 randomLink(linkLength, random));
     }
 
+    @NonNull
     public static PlainPost randomPost(int textLength, int locationLength, int attachmentCount, int linkLength,
                                        @NonNull Random random) {
         if (random.nextBoolean()) {
@@ -128,7 +132,8 @@ public class Generators {
         }
     }
 
-    public static KeyKeeper randomKeyKeeper(int network, Random random) {
+    @Nullable
+    public static KeyKeeper randomKeyKeeper(int network, @NonNull Random random) {
         switch (network) {
             case Networks.FB: {
                 FacebookKeyKeeper keyKeeper = new FacebookKeyKeeper();

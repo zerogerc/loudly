@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.test.runner.AndroidJUnit4;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
@@ -30,7 +31,7 @@ public abstract class DatabaseTest<T> {
     protected Random random;
     protected StorIOSQLite postsDatabase;
 
-    public static void cleanTables(StorIOSQLite database, String... tables) {
+    public static void cleanTables(@NonNull StorIOSQLite database, String... tables) {
         for (String table : tables) {
             database
                     .delete()
@@ -51,7 +52,7 @@ public abstract class DatabaseTest<T> {
 
     protected abstract void delete(long id) throws DatabaseException;
 
-    protected abstract boolean equals(T a, T b);
+    protected abstract boolean equals(@Nullable T a, @Nullable T b);
 
     protected abstract long insert(@NonNull T object) throws DatabaseException;
 

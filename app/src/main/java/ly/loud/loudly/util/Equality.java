@@ -5,7 +5,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.*;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
-import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import rx.functions.Func0;
 import rx.functions.Func2;
@@ -42,21 +41,23 @@ public class Equality {
      * Null-safe equality of strings
      * @return true, of strings are equal
      */
-    public static boolean equal(String a, String b) {
-        return equalBuilder(a, b, () -> a.equals(b));
-    }
-
-    public static boolean equal(Uri a, Uri b) {
-        return equalBuilder(a, b, () -> a.equals(b));
-    }
-
-    public static boolean equal(Link a, Link b) {
-        return equalBuilder(a, b, () -> /* a.isValid() == b.isValid() && // It's a problem of architecture*/
-                equal(a.get(), b.get()));
-    }
-
-    public static boolean equal(Link[] a, Link[] b) {
+    public static boolean equal(@Nullable String a, @Nullable String b) {
         return equalBuilder(a, b, () -> {
+            //noinspection ConstantConditions checked in EqualBuilder
+            return a.equals(b);
+        });
+    }
+
+    public static boolean equal(@Nullable Link a, @Nullable Link b) {
+        return equalBuilder(a, b, () -> {
+            //noinspection ConstantConditions checked in EqualBuilder
+            return equal(a.get(), b.get());
+        });
+    }
+
+    public static boolean equal(@Nullable Link[] a, @Nullable Link[] b) {
+        return equalBuilder(a, b, () -> {
+            //noinspection ConstantConditions checked in EqualBuilder
             if (a.length != b.length) {
                 return false;
             }
@@ -70,11 +71,14 @@ public class Equality {
         });
     }
 
-    public static boolean equal(Location a, Location b) {
-        return equalBuilder(a, b, () -> a.equals(b));
+    public static boolean equal(@Nullable Location a, @Nullable Location b) {
+        return equalBuilder(a, b, () -> {
+            //noinspection ConstantConditions checked in EqualBuilder
+            return a.equals(b);
+        });
     }
 
-    public static boolean equal(Attachment a, Attachment b) {
+    public static boolean equal(@Nullable Attachment a, @Nullable Attachment b) {
         return equalBuilder(a, b, () -> {
             if ((a instanceof LoudlyImage) && (b instanceof LoudlyImage)) {
                 return equal(((LoudlyImage) a).getNetworkInstances(), ((LoudlyImage) b).getNetworkInstances())
@@ -92,8 +96,10 @@ public class Equality {
         });
     }
 
-    private static <T> boolean equalLists(List<T> a, List<T> b, Func2<T, T, Boolean> equal) {
+    private static <T> boolean equalLists(@Nullable List<T> a, @Nullable List<T> b,
+                                          @NonNull Func2<T, T, Boolean> equal) {
         return equalBuilder(a, b, () -> {
+            //noinspection ConstantConditions checked in EqualBuilder
             if (a.size() != b.size()) {
                 return false;
             }
@@ -107,16 +113,17 @@ public class Equality {
             return true;
         });
     }
-    public static <T extends PlainPost> boolean equalPosts(List<T> a, List<T> b) {
+    public static <T extends PlainPost> boolean equalPosts(@Nullable List<T> a, @Nullable List<T> b) {
         return equalLists(a, b, Equality::equal);
     }
 
-    public static <T extends Attachment> boolean equal(List<T> a, List<T> b) {
+    public static <T extends Attachment> boolean equal(@Nullable List<T> a, @Nullable List<T> b) {
         return equalLists(a, b, Equality::equal);
     }
 
-    public static boolean equal(PlainPost a, PlainPost b) {
+    public static boolean equal(@Nullable PlainPost a, @Nullable PlainPost b) {
         return equalBuilder(a, b, () -> {
+            //noinspection ConstantConditions checked in EqualBuilder
             boolean equal = equal(a.getText(), b.getText()) &&
                     equal(a.getLocation(), b.getLocation()) &&
                     equal(a.getAttachments(), b.getAttachments()) &&

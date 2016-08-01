@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.util.Equality;
 import ly.loud.loudly.test.Generators;
@@ -32,7 +33,7 @@ public class LinksTest extends DatabaseTest<Link[]> {
     }
 
     @Override
-    protected boolean equals(Link[] a, Link[] b) {
+    protected boolean equals(@Nullable Link[] a, @Nullable Link[] b) {
         return Equality.equal(a, b);
     }
 }

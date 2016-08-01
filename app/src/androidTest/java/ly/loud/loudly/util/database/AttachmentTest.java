@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.LoudlyImage;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.util.Equality;
@@ -36,7 +37,7 @@ public class AttachmentTest extends DatabaseTest<ly.loud.loudly.new_base.interfa
     }
 
     @Override
-    protected boolean equals(Attachment a, Attachment b) {
+    protected boolean equals(@Nullable Attachment a, @Nullable Attachment b) {
         return Equality.equal(a, b);
     }
 }

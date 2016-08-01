@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
@@ -22,10 +23,12 @@ import java.util.List;
  * Utilities for work with databases
  */
 public class DatabaseUtils {
+    @NonNull
     static StorIOSQLite getPostsDatabase() {
         return Loudly.getContext().getDatabaseComponent().getPostsDatabase();
     }
 
+    @NonNull
     static StorIOSQLite getKeysDatabase() {
         return Loudly.getContext().getDatabaseComponent().getKeysDatabase();
     }
@@ -99,6 +102,7 @@ public class DatabaseUtils {
         }
     }
 
+    @NonNull
     private static Link[] instancesToLinks(MultipleNetworkElement element) {
         Link[] links = new Link[Networks.NETWORK_COUNT];
         @SuppressWarnings("unchecked") // Java doesn't infer that it's an array of SingleNetworkElement
@@ -178,7 +182,7 @@ public class DatabaseUtils {
         }
     }
 
-    private static void fillImageFromLinks(LoudlyImage image, Link[] links) {
+    private static void fillImageFromLinks(@NonNull LoudlyImage image, @NonNull Link[] links) {
         for (int i = 0; i < links.length; i++) {
             if (links[i] != null) {
                 image.setSingleNetworkInstance(i, new SingleImage(image.getUrl(), image.getSize(), i, links[i]));
@@ -273,7 +277,7 @@ public class DatabaseUtils {
         return finishPostLoading(stored);
     }
 
-    private static void fillPostFromLinks(LoudlyPost post, Link[] links) {
+    private static void fillPostFromLinks(@NonNull LoudlyPost post, @NonNull Link[] links) {
         for (int i = 0; i < links.length; i++) {
             if (links[i] != null) {
                 ArrayList<SingleAttachment> attachments = new ArrayList<>();
@@ -317,7 +321,7 @@ public class DatabaseUtils {
      * @throws DatabaseException If some error occurs
      */
     @NonNull
-    public static List<LoudlyPost> loadPosts(TimeInterval time) throws DatabaseException {
+    public static List<LoudlyPost> loadPosts(@NonNull TimeInterval time) throws DatabaseException {
         List<ly.loud.loudly.util.database.entities.Post> stored =
                 ly.loud.loudly.util.database.entities.Post.selectByTimeInterval(
                         time, getPostsDatabase());
@@ -359,7 +363,7 @@ public class DatabaseUtils {
      * @param post A post
      * @throws DatabaseException If error with database occurs
      */
-    public static void deletePost(LoudlyPost post) throws DatabaseException {
+    public static void deletePost(@NonNull LoudlyPost post) throws DatabaseException {
         SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(Networks.LOUDLY);
         if (loudlyInstance == null) {
             // Nothing to delete
@@ -429,7 +433,7 @@ public class DatabaseUtils {
      * @param keyKeeper New keykeeper
      * @throws DatabaseException If some error with DB occurs
      */
-    public static void updateKey(int network, KeyKeeper keyKeeper) throws DatabaseException {
+    public static void updateKey(int network, @Nullable KeyKeeper keyKeeper) throws DatabaseException {
         if (keyKeeper == null) {
             deleteKey(network);
         } else {
