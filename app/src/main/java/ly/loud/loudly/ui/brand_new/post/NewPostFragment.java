@@ -10,6 +10,8 @@ import android.widget.Button;
 
 import com.hannesdorfmann.mosby.mvp.MvpFragment;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import butterknife.BindView;
@@ -17,15 +19,28 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.application.models.NetworkContract;
 import ly.loud.loudly.application.models.PostUploadModel;
-import ly.loud.loudly.util.Utils;
+import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
+import ly.loud.loudly.ui.brand_new.views.TextPlusAttachmentsView;
 
-public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter> {
+public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
+    implements NewPostView {
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.material_new_post_fragment_send_button)
     @NonNull
     Button sendButton;
+
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.material_new_post_fragment_text_plus_attachments)
+    @NonNull
+    TextPlusAttachmentsView textPlusAttachmentsView;
+
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.material_new_post_fragment_gallery_button)
+    @NonNull
+    View galleryButton;
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @Inject
@@ -56,14 +71,42 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter> 
         return new NewPostPresenter(postUploadModel);
     }
 
+    @Override
+    public void showNewAttachment(@NonNull Attachment attachment) {
+        textPlusAttachmentsView.addAttachment(attachment);
+    }
+
+    @Override
+    public void showGalleryError() {
+
+    }
+
     @OnClick(R.id.material_new_post_fragment_send_button)
     public void onSendClicked() {
-        Utils.hidePhoneKeyboard(getActivity());
-        // TODO: remove this crunch
-        //noinspection ConstantConditions
-        getView().postDelayed(() -> {
-            NetworkChooseFragment dialog = new NetworkChooseFragment();
-            dialog.show(getFragmentManager(), dialog.getTag());
-        }, 50);
+        // Activity knows the networks chosen by user
+//        List<NetworkContract> models = ((NetworksGetter) getActivity()).getChoosenNetworks();
+
+//        presenter.uploadPost(
+//                textPlusAttachmentsView.getText(),
+//                SolidList.empty(),
+//                models
+//                );
+    }
+
+    @OnClick(R.id.material_new_post_fragment_camera_button)
+    public void onTakePhotoClicked() {
+        presenter.takePhoto(this);
+    }
+
+    @OnClick(R.id.material_new_post_fragment_gallery_button)
+    public void onPickFromGalleryClicker() {
+        presenter.loadImageFromGallery(this);
+    }
+
+    /**
+     * Interface for getting chosen networks. (networks to post to)
+     */
+    public interface NetworksGetter {
+        List<NetworkContract> getChoosenNetworks();
     }
 }

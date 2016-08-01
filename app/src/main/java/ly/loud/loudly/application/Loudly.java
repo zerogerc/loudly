@@ -12,23 +12,31 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import ly.loud.loudly.new_base.KeyKeeper;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
-import ly.loud.loudly.ui.GetInfoService;
-import ly.loud.loudly.ui.LocalBroadcastReceiver;
-import ly.loud.loudly.ui.MainActivity;
-import ly.loud.loudly.ui.PostsHolder;
-import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.*;
+
+import com.fuck_boilerplate.rx_paparazzo.RxPaparazzo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import ly.loud.loudly.base.Wrap;
+import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.ui.GetInfoService;
+import ly.loud.loudly.ui.LocalBroadcastReceiver;
+import ly.loud.loudly.ui.MainActivity;
+import ly.loud.loudly.ui.PostsHolder;
+import ly.loud.loudly.util.Broadcasts;
+import ly.loud.loudly.util.TimeInterval;
+import ly.loud.loudly.util.database.DaggerDatabaseComponent;
+import ly.loud.loudly.util.database.DatabaseComponent;
+import ly.loud.loudly.util.database.DatabaseException;
+import ly.loud.loudly.util.database.DatabaseUtils;
+import ly.loud.loudly.util.database.KeysDbModule;
+import ly.loud.loudly.util.database.PostDbModule;
 
 /**
  * Core application of Loudly app
@@ -238,6 +246,7 @@ public class Loudly extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        RxPaparazzo.register(this);
 
         initInjector();
 

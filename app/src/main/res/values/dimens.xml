@@ -10,4 +10,6 @@
     <dimen name="recycler_landscape_margin">4dp</dimen>
 
     <dimen name="feedback_icon_size">24dp</dimen>
+
+    <dimen name="text_with_attachment_attachment_size">144dp</dimen>
 </resources>

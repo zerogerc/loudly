@@ -72,4 +72,7 @@ dependencies {
     def solidVersion = '2.0.3'
     compile "info.android15.solid:streams:$solidVersion"
     compile "info.android15.solid:collections:$solidVersion"
+
+    compile "com.github.miguelbcr:RxPaparazzo:0.2.0"
+    compile "io.reactivex:rxjava:1.1.5"
 }
