@@ -3,14 +3,12 @@ package ly.loud.loudly.util;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.new_base.Link;
-import ly.loud.loudly.new_base.Location;
-import ly.loud.loudly.base.attachments.Attachment;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.attachments.LoudlyImage;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.*;
+import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
+import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import rx.functions.Func0;
+import rx.functions.Func2;
 
 import java.util.Iterator;
 import java.util.List;
@@ -79,37 +77,45 @@ public class Equality {
     public static boolean equal(Attachment a, Attachment b) {
         return equalBuilder(a, b, () -> {
             if ((a instanceof LoudlyImage) && (b instanceof LoudlyImage)) {
-                return equal(((LoudlyImage) a).getLinks(), ((LoudlyImage) b).getLinks())
+                return equal(((LoudlyImage) a).getNetworkInstances(), ((LoudlyImage) b).getNetworkInstances())
                         && equal(a.getExtra(), b.getExtra());
             }
             if ((a instanceof LoudlyImage) || (b instanceof LoudlyImage)) {
                 return false;
             }
-            if ((a instanceof Image) && (b instanceof Image)) {
-                return equal(a.getLink(), b.getLink()) && a.getNetwork() == b.getNetwork() &&
+            if ((a instanceof SingleImage) && (b instanceof SingleImage)) {
+                return equal(((SingleImage) a).getLink(), ((SingleImage) b).getLink())
+                        && ((SingleImage) a).getNetwork() == ((SingleImage) b).getNetwork() &&
                         equal(a.getExtra(), b.getExtra());
             }
             return false;
         });
     }
 
-    public static boolean equal(List<Attachment> a, List<Attachment> b) {
+    private static <T> boolean equalLists(List<T> a, List<T> b, Func2<T, T, Boolean> equal) {
         return equalBuilder(a, b, () -> {
             if (a.size() != b.size()) {
                 return false;
             }
-            Iterator<Attachment> itA = a.iterator();
-            Iterator<Attachment> itB = b.iterator();
+            Iterator<T> itA = a.iterator();
+            Iterator<T> itB = b.iterator();
             while (itA.hasNext()) {
-                if (!equal(itA.next(), itB.next())) {
+                if (!equal.call(itA.next(), itB.next())) {
                     return false;
                 }
             }
             return true;
         });
     }
+    public static <T extends PlainPost> boolean equalPosts(List<T> a, List<T> b) {
+        return equalLists(a, b, Equality::equal);
+    }
 
-    public static boolean equal(Post a, Post b) {
+    public static <T extends Attachment> boolean equal(List<T> a, List<T> b) {
+        return equalLists(a, b, Equality::equal);
+    }
+
+    public static boolean equal(PlainPost a, PlainPost b) {
         return equalBuilder(a, b, () -> {
             boolean equal = equal(a.getText(), b.getText()) &&
                     equal(a.getLocation(), b.getLocation()) &&
@@ -117,12 +123,14 @@ public class Equality {
                     a.getDate() == b.getDate();
 
             if ((a instanceof LoudlyPost) && (b instanceof LoudlyPost)) {
-                return equal && equal(((LoudlyPost) a).getLinks(), ((LoudlyPost) b).getLinks());
+                return equal && equalPosts(((LoudlyPost) a).getNetworkInstances(),
+                        ((LoudlyPost) b).getNetworkInstances());
             }
             if ((a instanceof LoudlyPost) || (b instanceof LoudlyPost)) {
                 return false;
             }
-            return equal && a.getNetwork() == b.getNetwork() && equal(a.getLink(), b.getLink());
+            return equal && ((SinglePost) a).getNetwork() == ((SinglePost) b).getNetwork()
+                    && equal(((SinglePost) a).getLink(), ((SinglePost) b).getLink());
         });
     }
 }

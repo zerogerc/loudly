@@ -51,10 +51,10 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
         this.info = info;
     }
 
-    private SinglePost(@Nullable String text,
+    public SinglePost(@Nullable String text,
                        long date,
                        @NonNull ArrayList<SingleAttachment> attachments,
-                      @Nullable Location location,
+                       @Nullable Location location,
                        int network,
                        @NonNull Link link) {
         super(text, date, attachments, location);

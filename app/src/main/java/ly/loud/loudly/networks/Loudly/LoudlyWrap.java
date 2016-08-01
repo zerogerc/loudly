@@ -54,7 +54,7 @@ public class LoudlyWrap extends Wrap {
 
     @Override
     protected void upload(Post post, KeyKeeper keyKeeper) throws IOException {
-        DatabaseUtils.savePost(((LoudlyPost) post));
+//        DatabaseUtils.savePost(((LoudlyPost) post));
     }
 
     @Override
@@ -72,13 +72,14 @@ public class LoudlyWrap extends Wrap {
                 return;
             }
         }
-        DatabaseUtils.deletePost(loudlyPost);
+//        DatabaseUtils.deletePost(loudlyPost);
         loudlyPost.getLink(Networks.LOUDLY).setValid(false);
     }
 
     @Override
     protected List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException {
-        return DatabaseUtils.loadPosts(timeInterval);
+//        return DatabaseUtils.loadPosts(timeInterval);
+        return Collections.emptyList();
     }
 
     @Override

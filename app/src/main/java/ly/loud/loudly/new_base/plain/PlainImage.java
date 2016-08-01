@@ -28,10 +28,10 @@ public class PlainImage implements Attachment {
     @Nullable
     private final String url;
 
-    @NonNull
+    @Nullable
     private final Point size;
 
-    public PlainImage(@Nullable String url, @NonNull Point size) {
+    public PlainImage(@Nullable String url, @Nullable Point size) {
         this.url = url;
         this.size = size;
     }
@@ -57,7 +57,7 @@ public class PlainImage implements Attachment {
         return url;
     }
 
-    @NonNull
+    @Nullable
     public Point getSize() {
         return size;
     }

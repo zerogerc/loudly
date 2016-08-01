@@ -36,7 +36,7 @@ public class LoudlyImage extends PlainImage implements MultipleAttachment, Local
     @NonNull
     private final SingleImage[] elements;
 
-    public LoudlyImage(@Nullable String url, @NonNull Point size) {
+    public LoudlyImage(@Nullable String url, @Nullable Point size) {
         super(url, size);
         elements = new SingleImage[Networks.NETWORK_COUNT];
     }
