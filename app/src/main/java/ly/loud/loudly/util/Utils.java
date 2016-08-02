@@ -1,11 +1,7 @@
 package ly.loud.loudly.util;
 
 import android.app.Activity;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -15,9 +11,6 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.DisplayMetrics;
@@ -46,15 +39,14 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
+import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.base.attachments.Image;
+import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.new_base.Person;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.new_base.SinglePost;
 import ly.loud.loudly.new_base.plain.PlainPost;
-import ly.loud.loudly.ui.MainActivity;
-import ly.loud.loudly.R;
-import ly.loud.loudly.ui.SettingsActivity;
 
 public class Utils {
     private static final String TAG = "UTIL_TAG";
@@ -422,43 +414,14 @@ public class Utils {
         }
     }
 
-    public static void makeNotification(Context context, String title, String content, int id) {
-        NotificationCompat.Builder notificationCompat = new NotificationCompat.Builder(context)
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(title)
-                .setContentText(content)
-                .setAutoCancel(true)
-                .setColor(ContextCompat.getColor(context, R.color.colorAccent));
-        // Creates an explicit intent for an Activity in your app
-        Intent resultIntent = new Intent(context, MainActivity.class);
-
-        // The stack builder object will contain an artificial back stack for the
-        // started Activity.
-        // This ensures that navigating backward from the Activity leads out of
-        // your application to the Home screen.
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-        // Adds the back stack for the Intent (but not the Intent itself)
-        stackBuilder.addParentStack(MainActivity.class);
-        // Adds the Intent that starts the Activity to the top of the stack
-        stackBuilder.addNextIntent(resultIntent);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(
-                        0,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-        notificationCompat.setContentIntent(resultPendingIntent);
-        // mId allows you to update the notification later on.
-        ((NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE)).
-                notify(id, notificationCompat.build());
-    }
-
-    // ToDo: make it part of LoudlyActivity
-    public static void showSnackBar(final String message) {
-        MainActivity.executeOnUI((mainActivity, params) -> Snackbar.make(mainActivity.findViewById(R.id.fab),
-                message, Snackbar.LENGTH_LONG)
-                .show());
-        SettingsActivity.executeOnUI((settingsActivity, params) -> Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
-                message, Snackbar.LENGTH_LONG)
-                .show());
+    @NonNull
+    public static ArrayList<SinglePost> getInstances(@NonNull PlainPost post) {
+        if (post instanceof SinglePost) {
+            return asArrayList(((SinglePost) post));
+        } else if (post instanceof LoudlyPost) {
+             return ((LoudlyPost) post).getNetworkInstances();
+        } else {
+            return emptyArrayList();
+        }
     }
 }

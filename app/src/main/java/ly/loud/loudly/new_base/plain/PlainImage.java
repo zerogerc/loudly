@@ -38,7 +38,7 @@ public class PlainImage implements Attachment {
 
     protected PlainImage(@NonNull Parcel parcel) {
         url = parcel.readString();
-        size = Point.CREATOR.createFromParcel(parcel);
+        size = parcel.readParcelable(Point.class.getClassLoader());
     }
 
     @Override

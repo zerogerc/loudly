@@ -16,7 +16,6 @@ import android.util.Log;
 import com.fuck_boilerplate.rx_paparazzo.RxPaparazzo;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,9 +24,7 @@ import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
 import ly.loud.loudly.new_base.KeyKeeper;
 import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.ui.GetInfoService;
 import ly.loud.loudly.ui.LocalBroadcastReceiver;
-import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.PostsHolder;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.TimeInterval;
@@ -175,7 +172,6 @@ public class Loudly extends Application {
             }
         }
         getPostHolder().clear();
-        Arrays.fill(MainActivity.loadedNetworks, false);
     }
 
     /**
@@ -220,25 +216,9 @@ public class Loudly extends Application {
         return timeInterval;
     }
 
-    public void startGetInfoService() {
-        if (getInfoService != null) {
-            stopGetInfoService();
-        }
-        Intent runService = new Intent(context, GetInfoService.class);
-        getInfoService = PendingIntent.getService(context, 0, runService, PendingIntent.FLAG_CANCEL_CURRENT);
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.SECOND, getInfoInterval);
-        alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), getInfoService);
-    }
-
-    public void stopGetInfoService() {
-        alarmManager.cancel(getInfoService);
-    }
-
     @Override
     public void onLowMemory() {
         super.onLowMemory();
-        stopGetInfoService();
         posts.getPosts().clear();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
     }

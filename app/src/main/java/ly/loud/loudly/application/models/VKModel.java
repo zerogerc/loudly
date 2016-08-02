@@ -5,17 +5,34 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.networks.VK.VKClient;
+import ly.loud.loudly.networks.VK.VKKeyKeeper;
+import ly.loud.loudly.networks.VK.entities.Attachment;
+import ly.loud.loudly.networks.VK.entities.Counter;
+import ly.loud.loudly.networks.VK.entities.Photo;
+import ly.loud.loudly.networks.VK.entities.PhotoUploadServer;
+import ly.loud.loudly.networks.VK.entities.PhotoUploadServerResponse;
+import ly.loud.loudly.networks.VK.entities.Profile;
+import ly.loud.loudly.networks.VK.entities.Say;
+import ly.loud.loudly.networks.VK.entities.VKItems;
+import ly.loud.loudly.networks.VK.entities.VKResponse;
+import ly.loud.loudly.new_base.Comment;
+import ly.loud.loudly.new_base.Info;
 import ly.loud.loudly.new_base.KeyKeeper;
 import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.new_base.Person;
-import ly.loud.loudly.new_base.Info;
-import ly.loud.loudly.networks.VK.VKClient;
-import ly.loud.loudly.networks.VK.VKKeyKeeper;
-import ly.loud.loudly.networks.VK.entities.*;
-import ly.loud.loudly.new_base.Comment;
 import ly.loud.loudly.new_base.SingleImage;
 import ly.loud.loudly.new_base.SinglePost;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
@@ -31,14 +48,9 @@ import retrofit2.Call;
 import retrofit2.Response;
 import rx.Single;
 
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static ly.loud.loudly.application.models.GetterModel.*;
+import static ly.loud.loudly.application.models.GetterModel.LIKES;
+import static ly.loud.loudly.application.models.GetterModel.RequestType;
+import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
@@ -259,7 +271,7 @@ public class VKModel implements NetworkContract {
             }
 
             String type, filter;
-            if (element instanceof Post) {
+            if (element instanceof SinglePost) {
                 type = "post";
             } else if (element instanceof SingleImage) {
                 type = "photo";

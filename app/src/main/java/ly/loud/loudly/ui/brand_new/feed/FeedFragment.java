@@ -22,7 +22,6 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
-import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.PostsAdapter;
 import ly.loud.loudly.ui.brand_new.views.FeedRecyclerView;
@@ -113,7 +112,6 @@ public class FeedFragment extends MvpViewStateFragment<FeedView, FeedPresenter>
 
     private void initRecyclerView() {
         postsAdapter = new PostsAdapter(postsList, (AppCompatActivity) getActivity());
-        Loudly.getPostHolder().setAdapter(postsAdapter);
         feedRecyclerView.setAdapter(postsAdapter);
     }
 }

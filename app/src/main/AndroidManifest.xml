@@ -22,30 +22,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ui.MainActivity"
-            android:label="@string/loudly"
-            android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustNothing">
-        </activity>
-        <activity
             android:name=".ui.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName=".ui.brand_new.feed.FeedActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.MainActivity" />
+                android:value=".ui.brand_new.feed.FeedActivity" />
         </activity>
-
-        <service android:name=".ui.GetInfoService" />
 
         <activity
             android:name=".ui.FullPostInfoActivity"
             android:launchMode="singleTask">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.MainActivity" />
+                android:value=".ui.brand_new.feed.FeedActivity" />
         </activity>
         <activity
             android:name=".ui.brand_new.feed.FeedActivity"
