@@ -36,7 +36,7 @@ public class SingleImage extends PlainImage implements SingleAttachment {
     @NonNull
     private Info info;
 
-    public SingleImage(@Nullable String url, @NonNull Point size, int network, @NonNull Link link) {
+    public SingleImage(@Nullable String url, @Nullable Point size, int network, @NonNull Link link) {
         super(url, size);
         this.network = network;
         this.link = link;
@@ -44,7 +44,7 @@ public class SingleImage extends PlainImage implements SingleAttachment {
     }
 
     public SingleImage(@Nullable String url,
-                       @NonNull Point size,
+                       @Nullable Point size,
                        int network,
                        @NonNull Link link,
                        @NonNull Info info) {
