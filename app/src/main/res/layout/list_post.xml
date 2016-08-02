@@ -4,9 +4,8 @@
     android:layout_height="wrap_content"
     xmlns:post_card="http://schemas.android.com/apk/res-auto"
     android:id="@+id/post_card"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp"
-    post_card:cardCornerRadius="2dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
     android:padding="0dp">
 
     <RelativeLayout
@@ -36,7 +35,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
                 android:src="@drawable/ic_clear"
-                android:tint="@color/grey_color"
+                android:tint="@color/gray_color"
                 android:background="@null"
                 android:padding="3dp" />
 
@@ -50,26 +49,20 @@
                 android:layout_toStartOf="@id/post_view_more_options_button"
                 android:layout_centerVertical="true">
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    style="@style/SecondaryText"
                     android:id="@+id/post_view_data_text"
                     android:lines="1"
                     android:ellipsize="end"
                     android:text="01.02.1997"
-                    android:textSize="14sp"
-                    android:textColor="@color/grey_blue"
                     android:layout_margin="4dp"/>
 
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    style="@style/SecondaryText"
                     android:id="@+id/post_view_geo_data_text"
                     android:layout_below="@id/post_view_data_text"
                     android:text="Stoubtsy"
                     android:lines="1"
                     android:ellipsize="end"
-                    android:textSize="14sp"
-                    android:textColor="@color/grey_blue"
                     android:layout_margin="4dp"/>
             </RelativeLayout>
 
@@ -91,20 +84,12 @@
                 android:layout_margin="8dp"
                 />
 
-            <FrameLayout
-                android:layout_width="wrap_content"
+            <ly.loud.loudly.ui.views.GlideImageView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/post_view_post_text"
-                android:layout_centerHorizontal="true">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/post_view_post_image"
-                    android:adjustViewBounds="true"
-                    android:scaleType="centerInside"
-                    android:background="@color/light_grey_color" />
-            </FrameLayout>
+                android:id="@+id/post_view_post_image"
+                android:background="@color/light_grey_color" />
         </RelativeLayout>
 
         <RelativeLayout

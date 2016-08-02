@@ -41,18 +41,40 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
+import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.R;
 import ly.loud.loudly.ui.SettingsActivity;
 
 public class Utils {
     private static final String TAG = "UTIL_TAG";
+    private static ArrayList EMPTY_ARRAY_LIST;
+
+    public static <T> ArrayList<T> asArrayList(T... objects) {
+        ArrayList<T> result = new ArrayList<>();
+        for (T object : objects) {
+            result.add(object);
+        }
+        return result;
+    }
+
+    public static <T> ArrayList<T> emptyArrayList() {
+        if (EMPTY_ARRAY_LIST == null) {
+            EMPTY_ARRAY_LIST = new ArrayList();
+        }
+        //noinspection unchecked
+        return EMPTY_ARRAY_LIST;
+    }
 
     public static int dipToPixels(float dipValue) {
         DisplayMetrics metrics = Loudly.getContext().getResources().getDisplayMetrics();
@@ -68,8 +90,9 @@ public class Utils {
     public static String getDateFormatted(long date) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(date * 1000);
-        return cal.get(Calendar.DAY_OF_MONTH) + "." + +(cal.get(Calendar.MONTH) + 1) + "." + cal.get(Calendar.YEAR)
-                + " around " + cal.get(Calendar.HOUR_OF_DAY) + " hours";
+        SimpleDateFormat formatter = new SimpleDateFormat("h 'hours', EEEE, d.MM", Locale.US);
+
+        return formatter.format(cal.getTime());
     }
 
     public static int getDefaultScreenHeight() {
@@ -116,31 +139,61 @@ public class Utils {
         return BitmapFactory.decodeResource(Loudly.getContext().getResources(), getResourceByNetwork(network));
     }
 
+    @NonNull
+    public static int getResourceByPost(@NonNull PlainPost post) {
+        if (post instanceof SinglePost) {
+            return getResourceByNetwork(((SinglePost) post).getNetwork());
+        } else {
+            return getResourceByNetwork(Networks.LOUDLY);
+        }
+    }
+
     public static int getResourceByNetwork(int network) {
-        int resource;
         switch (network) {
             case Networks.LOUDLY:
                 return R.mipmap.ic_launcher;
             case Networks.FB:
-                resource = R.mipmap.ic_facebook_round;
+                return R.mipmap.ic_facebook_round;
+            case Networks.TWITTER:
+                return R.mipmap.ic_twitter_round;
+            case Networks.INSTAGRAM:
+                return R.mipmap.ic_instagram_round;
+            case Networks.VK:
+                return R.mipmap.ic_vk_round;
+            case Networks.OK:
+                return R.mipmap.ic_ok_round;
+            case Networks.MAILRU:
+                return R.mipmap.ic_mail_ru_round;
+            default:
+                return R.mipmap.ic_launcher;
+        }
+    }
+
+    public static int getResourceWhiteByNetwork(int network) {
+        int resource;
+        switch (network) {
+            case Networks.LOUDLY:
+                return R.drawable.ic_loudly_white;
+            case Networks.FB:
+                resource = R.drawable.ic_facebook_white;
                 break;
             case Networks.TWITTER:
-                resource = R.mipmap.ic_twitter_round;
+                resource = R.drawable.ic_twitter_white;
                 break;
             case Networks.INSTAGRAM:
-                resource = R.mipmap.ic_instagram_round;
+                resource = R.drawable.ic_instagram_white;
                 break;
             case Networks.VK:
-                resource = R.mipmap.ic_vk_round;
+                resource = R.drawable.ic_vk_white;
                 break;
             case Networks.OK:
-                resource = R.mipmap.ic_ok_round;
+                resource = R.drawable.ic_ok_white;
                 break;
             case Networks.MAILRU:
-                resource = R.mipmap.ic_mail_ru_round;
+                resource = R.drawable.ic_myworld_white;
                 break;
             default:
-                resource = R.mipmap.ic_launcher;
+                resource = R.drawable.ic_loudly_white;
         }
         return resource;
     }
@@ -399,22 +452,13 @@ public class Utils {
                 notify(id, notificationCompat.build());
     }
 
+    // ToDo: make it part of LoudlyActivity
     public static void showSnackBar(final String message) {
-        MainActivity.executeOnUI(new UIAction<MainActivity>() {
-            @Override
-            public void execute(MainActivity mainActivity, Object... params) {
-                Snackbar.make(mainActivity.findViewById(R.id.main_layout),
-                        message, Snackbar.LENGTH_LONG)
-                        .show();
-            }
-        });
-        SettingsActivity.executeOnUI(new UIAction<SettingsActivity>() {
-            @Override
-            public void execute(SettingsActivity settingsActivity, Object... params) {
-                Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
-                        message, Snackbar.LENGTH_LONG)
-                        .show();
-            }
-        });
+        MainActivity.executeOnUI((mainActivity, params) -> Snackbar.make(mainActivity.findViewById(R.id.fab),
+                message, Snackbar.LENGTH_LONG)
+                .show());
+        SettingsActivity.executeOnUI((settingsActivity, params) -> Snackbar.make(settingsActivity.findViewById(R.id.settings_parent_layout),
+                message, Snackbar.LENGTH_LONG)
+                .show());
     }
 }

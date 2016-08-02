@@ -15,15 +15,4 @@
         android:layout_margin="8dp"
         android:layout_centerHorizontal="true"/>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:id="@+id/people_list_delimiter"
-        android:layout_marginTop="0dp"
-        android:layout_marginBottom="0dp"
-        android:layout_marginRight="5dp"
-        android:layout_marginLeft="5dp"
-        android:layout_below="@id/people_list_delimeter_icon"
-        android:background="@color/light_grey_color"/>
-
 </RelativeLayout>

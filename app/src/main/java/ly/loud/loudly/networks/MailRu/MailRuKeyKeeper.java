@@ -2,7 +2,7 @@ package ly.loud.loudly.networks.MailRu;
 
 import android.os.Parcel;
 
-import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.new_base.KeyKeeper;
 
 public class MailRuKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "738872";

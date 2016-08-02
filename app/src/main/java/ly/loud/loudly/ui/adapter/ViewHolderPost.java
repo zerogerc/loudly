@@ -1,30 +1,25 @@
 package ly.loud.loudly.ui.adapter;
 
 import android.app.Activity;
-import android.content.res.Configuration;
-import android.net.Uri;
+import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
-
 import ly.loud.loudly.R;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.new_base.Info;
+import ly.loud.loudly.new_base.interfaces.ElementWithInfo;
+import ly.loud.loudly.new_base.plain.PlainImage;
+import ly.loud.loudly.new_base.plain.PlainPost;
+import ly.loud.loudly.ui.FullPostInfoActivity;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.ui.views.GlideImageView;
 import ly.loud.loudly.util.Utils;
 
 /**
@@ -32,7 +27,7 @@ import ly.loud.loudly.util.Utils;
  * ITMO University
  */
 
-public class ViewHolderPost extends ViewHolder<Post> {
+public class ViewHolderPost extends ViewHolder<PlainPost> {
     private ImageView socialIcon;
     private TextView text;
     private TextView data;
@@ -43,14 +38,12 @@ public class ViewHolderPost extends ViewHolder<Post> {
     private ImageView likesButton;
     private TextView sharesAmount;
     private ImageView repostsButton;
-    private ImageView postImageView;
-    private ImageView showMoreOptions;
+    private GlideImageView postImageView;
+    private ImageView deleteButton;
 
     public ViewHolderPost(Activity activity, ViewGroup parent) {
         super(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.list_post, parent, false));
         
-        Post post = new Post();
-
         socialIcon = (ImageView) itemView.findViewById(R.id.post_view_social_network_icon);
         text = (TextView) itemView.findViewById(R.id.post_view_post_text);
         data = (TextView) itemView.findViewById(R.id.post_view_data_text);
@@ -61,68 +54,53 @@ public class ViewHolderPost extends ViewHolder<Post> {
         likesButton = (ImageView) itemView.findViewById(R.id.post_view_likes_button);
         sharesAmount = (TextView) itemView.findViewById(R.id.post_view_reposts_amount);
         repostsButton = (ImageView) itemView.findViewById(R.id.post_view_reposts_button);
-        postImageView = (ImageView) itemView.findViewById(R.id.post_view_post_image);
-        showMoreOptions = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
+        postImageView = (GlideImageView) itemView.findViewById(R.id.post_view_post_image);
+        deleteButton = (ImageView) itemView.findViewById(R.id.post_view_more_options_button);
 
         geoData.setHeight(0);
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) geoData.getLayoutParams();
         params.setMargins(0, 0, 0, 0);
         geoData.setLayoutParams(params);
-        refresh(post);
+        refresh(null);
     }
 
     @Override
-    public void refresh(final Post post) {
+    public void refresh(@Nullable final PlainPost post) {
+        if (post == null) {
+            text.setText("");
+            data.setText("");
+            return;
+        }
         text.setText(post.getText());
         data.setText(Utils.getDateFormatted(post.getDate()));
 
+        itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), FullPostInfoActivity.class);
+                intent.putExtra(FullPostInfoActivity.POST_KEY, post);
+                getActivity().startActivity(intent);
+            }
+        });
         loadPictures(post);
         handleButtons(post);
     }
 
-    private void loadPictures(final Post post) {
-        int resource = Utils.getResourceByNetwork(post.getNetwork());
-        Glide.with(Loudly.getContext()).load("image")
-                .error(resource)
-                .placeholder(resource)
-                .into(socialIcon);
-
+    private void loadPictures(@NonNull final PlainPost post) {
+        int resource = Utils.getResourceByPost(post);
+        socialIcon.setImageResource(resource);
 
         if (post.getAttachments().size() != 0) {
-            postImageView.setImageBitmap(null);
-
-            final Image image = (Image) post.getAttachments().get(0);
-            resizeImageView(post);
-
-            Glide.with(Loudly.getContext()).load(image.getUri())
-                    .override(Utils.getDefaultScreenWidth(), Utils.getDefaultScreenHeight())
-                    .fitCenter()
-                    .listener(new RequestListener<Uri, GlideDrawable>() {
-                        @Override
-                        public boolean onException(Exception e, Uri model, Target<GlideDrawable> target, boolean isFirstResource) {
-                            Log.e("GLIDE", "Error occured during image load", e);
-                            return false;
-                        }
-
-                        @Override
-                        public boolean onResourceReady(GlideDrawable resource, Uri model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
-                            image.setWidth(resource.getIntrinsicWidth());
-                            image.setHeight(resource.getIntrinsicHeight());
-                            return false;
-                        }
-                    })
-                    .into(postImageView);
+            final PlainImage image = (PlainImage) post.getAttachments().get(0);
+            postImageView.loadImage(image);
         } else {
-            postImageView.setImageBitmap(null);
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(0, 0);
-            postImageView.setLayoutParams(layoutParams);
+            postImageView.loadImage(null);
         }
     }
 
-    private void handleButtons(final Post post) {
+    private void handleButtons(@NonNull final PlainPost post) {
         int like, comment, shares;
-        Info info = (post instanceof LoudlyPost) ? ((LoudlyPost) post).getInfo(Networks.LOUDLY) :
-                post.getInfo();
+        Info info = post instanceof ElementWithInfo ? ((ElementWithInfo) post).getInfo() : null;
 
         if (info != null) {
             like = info.like;
@@ -139,7 +117,6 @@ public class ViewHolderPost extends ViewHolder<Post> {
 
         } else {
             setOverShadowFooterComponent(commentsButton, commentsAmount, false);
-            setCommentsOnClick(null);
         }
 
         if (like != 0) {
@@ -169,49 +146,6 @@ public class ViewHolderPost extends ViewHolder<Post> {
         }
     }
 
-    private void resizeImageView(final Post post) {
-        if (post.getAttachments().size() != 0) {
-            if (post.getAttachments().get(0) instanceof Image) {
-                Image image = ((Image) post.getAttachments().get(0));
-                int width = image.getWidth();
-                int height = image.getHeight();
-
-                if (width != 0 && height != 0) {
-                    setViewSizesForImageSizes(image.getWidth(), image.getHeight());
-                } else {
-                    postImageView.setImageBitmap(null);
-                    FrameLayout.LayoutParams lp = ((FrameLayout.LayoutParams) postImageView.getLayoutParams());
-                    lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
-                    lp.width = FrameLayout.LayoutParams.WRAP_CONTENT;
-                    postImageView.setLayoutParams(lp);
-                }
-            }
-        } else {
-            postImageView.setImageBitmap(null);
-            postImageView.getLayoutParams().width = 0;
-            postImageView.getLayoutParams().height = 0;
-            postImageView.requestLayout();
-        }
-    }
-
-    private void setViewSizesForImageSizes(final int width, final int height) {
-        int imageWidth = Utils.getDefaultScreenWidth() - 2 * getMargin();
-        //TODO: remove
-        if (Loudly.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            imageWidth /= 2;
-        }
-        float scale = ((float) imageWidth) / ((float) width);
-        int imageHeight = (int) (height * scale);
-        postImageView.getLayoutParams().width = imageWidth;
-        postImageView.getLayoutParams().height = imageHeight;
-        postImageView.requestLayout();
-    }
-
-    public int getMargin() {
-        //TODO: measure layout
-        return Utils.dpToPx(8);
-    }
-
     public void setLikesOnClick(View.OnClickListener listener) {
         likesButton.setOnClickListener(listener);
     }
@@ -220,11 +154,15 @@ public class ViewHolderPost extends ViewHolder<Post> {
         repostsButton.setOnClickListener(listener);
     }
 
-    public void setCommentsOnClick(View.OnClickListener listener) {
-        commentsButton.setOnClickListener(listener);
+    public void setDeleteOnClick(View.OnClickListener listener) {
+        deleteButton.setOnClickListener(listener);
     }
 
-    public void setDeleteOnClick(View.OnClickListener listener) {
-        showMoreOptions.setOnClickListener(listener);
+    public void showDeleteButton() {
+        deleteButton.setVisibility(View.VISIBLE);
+    }
+
+    public void hideDeleteButton() {
+        deleteButton.setVisibility(View.GONE);
     }
 }

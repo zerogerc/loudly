@@ -1,9 +1,9 @@
 package ly.loud.loudly.ui;
 
-import android.app.FragmentManager;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -11,9 +11,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -22,14 +20,17 @@ import android.view.MenuItem;
 import android.view.View;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
+import javax.inject.Inject;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import ly.loud.loudly.R;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Tasks;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.adapter.SpacesItemDecoration;
+import ly.loud.loudly.ui.brand_new.views.FeedRecyclerView;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
@@ -37,16 +38,19 @@ import ly.loud.loudly.util.Utils;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private static final String TAG = "MAIN";
+    private static final String BUNDLE_RECYCLER_LAYOUT = "Recycler View State";
 
-    private final String TAG = "MAIN";
-    static LinkedList<Post> posts = new LinkedList<>();
-    static boolean keysLoaded = false;
-    static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
-    static int aliveCopy = 0;
+    public static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
 
-    RecyclerView recyclerView;
-    public MainActivityPostsAdapter mainActivityPostsAdapter;
-    public FloatingActionButton floatingActionButton;
+    @BindView(R.id.content_main_feed_view)
+    FeedRecyclerView feedRecyclerView;
+
+    @BindView(R.id.fab)
+    FloatingActionButton floatingActionButton;
+
+    @Inject
+    Handler mainThreadHandler;
 
     static final int LOAD_POSTS_RECEIVER = 0;
     static final int POST_UPLOAD_RECEIVER = 1;
@@ -54,72 +58,33 @@ public class MainActivity extends AppCompatActivity
     static final int RECEIVER_COUNT = 4;
 
     static AttachableReceiver[] receivers = null;
-    static Tasks.LoadPostsTask loadPosts = null;
 
     private static MainActivity self;
 
     public static void executeOnUI(final UIAction<MainActivity> action) {
         if (self != null) {
-            self.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    action.execute(self);
-                }
-            });
+            self.runOnUiThread(() -> action.execute(self));
         }
     }
 
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-//
-//        if (id == R.id.main_call_settings) {
-//            callSettingsActivity();
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
-    @Override
-    public void finish() {
-        super.finish();
-        Utils.hidePhoneKeyboard(this);
-    }
-
     private void init() {
-        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-            @Override
-            public void onBackStackChanged() {
-                int count = getFragmentManager().getBackStackEntryCount();
-                if (count > 0) {
-                    floatingActionButton.setVisibility(View.INVISIBLE);
-                }
-                if (count == 0) {
-                    floatingActionButton.setVisibility(View.VISIBLE);
-                }
-            }
-        });
+        self = this;
 
-        SplashFragment.showSplash(this);
-
-        setRecyclerView();
+        setFeedRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        ButterKnife.bind(this);
+        ((Loudly) getApplication()).getAppComponent().inject(this);
 
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                callPostCreate(view);
-            }
-        });
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.feed);
+
+        setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -131,6 +96,25 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         init();
+
+        if (savedInstanceState != null) {
+            int position = savedInstanceState.getInt(BUNDLE_RECYCLER_LAYOUT);
+            feedRecyclerView.getLayoutManager().scrollToPosition(position);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        int position;
+        if (feedRecyclerView.getLayoutManager() instanceof StaggeredGridLayoutManager) {
+            int[] positions = new int[2];
+            ((StaggeredGridLayoutManager) feedRecyclerView.getLayoutManager()).findFirstVisibleItemPositions(positions);
+            position = positions[0];
+        } else {
+            position = ((LinearLayoutManager) feedRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+        }
+        outState.putInt(BUNDLE_RECYCLER_LAYOUT, position);
     }
 
     @Override
@@ -182,21 +166,24 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camara) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        item.getTitle();
+        if (id == R.id.nav_no_filter) {
+            setFeedRecyclerView(new PostsAdapter(Loudly.getPostHolder().getPosts(), this));
+            getSupportActionBar().setTitle(R.string.feed);
+        } else if (id == R.id.nav_loudly) {
+            setFeedRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.LOUDLY, this));
+            getSupportActionBar().setTitle(item.getTitle());
+        } else if (id == R.id.nav_facebook) {
+            setFeedRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.FB, this));
+            getSupportActionBar().setTitle(item.getTitle());
+        } else if (id == R.id.nav_instagram) {
+            setFeedRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.INSTAGRAM, this));
+            getSupportActionBar().setTitle(item.getTitle());
+        } else if (id == R.id.nav_vk) {
+            setFeedRecyclerView(new FilteredPostsAdapter(Loudly.getPostHolder().getPosts(), Networks.VK, this));
+            getSupportActionBar().setTitle(item.getTitle());
         }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.fab);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -205,6 +192,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         self = this;
+        Loudly.setCurrentActivity(this);
 
         if (receivers == null) {
             receivers = new AttachableReceiver[RECEIVER_COUNT];
@@ -215,22 +203,18 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }
-        if (keysLoaded && loadPosts == null) {
-            loadPosts();
-        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        aliveCopy++;
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         Utils.hidePhoneKeyboard(this);
-        aliveCopy--;
+        Loudly.clearCurrentActivity(this);
     }
 
     static void loadPosts() {
@@ -243,28 +227,14 @@ public class MainActivity extends AppCompatActivity
         // Loading posts
         if (loadFrom.size() > 0) {
             receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(self);
-            loadPosts = new Tasks.LoadPostsTask(Loudly.getContext().getTimeInterval(),
-                    loadFrom.toArray(new Wrap[loadFrom.size()]));
-            loadPosts.execute();
         } else {
             Loudly.getContext().startGetInfoService();
         }
     }
 
-    private void setRecyclerView() {
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mainActivityPostsAdapter = new MainActivityPostsAdapter(posts, this);
-        recyclerView.setHasFixedSize(true); /// HERE
-        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.setAdapter(mainActivityPostsAdapter);
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        } else {
-            recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-            int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.recycler_landscape_margin);
-            recyclerView.addItemDecoration(new SpacesItemDecoration(spacingInPixels));
-        }
-        recyclerView.setItemAnimator(itemAnimator);
+    private void setFeedRecyclerView(@NonNull PostsAdapter adapter) {
+        Loudly.getPostHolder().setAdapter(adapter);
+        feedRecyclerView.setAdapter(adapter);
     }
 
     public void callSettingsActivity() {
@@ -272,11 +242,11 @@ public class MainActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    public void callPostCreate(View v) {
+    public void callPostCreate() {
         if (receivers[POST_UPLOAD_RECEIVER] == null) {
             receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
         }
-        PostCreateFragment.showPostCreate(this);
+//        PostCreateFragment.newInstance().show(getFragmentManager(), PostCreateFragment.TAG);
     }
 
     @Override
@@ -289,7 +259,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-
 
     static class PostUploaderReceiver extends AttachableReceiver<MainActivity> {
         public PostUploaderReceiver(MainActivity context) {
@@ -352,7 +321,7 @@ public class MainActivity extends AppCompatActivity
                         case Broadcasts.NETWORK_ERROR:
                             error += "no internet connection";
                             break;
-                        case Broadcasts.INVALID_TOKEN:
+                        case Broadcasts.EXPIRED_TOKEN:
                             error += "lost connection to network";
                             break;
                         default:
@@ -393,14 +362,13 @@ public class MainActivity extends AppCompatActivity
                             .show();
                     break;
                 case Broadcasts.LOADED:
-                    if (posts.size() == 0) {
+                    if (Loudly.getPostHolder().getPosts().isEmpty()) {
                         Snackbar.make(context.findViewById(R.id.fab),
                                 "You haven't upload any post yet",
                                 Snackbar.LENGTH_SHORT)
                                 .show();
                         stop();
                         receivers[LOAD_POSTS_RECEIVER] = null;
-                        loadPosts = null;
                     } else {
                         Snackbar.make(context.findViewById(R.id.fab),
                                 "Loudly posts loaded",
@@ -423,7 +391,6 @@ public class MainActivity extends AppCompatActivity
                             .show();
                     stop();
                     receivers[LOAD_POSTS_RECEIVER] = null;
-                    loadPosts = null; // Posts loaded
 
                     Loudly.getContext().startGetInfoService(); // Let's get info about posts
                     break;
@@ -434,7 +401,7 @@ public class MainActivity extends AppCompatActivity
                         case Broadcasts.NETWORK_ERROR:
                             error += "no internet connection";
                             break;
-                        case Broadcasts.INVALID_TOKEN:
+                        case Broadcasts.EXPIRED_TOKEN:
                             error += "lost connection to it";
                             break;
                         default:
@@ -444,6 +411,7 @@ public class MainActivity extends AppCompatActivity
                     Snackbar.make(context.findViewById(R.id.fab),
                             error, Snackbar.LENGTH_SHORT)
                             .show();
+                    loadedNetworks[network] = false;
                     break;
             }
         }
@@ -469,7 +437,6 @@ public class MainActivity extends AppCompatActivity
                     Snackbar.make(context.findViewById(R.id.fab),
                             "Post deleted", Snackbar.LENGTH_SHORT)
                             .show();
-                    context.floatingActionButton.setVisibility(View.VISIBLE);
                     Loudly.getContext().startGetInfoService();
                     break;
                 case Broadcasts.ERROR:
@@ -479,7 +446,7 @@ public class MainActivity extends AppCompatActivity
                         case Broadcasts.NETWORK_ERROR:
                             error += "no internet connection";
                             break;
-                        case Broadcasts.INVALID_TOKEN:
+                        case Broadcasts.EXPIRED_TOKEN:
                             error += "lost connection to network";
                             break;
                         default:
@@ -488,7 +455,6 @@ public class MainActivity extends AppCompatActivity
                             Snackbar.make(context.findViewById(R.id.fab),
                                     error, Snackbar.LENGTH_SHORT)
                                     .show();
-                            context.floatingActionButton.setVisibility(View.VISIBLE);
                             Log.e("DELETE_POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
                             stop();
                             receivers[POST_DELETE_RECEIVER] = null;
@@ -500,5 +466,10 @@ public class MainActivity extends AppCompatActivity
                     break;
             }
         }
+    }
+
+    @OnClick(R.id.fab)
+    public void fabClick() {
+        callPostCreate();
     }
 }

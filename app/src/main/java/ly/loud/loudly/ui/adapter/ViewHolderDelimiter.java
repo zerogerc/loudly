@@ -7,7 +7,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.R;
 import ly.loud.loudly.util.Utils;
 

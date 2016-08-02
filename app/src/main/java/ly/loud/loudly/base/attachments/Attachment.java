@@ -1,8 +1,10 @@
 package ly.loud.loudly.base.attachments;
 
+import android.os.Parcelable;
+
 import ly.loud.loudly.base.SingleNetwork;
 
-public interface Attachment extends SingleNetwork {
+public interface Attachment extends SingleNetwork, Parcelable {
     int IMAGE = 0;
 
     int getType();

@@ -1,12 +1,14 @@
 package ly.loud.loudly.base;
 
-import ly.loud.loudly.base.says.Info;
+import android.os.Parcelable;
+import ly.loud.loudly.new_base.Info;
+import ly.loud.loudly.new_base.Link;
 
 /**
  * Interface for objects which are in many networks. They are stored in the local database
  */
 
-public interface MultipleNetwork  {
+public interface MultipleNetwork extends Parcelable {
     Link getLink(int network);
     void setLink(int network, Link link);
     Link[] getLinks();

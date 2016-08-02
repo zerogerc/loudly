@@ -1,19 +1,22 @@
 package ly.loud.loudly.base;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.attachments.Image;
 import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.base.says.Info;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.new_base.Info;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.util.BackgroundAction;
-import ly.loud.loudly.util.InvalidTokenException;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 
@@ -28,7 +31,6 @@ public abstract class Wrap implements Comparable<Wrap> {
     public static final int IMAGE_ONLY_LINK = 2;
 
     public static final int UPLOAD_LAST = 1337;
-
     // Interface
 
     /**
@@ -41,6 +43,13 @@ public abstract class Wrap implements Comparable<Wrap> {
      */
     public abstract int networkID();
 
+    /**
+     * Get description of this network
+     *
+     * @return description
+     * @see NetworkDescription
+     */
+    public abstract NetworkDescription getDescription();
 
     /**
      * Proper flag from this class
@@ -64,8 +73,19 @@ public abstract class Wrap implements Comparable<Wrap> {
     protected abstract List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException;
 
     /**
+     * Handle ERROR answer from network
+     *
+     * @param stream ErrorStream from network
+     * @return User-friendly description of error
+     * @throws IOException If some error occurs
+     */
+    public abstract String handleError(InputStream stream) throws IOException;
+
+
+    /**
      * Get changed info for posts
-     * @param posts Lists of Posts to which should get updated info
+     *
+     * @param posts     Lists of Posts to which should get updated info
      * @param keyKeeper Actual keykeeper with user ID
      * @return List of pair of posts, which info have changed, and new info. If info isn't got, return pair <Post, null>
      * @throws IOException in case of network exception
@@ -79,7 +99,7 @@ public abstract class Wrap implements Comparable<Wrap> {
     protected abstract void getImageInfo(List<Image> images, KeyKeeper keyKeeper) throws IOException;
 
     public void upload(final Post post) throws IOException {
-        doWithKeys(new KeyKeeper.Action<Void>() {
+        doWithKeys(new Action<Void>() {
             @Override
             public Void execute(KeyKeeper keyKeeper) throws IOException {
                 upload(post, keyKeeper);
@@ -89,7 +109,7 @@ public abstract class Wrap implements Comparable<Wrap> {
     }
 
     public void upload(final Image image, final BackgroundAction progress) throws IOException {
-        doWithKeys(new KeyKeeper.Action<Void>() {
+        doWithKeys(new Action<Void>() {
             @Override
             public Void execute(KeyKeeper keyKeeper) throws IOException {
                 upload(image, progress, keyKeeper);
@@ -99,7 +119,7 @@ public abstract class Wrap implements Comparable<Wrap> {
     }
 
     public void delete(final Post post) throws IOException {
-        doWithKeys(new KeyKeeper.Action<Void>() {
+        doWithKeys(new Action<Void>() {
             @Override
             public Void execute(KeyKeeper keyKeeper) throws IOException {
                 delete(post, keyKeeper);
@@ -108,8 +128,9 @@ public abstract class Wrap implements Comparable<Wrap> {
         });
     }
 
+    @Nullable
     public List<Post> loadPosts(final TimeInterval timeInterval) throws IOException {
-        return doWithKeys(new KeyKeeper.Action<List<Post>>() {
+        return doWithKeys(new Action<List<Post>>() {
             @Override
             public List<Post> execute(KeyKeeper keyKeeper) throws IOException {
                 return loadPosts(timeInterval, keyKeeper);
@@ -117,8 +138,9 @@ public abstract class Wrap implements Comparable<Wrap> {
         });
     }
 
+    @Nullable
     public List<Pair<Post, Info>> getPostsInfo(final List<Post> posts) throws IOException {
-        return doWithKeys(new KeyKeeper.Action<List<Pair<Post, Info>>>() {
+        return doWithKeys(new Action<List<Pair<Post, Info>>>() {
             @Override
             public List<Pair<Post, Info>> execute(KeyKeeper keyKeeper) throws IOException {
                 return getPostsInfo(posts, keyKeeper);
@@ -126,8 +148,9 @@ public abstract class Wrap implements Comparable<Wrap> {
         });
     }
 
+    @Nullable
     public List<Person> getPersons(final int what, final SingleNetwork element) throws IOException {
-        return doWithKeys(new KeyKeeper.Action<List<Person>>() {
+        return doWithKeys(new Action<List<Person>>() {
             @Override
             public List<Person> execute(KeyKeeper keyKeeper) throws IOException {
                 return getPersons(what, element, keyKeeper);
@@ -135,8 +158,9 @@ public abstract class Wrap implements Comparable<Wrap> {
         });
     }
 
+    @Nullable
     public List<Comment> getComments(final SingleNetwork element) throws IOException {
-        return doWithKeys(new KeyKeeper.Action<List<Comment>>() {
+        return doWithKeys(new Action<List<Comment>>() {
             @Override
             public List<Comment> execute(KeyKeeper keyKeeper) throws IOException {
                 return getComments(element, keyKeeper);
@@ -145,7 +169,7 @@ public abstract class Wrap implements Comparable<Wrap> {
     }
 
     public void updateImagesInfo(final List<Image> images) throws IOException {
-        doWithKeys(new KeyKeeper.Action<Void>() {
+        doWithKeys(new Action<Void>() {
             @Override
             public Void execute(KeyKeeper keyKeeper) throws IOException {
                 getImageInfo(images, keyKeeper);
@@ -154,16 +178,13 @@ public abstract class Wrap implements Comparable<Wrap> {
         });
     }
 
-
-    private <T> T doWithKeys(KeyKeeper.Action<T> action) throws IOException {
+    @Nullable
+    private <T> T doWithKeys(Action<T> action) throws IOException {
         KeyKeeper keys = Loudly.getContext().getKeyKeeper(networkID());
         if (keys == null) {
-            throw new InvalidTokenException();
+            return null;
         }
-        if (!keys.isValid()) {
-            throw new InvalidTokenException();
-        }
-        return keys.doWithKeys(action);
+        return action.execute(keys);
     }
 
 
@@ -179,5 +200,9 @@ public abstract class Wrap implements Comparable<Wrap> {
             return 0;
         }
         return 1;
+    }
+
+    public static abstract class Action<T> {
+        public abstract T execute(KeyKeeper keyKeeper) throws IOException;
     }
 }

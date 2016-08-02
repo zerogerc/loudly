@@ -2,15 +2,17 @@ package ly.loud.loudly.base.attachments;
 
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-import ly.loud.loudly.base.Link;
+import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.says.Info;
+import ly.loud.loudly.new_base.Info;
 
 /**
  * Image from the internet. Exists in only one network
  */
-public class Image implements Attachment, SingleNetwork {
+public class Image implements Attachment, SingleNetwork, Parcelable {
     protected String externalLink;
     protected Point size = new Point(0, 0);
 
@@ -29,6 +31,21 @@ public class Image implements Attachment, SingleNetwork {
         this.externalLink = externalLink;
         this.network = network;
         this.id = id;
+    }
+
+    public Image(String externalLink, Point size, int network, Link id) {
+        this.externalLink = externalLink;
+        this.size = size;
+        this.network = network;
+        this.id = id;
+    }
+
+    public Image(Parcel source) {
+        externalLink = source.readString();
+        size = source.readParcelable(Point.class.getClassLoader());
+        info = source.readParcelable(Info.class.getClassLoader());
+        network = source.readInt();
+        id = source.readParcelable(Link.class.getClassLoader());
     }
 
     @Override
@@ -124,4 +141,30 @@ public class Image implements Attachment, SingleNetwork {
     public String getExtra() {
         return externalLink;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(externalLink);
+        dest.writeParcelable(size, 0);
+        dest.writeParcelable(info, 0);
+        dest.writeInt(network);
+        dest.writeParcelable(id, 0);
+    }
+
+    public static final Creator<Image> CREATOR = new Creator<Image>() {
+        @Override
+        public Image createFromParcel(Parcel source) {
+            return new Image(source);
+        }
+
+        @Override
+        public Image[] newArray(int size) {
+            return new Image[size];
+        }
+    };
 }

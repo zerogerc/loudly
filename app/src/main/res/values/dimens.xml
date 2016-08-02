@@ -8,4 +8,8 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <dimen name="recycler_landscape_margin">4dp</dimen>
+
+    <dimen name="feedback_icon_size">24dp</dimen>
+
+    <dimen name="text_with_attachment_attachment_size">256dp</dimen>
 </resources>

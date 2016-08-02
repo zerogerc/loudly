@@ -5,7 +5,7 @@ import android.app.Activity;
 import java.util.List;
 
 /**
- * Adapter that do some actions when first item appearing
+ * AfterLoadAdapter that do some actions when first item appearing
  * This action could be specified in method onFirstItemAppeared
  */
 public abstract class AfterLoadAdapter extends BaseAdapter<Activity, Item> {

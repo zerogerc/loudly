@@ -2,24 +2,16 @@ package ly.loud.loudly.ui;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.util.Log;
-import android.util.Pair;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import ly.loud.loudly.base.Tasks;
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.new_base.Info;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.InvalidTokenException;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
 
+import java.util.LinkedList;
+
+// ToDo: It's totally not thread-safe
 public class GetInfoService extends IntentService {
     private static final String NAME = "GetInfoService";
     private static final int NOTIFICATION_ID = 0;
@@ -60,81 +52,71 @@ public class GetInfoService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (Loudly.getExecutor().getQueue().size() > 0) {
-            // If executor is busy, get info later
-            // TODO: get info for networks which aren't in use
-
-            Loudly.getContext().startGetInfoService();  // Restarting
-            return;
-        }
-
         stopped = false;
-        if (MainActivity.posts.isEmpty()) {
+        if (Loudly.getPostHolder().getPosts().isEmpty()) {
             return;
         }
 
         summary = new Info();
         final LinkedList<Integer> success = new LinkedList<>();
 
-        Tasks.doAndWait(MainActivity.posts, new Tasks.ActionWithWrap<LinkedList<Post>, Pair<List<Pair<Post, Info>>, Integer>>() {
-            @Override
-            public Pair<List<Pair<Post, Info>>, Integer> apply(LinkedList<Post> item, Wrap w) {
-                ArrayList<Post> current = new ArrayList<>();
-                for (Post p : item) {
-                    if (p.existsIn(w.networkID())) {
-                        current.add((Post)p.getNetworkInstance(w.networkID()));
-                    }
-                }
-                try {
-                    return new Pair<>(w.getPostsInfo(current), w.networkID());
-                } catch (InvalidTokenException e) {
-                    Intent message = BroadcastSendingTask.makeError(Broadcasts.POST_GET_INFO,
-                            Broadcasts.INVALID_TOKEN, e.getMessage());
-                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
-                    Loudly.sendLocalBroadcast(message);
-                } catch (IOException e) {
-                    Log.e(NAME, e.getMessage(), e);
-                    Loudly.sendLocalBroadcast(BroadcastSendingTask.makeError(Broadcasts.POST_GET_INFO,
-                            Broadcasts.NETWORK_ERROR, e.getMessage()));
-                }
-                return null;
-            }
-        }, new Tasks.ActionWithResult<Pair<List<Pair<Post, Info>>, Integer>>() {
-            @Override
-            public void apply(final Pair<List<Pair<Post, Info>>, Integer> result) {
-                if (result != null && result.first != null) {
-                    MainActivity.executeOnUI(new UIAction<MainActivity>() {
-                        @Override
-                        public void execute(MainActivity context, Object... params) {
-                            summary.add(context
-                                    .mainActivityPostsAdapter
-                                    .updateInfo(result.first, result.second));
-
-                            Intent message = BroadcastSendingTask.makeMessage(Broadcasts.POST_GET_INFO,
-                                    Broadcasts.PROGRESS);
-                            message.putExtra(Broadcasts.NETWORK_FIELD, result.second);
-                            Loudly.sendLocalBroadcast(message);
-                        }
-                    });
-                    if (result.first.size() > 0) {
-                        success.add(result.second);
-                    }
-                }
-            }
-        }, Loudly.getContext().getWraps());
+//        Tasks.doAndWait(Loudly.getPostHolder().getPosts(), new Tasks.ActionWithWrap<List<Post>, Pair<List<Pair<Post, Info>>, Integer>>() {
+//            @Override
+//            public Pair<List<Pair<Post, Info>>, Integer> apply(List<Post> item, Wrap w) {
+//                ArrayList<Post> current = new ArrayList<>();
+//                for (Post p : item) {
+//                    if (p.existsIn(w.networkID())) {
+//                        current.add((Post)p.getNetworkInstance(w.networkID()));
+//                    }
+//                }
+//                try {
+//                    return new Pair<>(w.getPostsInfo(current), w.networkID());
+//                } catch (TokenExpiredException e) {
+//                    Intent message = BroadcastSendingTask.makeError(Broadcasts.INTERNAL_MESSAGE,
+//                            Broadcasts.EXPIRED_TOKEN, e.getMessage());
+//                    message.putExtra(Broadcasts.NETWORK_FIELD, w.networkID());
+//                    Loudly.sendLocalBroadcast(message);
+//                } catch (IOException e) {
+//                    Log.e(NAME, e.getMessage(), e);
+//                    Loudly.sendLocalBroadcast(BroadcastSendingTask.makeError(Broadcasts.POST_GET_INFO,
+//                            Broadcasts.NETWORK_ERROR, e.getMessage()));
+//                }
+//                return null;
+//            }
+//        }, new Tasks.ActionWithResult<Pair<List<Pair<Post, Info>>, Integer>>() {
+//            @Override
+//            public void apply(final Pair<List<Pair<Post, Info>>, Integer> result) {
+//                if (result != null && result.first != null) {
+//                    MainActivity.executeOnUI(new UIAction<MainActivity>() {
+//                        @Override
+//                        public void execute(MainActivity context, Object... params) {
+//                            summary.add(Loudly.getPostHolder().updateInfo(result, result.second));
+//
+//                            Intent message = BroadcastSendingTask.makeMessage(Broadcasts.POST_GET_INFO,
+//                                    Broadcasts.PROGRESS);
+//                            message.putExtra(Broadcasts.NETWORK_FIELD, result.second);
+//                            Loudly.sendLocalBroadcast(message);
+//                        }
+//                    });
+//                    if (result.first.size() > 0) {
+//                        success.add(result.second);
+//                    }
+//                }
+//            }
+//        }, Loudly.getContext().getWraps());
 
         if (success.size() > 0) {
             MainActivity.executeOnUI(new UIAction<MainActivity>() {
                 @Override
                 public void execute(MainActivity context, Object... params) {
-                    context.mainActivityPostsAdapter.cleanUp(success);
+                    Loudly.getPostHolder().cleanUp(success, true);
                 }
             });
         }
         Loudly.sendLocalBroadcast(BroadcastSendingTask.makeSuccess(Broadcasts.POST_GET_INFO));
         if (summary.hasPositiveChanges()) {
             String[] strings = makeNewInfoMessages(summary);
-            if (MainActivity.aliveCopy == 0 && SettingsActivity.aliveCopy == 0) {
+            if (Loudly.getCurrentActivity() == null) {
                 Utils.makeNotification(this, strings[0], strings[1], NOTIFICATION_ID);
             } else {
                 Utils.showSnackBar(strings[1]);
