@@ -24,8 +24,11 @@ import java.util.Random;
  */
 @RunWith(AndroidJUnit4.class)
 public class KeyTest {
-    private StorIOSQLite keysDatabase;
-    private Random random;
+    @NonNull
+    private StorIOSQLite keysDatabase = DatabaseUtils.getKeysDatabase();
+
+    @NonNull
+    private Random random = new Random(1234567890L);
 
     private static void checkKeys(@NonNull List<KeyKeeper> keys) {
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
@@ -44,9 +47,7 @@ public class KeyTest {
 
     @Before
     public void setUp() {
-        keysDatabase = DatabaseUtils.getKeysDatabase();
         DatabaseTest.cleanTables(keysDatabase, Key.Contract.TABLE_NAME);
-        random = new Random(1234567890L);
     }
 
     @NonNull

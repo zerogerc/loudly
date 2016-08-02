@@ -28,10 +28,13 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class DatabaseTest<T> {
-    protected Random random;
-    protected StorIOSQLite postsDatabase;
+    @NonNull
+    protected Random random = new Random(1234567890L);
 
-    public static void cleanTables(@NonNull StorIOSQLite database, String... tables) {
+    @NonNull
+    protected StorIOSQLite postsDatabase = DatabaseUtils.getPostsDatabase();
+
+    public static void cleanTables(@NonNull StorIOSQLite database, @NonNull String... tables) {
         for (String table : tables) {
             database
                     .delete()
@@ -133,10 +136,7 @@ public abstract class DatabaseTest<T> {
 
     @Before
     public void setUp() throws Exception {
-        postsDatabase = DatabaseUtils.getPostsDatabase();
         clean();
-
-        random = new Random(1234567890L);
     }
 
     @After
