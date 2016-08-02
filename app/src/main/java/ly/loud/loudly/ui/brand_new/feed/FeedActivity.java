@@ -32,6 +32,10 @@ import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
+/**
+ * Main activity of Loudly application. It responds for user interaction with behavior of
+ * BottomSheet Fragment (for post creation), menu and {@link NavigationView}.
+ */
 public class FeedActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, FragmentInvoker {
 
@@ -124,6 +128,9 @@ public class FeedActivity extends AppCompatActivity
         initBottomSheet();
     }
 
+    /**
+     * Perform initialization of post creation fragment.
+     */
     private void initBottomSheet() {
         bottomSheetBehavior = BottomSheetBehavior.from(networkChooseScroll);
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
@@ -166,11 +173,10 @@ public class FeedActivity extends AppCompatActivity
         return true;
     }
 
-    @OnClick(R.id.fab)
-    public void onNewPostClicked() {
-        bottomSheetBehavior.setState(STATE_EXPANDED);
-    }
-
+    /**
+     * Starts fragment that replaced all content currently visible on the screen.
+     * Also add this fragment to back stack.
+     */
     @Override
     public void startFragment(@NonNull Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
@@ -183,5 +189,10 @@ public class FeedActivity extends AppCompatActivity
         bottomSheetBehavior.setState(STATE_COLLAPSED);
         newPostRoot.setVisibility(GONE);
         background.setOpacity(0);
+    }
+
+    @OnClick(R.id.fab)
+    public void onNewPostClicked() {
+        bottomSheetBehavior.setState(STATE_EXPANDED);
     }
 }

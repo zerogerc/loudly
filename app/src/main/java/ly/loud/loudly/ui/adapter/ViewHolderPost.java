@@ -74,13 +74,11 @@ public class ViewHolderPost extends ViewHolder<PlainPost> {
         text.setText(post.getText());
         data.setText(Utils.getDateFormatted(post.getDate()));
 
-        itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), FullPostInfoActivity.class);
-                intent.putExtra(FullPostInfoActivity.POST_KEY, post);
-                getActivity().startActivity(intent);
-            }
+        itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), FullPostInfoActivity.class);
+            intent.putExtra(FullPostInfoActivity.POST_KEY, post);
+            intent.putExtra(FullPostInfoActivity.INSTANCES_KEY, Utils.getInstances(post));
+            getActivity().startActivity(intent);
         });
         loadPictures(post);
         handleButtons(post);

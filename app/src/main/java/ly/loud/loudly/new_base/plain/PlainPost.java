@@ -3,11 +3,12 @@ package ly.loud.loudly.new_base.plain;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.ArrayList;
+
 import ly.loud.loudly.new_base.Location;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.ui.adapter.Item;
-
-import java.util.ArrayList;
 
 /**
  * Just post - say + location
@@ -39,7 +40,7 @@ public class PlainPost<T extends Attachment> extends PlainSay<T> implements Item
 
     protected PlainPost(@NonNull Parcel parcel) {
         super(parcel);
-        location = Location.CREATOR.createFromParcel(parcel);
+        location = parcel.readParcelable(Location.class.getClassLoader());
     }
 
     @Nullable

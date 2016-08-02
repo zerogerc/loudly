@@ -215,7 +215,6 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public void LogoutClick(int network) {
-        Loudly.getContext().stopGetInfoService();
         Networks.makeWrap(network).resetState();
 
         new AsyncTask<Integer, Void, Integer>() {
@@ -244,7 +243,6 @@ public class SettingsActivity extends AppCompatActivity {
                 }
 
                 Loudly.getPostHolder().cleanUp(Collections.singletonList(network), false);
-                MainActivity.loadedNetworks[network] = false;
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, network);
     }

@@ -3,12 +3,13 @@ package ly.loud.loudly.new_base;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.ArrayList;
+
 import ly.loud.loudly.new_base.Networks.Network;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainPost;
-
-import java.util.ArrayList;
 
 /**
  * Post that exists in one network
@@ -73,8 +74,8 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     private SinglePost(@NonNull Parcel parcel) {
         super(parcel);
         network = parcel.readInt();
-        link = Link.CREATOR.createFromParcel(parcel);
-        info = Info.CREATOR.createFromParcel(parcel);
+        link = parcel.readParcelable(Link.class.getClassLoader());
+        info = parcel.readParcelable(Info.class.getClassLoader());
     }
 
     @Override
