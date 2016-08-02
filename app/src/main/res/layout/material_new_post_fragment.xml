@@ -6,7 +6,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="57dp"
+        android:layout_marginBottom="61dp"
         android:fillViewport="true">
 
         <LinearLayout
@@ -41,7 +41,9 @@
                 android:id="@+id/material_new_post_fragment_text_plus_attachments"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp">
 
                 <EditText
                     android:id="@+id/text"
@@ -50,8 +52,7 @@
                     android:background="@android:color/transparent"
                     android:gravity="start"
                     android:hint="What's on your mind?"
-                    android:paddingLeft="8dp"
-                    android:paddingRight="8dp" />
+                    android:paddingBottom="16dp"/>
 
                 <android.support.v7.widget.RecyclerView
                     android:id="@+id/attachments"

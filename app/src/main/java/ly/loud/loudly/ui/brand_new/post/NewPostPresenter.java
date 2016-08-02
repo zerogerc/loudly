@@ -47,7 +47,7 @@ public class NewPostPresenter extends BasePresenter<NewPostView> {
     }
 
     public <T extends Fragment & NewPostView> void loadImageFromGallery(@NonNull T target) {
-        RxPaparazzo.takeImage(target)
+        RxPaparazzo.takeImage(target).useInternalStorage()
                 .usingGallery()
                 .subscribe(response -> {
                     if (response.resultCode() != Activity.RESULT_OK) {
