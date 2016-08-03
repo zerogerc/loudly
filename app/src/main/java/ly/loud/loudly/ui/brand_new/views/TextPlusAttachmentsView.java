@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
@@ -32,14 +31,12 @@ public class TextPlusAttachmentsView extends LinearLayout {
     @NonNull
     RecyclerView attachmentsView;
 
-    @NonNull
     private final int attachmentsHeight = getResources().getDimensionPixelOffset(R.dimen.text_with_attachment_attachment_size);
 
-    @Nullable
-    private OnAttachmentListener onAttachmentListener;
-
+    @NonNull
     private List<Attachment> attachmentList = new ArrayList<>();
 
+    @SuppressWarnings("NullableProblems") // onAttachedToWindow
     @NonNull
     private AttachmentAdapter adapter;
 
@@ -72,29 +69,11 @@ public class TextPlusAttachmentsView extends LinearLayout {
         attachmentsView.setAdapter(adapter);
     }
 
-    public void setOnAttachmentListener(@Nullable OnAttachmentListener onAttachmentListener) {
-        this.onAttachmentListener = onAttachmentListener;
-    }
-
-    @Nullable
-    public OnAttachmentListener getOnAttachmentListener() {
-        return onAttachmentListener;
-    }
-
-    @NonNull
-    public String getText() {
-        return textView.getText().toString();
-    }
-
     public void addAttachment(@NonNull Attachment attachment) {
         attachmentList.add(attachment);
         setAttachmentsParams();
         setEditTextParams();
         adapter.notifyDataSetChanged();
-
-        if (onAttachmentListener != null) {
-            onAttachmentListener.onAttachmentAdded(attachment);
-        }
     }
 
     private void setEditTextParams() {
@@ -117,9 +96,14 @@ public class TextPlusAttachmentsView extends LinearLayout {
         attachmentsView.setLayoutParams(params);
     }
 
-    public interface OnAttachmentListener {
-        void onAttachmentAdded(@NonNull Attachment attachment);
+    @NonNull
+    public String getText() {
+        return textView.getText().toString();
+    }
 
-        void onAttachmentRemoved(@NonNull Attachment attachment);
+    @NonNull
+    public List<Attachment> getAttachmentList() {
+        return attachmentList;
+
     }
 }

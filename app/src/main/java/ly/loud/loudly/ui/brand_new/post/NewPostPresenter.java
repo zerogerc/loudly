@@ -16,7 +16,6 @@ import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.ui.brand_new.BasePresenter;
-import solid.collections.SolidList;
 
 public class NewPostPresenter extends BasePresenter<NewPostView> {
 
@@ -63,8 +62,9 @@ public class NewPostPresenter extends BasePresenter<NewPostView> {
     }
 
     public void uploadPost(@Nullable String text,
-                           @NonNull SolidList<Attachment> attachments,
+                           @NonNull List<Attachment> attachments,
                            @NonNull List<NetworkContract> networks
     ) {
+        // TODO: Here we have all date to upload post
     }
 }
