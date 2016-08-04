@@ -66,7 +66,7 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<List<PlainPost>> loadPosts(@NonNull TimeInterval timeInterval);
+    Single<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval);
 
     /**
      * Get persons by request type. For example: peoples that like certain post.

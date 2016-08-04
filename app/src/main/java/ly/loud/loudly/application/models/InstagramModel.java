@@ -79,7 +79,7 @@ public class InstagramModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<List<PlainPost>> loadPosts(@NonNull TimeInterval timeInterval) {
+    public Single<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Single.just(Collections.emptyList());
     }
 

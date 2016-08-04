@@ -56,7 +56,7 @@ public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
 
     @NonNull
-    private final List<PlainPost> posts = new ArrayList<>();
+    private final List<SinglePost> posts = new ArrayList<>();
 
     private int offset;
 
@@ -208,7 +208,7 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Single<List<PlainPost>> loadPosts(@NonNull TimeInterval timeInterval) {
+    public Single<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Single.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
