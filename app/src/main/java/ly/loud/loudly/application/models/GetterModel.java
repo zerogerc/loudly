@@ -51,7 +51,6 @@ public class GetterModel {
                 .flatMap(model ->
                         model.getPersons(element, type)
                                 .map(persons -> new PersonsFromNetwork(persons, model.getId()))
-                                .toObservable()
                 );
     }
 
@@ -62,7 +61,6 @@ public class GetterModel {
                 .flatMap(model ->
                         model.getComments(element)
                                 .map(comments -> new CommentsFromNetwork(comments, model.getId()))
-                                .toObservable()
                 );
     }
 

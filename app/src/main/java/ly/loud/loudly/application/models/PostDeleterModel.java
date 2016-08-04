@@ -30,14 +30,14 @@ public class PostDeleterModel {
         return coreModel.elementExistsIn(post)
                 .filter(n -> n.getId() == network)
                 .take(1)
-                .flatMap(n -> safeDelete(post, n).toObservable())
+                .flatMap(n -> safeDelete(post, n))
                 .toSingle();
     }
 
-    private Single<Boolean> safeDelete(LoudlyPost post, NetworkContract networkContract) {
+    private Observable<Boolean> safeDelete(LoudlyPost post, NetworkContract networkContract) {
         SinglePost singleNetworkInstance = post.getSingleNetworkInstance(networkContract.getId());
         if (singleNetworkInstance == null) {
-            return Single.just(true);
+            return Observable.just(true);
         }
         return networkContract.delete(singleNetworkInstance);
     }
@@ -48,7 +48,6 @@ public class PostDeleterModel {
     public Observable<Pair<Integer, Boolean>> deletePostFromAllNetworks(@NonNull LoudlyPost post) {
         return coreModel.elementExistsIn(post)
                 .flatMap(n -> safeDelete(post, n)
-                        .map(result -> new Pair<>(n.getId(), result))
-                        .toObservable());
+                        .map(result -> new Pair<>(n.getId(), result)));
     }
 }

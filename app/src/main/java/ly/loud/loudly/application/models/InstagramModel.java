@@ -4,21 +4,16 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.new_base.KeyKeeper;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.networks.Instagram.InstagramAuthorizer;
 import ly.loud.loudly.networks.Instagram.InstagramKeyKeeper;
 import ly.loud.loudly.networks.Instagram.InstagramWrap;
-import ly.loud.loudly.new_base.Comment;
-import ly.loud.loudly.new_base.SingleImage;
-import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.*;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
-import rx.Single;
+import rx.Observable;
 
 import javax.inject.Inject;
 import java.util.Collections;
@@ -48,8 +43,8 @@ public class InstagramModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<Boolean> reset() {
-        return Single.just(true);
+    public Observable<Boolean> reset() {
+        return Observable.just(true);
     }
 
     public InstagramWrap getWrap() {
@@ -61,50 +56,50 @@ public class InstagramModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<SingleImage> upload(@NonNull PlainImage image) {
-        return Single.just(null);
+    public Observable<SingleImage> upload(@NonNull PlainImage image) {
+        return Observable.just(null);
     }
 
     @NonNull
     @Override
-    public Single<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
-        return Single.just(null);
+    public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
+        return Observable.just(null);
     }
 
     @NonNull
     @Override
-    public Single<Boolean> delete(@NonNull SinglePost post) {
-        return Single.just(false);
+    public Observable<Boolean> delete(@NonNull SinglePost post) {
+        return Observable.just(false);
     }
 
     @NonNull
     @Override
-    public Single<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return Single.just(Collections.emptyList());
+    public Observable<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
+        return Observable.just(Collections.emptyList());
     }
 
     @NonNull
     @Override
-    public Single<List<Person>> getPersons(@NonNull SingleNetworkElement element, @GetterModel.RequestType int requestType) {
-        return Single.just(Collections.emptyList());
+    public Observable<List<Person>> getPersons(@NonNull SingleNetworkElement element, @GetterModel.RequestType int requestType) {
+        return Observable.just(Collections.emptyList());
     }
 
     @NonNull
     @Override
-    public Single<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
-        return Single.just(null);
+    public Observable<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
+        return Observable.just(null);
     }
 
     @NonNull
     @Override
-    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
-        return Single.just(false);
+    public Observable<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
+        return Observable.just(false);
     }
 
     @NonNull
     @Override
-    public Single<Boolean> disconnect() {
-        return Single.just(false);
+    public Observable<Boolean> disconnect() {
+        return Observable.just(false);
     }
 
     @NonNull

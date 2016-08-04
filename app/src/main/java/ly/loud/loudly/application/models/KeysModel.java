@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.VK.VKKeyKeeper;
+import rx.Observable;
 import rx.Single;
 
 /**
@@ -50,7 +51,7 @@ public class KeysModel {
     }
 
     @CheckResult
-    public Single<Boolean> disconnectFromNetwork(int network) {
-        return Single.just(true);
+    public Observable<Boolean> disconnectFromNetwork(int network) {
+        return Observable.just(true);
     }
 }

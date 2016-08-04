@@ -22,6 +22,7 @@ import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.Utils;
 import retrofit2.Call;
 import retrofit2.Response;
+import rx.Observable;
 import rx.Single;
 
 import javax.inject.Inject;
@@ -58,8 +59,8 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<Boolean> reset() {
-        return Single.just(true);
+    public Observable<Boolean> reset() {
+        return Observable.just(true);
     }
 
     public FacebookWrap getWrap() {
@@ -71,20 +72,20 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<SingleImage> upload(@NonNull PlainImage image) {
-        return Single.just(null);
+    public Observable<SingleImage> upload(@NonNull PlainImage image) {
+        return Observable.just(null);
     }
 
     @NonNull
     @Override
-    public Single<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
-        return Single.just(null);
+    public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
+        return Observable.just(null);
     }
 
     @NonNull
     @Override
-    public Single<Boolean> delete(@NonNull SinglePost post) {
-        return Single.fromCallable(() -> {
+    public Observable<Boolean> delete(@NonNull SinglePost post) {
+        return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: Handle
@@ -108,8 +109,8 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
-        return Single.fromCallable(() -> {
+    public Observable<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
+        return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
                 //ToDo: handle
@@ -174,8 +175,8 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return Single.fromCallable(() -> {
+    public Observable<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
+        return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: handle
@@ -239,8 +240,8 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
-        return Single.fromCallable(() -> {
+    public Observable<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
+        return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo handle
@@ -280,17 +281,17 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
+    public Observable<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
         if (!(keyKeeper instanceof FacebookKeyKeeper)) {
             throw new IllegalArgumentException("Wrong keykeeper");
         }
         keysModel.setFacebookKeyKeeper(((FacebookKeyKeeper) keyKeeper));
-        return Single.just(true);
+        return Observable.just(true);
     }
 
     @NonNull
     @Override
-    public Single<Boolean> disconnect() {
+    public Observable<Boolean> disconnect() {
         return keysModel.disconnectFromNetwork(getId());
     }
 

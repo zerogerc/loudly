@@ -7,7 +7,9 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.says.LoudlyPost;
 import ly.loud.loudly.base.says.Post;
 import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import rx.Observable;
 import rx.Single;
@@ -30,8 +32,15 @@ public class PostUploadModel {
     // Save to DB after uploading to networks
     @CheckResult
     @NonNull
-    public Observable<SinglePost> uploadPost(@NonNull PlainPost<SingleAttachment> post, @NonNull List<NetworkContract> networks) {
+    public Observable<SinglePost> uploadPost(@NonNull PlainPost<SingleAttachment> post,
+                                             @NonNull List<NetworkContract> networks) {
         return Observable.from(networks)
-                .flatMap(network -> network.upload(post).toObservable());
+                .flatMap(network -> network.upload(post));
+    }
+
+    public Observable<SingleAttachment> uploadImage(@NonNull PlainImage attachment,
+                                                         @NonNull List<NetworkContract> networks) {
+        return Observable.from(networks)
+                .flatMap(networkContract ->  networkContract.upload(attachment));
     }
 }
