@@ -1,35 +1,36 @@
 package ly.loud.loudly.application.models;
 
 import android.graphics.Point;
+import android.hardware.camera2.params.Face;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
+import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.Facebook.FacebookClient;
 import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
-import ly.loud.loudly.networks.Facebook.entities.*;
-import ly.loud.loudly.new_base.*;
-import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.Facebook.FacebookWrap;
+import ly.loud.loudly.networks.Facebook.entities.*;
 import ly.loud.loudly.new_base.Comment;
-import ly.loud.loudly.new_base.Person;
+import ly.loud.loudly.new_base.*;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.Utils;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Observable;
-import rx.Single;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class FacebookModel implements NetworkContract {
 
@@ -73,13 +74,60 @@ public class FacebookModel implements NetworkContract {
     @NonNull
     @Override
     public Observable<SingleImage> upload(@NonNull PlainImage image) {
-        return Observable.just(null);
+        return Observable.fromCallable(() -> {
+            FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: handle
+                return null;
+            }
+            String url = image.getUrl();
+            if (url == null) {
+                return null;
+            }
+            File file = new File(image.getUrl());
+
+            RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+            MultipartBody.Part part = MultipartBody.Part.createFormData("source", file.getName(), requestBody);
+            Call<ElementId> elementIdCall = client.uploadPhoto(part, keyKeeper.getAccessToken());
+            Response<ElementId> execute = elementIdCall.execute();
+            if (execute == null) {
+                return null;
+            }
+            ElementId id = execute.body();
+            if (id == null) {
+                return null;
+            }
+            Map<String, SingleImage> images = getImageInfos(Collections.singletonList(id.id));
+            return images.get(id.id);
+        });
     }
 
     @NonNull
     @Override
     public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
-        return Observable.just(null);
+        return Observable.fromCallable(() -> {
+            FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: handle
+
+                return null;
+            }
+            String attachmentId = post.getAttachments().isEmpty() ? null :
+                    Link.getLink(post.getAttachments().get(0).getLink());
+
+            Call<ElementId> elementIdCall =
+                    client.uploadPost(post.getText(), attachmentId, keyKeeper.getAccessToken());
+            Response<ElementId> execute = elementIdCall.execute();
+            if (execute == null) {
+                return null;
+            }
+            ElementId id = execute.body();
+            if (id == null) {
+                return null;
+            }
+            return new SinglePost(post.getText(), post.getDate(), post.getAttachments(), post.getLocation(),
+                    getId(), new Link(id));
+        });
     }
 
     @NonNull
@@ -159,10 +207,37 @@ public class FacebookModel implements NetworkContract {
         });
     }
 
+    private Map<String, SingleImage> getImageInfos(List<String> images) throws IOException {
+        FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
+        if (keyKeeper == null) {
+            return Collections.emptyMap();
+        }
+        Call<Map<String, Picture>> pictureInfos =
+                client.getPictureInfos(toCommaSeparated(images), keyKeeper.getAccessToken());
+        Response<Map<String, Picture>> executed = pictureInfos.execute();
+        if (executed == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, Picture> response = executed.body();
+        if (response == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, SingleImage> result = new HashMap<>();
+        for (Map.Entry<String, Picture> entry : response.entrySet()) {
+            result.put(entry.getKey(), toImage(entry.getValue(), entry.getKey()));
+        }
+        return result;
+    }
+
     @NonNull
     private SingleImage toImage(@NonNull Photo photo) {
         // ToDo: Strange ID
         return new SingleImage(photo.src, new Point(photo.width, photo.height), getId(), new Link(photo.src));
+    }
+
+    @NonNull
+    private SingleImage toImage(@NonNull Picture photo, @NonNull String id) {
+        return new SingleImage(id, new Point(photo.width, photo.height), getId(), new Link(id));
     }
 
     @Nullable

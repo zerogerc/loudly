@@ -123,7 +123,7 @@ public class VKModel implements NetworkContract {
                 return null;
             }
 
-            File file = new File(image.getUrl());
+            File file = new File(url);
 
             RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
             MultipartBody.Part part = MultipartBody.Part.createFormData("photo", file.getName(), requestBody);

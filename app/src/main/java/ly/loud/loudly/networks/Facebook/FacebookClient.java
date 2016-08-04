@@ -3,11 +3,9 @@ package ly.loud.loudly.networks.Facebook;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.networks.Facebook.entities.*;
+import okhttp3.MultipartBody;
 import retrofit2.Call;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
+import retrofit2.http.*;
 
 import java.util.List;
 import java.util.Map;
@@ -48,5 +46,22 @@ public interface FacebookClient {
 
     @DELETE("{id}")
     Call<Result> deleteElement(@NonNull @Path("id") String id,
+                               @NonNull @Query("access_token") String accessToken);
+
+    @Multipart
+    @POST("me/photos?published=true&no_story=true")
+    @NonNull
+    Call<ElementId> uploadPhoto(@NonNull @Part MultipartBody.Part file,
+                                @Query("access_token") String accessToken);
+
+    @GET("?fields=link,width,height")
+    @NonNull
+    Call<Map<String, Picture>> getPictureInfos(@NonNull @Query("ids") String ids,
+                                               @NonNull @Query("access_token") String accessToken);
+
+    @POST("me/feed")
+    @NonNull
+    Call<ElementId> uploadPost(@Nullable @Query("message") String message,
+                               @Nullable @Query("object_attachment") String attachmentId,
                                @NonNull @Query("access_token") String accessToken);
 }
