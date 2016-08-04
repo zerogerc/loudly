@@ -2,7 +2,7 @@ package ly.loud.loudly.ui.brand_new;
 
 import android.support.annotation.IntDef;
 
-public abstract class ItemTypeAnnotation {
+public abstract class ItemTypes {
     @IntDef
     public @interface ItemType {}
     public static final int POST = 0;

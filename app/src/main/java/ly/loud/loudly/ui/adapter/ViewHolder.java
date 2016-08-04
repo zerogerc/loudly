@@ -28,12 +28,7 @@ public abstract class ViewHolder<T extends Item> extends RecyclerView.ViewHolder
     public abstract void refresh(final T item);
 
     public static ViewHolder makeViewHolder(Activity activity, ViewGroup parent, int viewType) {
-        switch (viewType) {
-            case Item.COMMENT:
-                return new ViewHolderComment(activity, parent);
-            default:
-                return new ViewHolderPost(activity, parent);
-        }
+        return new ViewHolderComment(activity, parent);
     }
 
     public Activity getActivity() {
