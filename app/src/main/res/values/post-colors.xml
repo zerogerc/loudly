@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="list_item_post_text_primary_text_color">@color/black_color</color>
+    <color name="list_item_post_secondary_text_color">@color/gray_blue</color>
+
+    <color name="list_item_post_icons_bright_color">@color/colorAccent</color>
+    <color name="list_item_post_icons_light_color">@color/colorAccentLight</color>
+
+    <color name="list_item_post_button_text_color">@color/gray_color</color>
+</resources>

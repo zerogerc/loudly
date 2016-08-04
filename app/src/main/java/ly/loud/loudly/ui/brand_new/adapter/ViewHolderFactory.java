@@ -4,8 +4,9 @@ import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import static ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.ItemType;
-import static ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.PERSON;
+import static ly.loud.loudly.ui.brand_new.ItemTypes.ItemType;
+import static ly.loud.loudly.ui.brand_new.ItemTypes.PERSON;
+import static ly.loud.loudly.ui.brand_new.ItemTypes.POST;
 
 public class ViewHolderFactory {
     public static BindingViewHolder provideViewHolder(
@@ -14,6 +15,8 @@ public class ViewHolderFactory {
             @ItemType int type
     ) {
         switch (type) {
+            case POST:
+                return new ViewHolderPerson(inflater, parent);
             case PERSON:
                 return new ViewHolderPerson(inflater, parent);
             default:

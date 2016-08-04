@@ -8,13 +8,15 @@ import java.util.ArrayList;
 
 import ly.loud.loudly.new_base.Location;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
-import ly.loud.loudly.ui.adapter.Item;
+import ly.loud.loudly.ui.brand_new.ItemTypes;
+import ly.loud.loudly.ui.brand_new.ItemTypes.ItemType;
+import ly.loud.loudly.ui.brand_new.adapter.ListItem;
 
 /**
  * Just post - say + location
  * @author Danil Kolikov
  */
-public class PlainPost<T extends Attachment> extends PlainSay<T> implements Item {
+public class PlainPost<T extends Attachment> extends PlainSay<T> implements ListItem {
     @NonNull
     public static final Creator<PlainPost> CREATOR = new Creator<PlainPost>() {
         @Override
@@ -49,8 +51,9 @@ public class PlainPost<T extends Attachment> extends PlainSay<T> implements Item
     }
 
     @Override
+    @ItemType
     public int getType() {
-        return POST;
+        return ItemTypes.POST;
     }
 
     @Override

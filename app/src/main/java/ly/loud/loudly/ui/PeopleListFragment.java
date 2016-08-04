@@ -85,6 +85,16 @@ public class PeopleListFragment extends DialogFragment {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Loudly.getContext().getAppComponent().inject(this);
+
+        //noinspection ConstantConditions
+        instances = getArguments().getParcelableArrayList(SINGLE_NETWORK_KEY);
+        requestType = getArguments().getInt(REQUEST_TYPE_KEY);
+    }
+
+    @Override
     @NonNull
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -92,13 +102,7 @@ public class PeopleListFragment extends DialogFragment {
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View rootView = inflater.inflate(R.layout.list_fragment, null);
 
-
-        Loudly.getContext().getAppComponent().inject(this);
         ButterKnife.bind(this, rootView);
-
-        //noinspection ConstantConditions
-        instances = getArguments().getParcelableArrayList(SINGLE_NETWORK_KEY);
-        requestType = getArguments().getInt(REQUEST_TYPE_KEY);
 
         int titleRes = R.string.people_fragment_title_likes;
         if (requestType == SHARES) {

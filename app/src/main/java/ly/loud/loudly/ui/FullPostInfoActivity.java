@@ -1,5 +1,6 @@
 package ly.loud.loudly.ui;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,8 +27,8 @@ import ly.loud.loudly.new_base.Comment;
 import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.new_base.Person;
+import ly.loud.loudly.new_base.SinglePost;
 import ly.loud.loudly.new_base.interfaces.ElementWithInfo;
-import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.adapter.Item;
@@ -44,7 +45,6 @@ import static rx.android.schedulers.AndroidSchedulers.mainThread;
 public class FullPostInfoActivity extends AppCompatActivity {
 
     public static final String POST_KEY = "post";
-    public static final String INSTANCES_KEY = "instances";
 
     @BindView(R.id.full_post_info_post_footer)
     View postFooter;
@@ -92,8 +92,13 @@ public class FullPostInfoActivity extends AppCompatActivity {
     private ArrayList<Item> likers;
 
     private PlainPost post;
-    private ArrayList<SingleNetworkElement> instances;
+    private ArrayList<SinglePost> instances;
 
+    public static void invoke(@NonNull Activity activity, @NonNull PlainPost post) {
+        Intent intent = new Intent(activity, FullPostInfoActivity.class);
+        intent.putExtra(POST_KEY, post);
+        activity.startActivity(intent);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +122,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
     private void handleIntent(Intent intent) {
         PlainPost prev = post;
         post = intent.getParcelableExtra(POST_KEY);
-        instances = intent.getParcelableArrayListExtra(INSTANCES_KEY);
+        instances = Utils.getInstances(post);
 
         if (prev == null || post != prev) {
             loadPostView();

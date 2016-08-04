@@ -3,10 +3,10 @@ package ly.loud.loudly.new_base;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.ItemType;
+import ly.loud.loudly.ui.brand_new.ItemTypes.ItemType;
 import ly.loud.loudly.ui.brand_new.adapter.ListItem;
 
-import static ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.PERSON;
+import static ly.loud.loudly.ui.brand_new.ItemTypes.PERSON;
 
 public class Person implements ListItem, Parcelable {
     private String firstName, lastName;

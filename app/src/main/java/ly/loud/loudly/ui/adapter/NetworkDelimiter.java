@@ -1,10 +1,10 @@
 package ly.loud.loudly.ui.adapter;
 
 import ly.loud.loudly.new_base.Networks.Network;
-import ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.ItemType;
+import ly.loud.loudly.ui.brand_new.ItemTypes.ItemType;
 import ly.loud.loudly.ui.brand_new.adapter.ListItem;
 
-import static ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.DELIMITER;
+import static ly.loud.loudly.ui.brand_new.ItemTypes.DELIMITER;
 
 /**
  * Created by ZeRoGerc on 07.12.15.

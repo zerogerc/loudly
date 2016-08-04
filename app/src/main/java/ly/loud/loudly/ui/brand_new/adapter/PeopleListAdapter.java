@@ -12,8 +12,8 @@ import ly.loud.loudly.new_base.Networks.Network;
 import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 
-import static ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.ItemType;
-import static ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.PERSON;
+import static ly.loud.loudly.ui.brand_new.ItemTypes.ItemType;
+import static ly.loud.loudly.ui.brand_new.ItemTypes.PERSON;
 
 public class PeopleListAdapter extends RecyclerView.Adapter<BindingViewHolder> {
 
