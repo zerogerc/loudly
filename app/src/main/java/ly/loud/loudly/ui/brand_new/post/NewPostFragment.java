@@ -83,14 +83,13 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
 
     @OnClick(R.id.material_new_post_fragment_send_button)
     public void onSendClicked() {
-        // Activity knows the networks chosen by user
-//        List<NetworkContract> models = ((NetworksGetter) getActivity()).getChoosenNetworks();
+        List<NetworkContract> models = ((NetworksProvider) getActivity()).getChosenNetworks();
+        String text = textPlusAttachmentsView.getText();
+        List<Attachment> attachments = textPlusAttachmentsView.getAttachmentList();
 
-//        presenter.uploadPost(
-//                textPlusAttachmentsView.getText(),
-//                SolidList.empty(),
-//                models
-//                );
+        if (!(text.isEmpty() && attachments.isEmpty())) {
+            presenter.uploadPost(text, attachments, models);
+        }
     }
 
     @OnClick(R.id.material_new_post_fragment_camera_button)
@@ -106,7 +105,7 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     /**
      * Interface for getting chosen networks. (networks to post to)
      */
-    public interface NetworksGetter {
-        List<NetworkContract> getChoosenNetworks();
+    public interface NetworksProvider {
+        List<NetworkContract> getChosenNetworks();
     }
 }

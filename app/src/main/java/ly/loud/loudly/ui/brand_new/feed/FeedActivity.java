@@ -18,13 +18,18 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.application.models.NetworkContract;
 import ly.loud.loudly.ui.SettingsActivity;
 import ly.loud.loudly.ui.brand_new.FragmentInvoker;
+import ly.loud.loudly.ui.brand_new.post.NetworksChooseLayout;
+import ly.loud.loudly.ui.brand_new.post.NewPostFragment;
 import ly.loud.loudly.ui.brand_new.views.ScrimCoordinatorLayout;
 
 import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
@@ -37,7 +42,7 @@ import static android.view.View.VISIBLE;
  * BottomSheet Fragment (for post creation), menu and {@link NavigationView}.
  */
 public class FeedActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, FragmentInvoker {
+        implements NavigationView.OnNavigationItemSelectedListener, FragmentInvoker , NewPostFragment.NetworksProvider {
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.app_bar_feed_new_post_root)
@@ -73,6 +78,11 @@ public class FeedActivity extends AppCompatActivity
     @BindView(R.id.drawer_layout)
     @NonNull
     DrawerLayout drawerLayout;
+
+    @SuppressWarnings("NullableProblems")
+    @BindView(R.id.network_choose_layout)
+    @NonNull
+    NetworksChooseLayout networksChooseLayout;
 
     @SuppressWarnings("NullableProblems") // onCreate
     @NonNull
@@ -183,6 +193,11 @@ public class FeedActivity extends AppCompatActivity
                 .replace(R.id.fragment_container, fragment, fragment.getTag())
                 .addToBackStack(null)
                 .commit();
+    }
+
+    @Override
+    public List<NetworkContract> getChosenNetworks() {
+        return networksChooseLayout.getChosenNetworks();
     }
 
     private void hidePostCreateFragment() {

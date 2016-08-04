@@ -12,6 +12,7 @@ import android.util.AttributeSet;
 import com.hannesdorfmann.mosby.mvp.layout.MvpLinearLayout;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -26,7 +27,6 @@ import ly.loud.loudly.application.models.NetworkContract;
 /**
  * Fragment that allows user to choose networks from all connected.
  *
- * @see onNetworksChooseListener
  */
 public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, NetworksChoosePresenter>
         implements NetworksChooseView {
@@ -49,11 +49,9 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
     @NonNull
     private final List<NetworkContract> models = new ArrayList<>();
 
+    // Has the same size as models
     @NonNull
     private final List<Boolean> result = new ArrayList<>();
-
-    @Nullable
-    private onNetworksChooseListener onNetworksChooseListener;
 
     public NetworksChooseLayout(@NonNull Context context) {
         this(context, null);
@@ -94,20 +92,23 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
         recyclerView.setAdapter(adapter);
     }
 
-    public void setOnNetworksChooseListener(@Nullable NetworksChooseLayout.onNetworksChooseListener onNetworksChooseListener) {
-        this.onNetworksChooseListener = onNetworksChooseListener;
-    }
-
     @Override
     public void showModels(@NonNull List<NetworkContract> list) {
         models.addAll(list);
-        for (int i = 0; i < list.size(); i++) {
-            result.add(false);
-        }
+        result.addAll(Collections.nCopies(list.size(), false));
         adapter.notifyDataSetChanged();
     }
 
-    public interface onNetworksChooseListener {
-        void onNetworksChoosen(List<NetworkContract> models);
+    /**
+     * @return List of networks currently chosen by user.
+     */
+    public List<NetworkContract> getChosenNetworks() {
+        List<NetworkContract> chosen = new ArrayList<>();
+        for (int i = 0, size = result.size(); i < size; i++) {
+            if (result.get(i)) {
+                chosen.add(models.get(i));
+            }
+        }
+        return chosen;
     }
 }
