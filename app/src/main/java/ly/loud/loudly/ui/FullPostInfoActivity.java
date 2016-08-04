@@ -12,15 +12,20 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.new_base.Comment;
 import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.new_base.interfaces.ElementWithInfo;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.new_base.plain.PlainImage;
@@ -31,9 +36,6 @@ import ly.loud.loudly.ui.views.GlideImageView;
 import ly.loud.loudly.util.Utils;
 import rx.Observable;
 import rx.schedulers.Schedulers;
-
-import javax.inject.Inject;
-import java.util.ArrayList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
@@ -127,7 +129,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
                     .observeOn(mainThread())
                     .doOnNext(commentsFromNetwork -> {
                         if (!commentsFromNetwork.comments.isEmpty()) {
-                            comments.add(new NetworkDelimiter(commentsFromNetwork.network));
+//                            comments.add(new NetworkDelimiter(commentsFromNetwork.network));
                             comments.addAll(commentsFromNetwork.comments);
                         }
                     })
@@ -146,7 +148,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
                         // TODO: say user that something goes wrong
                     })
                     .doOnNext(personsFromNetwork -> {
-                        likers.addAll(personsFromNetwork.persons);
+//                        likers.addAll(personsFromNetwork.persons);
                     })
                     .doOnCompleted(this::fillLikers)
                     .subscribe();

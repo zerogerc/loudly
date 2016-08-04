@@ -9,9 +9,6 @@ import android.support.customtabs.CustomTabsIntent;
 
 import ly.loud.loudly.R;
 
-/**
- * Presenter for {@link ViewHolderPerson} for opening url in web tabs.
- */
 public class ViewHolderPersonPresenter {
 
     private @NonNull Activity activity;
