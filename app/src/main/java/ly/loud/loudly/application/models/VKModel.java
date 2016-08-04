@@ -105,8 +105,8 @@ public class VKModel implements NetworkContract {
             if (keyKeeper == null) {
                 return null;
             }
-            if (!(image instanceof LocalFile)) {
-                // Can't upload such image
+            String url = image.getUrl();
+            if (url == null) {
                 return null;
             }
             Call<VKResponse<PhotoUploadServer>> getServerCall =
@@ -123,7 +123,7 @@ public class VKModel implements NetworkContract {
                 return null;
             }
 
-            File file = new File(/* ToDo: get file path from URI */ "");
+            File file = new File(image.getUrl());
 
             RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
             MultipartBody.Part part = MultipartBody.Part.createFormData("photo", file.getName(), requestBody);
