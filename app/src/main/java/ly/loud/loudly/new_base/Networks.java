@@ -28,6 +28,7 @@ public class Networks {
     // It's important to add new network to the LinksContract, so we could save it to DB
     @IntDef
     public @interface Network {}
+    public static final int NO_NETWORK = -1;
     public static final int LOUDLY = 0;
     public static final int FB = 1;
     public static final int TWITTER = 2;

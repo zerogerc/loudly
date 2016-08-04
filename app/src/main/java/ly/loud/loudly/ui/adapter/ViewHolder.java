@@ -5,8 +5,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import ly.loud.loudly.ui.adapter.person.ViewHolderPerson;
-
 /**
  * Base class for ViewHolders BaseAdapter using
  *
@@ -33,12 +31,8 @@ public abstract class ViewHolder<T extends Item> extends RecyclerView.ViewHolder
         switch (viewType) {
             case Item.COMMENT:
                 return new ViewHolderComment(activity, parent);
-            case Item.PERSON:
-                return new ViewHolderPerson(activity, parent);
-            case Item.POST:
-                return new ViewHolderPost(activity, parent);
             default:
-                return new ViewHolderDelimiter(activity, parent);
+                return new ViewHolderPost(activity, parent);
         }
     }
 

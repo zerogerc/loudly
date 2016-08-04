@@ -3,9 +3,12 @@ package ly.loud.loudly.new_base;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import ly.loud.loudly.ui.adapter.Item;
+import ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.ItemType;
+import ly.loud.loudly.ui.brand_new.adapter.ListItem;
 
-public class Person implements Item, Parcelable {
+import static ly.loud.loudly.ui.brand_new.ItemTypeAnnotation.PERSON;
+
+public class Person implements ListItem, Parcelable {
     private String firstName, lastName;
     private String photoUrl;
     private int network;
@@ -70,8 +73,9 @@ public class Person implements Item, Parcelable {
     }
 
     @Override
+    @ItemType
     public int getType() {
-        return Item.PERSON;
+        return PERSON;
     }
 
     @Override

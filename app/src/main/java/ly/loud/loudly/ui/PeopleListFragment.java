@@ -15,8 +15,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -27,9 +25,7 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.ui.adapter.AfterLoadAdapter;
-import ly.loud.loudly.ui.adapter.Item;
-import ly.loud.loudly.ui.adapter.NetworkDelimiter;
+import ly.loud.loudly.ui.brand_new.adapter.PeopleListAdapter;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
@@ -41,29 +37,45 @@ public class PeopleListFragment extends DialogFragment {
     private static final String SINGLE_NETWORK_KEY = "single_network";
     private static final String REQUEST_TYPE_KEY = "request_type";
 
+    @SuppressWarnings("NullableProblems") // Inject
     @Inject
+    @NonNull
     GetterModel getterModel;
 
+    @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.people_list_recycler_view)
+    @NonNull
     RecyclerView recyclerView;
 
+    @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.people_list_progress)
+    @NonNull
     ProgressBar progress;
 
+    @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.people_list_title)
+    @NonNull
     TextView title;
 
     @RequestType
     private int requestType;
 
+    @SuppressWarnings("NullableProblems") // onCreateDialog
     @NonNull
     private ArrayList<? extends SingleNetworkElement> instances;
 
+    @SuppressWarnings("NullableProblems") // onCreateDialog
     @NonNull
-    private final LinkedList<Item> items = new LinkedList<>();
+    private PeopleListAdapter adapter;
+
+    /**
+     * Indicates whether this fragment created view for the first time.
+     * Should be accessed only from main thread.
+     */
+    private boolean firstRun = true;
 
     public static PeopleListFragment newInstance(@NonNull ArrayList<? extends SingleNetworkElement> element,
-                                                 int requestType) {
+                                                 @RequestType int requestType) {
         PeopleListFragment frag = new PeopleListFragment();
         Bundle args = new Bundle();
         args.putParcelableArrayList(SINGLE_NETWORK_KEY, element);
@@ -81,7 +93,7 @@ public class PeopleListFragment extends DialogFragment {
         View rootView = inflater.inflate(R.layout.list_fragment, null);
 
 
-        ((Loudly) getActivity().getApplication()).getAppComponent().inject(this);
+        Loudly.getContext().getAppComponent().inject(this);
         ButterKnife.bind(this, rootView);
 
         //noinspection ConstantConditions
@@ -95,13 +107,10 @@ public class PeopleListFragment extends DialogFragment {
         title.setText(titleRes);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setAdapter(new AfterLoadAdapter(items, getActivity()) {
-                                    @Override
-                                    public void onFirstItemAppeared() {
-                                        progress.setVisibility(View.GONE);
-                                    }
-                                }
-        );
+
+        adapter = new PeopleListAdapter();
+        recyclerView.setAdapter(adapter);
+
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
         progress.setVisibility(View.VISIBLE);
@@ -114,25 +123,21 @@ public class PeopleListFragment extends DialogFragment {
     public void onResume() {
         super.onResume();
 
-        if (items.isEmpty()) { // First run
+        if (firstRun) { // First run
             Observable.from(instances)
                     .flatMap(instance -> getterModel.getPersonsByType(instance, requestType))
                     .subscribeOn(Schedulers.io())
                     .observeOn(mainThread())
                     .doOnNext(personsFromNetwork -> {
                         if (!personsFromNetwork.persons.isEmpty()) {
-                            items.add(new NetworkDelimiter(personsFromNetwork.network));
-                            items.addAll(personsFromNetwork.persons);
-                        }
-
-                        if (recyclerView.getAdapter() != null) {
-                            recyclerView.getAdapter().notifyDataSetChanged();
+                            adapter.addPersons(personsFromNetwork.persons, personsFromNetwork.network);
                         }
                     })
                     .doOnError(throwable -> {
                         // TODO: show user that something goes wrong
                     })
                     .doOnCompleted(() -> {
+                        firstRun = false;
                         progress.setVisibility(View.GONE);
                     })
                     .subscribe();
