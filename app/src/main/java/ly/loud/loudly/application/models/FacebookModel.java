@@ -1,7 +1,6 @@
 package ly.loud.loudly.application.models;
 
 import android.graphics.Point;
-import android.hardware.camera2.params.Face;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.R;
@@ -241,7 +240,7 @@ public class FacebookModel implements NetworkContract {
     }
 
     @Nullable
-    private SingleAttachment toAttachment(@NonNull Attachment attachment) {
+    private SingleAttachment toAttachment(@NonNull FbAttachment attachment) {
         if (attachment.media.image != null) {
             return toImage(attachment.media.image);
         }
@@ -270,7 +269,7 @@ public class FacebookModel implements NetworkContract {
             for (Post post : body.data) {
                 ArrayList<SingleAttachment> attachments = new ArrayList<>();
                 if (post.attachments != null) {
-                    for (Attachment attachment : post.attachments.data) {
+                    for (FbAttachment attachment : post.attachments.data) {
                         SingleAttachment parsed = toAttachment(attachment);
                         if (parsed != null) {
                             attachments.add(parsed);
@@ -328,11 +327,11 @@ public class FacebookModel implements NetworkContract {
 
                 return Collections.emptyList();
             }
-            Call<Data<List<ly.loud.loudly.networks.Facebook.entities.Comment>>> dataCall =
+            Call<Data<List<FbComment>>> dataCall =
                     client.loadComments(link, keyKeeper.getAccessToken());
-            Response<Data<List<ly.loud.loudly.networks.Facebook.entities.Comment>>> executed = dataCall.execute();
+            Response<Data<List<FbComment>>> executed = dataCall.execute();
             List<String> personIds = new ArrayList<>();
-            for (ly.loud.loudly.networks.Facebook.entities.Comment comment : executed.body().data) {
+            for (FbComment comment : executed.body().data) {
                 personIds.add(comment.from.id);
             }
 
@@ -343,7 +342,7 @@ public class FacebookModel implements NetworkContract {
             Map<String, FbPerson> persons = personsCallExecuted.body();
 
             List<Comment> comments = new ArrayList<>();
-            for (ly.loud.loudly.networks.Facebook.entities.Comment comment : executed.body().data) {
+            for (FbComment comment : executed.body().data) {
                 ArrayList<SingleAttachment> attachment = comment.attachment == null ? Utils.emptyArrayList() :
                         Utils.asArrayList(toAttachment(comment.attachment));
 

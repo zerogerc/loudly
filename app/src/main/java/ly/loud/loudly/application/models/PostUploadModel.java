@@ -48,13 +48,9 @@ public class PostUploadModel {
                                                                 @NonNull NetworkContract networkContract) {
         // ToDo: Handle error
         return Observable.from(attachments)
-                .flatMap(attachment -> {
-                    if (attachment instanceof PlainImage) {
-                        return networkContract.upload(((PlainImage) attachment))
-                                .map(uploaded -> ((SingleAttachment) uploaded));
-                    }
-                    throw new IllegalArgumentException("Unsupported attachment");
-                })
+                .filter(attachment -> attachment instanceof PlainImage)
+                .flatMap(attachment -> networkContract.upload(((PlainImage) attachment))
+                        .map(uploaded -> ((SingleAttachment) uploaded)))
                 .toList();
     }
 

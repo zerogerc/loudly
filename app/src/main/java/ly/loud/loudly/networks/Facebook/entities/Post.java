@@ -23,5 +23,6 @@ public class Post {
     @Nullable
     public Summary likes, comments;
 
-    public Data<List<Attachment>> attachments;
+    @Nullable
+    public Data<List<FbAttachment>> attachments;
 }

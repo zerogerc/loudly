@@ -51,6 +51,7 @@ public class KeysModel {
     }
 
     @CheckResult
+    @NonNull
     public Observable<Boolean> disconnectFromNetwork(int network) {
         return Observable.just(true);
     }

@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 /**
  * @author Danil Kolikov
  */
-public class Comment {
+public class FbComment {
     public String id;
 
     public FbPerson from;
@@ -24,5 +24,5 @@ public class Comment {
     public int likeCount;
 
     @Nullable
-    public Attachment attachment;
+    public FbAttachment attachment;
 }

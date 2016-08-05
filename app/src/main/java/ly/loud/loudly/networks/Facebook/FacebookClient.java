@@ -30,8 +30,8 @@ public interface FacebookClient {
 
     @GET("{id}/comments?date_format=U&fields=message,from%7Bid%7D,created_time,id,comment_count,like_count,attachment")
     @NonNull
-    Call<Data<List<Comment>>> loadComments(@NonNull @Path("id") String id,
-                                           @NonNull @Query("access_token") String accessToken);
+    Call<Data<List<FbComment>>> loadComments(@NonNull @Path("id") String id,
+                                             @NonNull @Query("access_token") String accessToken);
 
     @GET("?fields=first_name,last_name,picture")
     @NonNull

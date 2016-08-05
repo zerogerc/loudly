@@ -5,5 +5,6 @@ package ly.loud.loudly.networks.Facebook.entities;
  */
 public class Picture {
     public String link;
+
     public int width, height;
 }
