@@ -2,6 +2,7 @@ package ly.loud.loudly.ui.brand_new.post;
 
 import android.app.Activity;
 import android.graphics.Point;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -16,6 +17,9 @@ import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.ui.brand_new.BasePresenter;
+
+import static rx.android.schedulers.AndroidSchedulers.mainThread;
+import static rx.schedulers.Schedulers.io;
 
 public class NewPostPresenter extends BasePresenter<NewPostView> {
 
@@ -46,15 +50,16 @@ public class NewPostPresenter extends BasePresenter<NewPostView> {
     }
 
     public <T extends Fragment & NewPostView> void loadImageFromGallery(@NonNull T target) {
-        RxPaparazzo.takeImage(target).useInternalStorage()
+        RxPaparazzo.takeImage(target)
+                .useInternalStorage()
                 .usingGallery()
                 .subscribe(response -> {
                     if (response.resultCode() != Activity.RESULT_OK) {
                         executeIfViewBound(NewPostView::showGalleryError);
                         return;
                     }
-
-                    PlainImage image = new PlainImage(response.data(), new Point(0, 0));
+                    PlainImage image = new PlainImage(Uri.parse(response.data()).getPath(),
+                            new Point(0, 0));
                     attachments.add(image);
 
                     response.targetUI().showNewAttachment(image);
@@ -65,6 +70,9 @@ public class NewPostPresenter extends BasePresenter<NewPostView> {
                            @NonNull List<Attachment> attachments,
                            @NonNull List<NetworkContract> networks
     ) {
-        // TODO: Here we have all date to upload post
+        postUploadModel.uploadPost(text, attachments, networks)
+                .subscribeOn(io())
+                .observeOn(mainThread())
+                .subscribe();
     }
 }

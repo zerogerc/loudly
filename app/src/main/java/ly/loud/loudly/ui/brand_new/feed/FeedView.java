@@ -12,5 +12,5 @@ import ly.loud.loudly.new_base.plain.PlainPost;
 
 @UiThread
 public interface FeedView extends MvpView {
-    void onNewLoadedPosts(@NonNull List<PlainPost> posts);
+    void onNewLoadedPosts(@NonNull List<? extends PlainPost> posts);
 }

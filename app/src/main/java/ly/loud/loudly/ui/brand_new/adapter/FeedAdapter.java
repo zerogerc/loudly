@@ -44,13 +44,13 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
         return posts.size();
     }
 
-    public void setPosts(@NonNull List<PlainPost> newPosts) {
+    public void setPosts(@NonNull List<? extends PlainPost> newPosts) {
         posts.clear();
         posts.addAll(newPosts);
         notifyDataSetChanged();
     }
 
-    public void addPosts(@NonNull List<PlainPost> newPosts) {
+    public void addPosts(@NonNull List<? extends PlainPost> newPosts) {
         int positionStart = posts.size();
         posts.addAll(newPosts);
         notifyItemRangeInserted(positionStart, newPosts.size());

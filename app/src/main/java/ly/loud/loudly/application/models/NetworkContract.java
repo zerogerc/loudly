@@ -16,7 +16,7 @@ import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
-import rx.Single;
+import rx.Observable;
 
 import static ly.loud.loudly.application.models.GetterModel.RequestType;
 
@@ -32,7 +32,7 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<Boolean> reset();
+    Observable<Boolean> reset();
 
     /**
      * Upload image to network
@@ -41,7 +41,7 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<SingleImage> upload(@NonNull PlainImage image);
+    Observable<SingleImage> upload(@NonNull PlainImage image);
 
     /**
      * Upload post to network
@@ -50,14 +50,14 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post);
+    Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post);
 
     /**
      * Delete post from network
      */
     @CheckResult
     @NonNull
-    Single<Boolean> delete(@NonNull SinglePost post);
+    Observable<Boolean> delete(@NonNull SinglePost post);
 
     /**
      * Load posts from network
@@ -66,21 +66,21 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<List<PlainPost>> loadPosts(@NonNull TimeInterval timeInterval);
+    Observable<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval);
 
     /**
      * Get persons by request type. For example: peoples that like certain post.
      */
     @CheckResult
     @NonNull
-    Single<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType);
+    Observable<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType);
 
     /**
      * Get comments for element of {@link SingleNetworkElement}.
      */
     @CheckResult
     @NonNull
-    Single<List<Comment>> getComments(@NonNull SingleNetworkElement element);
+    Observable<List<Comment>> getComments(@NonNull SingleNetworkElement element);
 
     /**
      * Connect this network for proper work.
@@ -89,7 +89,7 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<Boolean> connect(@NonNull KeyKeeper keyKeeper);
+    Observable<Boolean> connect(@NonNull KeyKeeper keyKeeper);
 
     /**
      * Disconnect from network
@@ -97,7 +97,7 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<Boolean> disconnect();
+    Observable<Boolean> disconnect();
 
     /**
      * User-readable full name of network

@@ -2,16 +2,18 @@ package ly.loud.loudly.application.models;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
-import android.support.v4.util.Pair;
+import android.support.annotation.Nullable;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.new_base.LoudlyImage;
+import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
+import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
+import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
-import rx.Single;
-import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +32,62 @@ public class PostUploadModel {
     // Save to DB after uploading to networks
     @CheckResult
     @NonNull
-    public Observable<SinglePost> uploadPost(@NonNull PlainPost<SingleAttachment> post, @NonNull List<NetworkContract> networks) {
+    private Observable<SinglePost> uploadPost(@Nullable String post, List<Attachment> attachments,
+                                             @NonNull NetworkContract network) {
+        return uploadAttachments(attachments, network)
+                .flatMap(list -> {
+                    PlainPost<SingleAttachment> plainPost =
+                            new PlainPost<>(post, System.currentTimeMillis(), new ArrayList<>(list), null);
+                    return network.upload(plainPost);
+                });
+    }
+
+    @CheckResult
+    @NonNull
+    private Observable<List<SingleAttachment>> uploadAttachments(@NonNull List<Attachment> attachments,
+                                                                @NonNull NetworkContract networkContract) {
+        // ToDo: Handle error
+        return Observable.from(attachments)
+                .filter(attachment -> attachment instanceof PlainImage)
+                .flatMap(attachment -> networkContract.upload(((PlainImage) attachment))
+                        .map(uploaded -> ((SingleAttachment) uploaded)))
+                .toList();
+    }
+
+    public Observable<LoudlyPost> uploadPost(@Nullable String text,
+                                             @NonNull List<Attachment> attachments,
+                                             @NonNull List<NetworkContract> networks) {
+
         return Observable.from(networks)
-                .flatMap(network -> network.upload(post).toObservable());
+                .flatMap(networkContract -> uploadPost(text, attachments, networkContract))
+                .toList()
+                .flatMap(singlePosts ->
+                        Observable.fromCallable(() -> {
+                            ArrayList<MultipleAttachment> images = new ArrayList<>();
+                            for (Attachment attachment : attachments) {
+                                if (attachment instanceof PlainImage) {
+                                    PlainImage image = ((PlainImage) attachment);
+                                    images.add(new LoudlyImage(image.getUrl(), image.getSize()));
+                                }
+                            }
+
+                            for (SinglePost post : singlePosts) {
+                                ArrayList<SingleAttachment> singles = post.getAttachments();
+                                // ToDo: fix dependency of uploaded length
+                                for (int i = 0; i < singles.size(); i++) {
+                                    SingleAttachment single = singles.get(i);
+                                    images.get(i).setSingleNetworkInstance(single.getNetwork(), single);
+                                }
+                            }
+
+                            LoudlyPost loudlyPost = new LoudlyPost(text, System.currentTimeMillis(),
+                                    images, null);
+                            for (SinglePost post : singlePosts) {
+                                loudlyPost.setSingleNetworkInstance(post.getNetwork(), post);
+                            }
+                            DatabaseUtils.savePost(loudlyPost);
+
+                            return loudlyPost;
+                        }));
     }
 }

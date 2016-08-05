@@ -88,7 +88,7 @@ public class FeedFragment extends MvpViewStateFragment<FeedView, FeedPresenter>
     }
 
     @Override
-    public void onNewLoadedPosts(@NonNull List<PlainPost> posts) {
+    public void onNewLoadedPosts(@NonNull List<? extends PlainPost> posts) {
         adapter.addPosts(posts);
     }
 

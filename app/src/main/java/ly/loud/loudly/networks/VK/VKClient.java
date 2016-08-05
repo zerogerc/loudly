@@ -141,7 +141,8 @@ public interface VKClient {
      */
     @Multipart
     @POST
-    Call<PhotoUploadServerResponse> uploadPhoto(@Url String url, @Part MultipartBody.Part file);
+    Call<PhotoUploadServerResponse> uploadPhoto(@NonNull @Url String url,
+                                                @NonNull @Part MultipartBody.Part file);
 
 
     /**

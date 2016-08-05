@@ -58,12 +58,12 @@ public class CoreModel {
                 .filter(networkContract ->  element.getSingleNetworkInstance(networkContract.getId()) != null);
     }
 
-    public Single<Boolean> connectToNetworkById(int id, @NonNull KeyKeeper keyKeeper) {
+    public Observable<Boolean> connectToNetworkById(int id, @NonNull KeyKeeper keyKeeper) {
         for (NetworkContract model : networkModels) {
             if (model.getId() == id) {
                 return model.connect(keyKeeper);
             }
         }
-        return Single.fromCallable(() -> false);
+        return Observable.just(false);
     }
 }

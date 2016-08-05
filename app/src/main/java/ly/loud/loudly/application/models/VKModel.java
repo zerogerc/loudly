@@ -46,7 +46,7 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
-import rx.Single;
+import rx.Observable;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.RequestType;
@@ -56,7 +56,7 @@ public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
 
     @NonNull
-    private final List<PlainPost> posts = new ArrayList<>();
+    private final List<SinglePost> posts = new ArrayList<>();
 
     private int offset;
 
@@ -84,9 +84,9 @@ public class VKModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<Boolean> reset() {
+    public Observable<Boolean> reset() {
         offset = 0;
-        return Single.just(true);
+        return Observable.just(true);
     }
 
     /**
@@ -99,14 +99,14 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Single<SingleImage> upload(@NonNull PlainImage image) {
-        return Single.fromCallable(() -> {
+    public Observable<SingleImage> upload(@NonNull PlainImage image) {
+        return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
                 return null;
             }
-            if (!(image instanceof LocalFile)) {
-                // Can't upload such image
+            String url = image.getUrl();
+            if (url == null) {
                 return null;
             }
             Call<VKResponse<PhotoUploadServer>> getServerCall =
@@ -123,7 +123,7 @@ public class VKModel implements NetworkContract {
                 return null;
             }
 
-            File file = new File(/* ToDo: get file path from URI */ "");
+            File file = new File(url);
 
             RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
             MultipartBody.Part part = MultipartBody.Part.createFormData("photo", file.getName(), requestBody);
@@ -175,8 +175,8 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Single<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
-        return Single.fromCallable(() -> {
+    public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
+        return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
                 return null;
@@ -201,15 +201,15 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Single<Boolean> delete(@NonNull SinglePost post) {
-        return Single.just(false);
+    public Observable<Boolean> delete(@NonNull SinglePost post) {
+        return Observable.just(false);
     }
 
     @NonNull
     @Override
     @CheckResult
-    public Single<List<PlainPost>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return Single.fromCallable(() -> {
+    public Observable<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
+        return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: handle
@@ -262,8 +262,8 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Single<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
-        return Single.fromCallable(() -> {
+    public Observable<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
+        return Observable.fromCallable(() -> {
             final VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: Handle
@@ -386,8 +386,8 @@ public class VKModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Single<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
-        return Single.fromCallable(() -> {
+    public Observable<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
+        return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: Handle
@@ -433,18 +433,18 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
+    public Observable<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
         if (!(keyKeeper instanceof VKKeyKeeper))
             throw new AssertionError("KeyKeeper must be VkKeyKeeper");
 
         keysModel.setVKKeyKeeper((VKKeyKeeper) keyKeeper);
-        return Single.just(true);
+        return Observable.just(true);
     }
 
     @NonNull
     @Override
     @CheckResult
-    public Single<Boolean> disconnect() {
+    public Observable<Boolean> disconnect() {
         return keysModel.disconnectFromNetwork(getId());
     }
 
