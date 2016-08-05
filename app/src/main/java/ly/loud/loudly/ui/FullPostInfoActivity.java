@@ -136,7 +136,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
                     .doOnNext(commentsFromNetwork -> {
                         if (!commentsFromNetwork.comments.isEmpty()) {
 //                            comments.add(new NetworkDelimiter(commentsFromNetwork.network));
-                            comments.addAll(commentsFromNetwork.comments);
+//                            comments.addAll(commentsFromNetwork.comments);
                         }
                     })
                     .doOnCompleted(() -> {

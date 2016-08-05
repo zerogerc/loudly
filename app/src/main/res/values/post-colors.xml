@@ -7,4 +7,8 @@
     <color name="list_item_post_icons_light_color">@color/colorAccentLight</color>
 
     <color name="list_item_post_button_text_color">@color/gray_color</color>
+
+    <color name="list_item_comment_title_color">@color/colorPrimaryDark</color>
+    <color name="list_item_comment_text_color">@color/black_color</color>
+    <color name="list_item_comment_date_color">@color/gray_color</color>
 </resources>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <ly.loud.loudly.ui.views.GlideImageView
+        android:id="@+id/list_item_comment_icon"
+        android:layout_width="@dimen/list_item_comment_icon_size"
+        android:layout_height="@dimen/list_item_comment_icon_size"
+        android:layout_margin="@dimen/list_item_comment_icon_margin" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="@dimen/list_item_comment_padding">
+
+        <TextView
+            android:id="@+id/list_item_comment_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/list_item_comment_padding"
+            android:paddingBottom="@dimen/list_item_comment_padding"
+            android:textColor="@color/list_item_comment_title_color"
+            android:textSize="@dimen/list_item_comment_title_text_size" />
+
+        <TextView
+            android:id="@+id/list_item_comment_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="@dimen/list_item_comment_padding"
+            android:paddingBottom="@dimen/list_item_comment_padding"
+            android:paddingRight="@dimen/list_item_comment_padding"
+            android:paddingEnd="@dimen/list_item_comment_padding">
+
+            <TextView
+                android:id="@+id/list_item_comment_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingEnd="@dimen/list_item_comment_padding"
+                android:paddingRight="@dimen/list_item_comment_padding" />
+
+            <TextView
+                android:id="@+id/list_item_comment_likes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/ic_comment_favourite"
+                android:drawableStart="@drawable/ic_comment_favourite"
+                android:drawablePadding="@dimen/list_item_comment_padding"
+                android:gravity="center_vertical"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

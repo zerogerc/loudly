@@ -4,19 +4,22 @@ import android.os.Parcel;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.ArrayList;
+
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainSay;
-import ly.loud.loudly.ui.adapter.Item;
-
-import java.util.ArrayList;
+import ly.loud.loudly.ui.brand_new.ItemTypes;
+import ly.loud.loudly.ui.brand_new.ItemTypes.ItemType;
+import ly.loud.loudly.ui.brand_new.adapter.ListItem;
 
 /**
  * Comment from some network
  *
  * @author Danil Kolikov
  */
-public class Comment extends PlainSay<SingleAttachment> implements SingleNetworkElement, Item {
+public class Comment extends PlainSay<SingleAttachment> implements SingleNetworkElement, ListItem {
     @NonNull
     public final static Creator<Comment> CREATOR = new Creator<Comment>() {
         @Override
@@ -83,14 +86,14 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
         return network;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Link getLink() {
         return link;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Info getInfo() {
         return info;
     }
@@ -103,8 +106,9 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
     }
 
     @Override
+    @ItemType
     public int getType() {
-        return COMMENT;
+        return ItemTypes.COMMENT;
     }
 
     @Override
