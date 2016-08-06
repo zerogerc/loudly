@@ -17,8 +17,8 @@ import java.util.List;
  *
  * @author Danil Kolikov
  */
-@StorIOSQLiteType(table = Attachment.Contract.TABLE_NAME)
-public class Attachment {
+@StorIOSQLiteType(table = StoredAttachment.Contract.TABLE_NAME)
+public class StoredAttachment {
     @Nullable
     @StorIOSQLiteColumn(name = Contract._ID, key = true)
     Long id;
@@ -33,10 +33,10 @@ public class Attachment {
     @StorIOSQLiteColumn(name = Contract.COLUMN_NAME_EXTRA)
     String extra;
 
-    public Attachment() {
+    public StoredAttachment() {
     }
 
-    public Attachment(@Nullable Long id, long postId, int type, long linksId, String extra) {
+    public StoredAttachment(@Nullable Long id, long postId, int type, long linksId, String extra) {
         this.id = id;
         this.postId = postId;
         this.type = type;
@@ -52,9 +52,9 @@ public class Attachment {
      * @return Attachment, or null, if not found
      */
     @Nullable
-    public static Attachment selectById(@Nullable Long id, StorIOSQLite database) {
+    public static StoredAttachment selectById(long id, StorIOSQLite database) {
         return database.get()
-                .object(Attachment.class)
+                .object(StoredAttachment.class)
                 .withQuery(Query.builder()
                         .table(Contract.TABLE_NAME)
                         .where(Contract._ID + " = ?")
@@ -71,7 +71,7 @@ public class Attachment {
      * @param database Posts database
      * @return Result of deletion
      */
-    @Nullable
+    @NonNull
     public static DeleteResult deleteById(long id, StorIOSQLite database) {
         return database.delete()
                 .byQuery(DeleteQuery.builder()
@@ -91,9 +91,9 @@ public class Attachment {
      * @return List of connected attachments
      */
     @NonNull
-    public static List<Attachment> selectByPostId(@Nullable Long postId, StorIOSQLite database) {
+    public static List<StoredAttachment> selectByPostId(long postId, StorIOSQLite database) {
         return database.get()
-                .listOfObjects(Attachment.class)
+                .listOfObjects(StoredAttachment.class)
                 .withQuery(Query.builder()
                         .table(Contract.TABLE_NAME)
                         .where(Contract.COLUMN_NAME_POST_ID + " = ?")

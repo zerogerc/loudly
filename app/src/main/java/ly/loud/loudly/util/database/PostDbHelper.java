@@ -4,10 +4,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.util.database.entities.Attachment;
+import ly.loud.loudly.util.database.entities.StoredAttachment;
 import ly.loud.loudly.util.database.entities.links.Links;
-import ly.loud.loudly.util.database.entities.Location;
-import ly.loud.loudly.util.database.entities.Post;
+import ly.loud.loudly.util.database.entities.StoredLocation;
+import ly.loud.loudly.util.database.entities.StoredPost;
 
 /**
  * Helper for Post Database
@@ -22,10 +22,10 @@ public class PostDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(Location.Contract.SQL_CREATE_TABLE);
+        db.execSQL(StoredLocation.Contract.SQL_CREATE_TABLE);
         db.execSQL(Links.Contract.SQL_CREATE_TABLE);
-        db.execSQL(Post.Contract.SQL_CREATE_POST_TABLE);
-        db.execSQL(Attachment.Contract.SQL_CREATE_TABLE);
+        db.execSQL(StoredPost.Contract.SQL_CREATE_POST_TABLE);
+        db.execSQL(StoredAttachment.Contract.SQL_CREATE_TABLE);
     }
 
     @Override

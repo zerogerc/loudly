@@ -1,6 +1,7 @@
 package ly.loud.loudly.new_base;
 
 import android.os.Parcel;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
@@ -94,9 +95,11 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
         return info;
     }
 
+    @NonNull
+    @CheckResult
     @Override
-    public void setInfo(@NonNull Info newInfo) {
-        info = newInfo;
+    public Comment setInfo(@NonNull Info newInfo) {
+        return new Comment(getText(), getDate(), getAttachments(), person, getNetwork(), link, newInfo);
     }
 
     @Override

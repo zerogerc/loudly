@@ -1,6 +1,7 @@
 package ly.loud.loudly.new_base.interfaces;
 
 import android.os.Parcelable;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.new_base.Info;
@@ -35,5 +36,7 @@ public interface SingleNetworkElement extends Parcelable, ElementWithInfo {
      *
      * @param newInfo New information
      */
-    void setInfo(@NonNull Info newInfo);
+    @CheckResult
+    @NonNull
+    SingleNetworkElement setInfo(@NonNull Info newInfo);
 }

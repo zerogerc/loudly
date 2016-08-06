@@ -1,10 +1,15 @@
 package ly.loud.loudly.util.database;
 
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.util.Equality;
 import ly.loud.loudly.test.Generators;
 import ly.loud.loudly.util.TimeInterval;
@@ -17,26 +22,35 @@ import java.util.List;
 /**
  * @author Danil Kolikov
  */
-public class PostTest extends DatabaseTest<LoudlyPost> {
+public class StoredPostTest extends DatabaseTest<LoudlyPost> {
+    @CheckResult
     @NonNull
     @Override
     protected LoudlyPost generate() {
         return Generators.randomLoudlyPost(100, 20, 100, 20, random);
     }
 
+    @CheckResult
     @NonNull
     @Override
-    protected LoudlyPost get(long id) throws DatabaseException {
-        return DatabaseUtils.loadPost(id);
+    protected LoudlyPost get(@NonNull LoudlyPost object) throws DatabaseException {
+        SingleNetworkElement element = object.getSingleNetworkInstance(Networks.LOUDLY);
+        Assert.assertNotNull(element);
+        String id = Link.getLink(element.getLink());
+        Assert.assertNotNull(id);
+
+        return DatabaseUtils.loadPost(Long.parseLong(id));
     }
 
     @Override
-    protected void delete(long id) throws DatabaseException {
-        DatabaseUtils.deletePost(id);
+    protected void delete(@NonNull LoudlyPost object) throws DatabaseException {
+        DatabaseUtils.deletePost(object);
     }
 
+    @CheckResult
+    @NonNull
     @Override
-    protected long insert(@NonNull LoudlyPost object) throws DatabaseException {
+    protected LoudlyPost insert(@NonNull LoudlyPost object) throws DatabaseException {
         return DatabaseUtils.savePost(object);
     }
 
@@ -54,13 +68,12 @@ public class PostTest extends DatabaseTest<LoudlyPost> {
             for (int j = 0; j < Networks.NETWORK_COUNT; j++) {
                 SinglePost instance = random.getSingleNetworkInstance(j);
                 if (instance!= null) {
-                    post.setSingleNetworkInstance(j, new SinglePost(post.getText(), post.getDate(),
+                    post = post.setSingleNetworkInstance(j, new SinglePost(post.getText(), post.getDate(),
                             instance.getAttachments(), post.getLocation(),
                             j, instance.getLink()));
                 }
             }
-            posts.add(post);
-            insert(post);
+            posts.add(insert(post));
         }
         int begin = random.nextInt(100);
         int end = begin + random.nextInt(100 - begin);

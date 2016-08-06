@@ -11,6 +11,7 @@ import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainPost;
+import ly.loud.loudly.util.database.entities.StoredLocation;
 import rx.functions.Func0;
 
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class Generators {
                 new Point(random.nextInt(), random.nextInt()));
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (random.nextBoolean()) {
-                image.setSingleNetworkInstance(i, new SingleImage(image.getUrl(),
+                image = image.setSingleNetworkInstance(i, new SingleImage(image.getUrl(),
                         image.getSize(), i, randomLink(maxLinkLength, random)));
             }
         }
@@ -78,6 +79,12 @@ public class Generators {
     @NonNull
     public static Location randomLocation(int nameSize, @NonNull Random random) {
         return new Location(random.nextDouble(), random.nextDouble(), randomString(nameSize, random));
+    }
+
+
+    @NonNull
+    public static StoredLocation randomStoredLocation(int nameSize, @NonNull Random random) {
+        return new StoredLocation(randomString(nameSize, random), random.nextDouble(), random.nextDouble());
     }
 
     @NonNull
@@ -104,7 +111,7 @@ public class Generators {
                 for (MultipleAttachment attachment : post.getAttachments()) {
                     attachments1.add(attachment.getSingleNetworkInstance(i));
                 }
-                post.setSingleNetworkInstance(i, new SinglePost(post.getText(), post.getDate(),
+                post = post.setSingleNetworkInstance(i, new SinglePost(post.getText(), post.getDate(),
                         attachments1, post.getLocation(), i, randomLink(linkLength, random)));
             }
         }

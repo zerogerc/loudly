@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database.entities;
 
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
@@ -17,8 +18,8 @@ import java.util.List;
  *
  * @author Danil Kolikov
  */
-@StorIOSQLiteType(table = Post.Contract.TABLE_NAME)
-public class Post {
+@StorIOSQLiteType(table = StoredPost.Contract.TABLE_NAME)
+public class StoredPost {
     @Nullable
     @StorIOSQLiteColumn(name = Contract._ID, key = true)
     Long id;
@@ -37,11 +38,11 @@ public class Post {
     @StorIOSQLiteColumn(name = Contract.COLUMN_NAME_LOCATION)
     Long locationId;
 
-    public Post() {
+    public StoredPost() {
     }
 
-    public Post(@Nullable Long id, @Nullable String text, long date, long linksId,
-                @Nullable Long locationId) {
+    public StoredPost(@Nullable Long id, @Nullable String text, long date, long linksId,
+                      @Nullable Long locationId) {
         this.id = id;
         this.text = text;
         this.date = date;
@@ -49,9 +50,10 @@ public class Post {
         this.locationId = locationId;
     }
 
-    public static Post selectById(Long id, StorIOSQLite database) {
+    @Nullable
+    public static StoredPost selectById(long id, StorIOSQLite database) {
         return database.get()
-                .object(Post.class)
+                .object(StoredPost.class)
                 .withQuery(Query.builder()
                         .table(Contract.TABLE_NAME)
                         .where(Contract._ID + " = ?")
@@ -61,6 +63,7 @@ public class Post {
                 .executeAsBlocking();
     }
 
+    @NonNull
     public static DeleteResult deleteById(long id, StorIOSQLite database) {
         return database.delete()
                 .byQuery(DeleteQuery.builder()
@@ -72,9 +75,10 @@ public class Post {
                 .executeAsBlocking();
     }
 
-    public static List<Post> selectByTimeInterval(TimeInterval interval, StorIOSQLite database) {
+    @NonNull
+    public static List<StoredPost> selectByTimeInterval(TimeInterval interval, StorIOSQLite database) {
         return database.get()
-                .listOfObjects(Post.class)
+                .listOfObjects(StoredPost.class)
                 .withQuery(Query.builder()
                         .table(Contract.TABLE_NAME)
                         .where("? < " + Contract.COLUMN_NAME_DATE + " and " + Contract.COLUMN_NAME_DATE + " < ?")

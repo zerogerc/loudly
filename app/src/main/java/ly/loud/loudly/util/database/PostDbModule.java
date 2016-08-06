@@ -32,10 +32,10 @@ public class PostDbModule {
     public StorIOSQLite provideStorIOSQLite(@NonNull PostDbHelper postDbHelper) {
         return DefaultStorIOSQLite.builder()
                 .sqliteOpenHelper(postDbHelper)
-                .addTypeMapping(Location.class, new LocationSQLiteTypeMapping())
-                .addTypeMapping(Attachment.class, new AttachmentSQLiteTypeMapping())
+                .addTypeMapping(StoredLocation.class, new StoredLocationSQLiteTypeMapping())
+                .addTypeMapping(StoredAttachment.class, new StoredAttachmentSQLiteTypeMapping())
                 .addTypeMapping(Links.class, new LinksTypeMapping())
-                .addTypeMapping(Post.class, new PostSQLiteTypeMapping())
+                .addTypeMapping(StoredPost.class, new StoredPostSQLiteTypeMapping())
                 .build();
     }
 

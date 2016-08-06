@@ -1,23 +1,37 @@
 package ly.loud.loudly.util.database;
 
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.new_base.*;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Link;
+import ly.loud.loudly.new_base.Location;
+import ly.loud.loudly.new_base.LoudlyImage;
+import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.new_base.SingleImage;
+import ly.loud.loudly.new_base.SinglePost;
 import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.entities.Key;
+import ly.loud.loudly.util.database.entities.StoredAttachment;
+import ly.loud.loudly.util.database.entities.StoredLocation;
+import ly.loud.loudly.util.database.entities.StoredPost;
 import ly.loud.loudly.util.database.entities.links.Links;
 
-import java.util.ArrayList;
-import java.util.List;
+import static ly.loud.loudly.new_base.Networks.LOUDLY;
 
 /**
  * Utilities for work with databases
@@ -33,7 +47,9 @@ public class DatabaseUtils {
         return Loudly.getContext().getDatabaseComponent().getKeysDatabase();
     }
 
-    static long saveLinks(@NonNull Link[] save) throws DatabaseException {
+    @CheckResult
+    @NonNull
+    static Links saveLinks(@NonNull Link[] save) throws DatabaseException {
         Links links = new Links(null, new String[Networks.NETWORK_COUNT]);
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             links.getLinks()[i] = Link.getLink(save[i]);
@@ -47,9 +63,11 @@ public class DatabaseUtils {
         if (id == null) {
             throw new DatabaseException("Links wasn't saved");
         }
-        return id;
+        links.setId(id);
+        return links;
     }
 
+    @CheckResult
     @NonNull
     static Link[] loadLinks(long id) throws DatabaseException {
         Links stored = Links.selectById(id, getPostsDatabase());
@@ -71,39 +89,55 @@ public class DatabaseUtils {
     }
 
     static long saveLocation(@NonNull Location location) throws DatabaseException {
-        ly.loud.loudly.util.database.entities.Location persistent =
-                new ly.loud.loudly.util.database.entities.Location(location.name, location.latitude, location.longitude);
-        persistent.setId(null);
+        StoredLocation persistent =
+                new StoredLocation(location.name, location.latitude, location.longitude);
+        StoredLocation storedLocation = saveStoredLocation(persistent);
+        //noinspection ConstantConditions It's stored, so have id
+        return storedLocation.getId();
+    }
+
+    @CheckResult
+    @NonNull
+    static StoredLocation saveStoredLocation(@NonNull StoredLocation location) throws DatabaseException {
+        location.setId(null);
         PutResult result = getPostsDatabase().put()
-                .object(persistent)
+                .object(location)
                 .prepare()
                 .executeAsBlocking();
         Long id = result.insertedId();
         if (id == null) {
-            throw new DatabaseException("Location wasn't saved");
+            throw new DatabaseException("StoredLocation wasn't saved");
         }
-        return id;
+        location.setId(id);
+        return location;
+    }
+
+    @CheckResult
+    @NonNull
+    static StoredLocation loadStoredLocation(long id) throws DatabaseException {
+        StoredLocation stored =
+                StoredLocation.selectById(id, getPostsDatabase());
+        if (stored == null) {
+            throw new DatabaseException("Can't load location");
+        }
+        return stored;
     }
 
     @NonNull
     static Location loadLocation(long id) throws DatabaseException {
-        ly.loud.loudly.util.database.entities.Location stored =
-                ly.loud.loudly.util.database.entities.Location.selectById(id, getPostsDatabase());
-        if (stored == null) {
-            throw new DatabaseException("Can't load location");
-        }
+        StoredLocation stored = loadStoredLocation(id);
         return new Location(stored.getLatitude(), stored.getLongitude(), stored.getName());
     }
 
     static void deleteLocation(long id) throws DatabaseException {
-        DeleteResult result = ly.loud.loudly.util.database.entities.Location.deleteById(id, getPostsDatabase());
+        DeleteResult result = StoredLocation.deleteById(id, getPostsDatabase());
         if (result.numberOfRowsDeleted() == 0) {
-            throw new DatabaseException("Location wasn't deleted");
+            throw new DatabaseException("StoredLocation wasn't deleted");
         }
     }
 
     @NonNull
-    private static Link[] instancesToLinks(MultipleNetworkElement element) {
+    private static Link[] instancesToLinks(@NonNull MultipleNetworkElement element) {
         Link[] links = new Link[Networks.NETWORK_COUNT];
         @SuppressWarnings("unchecked") // Java doesn't infer that it's an array of SingleNetworkElement
                 List<SingleNetworkElement> list = element.getNetworkInstances();
@@ -113,16 +147,20 @@ public class DatabaseUtils {
         return links;
     }
 
-    static long saveImage(@NonNull LoudlyImage attachment, long postId) throws DatabaseException {
+    @CheckResult
+    @NonNull
+    static LoudlyImage saveImage(@NonNull LoudlyImage attachment, long postId) throws DatabaseException {
         StorIOSQLite database = getPostsDatabase();
         database.lowLevel().beginTransaction();
         try {
 
-            long linksId = saveLinks(instancesToLinks(attachment));
+            Links stored = saveLinks(instancesToLinks(attachment));
 
-            ly.loud.loudly.util.database.entities.Attachment persistent =
-                    new ly.loud.loudly.util.database.entities.Attachment(
-                            null, postId, attachment.getType(), linksId, attachment.getExtra());
+            //noinspection ConstantConditions Stored has ids, because it's stored
+            StoredAttachment persistent =
+                    new StoredAttachment(null, postId, attachment.getType(),
+                            stored.getId(),
+                            attachment.getExtra());
             PutResult result = database.put()
                     .object(persistent)
                     .prepare()
@@ -131,11 +169,12 @@ public class DatabaseUtils {
             if (id == null) {
                 throw new DatabaseException("Attachment isn't saved");
             }
-            attachment.setSingleNetworkInstance(Networks.LOUDLY, new SingleImage(attachment.getUrl(), attachment.getSize(),
-                    Networks.LOUDLY, new Link(id)));
+            LoudlyImage resulting = attachment.setSingleNetworkInstance(
+                    LOUDLY, new SingleImage(attachment.getUrl(), attachment.getSize(),
+                            LOUDLY, new Link(id)));
 
             database.lowLevel().setTransactionSuccessful();
-            return id;
+            return resulting;
         } finally {
             database.lowLevel().endTransaction();
         }
@@ -143,8 +182,8 @@ public class DatabaseUtils {
 
     @NonNull
     static LoudlyImage loadImage(long id) throws DatabaseException {
-        ly.loud.loudly.util.database.entities.Attachment stored =
-                ly.loud.loudly.util.database.entities.Attachment.selectById(
+        StoredAttachment stored =
+                StoredAttachment.selectById(
                         id, getPostsDatabase());
         if (stored == null) {
             throw new DatabaseException("Can't load attachment");
@@ -153,8 +192,8 @@ public class DatabaseUtils {
     }
 
     static void deleteAttachment(long id) throws DatabaseException {
-        ly.loud.loudly.util.database.entities.Attachment stored =
-                ly.loud.loudly.util.database.entities.Attachment.selectById(id, getPostsDatabase());
+        StoredAttachment stored =
+                StoredAttachment.selectById(id, getPostsDatabase());
         if (stored == null) {
             // Was already deleted
             return;
@@ -162,46 +201,50 @@ public class DatabaseUtils {
         finishDeletingAttachment(stored);
     }
 
+    @CheckResult
     @NonNull
     private static ArrayList<MultipleAttachment> loadPostAttachments(long postId) throws DatabaseException {
-        List<ly.loud.loudly.util.database.entities.Attachment> stored =
-                ly.loud.loudly.util.database.entities.Attachment.selectByPostId(
+        List<StoredAttachment> stored =
+                StoredAttachment.selectByPostId(
                         postId, getPostsDatabase());
         ArrayList<MultipleAttachment> result = new ArrayList<>();
-        for (ly.loud.loudly.util.database.entities.Attachment attachment : stored) {
-            result.add(finishAttachmentLoading(attachment));
+        for (StoredAttachment storedAttachment : stored) {
+            result.add(finishAttachmentLoading(storedAttachment));
         }
         return result;
     }
 
     private static void deletePostAttachments(long postId) throws DatabaseException {
-        List<ly.loud.loudly.util.database.entities.Attachment> stored =
-                ly.loud.loudly.util.database.entities.Attachment.selectByPostId(postId, getPostsDatabase());
-        for (ly.loud.loudly.util.database.entities.Attachment attachment : stored) {
-            finishDeletingAttachment(attachment);
+        List<StoredAttachment> stored =
+                StoredAttachment.selectByPostId(postId, getPostsDatabase());
+        for (StoredAttachment storedAttachment : stored) {
+            finishDeletingAttachment(storedAttachment);
         }
     }
 
-    private static void fillImageFromLinks(@NonNull LoudlyImage image, @NonNull Link[] links) {
+    @CheckResult
+    @NonNull
+    private static LoudlyImage fillImageFromLinks(@NonNull LoudlyImage image, @NonNull Link[] links) {
         for (int i = 0; i < links.length; i++) {
             if (links[i] != null) {
-                image.setSingleNetworkInstance(i, new SingleImage(image.getUrl(), image.getSize(), i, links[i]));
+                image = image.setSingleNetworkInstance(i, new SingleImage(image.getUrl(), image.getSize(), i, links[i]));
             }
         }
-    }
-
-    @NonNull
-    private static LoudlyImage finishAttachmentLoading(@NonNull ly.loud.loudly.util.database.entities.Attachment stored)
-            throws DatabaseException {
-        Link[] links = loadLinks(stored.getLinksId());
-        links[Networks.LOUDLY] = new Link(stored.getId());
-
-        LoudlyImage image = new LoudlyImage(stored.getExtra(), null);
-        fillImageFromLinks(image, links);
         return image;
     }
 
-    private static void finishDeletingAttachment(@NonNull ly.loud.loudly.util.database.entities.Attachment stored)
+    @CheckResult
+    @NonNull
+    private static LoudlyImage finishAttachmentLoading(@NonNull StoredAttachment stored)
+            throws DatabaseException {
+        Link[] links = loadLinks(stored.getLinksId());
+        links[LOUDLY] = new Link(stored.getId());
+
+        LoudlyImage image = new LoudlyImage(stored.getExtra(), null);
+        return fillImageFromLinks(image, links);
+    }
+
+    private static void finishDeletingAttachment(@NonNull StoredAttachment stored)
             throws DatabaseException {
         StorIOSQLite.LowLevel lowLevel = getPostsDatabase().lowLevel();
         lowLevel.beginTransaction();
@@ -212,7 +255,7 @@ public class DatabaseUtils {
             @SuppressWarnings("ConstantConditions")
             long id = stored.getId();
 
-            DeleteResult result = ly.loud.loudly.util.database.entities.Attachment.deleteById(id, getPostsDatabase());
+            DeleteResult result = StoredAttachment.deleteById(id, getPostsDatabase());
             if (result.numberOfRowsDeleted() == 0) {
                 throw new DatabaseException("Can't delete attachment");
             }
@@ -229,15 +272,19 @@ public class DatabaseUtils {
      * @return ID of stored post
      * @throws DatabaseException if anything went wrong with database
      */
-    public static long savePost(@NonNull LoudlyPost post) throws DatabaseException {
-        ly.loud.loudly.util.database.entities.Post persistent = new ly.loud.loudly.util.database.entities.Post();
+    @CheckResult
+    @NonNull
+    public static LoudlyPost savePost(@NonNull LoudlyPost post) throws DatabaseException {
+        StoredPost persistent = new StoredPost();
         persistent.setText(post.getText());
         persistent.setDate(post.getDate());
         StorIOSQLite database = getPostsDatabase();
         database.lowLevel().beginTransaction();
         try {
-            long linksId = saveLinks(instancesToLinks(post));
-            persistent.setLinksId(linksId);
+            Links stored = saveLinks(instancesToLinks(post));
+
+            //noinspection ConstantConditions Stored has id, because it's stored
+            persistent.setLinksId(stored.getId());
 
             if (post.getLocation() != null) {
                 long locationId = saveLocation(post.getLocation());
@@ -252,16 +299,18 @@ public class DatabaseUtils {
                 throw new DatabaseException("Post wasn't inserted");
             }
             ArrayList<SingleAttachment> attachments = new ArrayList<>();
-            for (Attachment attachment : post.getAttachments()) {
+            for (int i = 0, size = post.getAttachments().size(); i < size; i++) {
+                MultipleAttachment attachment = post.getAttachments().get(i);
                 if (attachment instanceof LoudlyImage) {
-                    saveImage(((LoudlyImage) attachment), id);
-                    attachments.add(((LoudlyImage) attachment).getSingleNetworkInstance(Networks.LOUDLY));
+                    attachment = saveImage(((LoudlyImage) attachment), id);
+                    post.getAttachments().set(i, attachment);
+                    attachments.add(((LoudlyImage) attachment).getSingleNetworkInstance(LOUDLY));
                 }
             }
-            post.setSingleNetworkInstance(Networks.LOUDLY, new SinglePost(post.getText(), post.getDate(),
-                    attachments, post.getLocation(), Networks.LOUDLY, new Link(id)));
+            LoudlyPost resulting = post.setSingleNetworkInstance(LOUDLY, new SinglePost(post.getText(), post.getDate(),
+                    attachments, post.getLocation(), LOUDLY, new Link(id)));
             database.lowLevel().setTransactionSuccessful();
-            return id;
+            return resulting;
         } finally {
             database.lowLevel().endTransaction();
         }
@@ -269,29 +318,33 @@ public class DatabaseUtils {
 
     @NonNull
     static LoudlyPost loadPost(long id) throws DatabaseException {
-        ly.loud.loudly.util.database.entities.Post stored =
-                ly.loud.loudly.util.database.entities.Post.selectById(id, getPostsDatabase());
+        StoredPost stored =
+                StoredPost.selectById(id, getPostsDatabase());
         if (stored == null) {
             throw new DatabaseException("Can't load post");
         }
         return finishPostLoading(stored);
     }
 
-    private static void fillPostFromLinks(@NonNull LoudlyPost post, @NonNull Link[] links) {
+    @CheckResult
+    @NonNull
+    private static LoudlyPost fillPostFromLinks(@NonNull LoudlyPost post, @NonNull Link[] links) {
         for (int i = 0; i < links.length; i++) {
             if (links[i] != null) {
                 ArrayList<SingleAttachment> attachments = new ArrayList<>();
                 for (MultipleAttachment attachment : post.getAttachments()) {
                     attachments.add(attachment.getSingleNetworkInstance(i));
                 }
-                post.setSingleNetworkInstance(i, new SinglePost(post.getText(), post.getDate(), attachments,
+                post = post.setSingleNetworkInstance(i, new SinglePost(post.getText(), post.getDate(), attachments,
                         post.getLocation(), i, links[i]));
             }
         }
+        return post;
     }
 
+    @CheckResult
     @NonNull
-    private static LoudlyPost finishPostLoading(@NonNull ly.loud.loudly.util.database.entities.Post stored)
+    private static LoudlyPost finishPostLoading(@NonNull StoredPost stored)
             throws DatabaseException {
         Location location = null;
         // Very strange, but sometimes it doesn't return null value (return '0')
@@ -306,11 +359,9 @@ public class DatabaseUtils {
         LoudlyPost post = new LoudlyPost(stored.getText(), stored.getDate(), attachments, location);
 
         Link[] links = loadLinks(stored.getLinksId());
-        links[Networks.LOUDLY] = new Link(stored.getId());
+        links[LOUDLY] = new Link(stored.getId());
 
-        fillPostFromLinks(post, links);
-
-        return post;
+        return fillPostFromLinks(post, links);
     }
 
     /**
@@ -322,19 +373,19 @@ public class DatabaseUtils {
      */
     @NonNull
     public static List<LoudlyPost> loadPosts(@NonNull TimeInterval time) throws DatabaseException {
-        List<ly.loud.loudly.util.database.entities.Post> stored =
-                ly.loud.loudly.util.database.entities.Post.selectByTimeInterval(
+        List<StoredPost> stored =
+                StoredPost.selectByTimeInterval(
                         time, getPostsDatabase());
         List<LoudlyPost> result = new ArrayList<>();
-        for (ly.loud.loudly.util.database.entities.Post post : stored) {
-            result.add(finishPostLoading(post));
+        for (StoredPost storedPost : stored) {
+            result.add(finishPostLoading(storedPost));
         }
         return result;
     }
 
     static void deletePost(long id) throws DatabaseException {
-        ly.loud.loudly.util.database.entities.Post stored =
-                ly.loud.loudly.util.database.entities.Post.selectById(id, getPostsDatabase());
+        StoredPost stored =
+                StoredPost.selectById(id, getPostsDatabase());
         if (stored == null) {
             return;
         }
@@ -347,7 +398,7 @@ public class DatabaseUtils {
             if (stored.getLocationId() != null && stored.getLocationId() != 0) {
                 deleteLocation(stored.getLocationId());
             }
-            DeleteResult result = ly.loud.loudly.util.database.entities.Post.deleteById(id, getPostsDatabase());
+            DeleteResult result = StoredPost.deleteById(id, getPostsDatabase());
             if (result.numberOfRowsDeleted() == 0) {
                 throw new DatabaseException("Post wasn't deleted");
             }
@@ -364,7 +415,7 @@ public class DatabaseUtils {
      * @throws DatabaseException If error with database occurs
      */
     public static void deletePost(@NonNull LoudlyPost post) throws DatabaseException {
-        SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(Networks.LOUDLY);
+        SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(LOUDLY);
         if (loudlyInstance == null) {
             // Nothing to delete
             return;
@@ -408,8 +459,12 @@ public class DatabaseUtils {
             if (key == null) {
                 continue;
             }
+            String value = key.getValue();
+            if (value == null) {
+                continue;
+            }
             Loudly.getContext().setKeyKeeper(key.getNetwork(),
-                    KeyKeeper.fromStringBundle(key.getNetwork(), key.getValue()));
+                    KeyKeeper.fromStringBundle(key.getNetwork(), value));
         }
     }
 
