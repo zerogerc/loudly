@@ -7,9 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.hannesdorfmann.mosby.mvp.viewstate.MvpViewStateFragment;
-import com.hannesdorfmann.mosby.mvp.viewstate.ViewState;
-
 import java.util.List;
 
 import javax.inject.Inject;
@@ -21,16 +18,18 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.new_base.plain.PlainPost;
-import ly.loud.loudly.ui.FullPostInfoActivity;
 import ly.loud.loudly.ui.PeopleListFragment;
+import ly.loud.loudly.ui.brand_new.FragmentInvoker;
+import ly.loud.loudly.ui.brand_new.TitledFragment;
 import ly.loud.loudly.ui.brand_new.adapter.FeedAdapter;
+import ly.loud.loudly.ui.brand_new.full_post.FullPostInfoFragment;
 import ly.loud.loudly.ui.brand_new.views.FeedRecyclerView;
 import ly.loud.loudly.util.Utils;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
-public class FeedFragment extends MvpViewStateFragment<FeedView, FeedPresenter>
+public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
         implements FeedView, FeedAdapter.PostClickListener {
 
     @SuppressWarnings("NullableProblems") // Butterknife
@@ -72,6 +71,12 @@ public class FeedFragment extends MvpViewStateFragment<FeedView, FeedPresenter>
     }
 
     @Override
+    @NonNull
+    public String getTitle() {
+        return getString(R.string.loudly);
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
@@ -94,17 +99,6 @@ public class FeedFragment extends MvpViewStateFragment<FeedView, FeedPresenter>
 
     @Override
     @NonNull
-    public ViewState createViewState() {
-        return new FeedViewState();
-    }
-
-    @Override
-    public void onNewViewStateInstance() {
-
-    }
-
-    @Override
-    @NonNull
     public FeedPresenter createPresenter() {
         return new FeedPresenter(
                 loudlyApp,
@@ -115,7 +109,7 @@ public class FeedFragment extends MvpViewStateFragment<FeedView, FeedPresenter>
 
     @Override
     public void onFullPostClick(@NonNull PlainPost post) {
-        FullPostInfoActivity.invoke(getActivity(), post);
+        ((FragmentInvoker) getActivity()).startFragment(FullPostInfoFragment.newInstance(post));
     }
 
     @Override

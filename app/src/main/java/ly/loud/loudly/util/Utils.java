@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.DisplayMetrics;
@@ -405,6 +406,15 @@ public class Utils {
              return ((LoudlyPost) post).getNetworkInstances();
         } else {
             return ListUtils.emptyArrayList();
+        }
+    }
+
+    @StringRes
+    public static int getNetworkTitleResourceByPost(@NonNull PlainPost post) {
+        if (post instanceof SinglePost) {
+            return  Networks.nameResourceOfNetwork(((SinglePost) post).getNetwork());
+        } else {
+            return Networks.nameResourceOfNetwork(Networks.LOUDLY);
         }
     }
 }

@@ -14,21 +14,18 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
-import java.util.Collections;
-
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.new_base.Authorizer;
 import ly.loud.loudly.new_base.KeyKeeper;
 import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.views.IconsHolder;
 import ly.loud.loudly.util.AttachableReceiver;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;
-import ly.loud.loudly.util.database.DatabaseUtils;
 import ly.loud.loudly.util.database.DatabaseException;
+import ly.loud.loudly.util.database.DatabaseUtils;
 
 public class SettingsActivity extends AppCompatActivity {
     public static String webViewURL;
@@ -238,11 +235,7 @@ public class SettingsActivity extends AppCompatActivity {
 
                 Loudly.getContext().setKeyKeeper(network, null);
                 // Clean posts from this network
-                for (PlainPost p : Loudly.getPostHolder().getPosts()) {
-                    // ToDo: Here was some code
-                }
 
-                Loudly.getPostHolder().cleanUp(Collections.singletonList(network), false);
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, network);
     }

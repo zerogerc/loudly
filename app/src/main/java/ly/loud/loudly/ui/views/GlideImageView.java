@@ -3,6 +3,7 @@ package ly.loud.loudly.ui.views;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.support.annotation.NonNull;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.AttributeSet;
@@ -80,7 +81,7 @@ public class GlideImageView extends ImageView {
      * Perform loading of image by Url. Set height equal to width.
      * @param url given url
      */
-    public void loadCircularShapeImageByUrl(String url) {
+    public void loadCircularShapeImageByUrl(@NonNull String url) {
         setScale(1);
         Glide.with(Loudly.getContext())
                 .load(url)

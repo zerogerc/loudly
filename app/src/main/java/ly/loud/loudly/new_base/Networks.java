@@ -1,7 +1,11 @@
 package ly.loud.loudly.new_base;
 
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 
+import ly.loud.loudly.R;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.Wrap;
 import ly.loud.loudly.networks.Facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
@@ -38,24 +42,30 @@ public class Networks {
     public static final int MAILRU = 6;
 
 
+    @NonNull
     public static String nameOfNetwork(@Network int network) {
+        return Loudly.getContext().getString(nameResourceOfNetwork(network));
+    }
+
+    @StringRes
+    public static int nameResourceOfNetwork(@Network int network) {
         switch (network) {
             case LOUDLY:
-                return "Loudly";
+                return R.string.network_loudly;
             case FB:
-                return "Facebook";
+                return R.string.network_facebook;
             case TWITTER:
-                return "Twitter";
+                return R.string.network_twitter;
             case INSTAGRAM:
-                return "Instagram";
+                return R.string.network_instagram;
             case VK:
-                return "ВКонтакте";
+                return R.string.network_vk;
             case OK:
-                return "Одноклассники";
+                return R.string.network_ok;
             case MAILRU:
-                return "Мой мир";
+                return R.string.network_myworld;
             default:
-                return "";
+                return R.string.network_loudly;
         }
     }
 

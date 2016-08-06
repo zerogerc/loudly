@@ -12,10 +12,10 @@ import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.networks.Facebook.FacebookClientModule;
 import ly.loud.loudly.networks.VK.VKClientModule;
-import ly.loud.loudly.ui.FullPostInfoActivity;
 import ly.loud.loudly.ui.PeopleListFragment;
 import ly.loud.loudly.ui.brand_new.feed.FeedActivity;
 import ly.loud.loudly.ui.brand_new.feed.FeedFragment;
+import ly.loud.loudly.ui.brand_new.full_post.FullPostInfoFragment;
 import ly.loud.loudly.ui.brand_new.post.NetworksChooseLayout;
 import ly.loud.loudly.ui.brand_new.post.NewPostFragment;
 
@@ -44,12 +44,12 @@ public interface AppComponent {
     @NonNull
     CoreModel coreModel();
 
-    void inject(FeedActivity feedActivity);
-    void inject(FullPostInfoActivity fullPostInfoActivity);
+    void inject(@NonNull FeedActivity feedActivity);
 
-    void inject(PeopleListFragment peopleListFragment);
-    void inject(NewPostFragment newPostFragment);
-    void inject(FeedFragment feedFragment);
+    void inject(@NonNull PeopleListFragment peopleListFragment);
+    void inject(@NonNull NewPostFragment newPostFragment);
+    void inject(@NonNull FeedFragment feedFragment);
+    void inject(@NonNull FullPostInfoFragment fullPostInfoFragment);
 
-    void inject(NetworksChooseLayout networksChooseLayout);
+    void inject(@NonNull NetworksChooseLayout networksChooseLayout);
 }
