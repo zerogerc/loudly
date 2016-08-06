@@ -17,6 +17,7 @@ import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
+import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.RequestType;
 
@@ -66,21 +67,21 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Observable<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval);
+    Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval);
 
     /**
      * Get persons by request type. For example: peoples that like certain post.
      */
     @CheckResult
     @NonNull
-    Observable<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType);
+    Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType);
 
     /**
      * Get comments for element of {@link SingleNetworkElement}.
      */
     @CheckResult
     @NonNull
-    Observable<List<Comment>> getComments(@NonNull SingleNetworkElement element);
+    Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element);
 
     /**
      * Connect this network for proper work.

@@ -34,6 +34,7 @@ import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.ui.adapter.Item;
 import ly.loud.loudly.ui.adapter.NetworkDelimiter;
 import ly.loud.loudly.ui.views.GlideImageView;
+import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.Utils;
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -280,7 +281,7 @@ public class FullPostInfoActivity extends AppCompatActivity {
             likes.setText(Integer.toString(comment.getInfo().like));
             commentView.findViewById(R.id.comment_likes_button)
                     .setOnClickListener(v -> {
-                        DialogFragment fragment = PeopleListFragment.newInstance(Utils.asArrayList(comment),
+                        DialogFragment fragment = PeopleListFragment.newInstance(ListUtils.asArrayList(comment),
                                 LIKES);
                         fragment.show(getSupportFragmentManager(), fragment.getTag());
                     });

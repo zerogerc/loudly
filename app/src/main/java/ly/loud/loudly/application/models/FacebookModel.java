@@ -17,14 +17,15 @@ import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
+import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.Utils;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Observable;
+import solid.collections.SolidList;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -156,16 +157,16 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Observable<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
+    public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
                 //ToDo: handle
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             String id = Link.getLink(element.getLink());
             if (id == null) {
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             String endpoint;
             switch (requestType) {
@@ -185,7 +186,7 @@ public class FacebookModel implements NetworkContract {
             List<String> ids = new ArrayList<>();
             Data<List<FbPerson>> body = executed.body();
             if (body == null) {
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             for (FbPerson person : body.data) {
                 ids.add(person.id);
@@ -196,13 +197,13 @@ public class FacebookModel implements NetworkContract {
             Response<Map<String, FbPerson>> executedPersonsCall = personsInfoCall.execute();
             Map<String, FbPerson> persons = executedPersonsCall.body();
             if (persons == null) {
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             List<Person> result = new ArrayList<>();
             for (String personId : ids) {
                 result.add(toPerson(persons.get(personId)));
             }
-            return result;
+            return ListUtils.asSolidList(result);
         });
     }
 
@@ -249,12 +250,12 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Observable<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
+    public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: handle
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             Long since = timeInterval.from != Long.MIN_VALUE ? timeInterval.from : null;
             Long until = timeInterval.to != Long.MAX_VALUE ? timeInterval.to : null;
@@ -264,7 +265,7 @@ public class FacebookModel implements NetworkContract {
             Data<List<Post>> body = execute.body();
             List<SinglePost> posts = new ArrayList<>();
             if (body == null) {
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             for (Post post : body.data) {
                 ArrayList<SingleAttachment> attachments = new ArrayList<>();
@@ -282,7 +283,7 @@ public class FacebookModel implements NetworkContract {
                 posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
                         getId(), new Link(post.id), new Info(likes, shares, comments)));
             }
-            return posts;
+            return ListUtils.asSolidList(posts);
         });
     }
 
@@ -314,18 +315,18 @@ public class FacebookModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Observable<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
+    public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo handle
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             String link = Link.getLink(element.getLink());
             if (link == null) {
                 // Here can't be comments
 
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             Call<Data<List<FbComment>>> dataCall =
                     client.loadComments(link, keyKeeper.getAccessToken());
@@ -343,13 +344,13 @@ public class FacebookModel implements NetworkContract {
 
             List<Comment> comments = new ArrayList<>();
             for (FbComment comment : executed.body().data) {
-                ArrayList<SingleAttachment> attachment = comment.attachment == null ? Utils.emptyArrayList() :
-                        Utils.asArrayList(toAttachment(comment.attachment));
+                ArrayList<SingleAttachment> attachment = comment.attachment == null ? ListUtils.emptyArrayList() :
+                        ListUtils.asArrayList(toAttachment(comment.attachment));
 
                 comments.add(new Comment(comment.message, comment.createdTime, attachment, toPerson(persons.get(comment.from.id)),
                         getId(), new Link(comment.id)));
             }
-            return comments;
+            return ListUtils.asSolidList(comments);
         });
     }
 
@@ -380,6 +381,7 @@ public class FacebookModel implements NetworkContract {
         return keysModel.getFacebookKeyKeeper() != null;
     }
 
+    @Networks.Network
     @Override
     public int getId() {
         return Networks.FB;

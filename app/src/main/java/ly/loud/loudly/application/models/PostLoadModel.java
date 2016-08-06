@@ -6,6 +6,7 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
+import solid.collections.SolidList;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -29,7 +30,7 @@ public class PostLoadModel {
 
     @CheckResult
     @NonNull
-    public Observable<List<? extends PlainPost>> loadPosts(@NonNull TimeInterval interval) {
+    public Observable<SolidList<? extends PlainPost>> loadPosts(@NonNull TimeInterval interval) {
         return coreModel.getConnectedNetworksModels().flatMap(n -> n.loadPosts(interval));
     }
 }

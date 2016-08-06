@@ -3,6 +3,10 @@ package ly.loud.loudly.application.models;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.new_base.LoudlyImage;
 import ly.loud.loudly.new_base.LoudlyPost;
@@ -15,9 +19,7 @@ import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
-
-import java.util.ArrayList;
-import java.util.List;
+import solid.collections.SolidList;
 
 public class PostUploadModel {
     @NonNull
@@ -33,8 +35,9 @@ public class PostUploadModel {
     // Save to DB after uploading to networks
     @CheckResult
     @NonNull
-    private Observable<SinglePost> uploadPost(@Nullable String post, List<Attachment> attachments,
-                                             @NonNull NetworkContract network) {
+    private Observable<SinglePost> uploadPost(@Nullable String post,
+                                              @NonNull SolidList<Attachment> attachments,
+                                              @NonNull NetworkContract network) {
         return uploadAttachments(attachments, network)
                 .flatMap(list -> {
                     PlainPost<SingleAttachment> plainPost =
@@ -45,8 +48,10 @@ public class PostUploadModel {
 
     @CheckResult
     @NonNull
-    private Observable<List<SingleAttachment>> uploadAttachments(@NonNull List<Attachment> attachments,
-                                                                @NonNull NetworkContract networkContract) {
+    private Observable<List<SingleAttachment>> uploadAttachments(
+            @NonNull SolidList<Attachment> attachments,
+            @NonNull NetworkContract networkContract) {
+
         // ToDo: Handle error
         return Observable.from(attachments)
                 .filter(attachment -> attachment instanceof PlainImage)
@@ -56,7 +61,7 @@ public class PostUploadModel {
     }
 
     public Observable<LoudlyPost> uploadPost(@Nullable String text,
-                                             @NonNull List<Attachment> attachments,
+                                             @NonNull SolidList<Attachment> attachments,
                                              @NonNull List<NetworkContract> networks) {
 
         return Observable.from(networks)
