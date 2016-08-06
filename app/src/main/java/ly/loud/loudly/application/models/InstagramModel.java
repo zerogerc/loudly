@@ -14,10 +14,10 @@ import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
+import solid.collections.SolidList;
 
 import javax.inject.Inject;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by ZeRoGerc on 21/07/16.
@@ -74,19 +74,19 @@ public class InstagramModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Observable<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return Observable.just(Collections.emptyList());
+    public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
+        return Observable.just(SolidList.empty());
     }
 
     @NonNull
     @Override
-    public Observable<List<Person>> getPersons(@NonNull SingleNetworkElement element, @GetterModel.RequestType int requestType) {
-        return Observable.just(Collections.emptyList());
+    public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @GetterModel.RequestType int requestType) {
+        return Observable.just(SolidList.empty());
     }
 
     @NonNull
     @Override
-    public Observable<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
+    public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.just(null);
     }
 

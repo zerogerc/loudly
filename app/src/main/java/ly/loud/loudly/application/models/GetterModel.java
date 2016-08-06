@@ -14,6 +14,7 @@ import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.new_base.Comment;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import rx.Observable;
+import solid.collections.SolidList;
 
 /**
  * Model for loading persons from different networks.
@@ -66,11 +67,11 @@ public class GetterModel {
 
     public class CommentsFromNetwork {
         @NonNull
-        public List<Comment> comments;
+        public SolidList<Comment> comments;
 
         public int network;
 
-        public CommentsFromNetwork(@NonNull List<Comment> comments, int network) {
+        public CommentsFromNetwork(@NonNull SolidList<Comment> comments, int network) {
             this.comments = comments;
             this.network = network;
         }

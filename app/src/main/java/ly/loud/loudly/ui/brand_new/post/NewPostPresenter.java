@@ -17,6 +17,7 @@ import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.ui.brand_new.BasePresenter;
+import ly.loud.loudly.util.ListUtils;
 
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 import static rx.schedulers.Schedulers.io;
@@ -70,7 +71,7 @@ public class NewPostPresenter extends BasePresenter<NewPostView> {
                            @NonNull List<Attachment> attachments,
                            @NonNull List<NetworkContract> networks
     ) {
-        postUploadModel.uploadPost(text, attachments, networks)
+        postUploadModel.uploadPost(text, ListUtils.asSolidList(attachments), networks)
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe();

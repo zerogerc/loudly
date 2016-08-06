@@ -50,23 +50,6 @@ import ly.loud.loudly.new_base.plain.PlainPost;
 
 public class Utils {
     private static final String TAG = "UTIL_TAG";
-    private static ArrayList EMPTY_ARRAY_LIST;
-
-    public static <T> ArrayList<T> asArrayList(T... objects) {
-        ArrayList<T> result = new ArrayList<>();
-        for (T object : objects) {
-            result.add(object);
-        }
-        return result;
-    }
-
-    public static <T> ArrayList<T> emptyArrayList() {
-        if (EMPTY_ARRAY_LIST == null) {
-            EMPTY_ARRAY_LIST = new ArrayList();
-        }
-        //noinspection unchecked
-        return EMPTY_ARRAY_LIST;
-    }
 
     public static int dipToPixels(float dipValue) {
         DisplayMetrics metrics = Loudly.getContext().getResources().getDisplayMetrics();
@@ -417,11 +400,11 @@ public class Utils {
     @NonNull
     public static ArrayList<SinglePost> getInstances(@NonNull PlainPost post) {
         if (post instanceof SinglePost) {
-            return asArrayList(((SinglePost) post));
+            return ListUtils.asArrayList(((SinglePost) post));
         } else if (post instanceof LoudlyPost) {
              return ((LoudlyPost) post).getNetworkInstances();
         } else {
-            return emptyArrayList();
+            return ListUtils.emptyArrayList();
         }
     }
 }

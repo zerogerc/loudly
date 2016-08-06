@@ -9,7 +9,6 @@ import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -36,10 +35,10 @@ import ly.loud.loudly.new_base.Person;
 import ly.loud.loudly.new_base.SingleImage;
 import ly.loud.loudly.new_base.SinglePost;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.new_base.interfaces.attachments.LocalFile;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
+import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.TimeInterval;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -47,6 +46,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Observable;
+import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.RequestType;
@@ -208,12 +208,12 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Observable<List<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
+    public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: handle
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             Call<VKResponse<VKItems<Say>>> call;
             long currentTime = 0;
@@ -224,7 +224,7 @@ public class VKModel implements NetworkContract {
                 if (body.error != null) {
                     // ToDo: Handle
                     Log.e(TAG, body.error.errorMessage);
-                    return Collections.emptyList();
+                    return SolidList.empty();
                 }
                 if (body.response != null) {
                     if (body.response.items.isEmpty()) {
@@ -242,7 +242,7 @@ public class VKModel implements NetworkContract {
                     }
                 }
             } while (timeInterval.contains(currentTime));
-            return posts;
+            return ListUtils.asSolidList(posts);
         });
     }
 
@@ -262,12 +262,12 @@ public class VKModel implements NetworkContract {
     @NonNull
     @Override
     @CheckResult
-    public Observable<List<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
+    public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
         return Observable.fromCallable(() -> {
             final VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: Handle
-                return Collections.emptyList();
+                return SolidList.empty();
             }
 
             String type, filter;
@@ -278,7 +278,7 @@ public class VKModel implements NetworkContract {
             } else if (element instanceof Comment) {
                 type = "comment";
             } else {
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             switch (requestType) {
                 case LIKES:
@@ -288,51 +288,47 @@ public class VKModel implements NetworkContract {
                     filter = "copies";
                     break;
                 default:
-                    return Collections.emptyList();
+                    return SolidList.empty();
             }
             Link elementLink = element.getLink();
             String elementId = elementLink.get();
             if (elementId == null) {
-                return Collections.emptyList();
+                return SolidList.empty();
             }
 
             Call<VKResponse<VKItems<Profile>>> likersIds = client.getLikersIds(keyKeeper.getUserId(),
                     elementId, type, filter, keyKeeper.getAccessToken());
-            try {
-                Response<VKResponse<VKItems<Profile>>> executed = likersIds.execute();
-                VKResponse<VKItems<Profile>> body = executed.body();
-                if (body.error != null) {
-                    // ToDo: Handle
-                    Log.e(TAG, body.error.errorMessage);
-                    return Collections.emptyList();
-                }
-                if (body.response != null) {
-                    VKItems<Profile> response = body.response;
-                    List<String> ids = new ArrayList<>();
-                    for (Profile profile : response.items) {
-                        ids.add(profile.id);
-                    }
-                    Call<VKResponse<List<Profile>>> profiles = client.getProfiles(toCommaSeparated(ids),
-                            keyKeeper.getAccessToken());
-                    Response<VKResponse<List<Profile>>> gotPerson = profiles.execute();
-                    VKResponse<List<Profile>> personsBody = gotPerson.body();
-                    if (personsBody.error != null) {
-                        // ToDo: Handle
-                        Log.e(TAG, personsBody.error.errorMessage);
-                        return Collections.emptyList();
-                    }
-                    if (personsBody.response != null) {
-                        List<Person> persons = new ArrayList<>();
-                        for (Profile profile : personsBody.response) {
-                            persons.add(toPerson(profile));
-                        }
-                        return persons;
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            Response<VKResponse<VKItems<Profile>>> executed = likersIds.execute();
+            VKResponse<VKItems<Profile>> body = executed.body();
+            if (body.error != null) {
+                // ToDo: Handle
+                Log.e(TAG, body.error.errorMessage);
+                return SolidList.empty();
             }
-            return Collections.emptyList();
+            if (body.response != null) {
+                VKItems<Profile> response = body.response;
+                List<String> ids = new ArrayList<>();
+                for (Profile profile : response.items) {
+                    ids.add(profile.id);
+                }
+                Call<VKResponse<List<Profile>>> profiles = client.getProfiles(toCommaSeparated(ids),
+                        keyKeeper.getAccessToken());
+                Response<VKResponse<List<Profile>>> gotPerson = profiles.execute();
+                VKResponse<List<Profile>> personsBody = gotPerson.body();
+                if (personsBody.error != null) {
+                    // ToDo: Handle
+                    Log.e(TAG, personsBody.error.errorMessage);
+                    return SolidList.empty();
+                }
+                if (personsBody.response != null) {
+                    List<Person> persons = new ArrayList<>();
+                    for (Profile profile : personsBody.response) {
+                        persons.add(toPerson(profile));
+                    }
+                    return ListUtils.asSolidList(persons);
+                }
+            }
+            return SolidList.empty();
         });
     }
 
@@ -386,17 +382,17 @@ public class VKModel implements NetworkContract {
 
     @NonNull
     @Override
-    public Observable<List<Comment>> getComments(@NonNull SingleNetworkElement element) {
+    public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: Handle
-                return Collections.emptyList();
+                return SolidList.empty();
             }
 
             String id = Link.getLink(element.getLink());
             if (id == null) {
-                return Collections.emptyList();
+                return SolidList.empty();
             }
             Call<VKResponse<VKItems<Say>>> call = client.getComments(
                     keyKeeper.getUserId(), id,
@@ -407,7 +403,7 @@ public class VKModel implements NetworkContract {
                 if (body.error != null) {
                     // ToDo: Handle
                     Log.e(TAG, body.error.errorMessage);
-                    return Collections.emptyList();
+                    return SolidList.empty();
                 }
                 if (body.response != null && body.response.profiles != null) {
                     List<Comment> comments = new ArrayList<>();
@@ -419,12 +415,12 @@ public class VKModel implements NetworkContract {
                                 toPerson(profile), getId(), new Link(say.id), getInfo(say));
                         comments.add(comment);
                     }
-                    return comments;
+                    return ListUtils.asSolidList(comments);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return Collections.emptyList();
+            return SolidList.empty();
         });
     }
 

@@ -15,6 +15,7 @@ import ly.loud.loudly.new_base.plain.PlainImage;
 import ly.loud.loudly.new_base.plain.PlainPost;
 import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
+import solid.collections.SolidList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,7 @@ public class PostUploadModel {
     // Save to DB after uploading to networks
     @CheckResult
     @NonNull
-    private Observable<SinglePost> uploadPost(@Nullable String post, List<Attachment> attachments,
+    private Observable<SinglePost> uploadPost(@Nullable String post, SolidList<Attachment> attachments,
                                              @NonNull NetworkContract network) {
         return uploadAttachments(attachments, network)
                 .flatMap(list -> {
@@ -45,7 +46,7 @@ public class PostUploadModel {
 
     @CheckResult
     @NonNull
-    private Observable<List<SingleAttachment>> uploadAttachments(@NonNull List<Attachment> attachments,
+    private Observable<List<SingleAttachment>> uploadAttachments(@NonNull SolidList<Attachment> attachments,
                                                                 @NonNull NetworkContract networkContract) {
         // ToDo: Handle error
         return Observable.from(attachments)
@@ -56,7 +57,7 @@ public class PostUploadModel {
     }
 
     public Observable<LoudlyPost> uploadPost(@Nullable String text,
-                                             @NonNull List<Attachment> attachments,
+                                             @NonNull SolidList<Attachment> attachments,
                                              @NonNull List<NetworkContract> networks) {
 
         return Observable.from(networks)
