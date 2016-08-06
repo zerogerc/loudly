@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.VK.entities;
+package ly.loud.loudly.networks.vk.entities;
 
 /**
  * Counter of likes, shares, reposts

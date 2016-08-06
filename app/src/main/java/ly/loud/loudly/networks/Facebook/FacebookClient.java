@@ -1,8 +1,8 @@
-package ly.loud.loudly.networks.Facebook;
+package ly.loud.loudly.networks.facebook;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.networks.Facebook.entities.*;
+import ly.loud.loudly.networks.facebook.entities.*;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.*;

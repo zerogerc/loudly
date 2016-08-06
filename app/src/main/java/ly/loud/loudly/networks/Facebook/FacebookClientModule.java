@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.Facebook;
+package ly.loud.loudly.networks.facebook;
 
 import android.support.annotation.NonNull;
 import dagger.Module;

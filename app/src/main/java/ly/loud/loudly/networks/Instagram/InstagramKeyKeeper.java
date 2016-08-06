@@ -1,7 +1,7 @@
-package ly.loud.loudly.networks.Instagram;
+package ly.loud.loudly.networks.instagram;
 
 import android.os.Parcel;
-import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.networks.KeyKeeper;
 
 /**
  * @author Danil Kolikov

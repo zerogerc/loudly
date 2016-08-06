@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 
 import junit.framework.Assert;
 
-import ly.loud.loudly.new_base.Location;
 import ly.loud.loudly.util.Equality;
 import ly.loud.loudly.test.Generators;
 import ly.loud.loudly.util.database.entities.StoredLocation;

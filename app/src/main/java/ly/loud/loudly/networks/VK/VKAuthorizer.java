@@ -1,8 +1,8 @@
-package ly.loud.loudly.networks.VK;
+package ly.loud.loudly.networks.vk;
 
-import ly.loud.loudly.new_base.KeyKeeper;
-import ly.loud.loudly.new_base.Authorizer;
-import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Authorizer;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.Query;
 
 public class VKAuthorizer extends Authorizer {

@@ -7,7 +7,7 @@ import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
-import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.networks.Networks;
 
 /**
  * Object that represents Links table

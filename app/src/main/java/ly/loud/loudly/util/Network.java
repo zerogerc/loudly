@@ -10,8 +10,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.base.attachments.LocalFile;
+import ly.loud.loudly.legacy_base.Wrap;
+import ly.loud.loudly.legacy_base.attachments.LocalFile;
 import ly.loud.loudly.util.parsers.Parser;
 import ly.loud.loudly.util.parsers.StringParser;
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ly.loud.loudly.ui.brand_new.post.NetworksChooseLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ly.loud.loudly.ui.new_post.NetworksChooseLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/network_choose_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -19,4 +19,4 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
-</ly.loud.loudly.ui.brand_new.post.NetworksChooseLayout>
+</ly.loud.loudly.ui.new_post.NetworksChooseLayout>

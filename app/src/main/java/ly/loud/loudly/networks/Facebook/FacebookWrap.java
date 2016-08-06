@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.Facebook;
+package ly.loud.loudly.networks.facebook;
 
 import android.util.Pair;
 
@@ -14,22 +14,22 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 
-import ly.loud.loudly.new_base.KeyKeeper;
-import ly.loud.loudly.new_base.Link;
-import ly.loud.loudly.base.NetworkDescription;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.new_base.TokenExpiredException;
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.base.attachments.Attachment;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.attachments.LocalFile;
-import ly.loud.loudly.base.attachments.LoudlyImage;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.new_base.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.legacy_base.NetworkDescription;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.base.entities.Person;
+import ly.loud.loudly.legacy_base.SingleNetwork;
+import ly.loud.loudly.base.exceptions.TokenExpiredException;
+import ly.loud.loudly.legacy_base.Wrap;
+import ly.loud.loudly.legacy_base.attachments.Attachment;
+import ly.loud.loudly.legacy_base.attachments.Image;
+import ly.loud.loudly.legacy_base.attachments.LocalFile;
+import ly.loud.loudly.legacy_base.attachments.LoudlyImage;
+import ly.loud.loudly.legacy_base.says.Comment;
+import ly.loud.loudly.base.entities.Info;
+import ly.loud.loudly.legacy_base.says.LoudlyPost;
+import ly.loud.loudly.legacy_base.says.Post;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Network;
 import ly.loud.loudly.util.Query;

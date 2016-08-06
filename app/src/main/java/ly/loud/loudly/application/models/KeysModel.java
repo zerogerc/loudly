@@ -7,12 +7,10 @@ import android.support.annotation.Nullable;
 import javax.inject.Inject;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.networks.Facebook.FacebookKeyKeeper;
-import ly.loud.loudly.networks.VK.VKKeyKeeper;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.Networks.Network;
+import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
+import ly.loud.loudly.networks.vk.VKKeyKeeper;
+import ly.loud.loudly.networks.Networks.Network;
 import rx.Observable;
-import rx.Single;
 
 /**
  * Created by ZeRoGerc on 24/07/16.

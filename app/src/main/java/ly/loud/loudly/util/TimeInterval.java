@@ -1,5 +1,7 @@
 package ly.loud.loudly.util;
 
+import android.support.annotation.NonNull;
+
 public class TimeInterval {
     public long from, to;
 
@@ -11,14 +13,17 @@ public class TimeInterval {
         return new TimeInterval(from, to);
     }
 
+    @NonNull
     public static TimeInterval any() {
         return new TimeInterval(Long.MIN_VALUE, Long.MAX_VALUE);
     }
 
+    @NonNull
     public static TimeInterval since(long time) {
         return new TimeInterval(time, Long.MAX_VALUE);
     }
 
+    @NonNull
     public static TimeInterval before(long time) {
         return new TimeInterval(Long.MIN_VALUE, time);
     }

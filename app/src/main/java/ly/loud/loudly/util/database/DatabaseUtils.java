@@ -12,18 +12,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.new_base.KeyKeeper;
-import ly.loud.loudly.new_base.Link;
-import ly.loud.loudly.new_base.Location;
-import ly.loud.loudly.new_base.LoudlyImage;
-import ly.loud.loudly.new_base.LoudlyPost;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.SingleImage;
-import ly.loud.loudly.new_base.SinglePost;
-import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
-import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
-import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.base.entities.Location;
+import ly.loud.loudly.base.multiple.LoudlyImage;
+import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.base.single.SingleImage;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
+import ly.loud.loudly.base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.base.interfaces.attachments.MultipleAttachment;
+import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.entities.Key;
 import ly.loud.loudly.util.database.entities.StoredAttachment;
@@ -31,7 +31,7 @@ import ly.loud.loudly.util.database.entities.StoredLocation;
 import ly.loud.loudly.util.database.entities.StoredPost;
 import ly.loud.loudly.util.database.entities.links.Links;
 
-import static ly.loud.loudly.new_base.Networks.LOUDLY;
+import static ly.loud.loudly.networks.Networks.LOUDLY;
 
 /**
  * Utilities for work with databases

@@ -1,8 +1,8 @@
-package ly.loud.loudly.networks.VK;
+package ly.loud.loudly.networks.vk;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.networks.VK.entities.*;
+import ly.loud.loudly.networks.vk.entities.*;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.*;

@@ -9,9 +9,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.base.says.LoudlyPost;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.legacy_base.Wrap;
+import ly.loud.loudly.legacy_base.says.LoudlyPost;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.UIAction;
 import ly.loud.loudly.util.Utils;

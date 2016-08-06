@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.VK.entities;
+package ly.loud.loudly.networks.vk.entities;
 
 import com.google.gson.annotations.SerializedName;
 

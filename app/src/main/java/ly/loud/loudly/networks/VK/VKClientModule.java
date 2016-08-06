@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.VK;
+package ly.loud.loudly.networks.vk;
 
 import android.support.annotation.NonNull;
 import dagger.Module;
@@ -6,7 +6,6 @@ import dagger.Provides;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 

@@ -5,9 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".ui.brand_new.feed.FeedActivity">
+    tools:context=".ui.MainActivity">
 
-    <ly.loud.loudly.ui.brand_new.views.ScrimCoordinatorLayout
+    <ly.loud.loudly.ui.views.ScrimCoordinatorLayout
         android:id="@+id/app_bar_feed_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:context=".ui.brand_new.feed.FeedActivity"
+            tools:context=".ui.MainActivity"
             tools:showIn="@layout/app_bar_feed" />
 
         <android.support.design.widget.FloatingActionButton
@@ -43,7 +43,7 @@
             android:layout_margin="@dimen/fab_margin"
             android:src="@mipmap/ic_mode_edit_white_24dp" />
 
-    </ly.loud.loudly.ui.brand_new.views.ScrimCoordinatorLayout>
+    </ly.loud.loudly.ui.views.ScrimCoordinatorLayout>
 
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/app_bar_feed_new_post_root"
@@ -63,7 +63,7 @@
                 android:layout_height="match_parent"
                 android:background="@color/white_color">
 
-                <fragment android:name="ly.loud.loudly.ui.brand_new.post.NewPostFragment"
+                <fragment android:name="ly.loud.loudly.ui.new_post.NewPostFragment"
                     android:id="@+id/app_bar_feed_new_post_fragment"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"/>

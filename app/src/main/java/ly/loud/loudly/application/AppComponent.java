@@ -10,14 +10,14 @@ import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
-import ly.loud.loudly.networks.Facebook.FacebookClientModule;
-import ly.loud.loudly.networks.VK.VKClientModule;
-import ly.loud.loudly.ui.PeopleListFragment;
-import ly.loud.loudly.ui.brand_new.feed.FeedActivity;
-import ly.loud.loudly.ui.brand_new.feed.FeedFragment;
-import ly.loud.loudly.ui.brand_new.full_post.FullPostInfoFragment;
-import ly.loud.loudly.ui.brand_new.post.NetworksChooseLayout;
-import ly.loud.loudly.ui.brand_new.post.NewPostFragment;
+import ly.loud.loudly.networks.facebook.FacebookClientModule;
+import ly.loud.loudly.networks.vk.VKClientModule;
+import ly.loud.loudly.ui.MainActivity;
+import ly.loud.loudly.ui.people_list.PeopleListFragment;
+import ly.loud.loudly.ui.feed.FeedFragment;
+import ly.loud.loudly.ui.full_post.FullPostInfoFragment;
+import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
+import ly.loud.loudly.ui.new_post.NewPostFragment;
 
 /**
  * Created by ZeRoGerc on 20/07/16.
@@ -44,7 +44,7 @@ public interface AppComponent {
     @NonNull
     CoreModel coreModel();
 
-    void inject(@NonNull FeedActivity feedActivity);
+    void inject(@NonNull MainActivity mainActivity);
 
     void inject(@NonNull PeopleListFragment peopleListFragment);
     void inject(@NonNull NewPostFragment newPostFragment);

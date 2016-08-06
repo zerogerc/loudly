@@ -1,8 +1,8 @@
-package ly.loud.loudly.networks.VK;
+package ly.loud.loudly.networks.vk;
 
 import android.os.Parcel;
 
-import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.networks.KeyKeeper;
 
 public class VKKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "5133011";

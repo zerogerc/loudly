@@ -6,7 +6,6 @@ import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,12 +19,10 @@ import java.util.Calendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
-import ly.loud.loudly.new_base.KeyKeeper;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.ui.LocalBroadcastReceiver;
-import ly.loud.loudly.util.Broadcasts;
+import ly.loud.loudly.legacy_base.Wrap;
+import ly.loud.loudly.networks.loudly.LoudlyKeyKeeper;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.DaggerDatabaseComponent;
 import ly.loud.loudly.util.database.DatabaseComponent;
@@ -53,7 +50,6 @@ public class Loudly extends Application {
     private TimeInterval timeInterval;
     private AlarmManager alarmManager;
     private PendingIntent getInfoService;
-    private LocalBroadcastReceiver receiver;
 
     private AppComponent appComponent;
     private DatabaseComponent databaseComponent;
@@ -207,12 +203,6 @@ public class Loudly extends Application {
     }
 
     @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
-    }
-
-    @Override
     public void onCreate() {
         super.onCreate();
         RxPaparazzo.register(this);
@@ -221,9 +211,6 @@ public class Loudly extends Application {
 
         keyKeepers = new KeyKeeper[Networks.NETWORK_COUNT];
         context = this;
-        receiver = new LocalBroadcastReceiver();
-        LocalBroadcastManager.getInstance(this).
-                registerReceiver(receiver, new IntentFilter(Broadcasts.INTERNAL_MESSAGE));
 
         try {
             loadFromDB();

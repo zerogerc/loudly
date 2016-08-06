@@ -37,7 +37,7 @@
                     android:text="post" />
             </LinearLayout>
 
-            <ly.loud.loudly.ui.brand_new.views.TextPlusAttachmentsView
+            <ly.loud.loudly.ui.views.TextPlusAttachmentsView
                 android:id="@+id/material_new_post_fragment_text_plus_attachments"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -58,7 +58,7 @@
                     android:id="@+id/attachments"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
-            </ly.loud.loudly.ui.brand_new.views.TextPlusAttachmentsView>
+            </ly.loud.loudly.ui.views.TextPlusAttachmentsView>
         </LinearLayout>
     </ScrollView>
 

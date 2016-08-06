@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.VK.entities;
+package ly.loud.loudly.networks.vk.entities;
 
 /**
  * Response from photo upload server
