@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.Instagram;
+package ly.loud.loudly.networks.instagram;
 
 import android.util.Pair;
 
@@ -8,12 +8,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ly.loud.loudly.base.*;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.new_base.*;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.base.entities.Info;
+import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.base.entities.Person;
+import ly.loud.loudly.base.exceptions.TokenExpiredException;
+import ly.loud.loudly.legacy_base.*;
+import ly.loud.loudly.legacy_base.attachments.Image;
+import ly.loud.loudly.legacy_base.says.Comment;
+import ly.loud.loudly.legacy_base.says.LoudlyPost;
+import ly.loud.loudly.legacy_base.says.Post;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Network;
 import ly.loud.loudly.util.Query;

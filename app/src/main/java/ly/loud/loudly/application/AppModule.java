@@ -5,10 +5,12 @@ import android.support.annotation.NonNull;
 
 import javax.inject.Singleton;
 
-import android.util.Log;
 import dagger.Module;
 import dagger.Provides;
 import ly.loud.loudly.application.models.*;
+import ly.loud.loudly.networks.facebook.FacebookModel;
+import ly.loud.loudly.networks.instagram.InstagramModel;
+import ly.loud.loudly.networks.vk.VKModel;
 
 import static android.os.Looper.getMainLooper;
 

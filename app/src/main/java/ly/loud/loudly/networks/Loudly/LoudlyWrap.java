@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.Loudly;
+package ly.loud.loudly.networks.loudly;
 
 import android.util.Pair;
 
@@ -7,19 +7,18 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
-import ly.loud.loudly.base.*;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.new_base.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.new_base.KeyKeeper;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.Person;
+import ly.loud.loudly.legacy_base.*;
+import ly.loud.loudly.legacy_base.attachments.Image;
+import ly.loud.loudly.legacy_base.says.Comment;
+import ly.loud.loudly.base.entities.Info;
+import ly.loud.loudly.legacy_base.says.LoudlyPost;
+import ly.loud.loudly.legacy_base.says.Post;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.DatabaseUtils;
 
 /**
  * Wrap over database

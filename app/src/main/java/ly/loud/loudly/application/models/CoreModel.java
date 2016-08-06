@@ -6,14 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.new_base.KeyKeeper;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.Networks.Network;
-import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
-import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.networks.facebook.FacebookModel;
+import ly.loud.loudly.networks.instagram.InstagramModel;
+import ly.loud.loudly.networks.NetworkContract;
+import ly.loud.loudly.networks.vk.VKModel;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.legacy_base.SingleNetwork;
+import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
+import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import rx.Observable;
-import rx.Single;
 
 public class CoreModel {
     @NonNull

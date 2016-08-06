@@ -9,10 +9,10 @@ import java.util.List;
 import javax.inject.Inject;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.new_base.Networks.Network;
-import ly.loud.loudly.new_base.Person;
-import ly.loud.loudly.new_base.Comment;
-import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.base.entities.Person;
+import ly.loud.loudly.base.single.Comment;
+import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import rx.Observable;
 import solid.collections.SolidList;
 

@@ -1,8 +1,8 @@
-package ly.loud.loudly.networks.Facebook;
+package ly.loud.loudly.networks.facebook;
 
 import android.os.Parcel;
 
-import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.networks.KeyKeeper;
 
 public class FacebookKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "443913362466352";

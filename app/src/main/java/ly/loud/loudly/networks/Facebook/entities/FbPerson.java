@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.Facebook.entities;
+package ly.loud.loudly.networks.facebook.entities;
 
 import android.support.annotation.Nullable;
 import com.google.gson.annotations.SerializedName;

@@ -4,11 +4,10 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.new_base.LoudlyPost;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.Networks.Network;
-import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.networks.NetworkContract;
+import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.base.single.SinglePost;
 import rx.Observable;
 import rx.Single;
 

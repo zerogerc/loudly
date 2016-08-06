@@ -4,12 +4,11 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.new_base.Link;
-import ly.loud.loudly.new_base.LoudlyPost;
-import ly.loud.loudly.new_base.Networks;
-import ly.loud.loudly.new_base.SinglePost;
-import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.util.Equality;
 import ly.loud.loudly.test.Generators;
 import ly.loud.loudly.util.TimeInterval;

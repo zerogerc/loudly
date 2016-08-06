@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.Facebook.entities;
+package ly.loud.loudly.networks.facebook.entities;
 
 
 /**
