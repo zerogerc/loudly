@@ -1,16 +1,15 @@
 package ly.loud.loudly.base.says;
 
 import android.os.Parcel;
+import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 
-import android.support.annotation.Nullable;
+import ly.loud.loudly.base.attachments.Attachment;
 import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.new_base.Location;
-import ly.loud.loudly.base.attachments.Attachment;
-import ly.loud.loudly.ui.adapter.Item;
 
-public class Post extends Say implements Item {
+public class Post extends Say {
     @Nullable
     protected Location location;
 
@@ -47,11 +46,6 @@ public class Post extends Say implements Item {
 
     public void setLocation(@Nullable Location location) {
         this.location = location;
-    }
-
-    @Override
-    public int getType() {
-        return Item.POST;
     }
 
     @Override

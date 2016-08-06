@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
+import static ly.loud.loudly.ui.brand_new.ItemTypes.COMMENT;
 import static ly.loud.loudly.ui.brand_new.ItemTypes.ItemType;
 import static ly.loud.loudly.ui.brand_new.ItemTypes.PERSON;
 import static ly.loud.loudly.ui.brand_new.ItemTypes.POST;
@@ -19,6 +20,8 @@ public class ViewHolderFactory {
                 return new ViewHolderPerson(inflater, parent);
             case PERSON:
                 return new ViewHolderPerson(inflater, parent);
+            case COMMENT:
+                return  new ViewHolderComment(inflater, parent);
             default:
                 return new ViewHolderDelimiter(inflater, parent);
         }

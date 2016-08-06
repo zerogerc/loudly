@@ -4,9 +4,8 @@ import android.os.Parcel;
 
 import ly.loud.loudly.new_base.Link;
 import ly.loud.loudly.new_base.Person;
-import ly.loud.loudly.ui.adapter.Item;
 
-public class Comment extends Say implements Item {
+public class Comment extends Say{
     Person person;
 
     public Comment() {
@@ -36,11 +35,6 @@ public class Comment extends Say implements Item {
 
     public void setPerson(Person person) {
         this.person = person;
-    }
-
-    @Override
-    public int getType() {
-        return Item.COMMENT;
     }
 
     @Override

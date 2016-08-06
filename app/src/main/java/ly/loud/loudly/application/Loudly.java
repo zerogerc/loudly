@@ -25,7 +25,6 @@ import ly.loud.loudly.networks.Loudly.LoudlyKeyKeeper;
 import ly.loud.loudly.new_base.KeyKeeper;
 import ly.loud.loudly.new_base.Networks;
 import ly.loud.loudly.ui.LocalBroadcastReceiver;
-import ly.loud.loudly.ui.PostsHolder;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.DaggerDatabaseComponent;
@@ -50,7 +49,6 @@ public class Loudly extends Application {
 
     private static int loadLast, getInfoInterval;
     private static ExecutorService executor = null;
-    private static PostsHolder posts;
     private KeyKeeper[] keyKeepers;
     private TimeInterval timeInterval;
     private AlarmManager alarmManager;
@@ -117,13 +115,6 @@ public class Loudly extends Application {
         Loudly.activity = activity;
     }
 
-    public static PostsHolder getPostHolder() {
-        if (posts == null) {
-            posts = new PostsHolder();
-        }
-        return posts;
-    }
-
     // ToDo: make singleton
     public static ExecutorService getExecutor() {
         if (executor == null) {
@@ -171,7 +162,6 @@ public class Loudly extends Application {
                 w.resetState();
             }
         }
-        getPostHolder().clear();
     }
 
     /**
@@ -219,7 +209,6 @@ public class Loudly extends Application {
     @Override
     public void onLowMemory() {
         super.onLowMemory();
-        posts.getPosts().clear();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
     }
 

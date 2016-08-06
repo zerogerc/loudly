@@ -32,13 +32,6 @@
         </activity>
 
         <activity
-            android:name=".ui.FullPostInfoActivity"
-            android:launchMode="singleTask">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.brand_new.feed.FeedActivity" />
-        </activity>
-        <activity
             android:name=".ui.brand_new.feed.FeedActivity"
             android:label="@string/loudly"
             android:theme="@style/AppTheme.NoActionBar"

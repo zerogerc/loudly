@@ -135,15 +135,23 @@ public class FeedActivity extends AppCompatActivity
                 .replace(R.id.fragment_container, new FeedFragment())
                 .commit();
 
-        initBottomSheet();
+        initFragmentsInteraction();
     }
 
     /**
      * Perform initialization of post creation fragment.
      */
-    private void initBottomSheet() {
+    private void initFragmentsInteraction() {
         bottomSheetBehavior = BottomSheetBehavior.from(networkChooseScroll);
         bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
+
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+                floatingActionButton.show();
+            } else {
+                floatingActionButton.hide();
+            }
+        });
     }
 
     @Override

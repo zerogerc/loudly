@@ -75,4 +75,7 @@ dependencies {
 
     compile "com.github.miguelbcr:RxPaparazzo:0.2.0"
     compile "io.reactivex:rxjava:1.1.5"
+
+    compile 'com.hannesdorfmann.fragmentargs:annotation:3.0.2'
+    apt 'com.hannesdorfmann.fragmentargs:processor:3.0.2'
 }
