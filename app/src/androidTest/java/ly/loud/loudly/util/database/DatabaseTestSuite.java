@@ -9,7 +9,7 @@ import org.junit.runners.Suite;
  * @author Danil Kolikov
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({LocationTest.class, LinksTest.class, AttachmentTest.class, PostTest.class,
+@Suite.SuiteClasses({StoredLocationTest.class, StoredPostTest.class,
         KeyTest.class})
 public class DatabaseTestSuite {
 }

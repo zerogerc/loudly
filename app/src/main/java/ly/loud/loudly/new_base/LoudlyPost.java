@@ -1,14 +1,16 @@
 package ly.loud.loudly.new_base;
 
 import android.os.Parcel;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.ArrayList;
+
 import ly.loud.loudly.new_base.Networks.Network;
 import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.plain.PlainPost;
-
-import java.util.ArrayList;
 
 /**
  * @author Danil Kolikov
@@ -34,9 +36,17 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
     public LoudlyPost(@Nullable String text,
                       long date,
                       @NonNull ArrayList<MultipleAttachment> attachments,
-                      @Nullable Location location) {
+                      @Nullable Location location,
+                      @NonNull SinglePost[] elements) {
         super(text, date, attachments, location);
-        elements = new SinglePost[Networks.NETWORK_COUNT];
+        this.elements = elements;
+    }
+
+    public LoudlyPost(@Nullable String text,
+                      long date,
+                      @NonNull ArrayList<MultipleAttachment> attachments,
+                      @Nullable Location location) {
+        this(text, date, attachments, location, new SinglePost[Networks.NETWORK_COUNT]);
     }
 
     private LoudlyPost(@NonNull Parcel source) {
@@ -50,10 +60,15 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
         return elements[network];
     }
 
+    @CheckResult
+    @NonNull
     @Override
-    public void setSingleNetworkInstance(@Network int network, @Nullable SinglePost instance) {
+    public LoudlyPost setSingleNetworkInstance(@Network int network, @Nullable SinglePost instance) {
         // Now single post is always post
-        elements[network] = instance;
+        SinglePost[] copied = new SinglePost[elements.length];
+        System.arraycopy(elements, 0, copied, 0, copied.length);
+        copied[network] = instance;
+        return new LoudlyPost(getText(), getDate(), getAttachments(), getLocation(), copied);
     }
 
     @NonNull

@@ -1,6 +1,7 @@
 package ly.loud.loudly.new_base.interfaces;
 
 import android.os.Parcelable;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.Networks.Network;
@@ -29,7 +30,9 @@ public interface MultipleNetworkElement<T extends SingleNetworkElement> extends 
      * @param network ID of network
      * @param instance New instance (may be null)
      */
-    void setSingleNetworkInstance(@Network int network, @Nullable T instance);
+    @CheckResult
+    @NonNull
+    MultipleNetworkElement<T> setSingleNetworkInstance(@Network int network, @Nullable T instance);
 
     /**
      * Get stream of all network instances

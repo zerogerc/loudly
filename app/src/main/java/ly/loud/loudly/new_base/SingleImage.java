@@ -2,6 +2,7 @@ package ly.loud.loudly.new_base;
 
 import android.graphics.Point;
 import android.os.Parcel;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.Networks.Network;
@@ -76,9 +77,11 @@ public class SingleImage extends PlainImage implements SingleAttachment {
         return info;
     }
 
+    @NonNull
+    @CheckResult
     @Override
-    public void setInfo(@NonNull Info newInfo) {
-        this.info = newInfo;
+    public SingleImage setInfo(@NonNull Info newInfo) {
+        return new SingleImage(getUrl(), getSize(), getNetwork(), link, newInfo);
     }
 
     @Override

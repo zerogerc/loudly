@@ -416,9 +416,7 @@ public class VKModel implements NetworkContract {
                         Profile profile = getProfileById(profiles, say.fromId);
 
                         Comment comment = new Comment(say.text, say.date, toAttachments(say),
-                                toPerson(profile), getId(), new Link(say.id));
-                        comment.setInfo(getInfo(say));
-
+                                toPerson(profile), getId(), new Link(say.id), getInfo(say));
                         comments.add(comment);
                     }
                     return comments;

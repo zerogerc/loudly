@@ -10,12 +10,12 @@ import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
 
 /**
- * Object that represents Location table
+ * Object that represents StoredLocation table
  *
  * @author Danil Kolikov
  */
-@StorIOSQLiteType(table = Location.Contract.TABLE_NAME)
-public class Location {
+@StorIOSQLiteType(table = StoredLocation.Contract.TABLE_NAME)
+public class StoredLocation {
     @StorIOSQLiteColumn(name = Contract._ID, key = true)
     @Nullable
     Long id;
@@ -30,10 +30,10 @@ public class Location {
     @StorIOSQLiteColumn(name = Contract.COLUMN_NAME_LONGITUDE)
     double longitude;
 
-    public Location() {
+    public StoredLocation() {
     }
 
-    public Location(@Nullable String name, double latitude, double longitude) {
+    public StoredLocation(@Nullable String name, double latitude, double longitude) {
         this.name = name;
         this.longitude = longitude;
         this.latitude = latitude;
@@ -45,12 +45,12 @@ public class Location {
      *
      * @param id ID of location
      * @param database Posts database
-     * @return Location (may be null if not found)
+     * @return StoredLocation (may be null if not found)
      */
     @Nullable
-    public static Location selectById(Long id, StorIOSQLite database) {
+    public static StoredLocation selectById(Long id, StorIOSQLite database) {
         return database.get()
-                .object(Location.class)
+                .object(StoredLocation.class)
                 .withQuery(Query.builder()
                         .table(Contract.TABLE_NAME)
                         .where(Contract._ID + " = ?")

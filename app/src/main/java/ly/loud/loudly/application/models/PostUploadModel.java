@@ -7,6 +7,7 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.new_base.LoudlyImage;
 import ly.loud.loudly.new_base.LoudlyPost;
 import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
@@ -76,18 +77,19 @@ public class PostUploadModel {
                                 // ToDo: fix dependency of uploaded length
                                 for (int i = 0; i < singles.size(); i++) {
                                     SingleAttachment single = singles.get(i);
-                                    images.get(i).setSingleNetworkInstance(single.getNetwork(), single);
+
+                                    MultipleNetworkElement<SingleAttachment> element =
+                                            images.get(i).setSingleNetworkInstance(single.getNetwork(), single);
+                                    images.set(i, ((MultipleAttachment) element));
                                 }
                             }
 
                             LoudlyPost loudlyPost = new LoudlyPost(text, System.currentTimeMillis(),
                                     images, null);
                             for (SinglePost post : singlePosts) {
-                                loudlyPost.setSingleNetworkInstance(post.getNetwork(), post);
+                                loudlyPost = loudlyPost.setSingleNetworkInstance(post.getNetwork(), post);
                             }
-                            DatabaseUtils.savePost(loudlyPost);
-
-                            return loudlyPost;
+                            return DatabaseUtils.savePost(loudlyPost);
                         }));
     }
 }

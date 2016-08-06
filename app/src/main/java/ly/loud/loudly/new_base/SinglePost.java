@@ -1,6 +1,7 @@
 package ly.loud.loudly.new_base;
 
 import android.os.Parcel;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -96,8 +97,11 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     }
 
     @Override
-    public void setInfo(@NonNull Info newInfo) {
-        info = newInfo;
+    @CheckResult
+    @NonNull
+    public SinglePost setInfo(@NonNull Info newInfo) {
+        return new SinglePost(getText(), getDate(), getAttachments(), getLocation(), getNetwork(),
+                link, newInfo);
     }
 
     @Override

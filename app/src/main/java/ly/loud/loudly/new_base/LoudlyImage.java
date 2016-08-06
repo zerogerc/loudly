@@ -2,6 +2,7 @@ package ly.loud.loudly.new_base;
 
 import android.graphics.Point;
 import android.os.Parcel;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import ly.loud.loudly.new_base.Networks.Network;
@@ -36,9 +37,13 @@ public class LoudlyImage extends PlainImage implements MultipleAttachment, Local
     @NonNull
     private final SingleImage[] elements;
 
-    public LoudlyImage(@Nullable String url, @Nullable Point size) {
+    public LoudlyImage(@Nullable String url, @Nullable Point size, @NonNull SingleImage[] elements) {
         super(url, size);
-        elements = new SingleImage[Networks.NETWORK_COUNT];
+        this.elements = elements;
+    }
+
+    public LoudlyImage(@Nullable String url, @Nullable Point size) {
+        this(url, size,  new SingleImage[Networks.NETWORK_COUNT]);
     }
 
     private LoudlyImage(@NonNull Parcel source) {
@@ -52,15 +57,23 @@ public class LoudlyImage extends PlainImage implements MultipleAttachment, Local
         return elements[network];
     }
 
+    @CheckResult
+    @NonNull
     @Override
-    public void setSingleNetworkInstance(@Network int network, @Nullable SingleAttachment instance) {
+    public LoudlyImage setSingleNetworkInstance(@Network int network, @Nullable SingleAttachment instance) {
+        SingleImage[] copied = new SingleImage[elements.length];
+        System.arraycopy(elements, 0, copied, 0, elements.length);
+
         if (instance == null) {
-            elements[network] = null;
-            return;
+            copied[network] = null;
+            return new LoudlyImage(getUrl(), getSize(), copied);
         }
         if (instance.getType() == TYPE_IMAGE) {
-            elements[network] = (SingleImage) instance;
+            copied[network] = (SingleImage) instance;
+            return new LoudlyImage(getUrl(), getSize(), copied);
         }
+        // Impossible
+        return this;
     }
 
     @NonNull

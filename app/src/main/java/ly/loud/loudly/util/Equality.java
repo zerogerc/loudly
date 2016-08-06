@@ -1,16 +1,22 @@
 package ly.loud.loudly.util;
 
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.new_base.*;
-import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
-import ly.loud.loudly.new_base.plain.PlainPost;
-import rx.functions.Func0;
-import rx.functions.Func2;
 
 import java.util.Iterator;
 import java.util.List;
+
+import ly.loud.loudly.new_base.Link;
+import ly.loud.loudly.new_base.Location;
+import ly.loud.loudly.new_base.LoudlyImage;
+import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.SingleImage;
+import ly.loud.loudly.new_base.SinglePost;
+import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
+import ly.loud.loudly.new_base.plain.PlainPost;
+import ly.loud.loudly.util.database.entities.StoredLocation;
+import rx.functions.Func0;
+import rx.functions.Func2;
 
 /**
  * Some outer equalities between classes
@@ -39,9 +45,17 @@ public class Equality {
 
     /**
      * Null-safe equality of strings
+     *
      * @return true, of strings are equal
      */
     public static boolean equal(@Nullable String a, @Nullable String b) {
+        return equalBuilder(a, b, () -> {
+            //noinspection ConstantConditions checked in EqualBuilder
+            return a.equals(b);
+        });
+    }
+
+    public static boolean equal(@Nullable Long a, @Nullable Long b) {
         return equalBuilder(a, b, () -> {
             //noinspection ConstantConditions checked in EqualBuilder
             return a.equals(b);
@@ -75,6 +89,14 @@ public class Equality {
         return equalBuilder(a, b, () -> {
             //noinspection ConstantConditions checked in EqualBuilder
             return a.equals(b);
+        });
+    }
+
+    public static boolean equal(@Nullable StoredLocation a, @Nullable StoredLocation b) {
+        return equalBuilder(a, b, () -> {
+            //noinspection ConstantConditions checked in EqualBuilder
+            return equal(a.getName(), b.getName()) && a.getLatitude() == b.getLatitude() &&
+                    a.getLongitude() == b.getLongitude() && equal(a.getId(), b.getId());
         });
     }
 
@@ -113,6 +135,7 @@ public class Equality {
             return true;
         });
     }
+
     public static <T extends PlainPost> boolean equalPosts(@Nullable List<T> a, @Nullable List<T> b) {
         return equalLists(a, b, Equality::equal);
     }
