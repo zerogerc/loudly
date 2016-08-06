@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database.entities;
 
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
@@ -39,6 +40,7 @@ public class Key {
      * @param database Keys database
      * @return List of stored keys (Keys may be null)
      */
+    @NonNull
     public static List<Key> selectKeys(StorIOSQLite database) {
         return database.get()
                 .listOfObjects(Key.class)
@@ -56,6 +58,7 @@ public class Key {
      * @param database Keys database
      * @return Result of deletion
      */
+    @NonNull
     public static DeleteResult deleteKey(int network, StorIOSQLite database) {
         return database.delete()
                 .byQuery(DeleteQuery.builder()
@@ -75,6 +78,7 @@ public class Key {
         this.network = network;
     }
 
+    @Nullable
     public String getValue() {
         return value;
     }

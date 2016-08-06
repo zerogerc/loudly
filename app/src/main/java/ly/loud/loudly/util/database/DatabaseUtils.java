@@ -3,15 +3,25 @@ package ly.loud.loudly.util.database;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.new_base.*;
+import ly.loud.loudly.new_base.KeyKeeper;
+import ly.loud.loudly.new_base.Link;
+import ly.loud.loudly.new_base.Location;
+import ly.loud.loudly.new_base.LoudlyImage;
+import ly.loud.loudly.new_base.LoudlyPost;
+import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.new_base.SingleImage;
+import ly.loud.loudly.new_base.SinglePost;
 import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.new_base.interfaces.attachments.Attachment;
-import ly.loud.loudly.new_base.interfaces.attachments.LocalFile;
 import ly.loud.loudly.new_base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.new_base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.util.TimeInterval;
@@ -21,8 +31,7 @@ import ly.loud.loudly.util.database.entities.StoredLocation;
 import ly.loud.loudly.util.database.entities.StoredPost;
 import ly.loud.loudly.util.database.entities.links.Links;
 
-import java.util.ArrayList;
-import java.util.List;
+import static ly.loud.loudly.new_base.Networks.LOUDLY;
 
 /**
  * Utilities for work with databases
@@ -161,8 +170,8 @@ public class DatabaseUtils {
                 throw new DatabaseException("Attachment isn't saved");
             }
             LoudlyImage resulting = attachment.setSingleNetworkInstance(
-                    Networks.LOUDLY, new SingleImage(attachment.getUrl(), attachment.getSize(),
-                            Networks.LOUDLY, new Link(id)));
+                    LOUDLY, new SingleImage(attachment.getUrl(), attachment.getSize(),
+                            LOUDLY, new Link(id)));
 
             database.lowLevel().setTransactionSuccessful();
             return resulting;
@@ -229,7 +238,7 @@ public class DatabaseUtils {
     private static LoudlyImage finishAttachmentLoading(@NonNull StoredAttachment stored)
             throws DatabaseException {
         Link[] links = loadLinks(stored.getLinksId());
-        links[Networks.LOUDLY] = new Link(stored.getId());
+        links[LOUDLY] = new Link(stored.getId());
 
         LoudlyImage image = new LoudlyImage(stored.getExtra(), null);
         return fillImageFromLinks(image, links);
@@ -290,16 +299,16 @@ public class DatabaseUtils {
                 throw new DatabaseException("Post wasn't inserted");
             }
             ArrayList<SingleAttachment> attachments = new ArrayList<>();
-            for (int i = 0; i < post.getAttachments().size(); i++) {
+            for (int i = 0, size = post.getAttachments().size(); i < size; i++) {
                 MultipleAttachment attachment = post.getAttachments().get(i);
                 if (attachment instanceof LoudlyImage) {
                     attachment = saveImage(((LoudlyImage) attachment), id);
                     post.getAttachments().set(i, attachment);
-                    attachments.add(((LoudlyImage) attachment).getSingleNetworkInstance(Networks.LOUDLY));
+                    attachments.add(((LoudlyImage) attachment).getSingleNetworkInstance(LOUDLY));
                 }
             }
-            LoudlyPost resulting = post.setSingleNetworkInstance(Networks.LOUDLY, new SinglePost(post.getText(), post.getDate(),
-                    attachments, post.getLocation(), Networks.LOUDLY, new Link(id)));
+            LoudlyPost resulting = post.setSingleNetworkInstance(LOUDLY, new SinglePost(post.getText(), post.getDate(),
+                    attachments, post.getLocation(), LOUDLY, new Link(id)));
             database.lowLevel().setTransactionSuccessful();
             return resulting;
         } finally {
@@ -350,7 +359,7 @@ public class DatabaseUtils {
         LoudlyPost post = new LoudlyPost(stored.getText(), stored.getDate(), attachments, location);
 
         Link[] links = loadLinks(stored.getLinksId());
-        links[Networks.LOUDLY] = new Link(stored.getId());
+        links[LOUDLY] = new Link(stored.getId());
 
         return fillPostFromLinks(post, links);
     }
@@ -406,7 +415,7 @@ public class DatabaseUtils {
      * @throws DatabaseException If error with database occurs
      */
     public static void deletePost(@NonNull LoudlyPost post) throws DatabaseException {
-        SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(Networks.LOUDLY);
+        SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(LOUDLY);
         if (loudlyInstance == null) {
             // Nothing to delete
             return;
@@ -450,8 +459,12 @@ public class DatabaseUtils {
             if (key == null) {
                 continue;
             }
+            String value = key.getValue();
+            if (value == null) {
+                continue;
+            }
             Loudly.getContext().setKeyKeeper(key.getNetwork(),
-                    KeyKeeper.fromStringBundle(key.getNetwork(), key.getValue()));
+                    KeyKeeper.fromStringBundle(key.getNetwork(), value));
         }
     }
 
