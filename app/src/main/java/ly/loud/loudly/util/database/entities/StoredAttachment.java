@@ -52,7 +52,7 @@ public class StoredAttachment {
      * @return Attachment, or null, if not found
      */
     @Nullable
-    public static StoredAttachment selectById(@Nullable Long id, StorIOSQLite database) {
+    public static StoredAttachment selectById(long id, StorIOSQLite database) {
         return database.get()
                 .object(StoredAttachment.class)
                 .withQuery(Query.builder()
@@ -71,7 +71,7 @@ public class StoredAttachment {
      * @param database Posts database
      * @return Result of deletion
      */
-    @Nullable
+    @NonNull
     public static DeleteResult deleteById(long id, StorIOSQLite database) {
         return database.delete()
                 .byQuery(DeleteQuery.builder()
@@ -91,7 +91,7 @@ public class StoredAttachment {
      * @return List of connected attachments
      */
     @NonNull
-    public static List<StoredAttachment> selectByPostId(@Nullable Long postId, StorIOSQLite database) {
+    public static List<StoredAttachment> selectByPostId(long postId, StorIOSQLite database) {
         return database.get()
                 .listOfObjects(StoredAttachment.class)
                 .withQuery(Query.builder()

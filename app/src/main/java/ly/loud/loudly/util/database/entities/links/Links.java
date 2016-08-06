@@ -61,6 +61,7 @@ public class Links {
      * @param database Posts database
      * @return Result of deletion
      */
+    @NonNull
     public static DeleteResult deleteById(long id, @NonNull StorIOSQLite database) {
         return database.delete()
                 .byQuery(

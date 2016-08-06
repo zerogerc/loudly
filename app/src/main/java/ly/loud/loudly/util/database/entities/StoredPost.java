@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database.entities;
 
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
@@ -49,7 +50,8 @@ public class StoredPost {
         this.locationId = locationId;
     }
 
-    public static StoredPost selectById(Long id, StorIOSQLite database) {
+    @Nullable
+    public static StoredPost selectById(long id, StorIOSQLite database) {
         return database.get()
                 .object(StoredPost.class)
                 .withQuery(Query.builder()
@@ -61,6 +63,7 @@ public class StoredPost {
                 .executeAsBlocking();
     }
 
+    @NonNull
     public static DeleteResult deleteById(long id, StorIOSQLite database) {
         return database.delete()
                 .byQuery(DeleteQuery.builder()
@@ -72,6 +75,7 @@ public class StoredPost {
                 .executeAsBlocking();
     }
 
+    @NonNull
     public static List<StoredPost> selectByTimeInterval(TimeInterval interval, StorIOSQLite database) {
         return database.get()
                 .listOfObjects(StoredPost.class)

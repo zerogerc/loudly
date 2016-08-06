@@ -1,6 +1,7 @@
 package ly.loud.loudly.util.database.entities;
 
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
@@ -68,8 +69,8 @@ public class StoredLocation {
      * @param database Posts database
      * @return Result of deletion
      */
-    @Nullable
-    public static DeleteResult deleteById(Long id, StorIOSQLite database) {
+    @NonNull
+    public static DeleteResult deleteById(long id, StorIOSQLite database) {
         return database
                 .delete()
                 .byQuery(DeleteQuery.builder()
