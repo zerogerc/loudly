@@ -381,6 +381,7 @@ public class FacebookModel implements NetworkContract {
         return keysModel.getFacebookKeyKeeper() != null;
     }
 
+    @Networks.Network
     @Override
     public int getId() {
         return Networks.FB;

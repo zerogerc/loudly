@@ -8,14 +8,13 @@ import java.util.List;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.new_base.KeyKeeper;
 import ly.loud.loudly.base.SingleNetwork;
+import ly.loud.loudly.new_base.Networks;
+import ly.loud.loudly.new_base.Networks.Network;
 import ly.loud.loudly.new_base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.new_base.interfaces.SingleNetworkElement;
 import rx.Observable;
 import rx.Single;
 
-/**
- * Created by ZeRoGerc on 21/07/16.
- */
 public class CoreModel {
     @NonNull
     private Loudly loudlyApplication;
@@ -58,9 +57,10 @@ public class CoreModel {
                 .filter(networkContract ->  element.getSingleNetworkInstance(networkContract.getId()) != null);
     }
 
-    public Observable<Boolean> connectToNetworkById(int id, @NonNull KeyKeeper keyKeeper) {
+    public Observable<Boolean> connectToNetworkById(@Network int networkId,
+                                                    @NonNull KeyKeeper keyKeeper) {
         for (NetworkContract model : networkModels) {
-            if (model.getId() == id) {
+            if (model.getId() == networkId) {
                 return model.connect(keyKeeper);
             }
         }

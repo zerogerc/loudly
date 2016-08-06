@@ -69,9 +69,10 @@ public class GetterModel {
         @NonNull
         public SolidList<Comment> comments;
 
+        @Network
         public int network;
 
-        public CommentsFromNetwork(@NonNull SolidList<Comment> comments, int network) {
+        public CommentsFromNetwork(@NonNull SolidList<Comment> comments, @Network int network) {
             this.comments = comments;
             this.network = network;
         }

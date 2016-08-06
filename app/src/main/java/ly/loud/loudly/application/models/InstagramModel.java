@@ -114,6 +114,7 @@ public class InstagramModel implements NetworkContract {
         return true;
     }
 
+    @Networks.Network
     @Override
     public int getId() {
         return Networks.INSTAGRAM;

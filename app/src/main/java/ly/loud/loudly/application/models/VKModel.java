@@ -454,6 +454,7 @@ public class VKModel implements NetworkContract {
         return keysModel.getVKKeyKeeper() != null;
     }
 
+    @Networks.Network
     @Override
     public int getId() {
         return Networks.VK;
