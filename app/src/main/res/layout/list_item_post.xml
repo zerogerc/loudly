@@ -37,27 +37,26 @@
 
                 <TextView
                     android:id="@+id/list_item_post_date"
+                    style="@style/PostInfo"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:textColor="@color/list_item_post_secondary_text_color"
-                    android:textSize="@dimen/list_item_post_date_and_geo_text_size" />
+                    android:layout_height="match_parent" />
 
                 <TextView
                     android:id="@+id/list_item_post_geo"
+                    style="@style/PostInfo"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:textColor="@color/list_item_post_secondary_text_color"
-                    android:textSize="@dimen/list_item_post_date_and_geo_text_size" />
+                    android:layout_height="match_parent" />
             </LinearLayout>
 
             <ImageButton
                 android:id="@+id/list_item_post_show_more_button"
-                android:layout_width="@dimen/list_item_post_icon_size"
-                android:layout_height="@dimen/list_item_post_icon_size"
-                android:layout_gravity="center_vertical"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end|top"
                 android:background="@null"
+                android:padding="10dp"
                 android:src="@drawable/ic_clear"
-                android:tint="@color/gray_color" />
+                android:tint="@color/grey_color_500" />
         </LinearLayout>
 
         <LinearLayout
@@ -68,16 +67,16 @@
 
             <TextView
                 android:id="@+id/list_item_post_text"
+                style="@style/PostTextPrimary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="@dimen/list_item_post_text_padding"
-                android:textSize="@dimen/list_item_post_text_size"/>
+                android:padding="@dimen/list_item_post_text_padding" />
 
             <ly.loud.loudly.ui.views.GlideImageView
                 android:id="@+id/list_item_post_image"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/light_grey_color" />
+                android:background="@color/grey_color_300" />
         </LinearLayout>
 
         <LinearLayout
@@ -88,33 +87,33 @@
 
             <TextView
                 android:id="@+id/list_item_post_comments"
+                style="@style/PostSocialStatView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawableLeft="@drawable/ic_post_comment_light"
-                android:drawablePadding="@dimen/list_item_post_buttons_drawable_padding"
                 android:drawableStart="@drawable/ic_post_comment_light"
                 android:padding="@dimen/list_item_post_buttons_padding" />
 
             <View
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"/>
+                android:layout_weight="1" />
 
             <TextView
                 android:id="@+id/list_item_post_shares"
+                style="@style/PostSocialStatView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawableLeft="@drawable/ic_post_share_light"
-                android:drawablePadding="@dimen/list_item_post_buttons_drawable_padding"
                 android:drawableStart="@drawable/ic_post_share_light"
                 android:padding="@dimen/list_item_post_buttons_padding" />
 
             <TextView
                 android:id="@+id/list_item_post_likes"
+                style="@style/PostSocialStatView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawableLeft="@drawable/ic_post_favourite_light"
-                android:drawablePadding="@dimen/list_item_post_buttons_drawable_padding"
                 android:drawableStart="@drawable/ic_post_favourite_light"
                 android:padding="@dimen/list_item_post_buttons_padding" />
         </LinearLayout>

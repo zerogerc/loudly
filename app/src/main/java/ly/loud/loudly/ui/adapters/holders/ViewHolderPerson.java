@@ -25,7 +25,7 @@ public class ViewHolderPerson extends BindingViewHolder<Person> {
     TextView name;
 
     public ViewHolderPerson(@NonNull LayoutInflater inflater, @NonNull ViewGroup parent) {
-        super(inflater.inflate(R.layout.list_person, parent, false));
+        super(inflater.inflate(R.layout.list_item_person, parent, false));
 
         ButterKnife.bind(this, itemView);
     }

@@ -126,7 +126,7 @@ public class ViewHolderPost extends BindingViewHolder<PlainPost> {
         dateTextView.setText("");
         geoTextView.setText("");
         postTextView.setText("");
-        postImageView.setImageDrawable(null);
+        postImageView.reset();
 
         setIcon(commentsView, R.drawable.ic_post_comment_light);
         commentsView.setText("");

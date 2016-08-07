@@ -81,7 +81,6 @@ public class ViewHolderFullPost extends BindingViewHolder<PlainPost> {
 
     @Override
     public void bind(@NonNull PlainPost post) {
-        reset();
         initHeader(post);
         initBody(post);
         initFooter(post);
@@ -100,19 +99,6 @@ public class ViewHolderFullPost extends BindingViewHolder<PlainPost> {
         if (clickListener != null) {
             clickListener.onLikesClick(getAdapterPosition());
         }
-    }
-
-    private void reset() {
-        dateTextView.setText("");
-        geoTextView.setText("");
-        postTextView.setText("");
-        postImageView.setImageDrawable(null);
-
-        setIcon(sharesView, R.drawable.ic_post_share_light);
-        sharesView.setText("");
-
-        setIcon(likesView, R.drawable.ic_post_favourite_light);
-        likesView.setText("");
     }
 
     private void initHeader(@NonNull PlainPost post) {

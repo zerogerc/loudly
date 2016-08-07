@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ly.loud.loudly.ui.views.GlideImageView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="@dimen/feedback_icon_size"
-    android:layout_height="@dimen/feedback_icon_size"
-    android:layout_marginLeft="1dp"
-    android:layout_marginRight="1dp">
-</ly.loud.loudly.ui.views.GlideImageView>
