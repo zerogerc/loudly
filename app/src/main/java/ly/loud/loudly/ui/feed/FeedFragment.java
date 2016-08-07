@@ -18,11 +18,10 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.plain.PlainPost;
-import ly.loud.loudly.ui.people_list.PeopleListFragment;
-import ly.loud.loudly.ui.FragmentInvoker;
 import ly.loud.loudly.ui.TitledFragment;
 import ly.loud.loudly.ui.adapters.FeedAdapter;
-import ly.loud.loudly.ui.full_post.FullPostInfoFragment;
+import ly.loud.loudly.ui.full_post.FullPostInfoActivity;
+import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.ui.views.FeedRecyclerView;
 import ly.loud.loudly.util.Utils;
 
@@ -109,7 +108,7 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
 
     @Override
     public void onFullPostClick(@NonNull PlainPost post) {
-        ((FragmentInvoker) getActivity()).startFragment(FullPostInfoFragment.newInstance(post));
+        FullPostInfoActivity.invoke(getActivity(), post);
     }
 
     @Override
