@@ -48,6 +48,11 @@ public class KeysModel {
         this.facebookKeyKeeper = facebookKeyKeeper;
     }
 
+    /**
+     * Forget keys for this network
+     *
+     * @param network ID of network
+     */
     public void disconnectFromNetwork(@Network int network) {
         switch (network) {
             case FB:

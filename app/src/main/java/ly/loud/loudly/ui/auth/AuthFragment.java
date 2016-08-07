@@ -1,104 +1,142 @@
 package ly.loud.loudly.ui.auth;
 
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.annotation.CheckResult;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
-import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.networks.Authorizer;
-import ly.loud.loudly.networks.KeyKeeper;
+import javax.inject.Inject;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import ly.loud.loudly.R;
-import ly.loud.loudly.ui.settings.SettingsActivity;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.application.models.AuthModel;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.Utils;
+import rx.Observable;
 
-public class AuthFragment extends Fragment {
-    private View rootView;
+import static rx.android.schedulers.AndroidSchedulers.mainThread;
+import static rx.schedulers.Schedulers.io;
+
+public class AuthFragment extends DialogFragment {
+    private static final String NETWORK_FIELD = "network";
+
+    @SuppressWarnings("NullableProblems") // Butterkniife
+    @BindView(R.id.progressBar)
+    @NonNull
     ProgressBar circle;
-    boolean gotResponse;
+
+
+    @SuppressWarnings("NullableProblems") // Butterkniife
+    @BindView(R.id.webView)
+    @NonNull
     WebView webView;
 
+    @Inject
+    @SuppressWarnings("NullableProblems") // onCreate
+    @NonNull
+    AuthModel authModel;
+
+    @Network
+    int network;
+
+    /**
+     * Indicates whether this fragment created view for the first time.
+     * Should be accessed only from main thread.
+     */
+    private boolean firstRun = true;
+
+    public static AuthFragment newInstance(int network) {
+        Bundle args = new Bundle();
+        args.putInt(NETWORK_FIELD, network);
+
+        AuthFragment fragment = new AuthFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
-            gotResponse = savedInstanceState.getBoolean("got");
-        } else {
-            gotResponse = false;
-        }
+        Loudly.getContext().getAppComponent().inject(this);
 
-        rootView = inflater.inflate(R.layout.activity_auth, container, false);
+        network = getArguments().getInt(NETWORK_FIELD);
+    }
 
-        webView = (WebView) rootView.findViewById(R.id.webView);
-        circle = (ProgressBar) rootView.findViewById(R.id.progressBar);
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-        return rootView;
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View rootView = inflater.inflate(R.layout.activity_auth, null);
+        ButterKnife.bind(this, rootView);
+        builder.setView(rootView);
+        return builder.create();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean("got", gotResponse);
+        outState.putInt(NETWORK_FIELD, network);
     }
 
     @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        if (hidden) {
-            Utils.hidePhoneKeyboard(getActivity());
-            if (!gotResponse) {
-                Loudly.sendLocalBroadcast(
-                        BroadcastSendingTask.makeError(Broadcasts.AUTHORIZATION,
-                                Broadcasts.AUTH_FAIL, "User declined authorization")
-                );
-            }
-        } else {
-            String url = SettingsActivity.webViewURL;
-            final Authorizer authorizer = SettingsActivity.webViewAuthorizer;
-            final KeyKeeper keys = SettingsActivity.webViewKeyKeeper;
-
+    public void onResume() {
+        super.onResume();
+        if (firstRun) {
             circle.setVisibility(View.VISIBLE);
-
-            final Fragment fragment = this;
-            webView.loadUrl(url);
-            webView.setWebViewClient(new WebViewClient() {
-                @Override
-                public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    Log.i("AUTH_FRAGMENT", url);
-                    if (authorizer.isResponse(url)) {
-                        view.setVisibility(View.VISIBLE);
-
-                        authorizer.createFinishAuthorizationTask(keys, url).
-                                execute();
-                        gotResponse = true;
-
-                        FragmentTransaction ft = getFragmentManager().beginTransaction();
-                        ft.hide(fragment);
-                        ft.commit();
-                        getFragmentManager().popBackStack();
-                        return true;
-
-                    }
-                    return false;
-                }
-
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    super.onPageFinished(view, url);
-                        circle.setVisibility(View.INVISIBLE);
-                        webView.setVisibility(View.VISIBLE);
-                }
-            });
-
+            authModel.getAuthUrl(network)
+                    .flatMap(url -> authModel
+                            .finishAuthorization(createUrlsObservable(url), network))
+                    .subscribeOn(io())
+                    .observeOn(mainThread())
+                    .doOnSuccess(success -> {
+                        if (success) {
+                            // ToDo: handle success
+                        } else {
+                            // ToDo: handle failure
+                        }
+                        clearWebView();
+                        dismiss();
+                    })
+                    .subscribe();
+            firstRun = false;
         }
+    }
+
+    @CheckResult
+    @NonNull
+    private Observable<String> createUrlsObservable(String initialUrl) {
+        return Observable.create(observer -> {
+            webView.post(() -> {
+                webView.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                        observer.onNext(url);
+                        return super.shouldOverrideUrlLoading(view, url);
+                    }
+
+                    @Override
+                    public void onPageFinished(WebView view, String url) {
+                        super.onPageFinished(view, url);
+                        circle.setVisibility(View.INVISIBLE);
+                    }
+                });
+                webView.loadUrl(initialUrl);
+            });
+        });
     }
 
     public void clearWebView() {

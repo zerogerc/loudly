@@ -1,7 +1,6 @@
 package ly.loud.loudly.ui.settings;
 
 import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -30,47 +29,19 @@ import ly.loud.loudly.util.database.DatabaseUtils;
 
 public class SettingsActivity extends AppCompatActivity {
     public static String webViewURL;
-    public static Authorizer webViewAuthorizer;
     public static KeyKeeper webViewKeyKeeper;
-    private static SettingsActivity self;
     private static AttachableReceiver<SettingsActivity> authReceiver = null;
     private IconsHolder iconsHolder;
     private AuthFragment webViewFragment;
     private View webViewFragmentView;
     private EditText loadLastText, frequencyText;
 
-    public static void executeOnUI(final UIAction<SettingsActivity> action) {
-        if (self != null) {
-            self.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    action.execute(self);
-                }
-            });
-        }
-    }
-
     public void setIconsClick() {
         UIAction<SettingsActivity> grayItemClick = new UIAction<SettingsActivity>() {
             @Override
             public void execute(SettingsActivity context, Object... params) {
                 int network = ((int) params[0]);
-                //TODO remove when all networks will have been implemented
-                if (Networks.makeAuthorizer(network) != null) {
-                    startReceiver();
-                    Authorizer authorizer = Networks.makeAuthorizer(network);
-                    authorizer.createAsyncTask(context, new UIAction<SettingsActivity>() {
-                        @Override
-                        public void execute(SettingsActivity context, Object... params) {
-                            Authorizer authorizer = (Authorizer) params[0];
-                            KeyKeeper result = (KeyKeeper) params[1];
-                            context.webViewURL = authorizer.makeAuthQuery().toURL();
-                            context.webViewKeyKeeper = result;
-                            context.webViewAuthorizer = authorizer;
-                            context.startWebView();
-                        }
-                    }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                }
+                AuthFragment.newInstance(network).show(getSupportFragmentManager(), null);
             }
         };
         iconsHolder.setGrayItemClick(grayItemClick);
@@ -86,22 +57,10 @@ public class SettingsActivity extends AppCompatActivity {
         iconsHolder.setColorItemsClick(colorItemClick);
     }
 
-    private void initFragment() {
-        FragmentManager manager = getFragmentManager();
-        webViewFragment = ((AuthFragment) manager.findFragmentById(R.id.setting_web_view));
-
-        webViewFragmentView = findViewById(R.id.setting_web_view);
-        webViewFragmentView.getBackground().setAlpha(100);
-        FragmentTransaction ft = manager.beginTransaction();
-        ft.hide(webViewFragment);
-        ft.commit();
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        self = this;
         setContentView(R.layout.activity_settings);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.settings_toolbar);
@@ -111,7 +70,7 @@ public class SettingsActivity extends AppCompatActivity {
         iconsHolder.prepareView(IconsHolder.SHOW_ALL);
         setIconsClick();
 
-        initFragment();
+//        initFragment();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -151,7 +110,6 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        self = this;
         Loudly.setCurrentActivity(this);
         if (authReceiver != null) {
             authReceiver.attach(this);
@@ -175,7 +133,6 @@ public class SettingsActivity extends AppCompatActivity {
         if (authReceiver != null) {
             authReceiver.detach();
         }
-        self = null;
 
         int frequency = Integer.parseInt(frequencyText.getText().toString());
         int loadLast = Integer.parseInt(loadLastText.getText().toString());
@@ -197,13 +154,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void startReceiver() {
         authReceiver = new AuthReceiver(this, iconsHolder);
-    }
-
-    public void startWebView() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.show(webViewFragment);
-        ft.addToBackStack(null);
-        ft.commit();
     }
 
     // ToDo: make buttons not clickable during authorization

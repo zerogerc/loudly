@@ -14,6 +14,7 @@ import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.networks.facebook.FacebookClientModule;
 import ly.loud.loudly.networks.vk.VKClientModule;
 import ly.loud.loudly.ui.MainActivity;
+import ly.loud.loudly.ui.auth.AuthFragment;
 import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.ui.feed.FeedFragment;
 import ly.loud.loudly.ui.full_post.FullPostInfoFragment;
@@ -51,6 +52,7 @@ public interface AppComponent {
     void inject(@NonNull NewPostFragment newPostFragment);
     void inject(@NonNull FeedFragment feedFragment);
     void inject(@NonNull FullPostInfoFragment fullPostInfoFragment);
+    void inject(@NonNull AuthFragment authFragment);
 
     void inject(@NonNull NetworksChooseLayout networksChooseLayout);
 }

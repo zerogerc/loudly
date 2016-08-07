@@ -20,10 +20,4 @@
 
     <include layout="@layout/settings_content"/>
 
-    <fragment android:name="ly.loud.loudly.ui.auth.AuthFragment"
-        android:id="@+id/setting_web_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:layout="@layout/activity_auth" />
-
 </android.support.design.widget.CoordinatorLayout>

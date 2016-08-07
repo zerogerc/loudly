@@ -8,6 +8,8 @@ import javax.inject.Inject;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.util.database.DatabaseException;
+import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
 import rx.Single;
 
@@ -53,7 +55,17 @@ public class AuthModel {
             return Single.just(false);
         }
         return contract.proceedAuthUrls(urls)
-                .flatMap(contract::connect);
+                .flatMap(contract::connect)
+                .map(success -> {
+                    if (success) {
+                        try {
+                            DatabaseUtils.saveKeys();
+                        } catch (DatabaseException e) {
+                            return false;
+                        }
+                    }
+                    return success;
+                });
     }
 
     @CheckResult
@@ -67,7 +79,12 @@ public class AuthModel {
                 .disconnect()
                 .map(success -> {
                     if (success) {
-                        keysModel.disconnectFromNetwork(network);
+                        try {
+                            DatabaseUtils.deleteKey(network);
+                            keysModel.disconnectFromNetwork(network);
+                        } catch (DatabaseException e) {
+                            return false;
+                        }
                     }
                     return success;
                 });
