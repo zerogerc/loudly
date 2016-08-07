@@ -5,7 +5,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 
 import ly.loud.loudly.R;
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.legacy_base.Wrap;
 import ly.loud.loudly.networks.facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
@@ -31,7 +30,9 @@ public class Networks {
 
     // It's important to add new network to the LinksContract, so we could save it to DB
     @IntDef
-    public @interface Network {}
+    public @interface Network {
+    }
+
     public static final int LOUDLY = 0;
     public static final int FB = 1;
     public static final int TWITTER = 2;
@@ -111,22 +112,24 @@ public class Networks {
     }
 
     /**
-     * Make proper instance of KeyKeeper for the network
+     * Make proper instance of KeyKeeper for the network and fill it with values, stored in DB
+     *
      * @param network ID of the network
+     * @param strings Fields of this keyKeeper, stored in DB
      * @return KeyKeeper for the network
      */
-    public static KeyKeeper makeKeyKeeper(@Network int network) {
+    public static KeyKeeper makeKeyKeeper(@Network int network, @NonNull String[] strings) {
         switch (network) {
             case LOUDLY:
-                return new LoudlyKeyKeeper();
+                return new LoudlyKeyKeeper(strings);
             case FB:
-                return new FacebookKeyKeeper();
+                return new FacebookKeyKeeper(strings);
             case VK:
-                return new VKKeyKeeper();
+                return new VKKeyKeeper(strings);
             case INSTAGRAM:
-                return new InstagramKeyKeeper();
+                return new InstagramKeyKeeper(strings);
             case MAILRU:
-                return new MailRuKeyKeeper();
+                return new MailRuKeyKeeper(strings);
             default:
                 return null;
         }

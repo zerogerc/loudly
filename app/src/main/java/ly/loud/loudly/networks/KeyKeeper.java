@@ -17,20 +17,13 @@ public abstract class KeyKeeper implements Parcelable {
     @Nullable
     public static KeyKeeper fromStringBundle(int network, @NonNull String bundle) {
         String[] strings = bundle.split(String.valueOf(SEPARATOR));
-        KeyKeeper result = Networks.makeKeyKeeper(network);
-        if (result == null) {
-            return null;
-        }
-        result.fromStrings(strings);
-        return result;
+        return Networks.makeKeyKeeper(network, strings);
     }
 
     /**
      * @return content of KeyKeeper as list of strings
      */
     protected abstract String[] toStrings();
-
-    protected abstract void fromStrings(String[] strings);
 
     public String toStringBundle() {
         String[] strings = toStrings();

@@ -1,37 +1,31 @@
 package ly.loud.loudly.networks.facebook;
 
 import android.os.Parcel;
+import android.support.annotation.NonNull;
 
 import ly.loud.loudly.networks.KeyKeeper;
 
 public class FacebookKeyKeeper extends KeyKeeper {
-    public static final String CLIENT_ID = "443913362466352";
-    private String accessToken = null;
 
-    public FacebookKeyKeeper() {
-        super();
-    }
+    @NonNull
+    private final String accessToken;
 
-    private FacebookKeyKeeper(String accessToken) {
+    public FacebookKeyKeeper(@NonNull String accessToken) {
         this.accessToken = accessToken;
     }
 
+    public FacebookKeyKeeper(@NonNull String[] stored) {
+        accessToken = stored[0];
+    }
+
+    @NonNull
     public String getAccessToken() {
         return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
     }
 
     @Override
     protected String[] toStrings() {
         return new String[]{accessToken};
-    }
-
-    @Override
-    protected void fromStrings(String[] strings) {
-        accessToken = strings[0];
     }
 
     public static final Creator<FacebookKeyKeeper> CREATOR = new Creator<FacebookKeyKeeper>() {

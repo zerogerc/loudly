@@ -30,7 +30,7 @@ public abstract class Authorizer {
      * @return keys that we use to interact with social network
      */
     protected KeyKeeper beginAuthorize() {
-        return Networks.makeKeyKeeper(network());
+        return Networks.makeKeyKeeper(network(), new String[]{});
     }
 
     /**
@@ -118,7 +118,7 @@ public abstract class Authorizer {
 
         @Override
         protected Intent doInBackground(Object... params) {
-            Query response = Query.fromURL(url);
+            Query response = Query.fromResponseUrl(url);
 
             if (response == null) {
                 return makeError(Broadcasts.AUTHORIZATION, Broadcasts.AUTH_FAIL,

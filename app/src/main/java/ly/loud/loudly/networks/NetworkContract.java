@@ -3,18 +3,18 @@ package ly.loud.loudly.networks;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
-import ly.loud.loudly.networks.KeyKeeper;
-import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.base.entities.Person;
-import ly.loud.loudly.base.single.Comment;
-import ly.loud.loudly.base.single.SingleImage;
-import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainImage;
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.base.single.Comment;
+import ly.loud.loudly.base.single.SingleImage;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
+import rx.Single;
 import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.RequestType;
@@ -24,17 +24,29 @@ import static ly.loud.loudly.application.models.GetterModel.RequestType;
  */
 //TODO: nonnull annoations
 public interface NetworkContract {
+
     /**
-     * Reset inner counters of modules
+     * Get URL of initial web page for authorization
      *
-     * @return True, if reset, False otherwise
+     * @return Single url
      */
     @CheckResult
     @NonNull
-    Observable<Boolean> reset();
+    Single<String> getBeginAuthUrl();
+
+    /**
+     * Proceed urls of web pages, opened during user's authorization
+     *
+     * @param urls Observable of page urls
+     * @return True, if authorization is successful, False otherwise
+     */
+    @CheckResult
+    @NonNull
+    Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls);
 
     /**
      * Upload image to network
+     *
      * @param image - image to load
      * @return id of image in given network
      */
@@ -44,6 +56,7 @@ public interface NetworkContract {
 
     /**
      * Upload post to network
+     *
      * @param post - post to load
      * @return id of post in network
      */
@@ -60,6 +73,7 @@ public interface NetworkContract {
 
     /**
      * Load posts from network
+     *
      * @param timeInterval - desirable interval for loading
      * @return loaded posts
      */
@@ -83,20 +97,22 @@ public interface NetworkContract {
 
     /**
      * Connect this network for proper work.
+     *
      * @param keyKeeper - auth token
-     * @return  <code>true</code> if connected successfully
+     * @return <code>true</code> if connected successfully
      */
     @CheckResult
     @NonNull
-    Observable<Boolean> connect(@NonNull KeyKeeper keyKeeper);
+    Single<Boolean> connect(@NonNull KeyKeeper keyKeeper);
 
     /**
      * Disconnect from network
+     *
      * @return <code>true</code> if disconnected successfully
      */
     @CheckResult
     @NonNull
-    Observable<Boolean> disconnect();
+    Single<Boolean> disconnect();
 
     /**
      * User-readable full name of network

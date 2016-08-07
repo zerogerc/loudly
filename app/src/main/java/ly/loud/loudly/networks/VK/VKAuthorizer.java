@@ -6,8 +6,6 @@ import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.Query;
 
 public class VKAuthorizer extends Authorizer {
-    private static final String AUTHORIZE_URL = "https://oauth.vk.com/authorize";
-    private static final String RESPONSE_URL = "https://oauth.vk.com/blank.html";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String ERROR_DESCRIPTION = "error";
     private static final String USER_ID = "user_id";
@@ -19,7 +17,7 @@ public class VKAuthorizer extends Authorizer {
 
     @Override
     protected VKKeyKeeper beginAuthorize() {
-        return new VKKeyKeeper();
+        return null;
     }
 
     @Override
@@ -34,17 +32,15 @@ public class VKAuthorizer extends Authorizer {
 
     @Override
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
-        ((VKKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
-        ((VKKeyKeeper) keys).setUserId(response.getParameter(USER_ID));
         // It's unsafe to store expiration time in KeyKeeper
         int expiration = Integer.parseInt(response.getParameter("expires_in"));
     }
 
     @Override
     public Query makeAuthQuery() {
-        Query query = new Query(AUTHORIZE_URL);
-        query.addParameter("client_id", VKKeyKeeper.CLIENT_ID);
-        query.addParameter("redirect_uri", RESPONSE_URL);
+        Query query = new Query(VKModel.AUTHORIZE_URL);
+        query.addParameter("client_id", VKClient.CLIENT_ID);
+        query.addParameter("redirect_uri", VKModel.RESPONSE_URL);
         query.addParameter("display_type", "mobile");
         query.addParameter("scope", "wall,photos");
         query.addParameter("response_type", "token");
@@ -53,6 +49,6 @@ public class VKAuthorizer extends Authorizer {
 
     @Override
     public boolean isResponse(String url) {
-        return url.startsWith(RESPONSE_URL);
+        return url.startsWith(VKModel.RESPONSE_URL);
     }
 }

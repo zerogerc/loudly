@@ -15,6 +15,8 @@ import java.util.List;
  * @author Danil Kolikov
  */
 public interface VKClient {
+    String CLIENT_ID = "5133011";
+
     /**
      * Get comments for post
      *

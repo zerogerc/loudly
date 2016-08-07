@@ -1,33 +1,34 @@
 package ly.loud.loudly.networks.mail_ru;
 
 import android.os.Parcel;
+import android.support.annotation.NonNull;
 
 import ly.loud.loudly.networks.KeyKeeper;
 
 public class MailRuKeyKeeper extends KeyKeeper {
     public static final String CLIENT_ID = "738872";
-    private String sessionKey;
-    private String refreshToken;
+    @NonNull
+    private final String sessionKey;
 
-    public MailRuKeyKeeper() {}
+    @NonNull
+    private final String refreshToken;
 
-    public MailRuKeyKeeper(String sessionKey, String refreshToken) {
+    public MailRuKeyKeeper(@NonNull String sessionKey, @NonNull String refreshToken) {
         this.sessionKey = sessionKey;
         this.refreshToken = refreshToken;
     }
 
-    public void setSessionKey(String sessionKey) {
-        this.sessionKey = sessionKey;
+    public MailRuKeyKeeper(@NonNull String[] stored) {
+        sessionKey = stored[0];
+        refreshToken = stored[1];
     }
 
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
+    @NonNull
     public String getSessionKey() {
         return sessionKey;
     }
 
+    @NonNull
     public String getRefreshToken() {
         return refreshToken;
     }
@@ -35,12 +36,6 @@ public class MailRuKeyKeeper extends KeyKeeper {
     @Override
     protected String[] toStrings() {
         return new String[]{sessionKey, refreshToken};
-    }
-
-    @Override
-    protected void fromStrings(String[] strings) {
-        sessionKey = strings[0];
-        refreshToken = strings[1];
     }
 
     public static final Creator<MailRuKeyKeeper> CREATOR = new Creator<MailRuKeyKeeper>() {

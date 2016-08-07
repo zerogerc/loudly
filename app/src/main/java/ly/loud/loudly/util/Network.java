@@ -116,7 +116,7 @@ public class Network {
 
             if (file == null) {
                 // If we should send only text
-                String request = query.parametersToString(); // Get parameters in proper format
+                String request = query.parametersToString().toString(); // Get parameters in proper format
                 pw.append(request);
                 pw.flush();
             } else {

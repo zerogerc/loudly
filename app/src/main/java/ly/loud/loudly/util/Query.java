@@ -1,48 +1,64 @@
 package ly.loud.loudly.util;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Query {
-    private String serverURL;
-    private ArrayList<Parameter> params;
+    @NonNull
+    private final String serverURL;
 
-    public Query(String serverURL) {
+    @NonNull
+    private final List<Parameter> parameters;
+
+    public Query(@NonNull String serverURL) {
         this.serverURL = serverURL;
-        params = new ArrayList<>();
+        parameters = new ArrayList<>();
     }
 
     public boolean containsParameter(String name) {
         return getParameter(name) != null;
     }
 
-    public void addParameter(Parameter parameter) {
-        params.add(parameter);
+    @NonNull
+    public Query addParameter(@NonNull String parameter, @NonNull Object value) {
+        parameters.add(new Parameter(parameter, value));
+        return this;
     }
 
-    public void addParameter(String parameter, Object value) {
-        params.add(new Parameter(parameter, value));
-    }
-
-    public String getParameter(String name) {
-        for (Parameter p: params) {
+    @Nullable
+    public String getParameter(@NonNull String name) {
+        for (Parameter p: parameters) {
             if (p.name.equals(name)) {
                 return p.value;
             }
         }
-        return "";
+        return null;
     }
 
-    public ArrayList<Parameter> getParameters() {
-        return params;
+    @NonNull
+    public List<Parameter> getParameters() {
+        return parameters;
     }
 
+    @NonNull
+    public Query sortParameters() {
+        Collections.sort(parameters);
+        return this;
+    }
+
+    @NonNull
     public String getServerURL() {
         return serverURL;
     }
 
-    public static Query fromURL(String url) {
+    @Nullable
+    public static Query fromResponseUrl(@NonNull String url) {
         int begin = 0;
         int end = url.indexOf('#', begin);
         if (end == -1) {
@@ -67,37 +83,47 @@ public class Query {
         return query;
     }
 
+    @NonNull
     public String toURL() {
         StringBuilder sb = new StringBuilder(serverURL);
-        if (this.params.size() > 0) {
-            sb.append('?');
+        if (this.parameters.size() > 0) {
+            if (serverURL.contains("?")) {
+                sb.append('&');
+            } else {
+                sb.append('?');
+            }
             sb.append(parametersToString());
         }
         return sb.toString();
     }
 
-    public String parametersToString() {
+    @NonNull
+    public StringBuilder parametersToString() {
         StringBuilder sb = new StringBuilder();
-        if (params.size() >= 1) {
-            sb.append(params.get(0));
+        if (parameters.size() >= 1) {
+            sb.append(parameters.get(0));
         }
-        for (int i = 1; i < params.size(); i++) {
+        for (int i = 1; i < parameters.size(); i++) {
             sb.append('&');
-            sb.append(params.get(i));
+            sb.append(parameters.get(i));
         }
-        return sb.toString();
+        return sb;
     }
 
     public static class Parameter implements Comparable<Parameter>{
-        public String name, value;
+        @NonNull
+        public final String name;
 
-        public Parameter(String name, Object value) {
+        @NonNull
+        public final String value;
+
+        public Parameter(@NonNull String name, @NonNull Object value) {
             this.name = name;
             this.value = value.toString();
         }
 
         @Override
-        public int compareTo(Parameter another) {
+        public int compareTo(@NonNull Parameter another) {
             return name.compareTo(another.name);
         }
 

@@ -3,26 +3,47 @@ package ly.loud.loudly.networks.facebook;
 import android.graphics.Point;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
-import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Link;
 import ly.loud.loudly.base.entities.Person;
-import ly.loud.loudly.base.single.SingleImage;
-import ly.loud.loudly.base.single.SinglePost;
-import ly.loud.loudly.networks.facebook.entities.*;
-import ly.loud.loudly.base.single.Comment;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainImage;
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.base.single.Comment;
+import ly.loud.loudly.base.single.SingleImage;
+import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.facebook.entities.Data;
+import ly.loud.loudly.networks.facebook.entities.Element;
+import ly.loud.loudly.networks.facebook.entities.ElementId;
+import ly.loud.loudly.networks.facebook.entities.FbAttachment;
+import ly.loud.loudly.networks.facebook.entities.FbComment;
+import ly.loud.loudly.networks.facebook.entities.FbPerson;
+import ly.loud.loudly.networks.facebook.entities.Photo;
+import ly.loud.loudly.networks.facebook.entities.Picture;
+import ly.loud.loudly.networks.facebook.entities.Post;
+import ly.loud.loudly.networks.facebook.entities.Result;
 import ly.loud.loudly.util.ListUtils;
+import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -30,12 +51,8 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Observable;
+import rx.Single;
 import solid.collections.SolidList;
-
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
 
 public class FacebookModel implements NetworkContract {
 
@@ -63,10 +80,70 @@ public class FacebookModel implements NetworkContract {
         this.client = client;
     }
 
+    @Networks.Network
+    @Override
+    public int getId() {
+        return Networks.FB;
+    }
+
     @NonNull
     @Override
-    public Observable<Boolean> reset() {
-        return Observable.just(true);
+    public String getFullName() {
+        return loudlyApplication.getString(R.string.network_facebook);
+    }
+
+    @NonNull
+    @Override
+    public Single<String> getBeginAuthUrl() {
+        return Single.fromCallable(() -> new Query(FacebookClient.AUTHORIZE_URL)
+                .addParameter("client_id", FacebookClient.CLIENT_ID)
+                .addParameter("redirect_uri", FacebookClient.REDIRECT_URL)
+                .addParameter("scope", "publish_actions,user_posts")
+                .addParameter("response_type", "token")
+                .toURL());
+    }
+
+    @NonNull
+    @Override
+    public Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
+        return urls
+                .takeFirst(url -> url.startsWith(FacebookClient.REDIRECT_URL) ||
+                        url.startsWith(FacebookClient.RESPONSE_URL))
+                .toSingle()
+                .map(url -> {
+                    Query response = Query.fromResponseUrl(url);
+                    if (response == null) {
+                        // ToDo: Handle
+                        return null;
+                    }
+                    String accessToken = response.getParameter("access_token");
+                    if (accessToken == null) {
+                        // ToDo: Handle
+                        return null;
+                    }
+                    return new FacebookKeyKeeper(accessToken);
+                });
+    }
+
+    @NonNull
+    @Override
+    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
+        if (!(keyKeeper instanceof FacebookKeyKeeper)) {
+            throw new IllegalArgumentException("Wrong keykeeper");
+        }
+        keysModel.setFacebookKeyKeeper(((FacebookKeyKeeper) keyKeeper));
+        return Single.just(true);
+    }
+
+    @Override
+    public boolean isConnected() {
+        return keysModel.getFacebookKeyKeeper() != null;
+    }
+
+    @NonNull
+    @Override
+    public Single<Boolean> disconnect() {
+        return Single.just(true);
     }
 
     public FacebookWrap getWrap() {
@@ -357,38 +434,5 @@ public class FacebookModel implements NetworkContract {
             }
             return ListUtils.asSolidList(comments);
         });
-    }
-
-    @NonNull
-    @Override
-    public Observable<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
-        if (!(keyKeeper instanceof FacebookKeyKeeper)) {
-            throw new IllegalArgumentException("Wrong keykeeper");
-        }
-        keysModel.setFacebookKeyKeeper(((FacebookKeyKeeper) keyKeeper));
-        return Observable.just(true);
-    }
-
-    @NonNull
-    @Override
-    public Observable<Boolean> disconnect() {
-        return keysModel.disconnectFromNetwork(getId());
-    }
-
-    @NonNull
-    @Override
-    public String getFullName() {
-        return loudlyApplication.getString(R.string.network_facebook);
-    }
-
-    @Override
-    public boolean isConnected() {
-        return keysModel.getFacebookKeyKeeper() != null;
-    }
-
-    @Networks.Network
-    @Override
-    public int getId() {
-        return Networks.FB;
     }
 }

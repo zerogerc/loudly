@@ -16,11 +16,6 @@ public class MailRuAuthoriser extends Authorizer {
     }
 
     @Override
-    protected MailRuKeyKeeper beginAuthorize() {
-        return new MailRuKeyKeeper();
-    }
-
-    @Override
     public String successToken() {
         return ACCESS_TOKEN;
     }
@@ -32,8 +27,8 @@ public class MailRuAuthoriser extends Authorizer {
 
     @Override
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
-        ((MailRuKeyKeeper) keys).setSessionKey(response.getParameter(ACCESS_TOKEN));
-        ((MailRuKeyKeeper)keys).setSessionKey(response.getParameter("refresh_token"));
+//        ((MailRuKeyKeeper) keys).setSessionKey(response.getParameter(ACCESS_TOKEN));
+//        ((MailRuKeyKeeper)keys).setSessionKey(response.getParameter("refresh_token"));
     }
 
     @Override

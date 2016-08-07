@@ -1,33 +1,33 @@
 package ly.loud.loudly.networks.vk;
 
 import android.os.Parcel;
+import android.support.annotation.NonNull;
 
 import ly.loud.loudly.networks.KeyKeeper;
 
 public class VKKeyKeeper extends KeyKeeper {
-    public static final String CLIENT_ID = "5133011";
-    private String accessToken = null;
-    private String userId = null;
+    @NonNull
+    private final String accessToken;
 
-    public VKKeyKeeper() {}
+    @NonNull
+    private final String userId;
 
-    public VKKeyKeeper(String accessToken, String userID) {
+    public VKKeyKeeper(@NonNull String accessToken, @NonNull String userID) {
         this.accessToken = accessToken;
         this.userId = userID;
     }
 
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
+    public VKKeyKeeper(@NonNull String[] stored) {
+        accessToken = stored[0];
+        userId = stored[1];
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
+    @NonNull
     public String getAccessToken() {
         return accessToken;
     }
 
+    @NonNull
     public String getUserId() {
         return userId;
     }
@@ -35,12 +35,6 @@ public class VKKeyKeeper extends KeyKeeper {
     @Override
     protected String[] toStrings() {
         return new String[] {accessToken, userId};
-    }
-
-    @Override
-    protected void fromStrings(String[] strings) {
-        accessToken = strings[0];
-        userId = strings[1];
     }
 
     public static final Creator<VKKeyKeeper> CREATOR = new Creator<VKKeyKeeper>() {

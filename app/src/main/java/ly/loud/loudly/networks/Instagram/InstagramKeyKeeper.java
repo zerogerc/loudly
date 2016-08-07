@@ -1,27 +1,26 @@
 package ly.loud.loudly.networks.instagram;
 
 import android.os.Parcel;
+import android.support.annotation.NonNull;
+
 import ly.loud.loudly.networks.KeyKeeper;
 
 /**
  * @author Danil Kolikov
  */
 public class InstagramKeyKeeper extends KeyKeeper {
-    static final String CLIENT_ID = "25767d36bc624fe58215881ac0318ab3";
-    private String accessToken;
+    @NonNull
+    private final String accessToken;
 
-    public InstagramKeyKeeper() {
-        super();
-    }
-
-    private InstagramKeyKeeper(String s) {
-        accessToken = s;
-    }
-
-    public void setAccessToken(String accessToken) {
+    public InstagramKeyKeeper(@NonNull String accessToken) {
         this.accessToken = accessToken;
     }
 
+    public InstagramKeyKeeper(@NonNull String[] stored) {
+        accessToken = stored[0];
+    }
+
+    @NonNull
     public String getAccessToken() {
         return accessToken;
     }
@@ -29,11 +28,6 @@ public class InstagramKeyKeeper extends KeyKeeper {
     @Override
     protected String[] toStrings() {
         return new String[]{accessToken};
-    }
-
-    @Override
-    protected void fromStrings(String[] strings) {
-        accessToken = strings[0];
     }
 
     public final static Creator<InstagramKeyKeeper> CREATOR = new Creator<InstagramKeyKeeper>() {
