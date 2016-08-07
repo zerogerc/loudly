@@ -32,6 +32,7 @@ import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.entities.Data;
 import ly.loud.loudly.networks.facebook.entities.Element;
 import ly.loud.loudly.networks.facebook.entities.ElementId;
@@ -54,7 +55,12 @@ import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
 
+import static ly.loud.loudly.application.models.GetterModel.*;
+
 public class FacebookModel implements NetworkContract {
+    public static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
+    public static final String RESPONSE_URL = "https://web.facebook.com/connect/login_success.html";
+    public static final String REDIRECT_URL = "https://www.facebook.com/connect/login_success.html";
 
     @NonNull
     private Loudly loudlyApplication;
@@ -65,9 +71,6 @@ public class FacebookModel implements NetworkContract {
     @NonNull
     private FacebookClient client;
 
-    @Nullable
-    private FacebookWrap wrap;
-
     @Inject
     public FacebookModel(@NonNull Loudly loudlyApplication,
                          @NonNull KeysModel keysModel,
@@ -77,35 +80,35 @@ public class FacebookModel implements NetworkContract {
         this.client = client;
     }
 
-    @Networks.Network
+    @Network
     @Override
     public int getId() {
         return Networks.FB;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getFullName() {
         return loudlyApplication.getString(R.string.network_facebook);
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<String> getBeginAuthUrl() {
-        return Single.fromCallable(() -> new Query(FacebookClient.AUTHORIZE_URL)
+        return Single.fromCallable(() -> new Query(AUTHORIZE_URL)
                 .addParameter("client_id", FacebookClient.CLIENT_ID)
-                .addParameter("redirect_uri", FacebookClient.REDIRECT_URL)
+                .addParameter("redirect_uri", REDIRECT_URL)
                 .addParameter("scope", "publish_actions,user_posts")
                 .addParameter("response_type", "token")
                 .toURL());
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
         return urls
-                .takeFirst(url -> url.startsWith(FacebookClient.REDIRECT_URL) ||
-                        url.startsWith(FacebookClient.RESPONSE_URL))
+                .takeFirst(url -> url.startsWith(REDIRECT_URL) ||
+                        url.startsWith(RESPONSE_URL))
                 .toSingle()
                 .map(url -> {
                     Query response = Query.fromResponseUrl(url);
@@ -122,8 +125,8 @@ public class FacebookModel implements NetworkContract {
                 });
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
         if (!(keyKeeper instanceof FacebookKeyKeeper)) {
             throw new IllegalArgumentException("Wrong keykeeper");
@@ -137,17 +140,10 @@ public class FacebookModel implements NetworkContract {
         return keysModel.getFacebookKeyKeeper() != null;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<Boolean> disconnect() {
         return Single.just(true);
-    }
-
-    public FacebookWrap getWrap() {
-        if (wrap == null) {
-            this.wrap = new FacebookWrap();
-        }
-        return wrap;
     }
 
     @NonNull
@@ -181,8 +177,8 @@ public class FacebookModel implements NetworkContract {
         });
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
@@ -209,8 +205,8 @@ public class FacebookModel implements NetworkContract {
         });
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<Boolean> delete(@NonNull SinglePost post) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
@@ -234,8 +230,8 @@ public class FacebookModel implements NetworkContract {
         });
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
@@ -249,10 +245,10 @@ public class FacebookModel implements NetworkContract {
             }
             String endpoint;
             switch (requestType) {
-                case GetterModel.LIKES:
+                case LIKES:
                     endpoint = FacebookClient.LIKES_ENDPOINT;
                     break;
-                case GetterModel.SHARES:
+                case SHARES:
                     endpoint = FacebookClient.REPOSTS_ENDPOINT;
                     break;
                 default:
@@ -286,6 +282,7 @@ public class FacebookModel implements NetworkContract {
         });
     }
 
+    @NonNull
     private Map<String, SingleImage> getImageInfos(List<String> images) throws IOException {
         FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
         if (keyKeeper == null) {
@@ -327,8 +324,8 @@ public class FacebookModel implements NetworkContract {
         return null;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
@@ -392,8 +389,8 @@ public class FacebookModel implements NetworkContract {
         return new Person(person.firstName, person.lastName, url, getId());
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();

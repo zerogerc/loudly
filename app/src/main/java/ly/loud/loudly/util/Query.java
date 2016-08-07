@@ -103,7 +103,7 @@ public class Query {
         if (parameters.size() >= 1) {
             sb.append(parameters.get(0));
         }
-        for (int i = 1; i < parameters.size(); i++) {
+        for (int i = 1, size = parameters.size(); i < size; i++) {
             sb.append('&');
             sb.append(parameters.get(i));
         }

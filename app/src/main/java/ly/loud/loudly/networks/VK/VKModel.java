@@ -29,6 +29,7 @@ import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.vk.entities.Attachment;
 import ly.loud.loudly.networks.vk.entities.Counter;
 import ly.loud.loudly.networks.vk.entities.Photo;
@@ -86,20 +87,20 @@ public class VKModel implements NetworkContract {
         offset = 0;
     }
 
-    @Networks.Network
+    @Network
     @Override
     public int getId() {
         return Networks.VK;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getFullName() {
         return loudlyApplication.getString(R.string.network_vk);
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<String> getBeginAuthUrl() {
         return Single.fromCallable(() ->
                 new Query(AUTHORIZE_URL)
@@ -111,8 +112,8 @@ public class VKModel implements NetworkContract {
                         .toURL());
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
         return urls
                 .takeFirst(url -> url.startsWith(RESPONSE_URL))
@@ -133,9 +134,9 @@ public class VKModel implements NetworkContract {
                 });
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
         if (!(keyKeeper instanceof VKKeyKeeper))
             throw new AssertionError("KeyKeeper must be VkKeyKeeper");
@@ -150,9 +151,9 @@ public class VKModel implements NetworkContract {
         return keysModel.getVKKeyKeeper() != null;
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Single<Boolean> disconnect() {
         offset = 0;
         return Single.just(true);
@@ -165,9 +166,9 @@ public class VKModel implements NetworkContract {
         // TODO: implement
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<SingleImage> upload(@NonNull PlainImage image) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -241,9 +242,9 @@ public class VKModel implements NetworkContract {
         return toCommaSeparated(result);
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -267,16 +268,16 @@ public class VKModel implements NetworkContract {
         });
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<Boolean> delete(@NonNull SinglePost post) {
         return Observable.just(false);
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -328,9 +329,9 @@ public class VKModel implements NetworkContract {
         return sb.toString();
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
         return Observable.fromCallable(() -> {
             final VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -424,6 +425,7 @@ public class VKModel implements NetworkContract {
         return null;
     }
 
+    @NonNull
     private ArrayList<SingleAttachment> toAttachments(@NonNull Say loaded) {
         if (loaded.attachments == null) {
             return new ArrayList<>();
@@ -449,8 +451,8 @@ public class VKModel implements NetworkContract {
         return null;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -492,6 +494,5 @@ public class VKModel implements NetworkContract {
             return SolidList.empty();
         });
     }
-
 }
 

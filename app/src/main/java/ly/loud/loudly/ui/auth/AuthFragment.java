@@ -54,7 +54,7 @@ public class AuthFragment extends DialogFragment {
      */
     private boolean firstRun = true;
 
-    public static AuthFragment newInstance(int network) {
+    public static AuthFragment newInstance(@Network int network) {
         Bundle args = new Bundle();
         args.putInt(NETWORK_FIELD, network);
 
@@ -73,7 +73,7 @@ public class AuthFragment extends DialogFragment {
 
     @NonNull
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
+    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -84,9 +84,11 @@ public class AuthFragment extends DialogFragment {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@Nullable Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(NETWORK_FIELD, network);
+        if (outState != null) {
+            outState.putInt(NETWORK_FIELD, network);
+        }
     }
 
     @Override
@@ -115,7 +117,7 @@ public class AuthFragment extends DialogFragment {
 
     @CheckResult
     @NonNull
-    private Observable<String> createUrlsObservable(String initialUrl) {
+    private Observable<String> createUrlsObservable(@Nullable String initialUrl) {
         return Observable.create(observer -> {
             webView.post(() -> {
                 webView.setWebViewClient(new WebViewClient() {

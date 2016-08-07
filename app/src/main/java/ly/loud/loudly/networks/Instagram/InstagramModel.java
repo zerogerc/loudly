@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
+import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
@@ -26,19 +27,12 @@ import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
 
-/**
- * Created by ZeRoGerc on 21/07/16.
- */
 public class InstagramModel implements NetworkContract {
+    public static final String AUTHORIZE_URL = "https://api.instagram.com/oauth/authorize/";
+    public static final String RESPONSE_URL = "loudly://";
 
     @NonNull
     private Loudly loudlyApplication;
-
-    @Nullable
-    private InstagramKeyKeeper keyKeeper;
-
-    @Nullable
-    private InstagramWrap wrap;
 
     @NonNull
     private KeysModel keysModel;
@@ -56,29 +50,29 @@ public class InstagramModel implements NetworkContract {
         return Networks.INSTAGRAM;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getFullName() {
         return loudlyApplication.getString(R.string.network_instagram);
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<String> getBeginAuthUrl() {
         return Single.fromCallable(() ->
-                new Query(InstagramClient.AUTHORIZE_URL)
+                new Query(AUTHORIZE_URL)
                         .addParameter("client_id", InstagramClient.CLIENT_ID)
-                        .addParameter("redirect_uri", InstagramClient.RESPONSE_URL)
+                        .addParameter("redirect_uri", RESPONSE_URL)
                         .addParameter("response_type", "token")
                         .addParameter("scope", "basic public_content")
                         .toURL());
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
         return urls
-                .takeFirst(url -> url.startsWith(InstagramClient.RESPONSE_URL))
+                .takeFirst(url -> url.startsWith(RESPONSE_URL))
                 .toSingle()
                 .map(url -> {
                     Query query = Query.fromResponseUrl(url);
@@ -95,8 +89,8 @@ public class InstagramModel implements NetworkContract {
                 });
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
         return Single.just(false);
     }
@@ -106,51 +100,45 @@ public class InstagramModel implements NetworkContract {
         return false;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Single<Boolean> disconnect() {
         return Single.just(false);
     }
 
-    public InstagramWrap getWrap() {
-        if (wrap == null) {
-            this.wrap = new InstagramWrap();
-        }
-        return wrap;
-    }
-
-    @NonNull
     @Override
+    @NonNull
     public Observable<SingleImage> upload(@NonNull PlainImage image) {
         return Observable.just(null);
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
         return Observable.just(null);
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<Boolean> delete(@NonNull SinglePost post) {
         return Observable.just(false);
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Observable.just(SolidList.empty());
     }
 
-    @NonNull
     @Override
-    public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @GetterModel.RequestType int requestType) {
+    @NonNull
+    public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element,
+                                                    @RequestType int requestType) {
         return Observable.just(SolidList.empty());
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.just(null);
     }

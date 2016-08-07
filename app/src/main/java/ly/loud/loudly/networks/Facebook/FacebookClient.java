@@ -17,9 +17,6 @@ import java.util.Map;
  */
 public interface FacebookClient {
     String CLIENT_ID = "443913362466352";
-    String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
-    String RESPONSE_URL = "https://web.facebook.com/connect/login_success.html";
-    String REDIRECT_URL = "https://www.facebook.com/connect/login_success.html";
     String LIKES_ENDPOINT = "likes";
     String REPOSTS_ENDPOINT = "sharedposts";
 
