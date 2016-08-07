@@ -38,9 +38,6 @@ public class InstagramModel implements NetworkContract {
     private InstagramKeyKeeper keyKeeper;
 
     @Nullable
-    private InstagramAuthorizer authorizer;
-
-    @Nullable
     private InstagramWrap wrap;
 
     @NonNull

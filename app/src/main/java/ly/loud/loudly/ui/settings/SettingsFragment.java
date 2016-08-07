@@ -8,6 +8,11 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 
 import ly.loud.loudly.R;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.ui.auth.AuthFragment;
+
+import static ly.loud.loudly.networks.Networks.*;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
@@ -37,15 +42,22 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         addPreferencesFromResource(R.xml.preferences);
     }
 
+    private void openAuthFragment(@Network int network) {
+        AuthFragment.newInstance(network).show(getFragmentManager(), null);
+    }
+
     @Override
     public boolean onPreferenceTreeClick(@NonNull Preference preference) {
         final String key = preference.getKey();
         switch (key) {
             case FACEBOOK_KEY:
+                openAuthFragment(FB);
                 return true;
             case INSTAGRAM_KEY:
+                openAuthFragment(INSTAGRAM);
                 return true;
             case VK_KEY:
+                openAuthFragment(VK);
                 return true;
             case LOAD_FOR_KEY:
                 return true;

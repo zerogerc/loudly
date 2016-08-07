@@ -2,7 +2,6 @@ package ly.loud.loudly.ui.auth;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
@@ -22,8 +21,6 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.AuthModel;
 import ly.loud.loudly.networks.Networks.Network;
-import ly.loud.loudly.util.BroadcastSendingTask;
-import ly.loud.loudly.util.Broadcasts;
 import rx.Observable;
 
 import static rx.android.schedulers.AndroidSchedulers.mainThread;

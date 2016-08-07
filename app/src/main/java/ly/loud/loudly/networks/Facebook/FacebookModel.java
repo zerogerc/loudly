@@ -66,9 +66,6 @@ public class FacebookModel implements NetworkContract {
     private FacebookClient client;
 
     @Nullable
-    private FacebookAuthorizer authorizer;
-
-    @Nullable
     private FacebookWrap wrap;
 
     @Inject
