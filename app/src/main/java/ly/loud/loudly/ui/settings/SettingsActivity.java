@@ -180,7 +180,7 @@ public class SettingsActivity extends AppCompatActivity {
         int frequency = Integer.parseInt(frequencyText.getText().toString());
         int loadLast = Integer.parseInt(loadLastText.getText().toString());
 
-        Loudly.savePreferences(frequency, loadLast);
+//        Loudly.savePreferences(frequency, loadLast);
     }
 
     @Override
