@@ -14,6 +14,7 @@ public class Broadcasts {
     public static final String POST_GET_INFO = "post.info";
     public static final String GET_PERSONS = "person";
     public static final String POST_DELETE = "delete";
+    public static final String INTERNAL_MESSAGE = "internal";
 
     /** Fields in broadcasts **/
 
@@ -40,5 +41,5 @@ public class Broadcasts {
     public static final int DATABASE_ERROR = 8;
     public static final int NETWORK_ERROR = 9;
     public static final int AUTH_FAIL = 10;
-    public static final int INVALID_TOKEN = 11;
+    public static final int EXPIRED_TOKEN = 11;
 }

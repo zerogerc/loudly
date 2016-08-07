@@ -1,8 +1,8 @@
-package ly.loud.loudly.networks.VK;
+package ly.loud.loudly.networks.vk;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Authorizer;
-import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Authorizer;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.Query;
 
 public class VKAuthorizer extends Authorizer {
@@ -36,8 +36,8 @@ public class VKAuthorizer extends Authorizer {
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
         ((VKKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
         ((VKKeyKeeper) keys).setUserId(response.getParameter(USER_ID));
+        // It's unsafe to store expiration time in KeyKeeper
         int expiration = Integer.parseInt(response.getParameter("expires_in"));
-        keys.expiresIn(expiration);
     }
 
     @Override

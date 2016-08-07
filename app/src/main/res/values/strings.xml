@@ -5,12 +5,38 @@
     <string name="people_fragment_title_likes">People who like it</string>
     <string name="people_fragment_title_shares">People who shared it</string>
     <string name="people_fragment_title_comments">Comments</string>
-    <string name="title_activity_main">Loudly</string>
+    <string name="loudly">Loudly</string>
     <string name="title_activity_settings">Settings</string>
+
+    <string name="networks_choose_title">Post to:</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="token_expired_begin">Lost connection to</string>
+    <string name="token_expired_end">. Please, login in settings</string>
+
+    <!-- Networks -->
+    <string name="network_loudly">Loudly</string>
+    <string name="network_facebook">Facebook</string>
+    <string name="network_twitter">Twitter</string>
+    <string name="network_instagram">Instagram</string>
+    <string name="network_vk">ВКонтакте</string>
+    <string name="network_ok">Одноклассники</string>
+    <string name="network_myworld">Мой Мир</string>
+
+    <!-- Misc -->
+    <string name="feed">Feed</string>
+    <string name="filter_by">Show</string>
+    <string name="no_filters">Everything</string>
+    <string name="cant_delete_from">Can\'t delete from</string>
+    <string name="title_activity_feed">FeedActivity</string>
+
+    <!-- FullPostInfo -->
+    <string name="full_post_info_title">Post from: %s</string>
+
+    <!-- Preferences -->
+    <string name="load_for_last">Load for last (days):</string>
 
 </resources>

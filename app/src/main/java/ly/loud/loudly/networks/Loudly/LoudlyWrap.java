@@ -1,30 +1,46 @@
-package ly.loud.loudly.networks.Loudly;
+package ly.loud.loudly.networks.loudly;
 
 import android.util.Pair;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Person;
-import ly.loud.loudly.base.SingleNetwork;
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.base.attachments.Image;
-import ly.loud.loudly.base.attachments.LoudlyImage;
-import ly.loud.loudly.base.says.Comment;
-import ly.loud.loudly.base.says.Info;
-import ly.loud.loudly.base.says.LoudlyPost;
-import ly.loud.loudly.base.says.Post;
+import ly.loud.loudly.legacy_base.*;
+import ly.loud.loudly.legacy_base.attachments.Image;
+import ly.loud.loudly.legacy_base.says.Comment;
+import ly.loud.loudly.base.entities.Info;
+import ly.loud.loudly.legacy_base.says.LoudlyPost;
+import ly.loud.loudly.legacy_base.says.Post;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.DatabaseActions;
 
 /**
  * Wrap over database
  */
 public class LoudlyWrap extends Wrap {
+    private static final NetworkDescription DESCRIPTION = new NetworkDescription() {
+        @Override
+        public boolean canPost() {
+            return true;
+        }
+
+        @Override
+        public boolean canDelete() {
+            return true;
+        }
+    };
+
+    @Override
+    public NetworkDescription getDescription() {
+        return DESCRIPTION;
+    }
+
     @Override
     protected Query makeAPICall(String url) {
         return null;
@@ -37,12 +53,12 @@ public class LoudlyWrap extends Wrap {
 
     @Override
     protected void upload(Post post, KeyKeeper keyKeeper) throws IOException {
-        DatabaseActions.savePost(((LoudlyPost) post));
+//        DatabaseUtils.savePost(((LoudlyPost) post));
     }
 
     @Override
     protected void upload(Image image, BackgroundAction progress, KeyKeeper keyKeeper) throws IOException {
-        DatabaseActions.saveAttachment((LoudlyImage) image);
+        // Now it's not like other networks, it saves attachments after uploading
     }
 
     @Override
@@ -55,12 +71,14 @@ public class LoudlyWrap extends Wrap {
                 return;
             }
         }
-        DatabaseActions.deletePost(loudlyPost);
+//        DatabaseUtils.deletePost(loudlyPost);
+        loudlyPost.getLink(Networks.LOUDLY).setValid(false);
     }
 
     @Override
     protected List<Post> loadPosts(TimeInterval timeInterval, KeyKeeper keyKeeper) throws IOException {
-        return DatabaseActions.loadPosts(timeInterval);
+//        return DatabaseUtils.loadPosts(timeInterval);
+        return Collections.emptyList();
     }
 
     @Override
@@ -71,17 +89,23 @@ public class LoudlyWrap extends Wrap {
 
     @Override
     protected List<Person> getPersons(int what, SingleNetwork element, KeyKeeper keyKeeper) throws IOException {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
     protected List<Comment> getComments(SingleNetwork element, KeyKeeper keyKeeper) throws IOException {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
     protected void getImageInfo(List<Image> images, KeyKeeper keyKeeper) throws IOException {
         // Can't load image info
+    }
+
+    @Override
+    public String handleError(InputStream stream) {
+        // Nothing can be handled
+        return null;
     }
 
     @Override

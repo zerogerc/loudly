@@ -1,18 +1,16 @@
-package ly.loud.loudly.networks.Loudly;
+package ly.loud.loudly.networks.loudly;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 
-import ly.loud.loudly.base.Authorizer;
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.ui.Loudly;
+import ly.loud.loudly.networks.Authorizer;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.UIAction;
-import ly.loud.loudly.util.database.DatabaseActions;
 import ly.loud.loudly.util.database.DatabaseException;
 
 public class LoudlyAuthorizer extends Authorizer{
@@ -37,14 +35,7 @@ public class LoudlyAuthorizer extends Authorizer{
             @Override
             protected Intent doInBackground(Object... params) {
                 try {
-                    DatabaseActions.loadKeys();
-
-                    // Loading preferences
-                    SharedPreferences preferences = Loudly.getContext().getSharedPreferences(
-                            Loudly.PREFERENCES, Context.MODE_PRIVATE);
-                    int frequency = preferences.getInt(Loudly.UPDATE_FREQUENCY, 30);
-                    int loadLast = preferences.getInt(Loudly.LOAD_LAST, 7);
-                    Loudly.setPreferences(frequency, loadLast);
+                    Loudly.loadFromDB();
                 } catch (DatabaseException e) {
                     return makeError(Broadcasts.AUTHORIZATION, Broadcasts.DATABASE_ERROR,
                             e.getMessage());
@@ -69,7 +60,7 @@ public class LoudlyAuthorizer extends Authorizer{
 
     @Override
     public int network() {
-        return 0;
+        return Networks.LOUDLY;
     }
 
     @Override

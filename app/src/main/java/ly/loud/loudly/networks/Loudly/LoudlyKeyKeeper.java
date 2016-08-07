@@ -1,22 +1,12 @@
-package ly.loud.loudly.networks.Loudly;
+package ly.loud.loudly.networks.loudly;
 
 import android.os.Parcel;
 
-import ly.loud.loudly.base.KeyKeeper;
+import ly.loud.loudly.networks.KeyKeeper;
 
 public class LoudlyKeyKeeper extends KeyKeeper {
     public LoudlyKeyKeeper() {
         super();
-    }
-
-    @Override
-    public boolean isValid() {
-        return true;
-    }
-
-    @Override
-    public boolean mayExpire() {
-        return false;
     }
 
     // Has nothing to save, later should say some keys

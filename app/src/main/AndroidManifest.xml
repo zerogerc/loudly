@@ -1,58 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ly.loud.loudly" >
+    package="ly.loud.loudly">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="18"/>
-    <uses-permission android:name="android.permission.MANAGE_DOCUMENTS" />
-    <uses-feature android:name="android.hardware.camera"
-        android:required="true" />
 
     <application
-        android:name=".ui.Loudly"
+        android:name=".application.Loudly"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".ui.MainActivity"
-            android:windowSoftInputMode="stateHidden"
-            android:label="@string/title_activity_main"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".ui.SettingsActivity"
-            android:parentActivityName=".ui.MainActivity"
-            android:windowSoftInputMode="stateHidden"
+        <activity
+            android:name=".ui.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
+            android:parentActivityName=".ui.MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.MainActivity" />
         </activity>
 
-        <service android:name=".ui.GetInfoService" />
+        <activity
+            android:name=".ui.MainActivity"
+            android:label="@string/loudly"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustNothing">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.settings.MaterialSettingsActivity"
+            android:parentActivityName=".ui.MainActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.MainActivity" />
+        </activity>
+
+        <activity
+            android:name=".ui.full_post.FullPostInfoActivity"
+            android:parentActivityName=".ui.MainActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
-<!--=======-->
-<!--<manifest xmlns:android="http://schemas.android.com/apk/res/android" >-->
-
-    <!--<application>-->
-        <!--<activity android:name="ly.loud.loudly.ui.MainActivity"-->
-                    <!--android:label="@string/title_activity_main"-->
-                <!--android:theme="@style/AppTheme.NoActionBar"-->
-<!--&gt;-->
-        <!--</activity>-->
-    <!--</application>-->
-<!--</manifest>-->
-<!--&gt;>>>>>> Added-->

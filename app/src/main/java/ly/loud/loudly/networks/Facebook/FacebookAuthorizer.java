@@ -1,8 +1,8 @@
-package ly.loud.loudly.networks.Facebook;
+package ly.loud.loudly.networks.facebook;
 
-import ly.loud.loudly.base.Authorizer;
-import ly.loud.loudly.base.KeyKeeper;
-import ly.loud.loudly.base.Networks;
+import ly.loud.loudly.networks.Authorizer;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.Query;
 
 public class FacebookAuthorizer extends Authorizer {
@@ -14,11 +14,6 @@ public class FacebookAuthorizer extends Authorizer {
     @Override
     public int network() {
         return Networks.FB;
-    }
-
-    @Override
-    protected FacebookKeyKeeper beginAuthorize() {
-        return new FacebookKeyKeeper();
     }
 
     @Override
@@ -35,7 +30,6 @@ public class FacebookAuthorizer extends Authorizer {
     public void addFieldsFromQuery(KeyKeeper keys, Query response) {
         ((FacebookKeyKeeper) keys).setAccessToken(response.getParameter(ACCESS_TOKEN));
         int expiration = Integer.parseInt(response.getParameter("expires_in"));
-        keys.expiresIn(expiration);
     }
 
     @Override
