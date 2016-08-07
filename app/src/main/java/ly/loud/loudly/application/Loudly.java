@@ -4,9 +4,10 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -20,7 +21,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import ly.loud.loudly.legacy_base.Wrap;
-import ly.loud.loudly.networks.loudly.LoudlyKeyKeeper;
 import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.TimeInterval;
@@ -54,6 +54,17 @@ public class Loudly extends Application {
     private AppComponent appComponent;
     private DatabaseComponent databaseComponent;
 
+    private static SharedPreferences preferences;
+
+    private static OnSharedPreferenceChangeListener listener = new OnSharedPreferenceChangeListener() {
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+            int frequency = preferences.getInt(UPDATE_FREQUENCY, 30);
+            int loadLast1 = Integer.parseInt(preferences.getString(LOAD_LAST, "7"));
+            setPreferences(frequency, loadLast1);
+        }
+    };
+
 
     /**
      * Load state of application from database. <br>
@@ -65,11 +76,12 @@ public class Loudly extends Application {
         DatabaseUtils.loadKeys();
 
         // Loading preferences
-        SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, MODE_PRIVATE);
+        preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        preferences.registerOnSharedPreferenceChangeListener(listener);
+
         int frequency = preferences.getInt(UPDATE_FREQUENCY, 30);
-        int loadLast = preferences.getInt(LOAD_LAST, 7);
+        int loadLast = Integer.parseInt(preferences.getString(LOAD_LAST, "7"));
         setPreferences(frequency, loadLast);
-        Loudly.getContext().setKeyKeeper(Networks.LOUDLY, new LoudlyKeyKeeper());
     }
 
     /**
@@ -125,7 +137,7 @@ public class Loudly extends Application {
 
     private static void setPreferences(int updateFreq, int loadLast) {
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR, -loadLast);
+        calendar.add(Calendar.DAY_OF_YEAR, - loadLast);
         Loudly.getContext().timeInterval = TimeInterval.since(calendar.getTimeInMillis() / 1000);
 
         if (Loudly.loadLast != loadLast) {
@@ -140,16 +152,7 @@ public class Loudly extends Application {
      * @return Frequency of updates and posts interval
      */
     public static int[] getPreferences() {
-        return new int[]{getInfoInterval, loadLast};
-    }
-
-    public static void savePreferences(int frequency, int loadLast) {
-        SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt(UPDATE_FREQUENCY, frequency);
-        editor.putInt(LOAD_LAST, loadLast);
-        editor.apply();
-        setPreferences(frequency, loadLast);
+        return new int[]{ getInfoInterval, loadLast};
     }
 
     private void resetState() {

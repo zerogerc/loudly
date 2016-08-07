@@ -11,10 +11,10 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
+import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.networks.Authorizer;
 import ly.loud.loudly.networks.KeyKeeper;
-import ly.loud.loudly.R;
 import ly.loud.loudly.ui.settings.SettingsActivity;
 import ly.loud.loudly.util.BroadcastSendingTask;
 import ly.loud.loudly.util.Broadcasts;

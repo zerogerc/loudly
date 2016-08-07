@@ -26,10 +26,10 @@ import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.networks.NetworkContract;
-import ly.loud.loudly.ui.settings.SettingsActivity;
 import ly.loud.loudly.ui.feed.FeedFragment;
 import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
 import ly.loud.loudly.ui.new_post.NewPostFragment;
+import ly.loud.loudly.ui.settings.SettingsActivity;
 import ly.loud.loudly.ui.views.ScrimCoordinatorLayout;
 
 import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
@@ -124,7 +124,12 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this,
+                drawerLayout,
+                toolbar,
+                R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close
+        );
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -178,6 +183,7 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
+//            Intent intent = new Intent(this, MaterialSettingsActivity.class);
             startActivity(intent);
         }
 

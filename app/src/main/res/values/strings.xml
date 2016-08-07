@@ -32,7 +32,11 @@
     <string name="no_filters">Everything</string>
     <string name="cant_delete_from">Can\'t delete from</string>
     <string name="title_activity_feed">FeedActivity</string>
-    
+
     <!-- FullPostInfo -->
     <string name="full_post_info_title">Post from: %s</string>
+
+    <!-- Preferences -->
+    <string name="load_for_last">Load for last (days):</string>
+
 </resources>
