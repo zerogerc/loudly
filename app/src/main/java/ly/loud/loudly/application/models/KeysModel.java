@@ -10,11 +10,9 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.vk.VKKeyKeeper;
 import ly.loud.loudly.networks.Networks.Network;
-import rx.Observable;
 
-/**
- * Created by ZeRoGerc on 24/07/16.
- */
+import static ly.loud.loudly.networks.Networks.*;
+
 public class KeysModel {
 
     @NonNull
@@ -50,9 +48,19 @@ public class KeysModel {
         this.facebookKeyKeeper = facebookKeyKeeper;
     }
 
-    @CheckResult
-    @NonNull
-    public Observable<Boolean> disconnectFromNetwork(@Network int network) {
-        return Observable.just(true);
+    /**
+     * Forget keys for this network
+     *
+     * @param network ID of network
+     */
+    public void disconnectFromNetwork(@Network int network) {
+        switch (network) {
+            case FB:
+                setFacebookKeyKeeper(null);
+                return;
+            case VK:
+                setVKKeyKeeper(null);
+                return;
+        }
     }
 }

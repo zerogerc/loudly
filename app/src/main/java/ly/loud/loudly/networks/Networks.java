@@ -5,20 +5,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 
 import ly.loud.loudly.R;
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.legacy_base.Wrap;
-import ly.loud.loudly.networks.facebook.FacebookAuthorizer;
 import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.facebook.FacebookWrap;
-import ly.loud.loudly.networks.instagram.InstagramAuthorizer;
 import ly.loud.loudly.networks.instagram.InstagramKeyKeeper;
 import ly.loud.loudly.networks.instagram.InstagramWrap;
-import ly.loud.loudly.networks.loudly.LoudlyAuthorizer;
 import ly.loud.loudly.networks.loudly.LoudlyKeyKeeper;
 import ly.loud.loudly.networks.loudly.LoudlyWrap;
-import ly.loud.loudly.networks.mail_ru.MailRuAuthoriser;
-import ly.loud.loudly.networks.mail_ru.MailRuKeyKeeper;
-import ly.loud.loudly.networks.vk.VKAuthorizer;
 import ly.loud.loudly.networks.vk.VKKeyKeeper;
 import ly.loud.loudly.networks.vk.VKWrap;
 
@@ -31,7 +24,9 @@ public class Networks {
 
     // It's important to add new network to the LinksContract, so we could save it to DB
     @IntDef
-    public @interface Network {}
+    public @interface Network {
+    }
+
     public static final int LOUDLY = 0;
     public static final int FB = 1;
     public static final int TWITTER = 2;
@@ -91,42 +86,25 @@ public class Networks {
         }
     }
 
-    public static Authorizer makeAuthorizer(@Network int network) {
-        //TODO other networks
-        switch (network) {
-            case LOUDLY:
-                return new LoudlyAuthorizer();
-            case FB:
-                return new FacebookAuthorizer();
-            case VK:
-                return new VKAuthorizer();
-            case MAILRU:
-                return new MailRuAuthoriser();
-            case INSTAGRAM:
-                return new InstagramAuthorizer();
-            default:
-                return null;
-
-        }
-    }
-
     /**
-     * Make proper instance of KeyKeeper for the network
+     * Make proper instance of KeyKeeper for the network and fill it with values, stored in DB
+     *
      * @param network ID of the network
+     * @param strings Fields of this keyKeeper, stored in DB
      * @return KeyKeeper for the network
      */
-    public static KeyKeeper makeKeyKeeper(@Network int network) {
+    public static KeyKeeper makeKeyKeeper(@Network int network, @NonNull String[] strings) {
         switch (network) {
             case LOUDLY:
-                return new LoudlyKeyKeeper();
+                return new LoudlyKeyKeeper(strings);
             case FB:
-                return new FacebookKeyKeeper();
+                return new FacebookKeyKeeper(strings);
             case VK:
-                return new VKKeyKeeper();
+                return new VKKeyKeeper(strings);
             case INSTAGRAM:
-                return new InstagramKeyKeeper();
+                return new InstagramKeyKeeper(strings);
             case MAILRU:
-                return new MailRuKeyKeeper();
+                return null;
             default:
                 return null;
         }

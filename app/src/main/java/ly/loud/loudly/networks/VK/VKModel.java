@@ -16,7 +16,20 @@ import javax.inject.Inject;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.KeysModel;
+import ly.loud.loudly.base.entities.Info;
+import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.base.entities.Person;
+import ly.loud.loudly.base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.base.plain.PlainImage;
+import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.base.single.Comment;
+import ly.loud.loudly.base.single.SingleImage;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.vk.entities.Attachment;
 import ly.loud.loudly.networks.vk.entities.Counter;
 import ly.loud.loudly.networks.vk.entities.Photo;
@@ -26,19 +39,8 @@ import ly.loud.loudly.networks.vk.entities.Profile;
 import ly.loud.loudly.networks.vk.entities.Say;
 import ly.loud.loudly.networks.vk.entities.VKItems;
 import ly.loud.loudly.networks.vk.entities.VKResponse;
-import ly.loud.loudly.base.single.Comment;
-import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.networks.KeyKeeper;
-import ly.loud.loudly.base.entities.Link;
-import ly.loud.loudly.networks.Networks;
-import ly.loud.loudly.base.entities.Person;
-import ly.loud.loudly.base.single.SingleImage;
-import ly.loud.loudly.base.single.SinglePost;
-import ly.loud.loudly.base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
-import ly.loud.loudly.base.plain.PlainImage;
-import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.util.ListUtils;
+import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -46,6 +48,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Observable;
+import rx.Single;
 import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
@@ -54,11 +57,11 @@ import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
+    static final String RESPONSE_URL = "https://oauth.vk.com/blank.html";
+    static final String AUTHORIZE_URL = "https://oauth.vk.com/authorize";
 
     @NonNull
     private final List<SinglePost> posts = new ArrayList<>();
-
-    private int offset;
 
     @NonNull
     private Loudly loudlyApplication;
@@ -68,6 +71,8 @@ public class VKModel implements NetworkContract {
 
     @NonNull
     private VKClient client;
+
+    private int offset;
 
     @Inject
     public VKModel(
@@ -82,11 +87,76 @@ public class VKModel implements NetworkContract {
         offset = 0;
     }
 
-    @NonNull
+    @Network
     @Override
-    public Observable<Boolean> reset() {
+    public int getId() {
+        return Networks.VK;
+    }
+
+    @Override
+    @NonNull
+    public String getFullName() {
+        return loudlyApplication.getString(R.string.network_vk);
+    }
+
+    @Override
+    @NonNull
+    public Single<String> getBeginAuthUrl() {
+        return Single.fromCallable(() ->
+                new Query(AUTHORIZE_URL)
+                        .addParameter("client_id", VKClient.CLIENT_ID)
+                        .addParameter("redirect_uri", RESPONSE_URL)
+                        .addParameter("display_type", "mobile")
+                        .addParameter("scope", "wall,photos")
+                        .addParameter("response_type", "token")
+                        .toURL());
+    }
+
+    @Override
+    @NonNull
+    public Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
+        return urls
+                .takeFirst(url -> url.startsWith(RESPONSE_URL))
+                .toSingle()
+                .map(url -> {
+                    Query response = Query.fromResponseUrl(url);
+                    if (response == null) {
+                        // ToDo: handle
+                        return null;
+                    }
+                    String accessToken = response.getParameter("access_token");
+                    String userId = response.getParameter("user_id");
+                    if (accessToken == null || userId == null) {
+                        // ToDo: handle
+                        return null;
+                    }
+                    return new VKKeyKeeper(accessToken, userId);
+                });
+    }
+
+    @Override
+    @CheckResult
+    @NonNull
+    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
+        if (!(keyKeeper instanceof VKKeyKeeper))
+            throw new AssertionError("KeyKeeper must be VkKeyKeeper");
+
+        keysModel.setVKKeyKeeper((VKKeyKeeper) keyKeeper);
+        return Single.just(true);
+    }
+
+    @Override
+    @CheckResult
+    public boolean isConnected() {
+        return keysModel.getVKKeyKeeper() != null;
+    }
+
+    @Override
+    @CheckResult
+    @NonNull
+    public Single<Boolean> disconnect() {
         offset = 0;
-        return Observable.just(true);
+        return Single.just(true);
     }
 
     /**
@@ -96,9 +166,9 @@ public class VKModel implements NetworkContract {
         // TODO: implement
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<SingleImage> upload(@NonNull PlainImage image) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -172,9 +242,9 @@ public class VKModel implements NetworkContract {
         return toCommaSeparated(result);
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -198,16 +268,16 @@ public class VKModel implements NetworkContract {
         });
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<Boolean> delete(@NonNull SinglePost post) {
         return Observable.just(false);
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -259,9 +329,9 @@ public class VKModel implements NetworkContract {
         return sb.toString();
     }
 
-    @NonNull
     @Override
     @CheckResult
+    @NonNull
     public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @RequestType int requestType) {
         return Observable.fromCallable(() -> {
             final VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -355,6 +425,7 @@ public class VKModel implements NetworkContract {
         return null;
     }
 
+    @NonNull
     private ArrayList<SingleAttachment> toAttachments(@NonNull Say loaded) {
         if (loaded.attachments == null) {
             return new ArrayList<>();
@@ -380,8 +451,8 @@ public class VKModel implements NetworkContract {
         return null;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
@@ -422,42 +493,6 @@ public class VKModel implements NetworkContract {
             }
             return SolidList.empty();
         });
-    }
-
-    @NonNull
-    @Override
-    @CheckResult
-    public Observable<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
-        if (!(keyKeeper instanceof VKKeyKeeper))
-            throw new AssertionError("KeyKeeper must be VkKeyKeeper");
-
-        keysModel.setVKKeyKeeper((VKKeyKeeper) keyKeeper);
-        return Observable.just(true);
-    }
-
-    @NonNull
-    @Override
-    @CheckResult
-    public Observable<Boolean> disconnect() {
-        return keysModel.disconnectFromNetwork(getId());
-    }
-
-    @NonNull
-    @Override
-    public String getFullName() {
-        return loudlyApplication.getString(R.string.network_vk);
-    }
-
-    @Override
-    @CheckResult
-    public boolean isConnected() {
-        return keysModel.getVKKeyKeeper() != null;
-    }
-
-    @Networks.Network
-    @Override
-    public int getId() {
-        return Networks.VK;
     }
 }
 

@@ -9,9 +9,8 @@ public class LoudlyKeyKeeper extends KeyKeeper {
         super();
     }
 
-    // Has nothing to save, later should say some keys
-    @Override
-    protected void fromStrings(String[] strings) {
+    public LoudlyKeyKeeper(String[] strings){
+
     }
 
     @Override

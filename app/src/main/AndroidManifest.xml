@@ -14,16 +14,6 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".ui.settings.SettingsActivity"
-            android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.MainActivity" />
-        </activity>
-
-        <activity
             android:name=".ui.MainActivity"
             android:label="@string/loudly"
             android:theme="@style/AppTheme.NoActionBar"
@@ -36,7 +26,7 @@
         </activity>
 
         <activity
-            android:name=".ui.settings.MaterialSettingsActivity"
+            android:name=".ui.settings.SettingsActivity"
             android:parentActivityName=".ui.MainActivity"
             android:theme="@style/AppTheme">
             <meta-data

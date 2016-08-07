@@ -16,6 +16,7 @@ import java.util.Map;
  * @author Danil Kolikov
  */
 public interface FacebookClient {
+    String CLIENT_ID = "443913362466352";
     String LIKES_ENDPOINT = "likes";
     String REPOSTS_ENDPOINT = "sharedposts";
 

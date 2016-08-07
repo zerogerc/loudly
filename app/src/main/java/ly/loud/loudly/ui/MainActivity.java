@@ -183,7 +183,6 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
-//            Intent intent = new Intent(this, MaterialSettingsActivity.class);
             startActivity(intent);
         }
 
