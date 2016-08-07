@@ -11,7 +11,7 @@
         android:padding="16dp"
         android:text="@string/networks_choose_title"
         android:textAllCaps="true"
-        android:textColor="@color/gray_color"
+        android:textColor="@color/grey_color_500"
         android:textSize="15sp" />
 
     <android.support.v7.widget.RecyclerView

@@ -27,6 +27,7 @@
             android:textSize="@dimen/list_item_comment_title_text_size" />
 
         <TextView
+            style="@style/CommentText"
             android:id="@+id/list_item_comment_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -41,6 +42,7 @@
             android:paddingEnd="@dimen/list_item_comment_padding">
 
             <TextView
+                style="@style/CommentInfo"
                 android:id="@+id/list_item_comment_date"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -49,12 +51,12 @@
                 android:paddingRight="@dimen/list_item_comment_padding" />
 
             <TextView
+                style="@style/CommentSocialStatView"
                 android:id="@+id/list_item_comment_likes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawableLeft="@drawable/ic_comment_favourite"
                 android:drawableStart="@drawable/ic_comment_favourite"
-                android:drawablePadding="@dimen/list_item_comment_padding"
                 android:gravity="center_vertical"/>
         </LinearLayout>
     </LinearLayout>

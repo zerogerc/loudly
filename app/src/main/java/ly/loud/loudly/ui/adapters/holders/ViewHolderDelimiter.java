@@ -23,7 +23,7 @@ public class ViewHolderDelimiter extends BindingViewHolder<NetworkDelimiter> {
 
 
     public ViewHolderDelimiter(@NonNull LayoutInflater inflater, @NonNull ViewGroup parent) {
-        super(inflater.inflate(R.layout.list_delimeter, parent, false));
+        super(inflater.inflate(R.layout.list_item_delimeter, parent, false));
 
         ButterKnife.bind(this, itemView);
     }

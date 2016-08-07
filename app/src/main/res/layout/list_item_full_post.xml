@@ -26,18 +26,16 @@
             android:orientation="vertical">
 
             <TextView
+                style="@style/PostInfo"
                 android:id="@+id/list_item_full_post_date"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:textColor="@color/list_item_post_secondary_text_color"
-                android:textSize="@dimen/list_item_post_date_and_geo_text_size" />
+                android:layout_height="match_parent" />
 
             <TextView
+                style="@style/PostInfo"
                 android:id="@+id/list_item_full_post_geo"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:textColor="@color/list_item_post_secondary_text_color"
-                android:textSize="@dimen/list_item_post_date_and_geo_text_size" />
+                android:layout_height="match_parent" />
         </LinearLayout>
     </LinearLayout>
 
@@ -48,17 +46,17 @@
         android:orientation="vertical">
 
         <TextView
+            style="@style/PostTextPrimary"
             android:id="@+id/list_item_full_post_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="@dimen/list_item_post_text_padding"
-            android:textSize="@dimen/list_item_post_text_size" />
+            android:padding="@dimen/list_item_post_text_padding" />
 
         <ly.loud.loudly.ui.views.GlideImageView
             android:id="@+id/list_item_full_post_image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/light_grey_color" />
+            android:background="@color/grey_color_300" />
     </LinearLayout>
 
     <LinearLayout
@@ -68,11 +66,11 @@
         android:orientation="horizontal">
 
         <TextView
+            style="@style/PostSocialStatView"
             android:id="@+id/list_item_full_post_shares"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:drawableLeft="@drawable/ic_post_share_light"
-            android:drawablePadding="@dimen/list_item_post_buttons_drawable_padding"
             android:drawableStart="@drawable/ic_post_share_light"
             android:padding="@dimen/list_item_post_buttons_padding" />
 
@@ -82,11 +80,11 @@
             android:layout_weight="1" />
 
         <TextView
+            style="@style/PostSocialStatView"
             android:id="@+id/list_item_full_post_likes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:drawableLeft="@drawable/ic_post_favourite_light"
-            android:drawablePadding="@dimen/list_item_post_buttons_drawable_padding"
             android:drawableStart="@drawable/ic_post_favourite_light"
             android:padding="@dimen/list_item_post_buttons_padding" />
     </LinearLayout>

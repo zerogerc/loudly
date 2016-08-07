@@ -31,8 +31,9 @@ public class GlideImageView extends ImageView {
 
     /**
      * Create instance of ScalableImageView.
+     *
      * @param context current context
-     * @param attrs attrs from xml
+     * @param attrs   attrs from xml
      */
     public GlideImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -42,16 +43,19 @@ public class GlideImageView extends ImageView {
     /**
      * Set scale to ImageView. After this method <code>height</code> of the ImageView
      * will be equal to <code>width * scale</code>.
+     *
      * @param scale given scale for height resize
      */
     private void setScale(double scale) {
         this.scale = scale;
+        invalidate();
         requestLayout();
     }
 
     /**
      * Load given <code>image</code> by <code>image.getUri()</code>. This method performs resizing of <code>ImageView</code>
      * based on <code>image.getHeight()</code> and <code>image.getWidth()</code> first.
+     *
      * @param image given image
      */
     public void loadImage(PlainImage image) {
@@ -79,6 +83,7 @@ public class GlideImageView extends ImageView {
 
     /**
      * Perform loading of image by Url. Set height equal to width.
+     *
      * @param url given url
      */
     public void loadCircularShapeImageByUrl(@NonNull String url) {
@@ -100,6 +105,7 @@ public class GlideImageView extends ImageView {
 
     /**
      * Load given image and apply CircledTransformation to it.
+     *
      * @param image given image
      */
     public void loadCircularShapeImage(PlainImage image) {
@@ -111,5 +117,10 @@ public class GlideImageView extends ImageView {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         setMeasuredDimension(getMeasuredWidth(), ((int) (scale * getMeasuredWidth())));
+    }
+
+    public void reset() {
+        setScale(0);
+        setImageDrawable(null);
     }
 }
