@@ -9,9 +9,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ProgressBar;
 
 import javax.inject.Inject;
 
@@ -23,6 +23,8 @@ import ly.loud.loudly.application.models.AuthModel;
 import ly.loud.loudly.networks.Networks.Network;
 import rx.Observable;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 import static rx.schedulers.Schedulers.io;
 
@@ -30,10 +32,9 @@ public class AuthFragment extends DialogFragment {
     private static final String NETWORK_FIELD = "network";
 
     @SuppressWarnings("NullableProblems") // Butterkniife
-    @BindView(R.id.progressBar)
+    @BindView(R.id.progressLayout)
     @NonNull
-    ProgressBar circle;
-
+    View circle;
 
     @SuppressWarnings("NullableProblems") // Butterkniife
     @BindView(R.id.webView)
@@ -67,7 +68,7 @@ public class AuthFragment extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Loudly.getContext().getAppComponent().inject(this);
-
+        setStyle(STYLE_NO_TITLE, getTheme());
         network = getArguments().getInt(NETWORK_FIELD);
     }
 
@@ -77,11 +78,13 @@ public class AuthFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        View rootView = inflater.inflate(R.layout.activity_auth, null);
+        View rootView = inflater.inflate(R.layout.auth_fragment, null);
         ButterKnife.bind(this, rootView);
         builder.setView(rootView);
         return builder.create();
     }
+
+
 
     @Override
     public void onSaveInstanceState(@Nullable Bundle outState) {
@@ -94,12 +97,19 @@ public class AuthFragment extends DialogFragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (getDialog().getWindow() != null) {
+            getDialog().getWindow().setSoftInputMode(
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
+                            | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            );
+        }
         if (firstRun) {
-            circle.setVisibility(View.VISIBLE);
+            circle.setVisibility(VISIBLE);
             authModel.getAuthUrl(network)
+                    .subscribeOn(mainThread())
+                    .observeOn(io())
                     .flatMap(url -> authModel
                             .finishAuthorization(createUrlsObservable(url), network))
-                    .subscribeOn(io())
                     .observeOn(mainThread())
                     .doOnSuccess(success -> {
                         if (success) {
@@ -130,8 +140,7 @@ public class AuthFragment extends DialogFragment {
                     @Override
                     public void onPageFinished(WebView view, String url) {
                         super.onPageFinished(view, url);
-                        circle.setVisibility(View.INVISIBLE);
-                    }
+                        circle.setVisibility(GONE);}
                 });
                 webView.loadUrl(initialUrl);
             });
