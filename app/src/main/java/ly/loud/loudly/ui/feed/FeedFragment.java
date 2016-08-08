@@ -93,7 +93,7 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
 
     @Override
     public void onNewLoadedPosts(@NonNull List<? extends PlainPost> posts) {
-        adapter.addPosts(posts);
+        adapter.setPosts(posts);
     }
 
     @Override

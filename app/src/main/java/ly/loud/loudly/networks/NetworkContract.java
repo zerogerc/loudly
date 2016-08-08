@@ -26,6 +26,20 @@ import static ly.loud.loudly.application.models.GetterModel.RequestType;
 public interface NetworkContract {
 
     /**
+     * @return id of network.
+     */
+    @CheckResult
+    @Network
+    int getId();
+
+    /**
+     * User-readable full name of network
+     */
+    @CheckResult
+    @NonNull
+    String getFullName();
+
+    /**
      * Get URL of initial web page for authorization
      *
      * @return Single url
@@ -43,6 +57,31 @@ public interface NetworkContract {
     @CheckResult
     @NonNull
     Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls);
+
+    /**
+     * Connect this network for proper work.
+     *
+     * @param keyKeeper - auth token
+     * @return <code>true</code> if connected successfully
+     */
+    @CheckResult
+    @NonNull
+    Single<Boolean> connect(@NonNull KeyKeeper keyKeeper);
+
+    /**
+     * @return <code>true</code> if this network connected.
+     */
+    @CheckResult
+    boolean isConnected();
+
+    /**
+     * Disconnect from network
+     *
+     * @return <code>true</code> if disconnected successfully
+     */
+    @CheckResult
+    @NonNull
+    Single<Boolean> disconnect();
 
     /**
      * Upload image to network
@@ -94,43 +133,4 @@ public interface NetworkContract {
     @CheckResult
     @NonNull
     Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element);
-
-    /**
-     * Connect this network for proper work.
-     *
-     * @param keyKeeper - auth token
-     * @return <code>true</code> if connected successfully
-     */
-    @CheckResult
-    @NonNull
-    Single<Boolean> connect(@NonNull KeyKeeper keyKeeper);
-
-    /**
-     * Disconnect from network
-     *
-     * @return <code>true</code> if disconnected successfully
-     */
-    @CheckResult
-    @NonNull
-    Single<Boolean> disconnect();
-
-    /**
-     * User-readable full name of network
-     */
-    @CheckResult
-    @NonNull
-    String getFullName();
-
-    /**
-     * @return <code>true</code> if this network connected.
-     */
-    @CheckResult
-    boolean isConnected();
-
-    /**
-     * @return id of network.
-     */
-    @CheckResult
-    @Network
-    int getId();
 }

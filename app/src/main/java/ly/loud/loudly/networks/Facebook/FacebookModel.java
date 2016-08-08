@@ -3,6 +3,7 @@ package ly.loud.loudly.networks.facebook;
 import android.graphics.Point;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +45,7 @@ import ly.loud.loudly.networks.facebook.entities.Picture;
 import ly.loud.loudly.networks.facebook.entities.Post;
 import ly.loud.loudly.networks.facebook.entities.Result;
 import ly.loud.loudly.util.ListUtils;
+import ly.loud.loudly.util.NetworkUtils;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import okhttp3.MediaType;
@@ -71,6 +73,9 @@ public class FacebookModel implements NetworkContract {
     @NonNull
     private FacebookClient client;
 
+    @NonNull
+    private final List<SinglePost> cached;
+
     @Inject
     public FacebookModel(@NonNull Loudly loudlyApplication,
                          @NonNull KeysModel keysModel,
@@ -78,6 +83,7 @@ public class FacebookModel implements NetworkContract {
         this.loudlyApplication = loudlyApplication;
         this.keysModel = keysModel;
         this.client = client;
+        cached = new ArrayList<>();
     }
 
     @Network
@@ -328,39 +334,66 @@ public class FacebookModel implements NetworkContract {
     @NonNull
     public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Observable.fromCallable(() -> {
-            FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
-            if (keyKeeper == null) {
-                // ToDo: handle
-                return SolidList.empty();
+            if (cached.isEmpty()) {
+                List<SinglePost> posts = downloadPosts(timeInterval);
+                cached.addAll(posts);
+                return ListUtils.asSolidList(posts);
             }
-            Long since = timeInterval.from != Long.MIN_VALUE ? timeInterval.from : null;
-            Long until = timeInterval.to != Long.MAX_VALUE ? timeInterval.to : null;
-            Call<Data<List<Post>>> dataCall = client.loadPosts(since, until,
-                    keyKeeper.getAccessToken());
-            Response<Data<List<Post>>> execute = dataCall.execute();
-            Data<List<Post>> body = execute.body();
-            List<SinglePost> posts = new ArrayList<>();
-            if (body == null) {
-                return SolidList.empty();
-            }
-            for (Post post : body.data) {
-                ArrayList<SingleAttachment> attachments = new ArrayList<>();
-                if (post.attachments != null) {
-                    for (FbAttachment attachment : post.attachments.data) {
-                        SingleAttachment parsed = toAttachment(attachment);
-                        if (parsed != null) {
-                            attachments.add(parsed);
-                        }
+            NetworkUtils.DividedList dividedList = NetworkUtils
+                    .divideListOfCachedPosts(cached, timeInterval);
+            List<SinglePost> before = downloadPosts(dividedList.before);
+            List<SinglePost> after = downloadPosts(dividedList.after);
+
+            cached.addAll(before);
+            cached.addAll(after);
+            Collections.sort(cached);
+
+            List<SinglePost> result = new ArrayList<>();
+            result.addAll(before);
+            result.addAll(dividedList.cached);
+            result.addAll(after);
+            return ListUtils.asSolidList(result);
+        });
+    }
+
+    @NonNull
+    private List<SinglePost> downloadPosts(@NonNull TimeInterval timeInterval) throws IOException {
+        if (timeInterval.from >= timeInterval.to) {
+            return SolidList.empty();
+        }
+        Log.i("FACEBOOK", "DOWNLOADING");
+        FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
+        if (keyKeeper == null) {
+            // ToDo: handle
+            return SolidList.empty();
+        }
+        Long since = timeInterval.from != Long.MIN_VALUE ? timeInterval.from : null;
+        Long until = timeInterval.to != Long.MAX_VALUE ? timeInterval.to : null;
+        Call<Data<List<Post>>> dataCall = client.loadPosts(since, until,
+                keyKeeper.getAccessToken());
+        Response<Data<List<Post>>> execute = dataCall.execute();
+        Data<List<Post>> body = execute.body();
+        List<SinglePost> posts = new ArrayList<>();
+        if (body == null) {
+            return SolidList.empty();
+        }
+        for (Post post : body.data) {
+            ArrayList<SingleAttachment> attachments = new ArrayList<>();
+            if (post.attachments != null) {
+                for (FbAttachment attachment : post.attachments.data) {
+                    SingleAttachment parsed = toAttachment(attachment);
+                    if (parsed != null) {
+                        attachments.add(parsed);
                     }
                 }
-                int likes = post.likes != null ? post.likes.summary.totalCount : 0;
-                int shares = post.shares != null ? post.shares.count : 0;
-                int comments = post.comments != null ? post.comments.summary.totalCount : 0;
-                posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
-                        getId(), new Link(post.id), new Info(likes, shares, comments)));
             }
-            return ListUtils.asSolidList(posts);
-        });
+            int likes = post.likes != null ? post.likes.summary.totalCount : 0;
+            int shares = post.shares != null ? post.shares.count : 0;
+            int comments = post.comments != null ? post.comments.summary.totalCount : 0;
+            posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
+                    getId(), new Link(post.id), new Info(likes, shares, comments)));
+        }
+        return posts;
     }
 
     @NonNull
