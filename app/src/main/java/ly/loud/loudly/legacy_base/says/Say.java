@@ -8,7 +8,7 @@ import java.util.Comparator;
 
 import ly.loud.loudly.legacy_base.Counter;
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.legacy_base.Link;
 import ly.loud.loudly.legacy_base.SingleNetwork;
 import ly.loud.loudly.legacy_base.attachments.Attachment;
 import ly.loud.loudly.legacy_base.attachments.Image;

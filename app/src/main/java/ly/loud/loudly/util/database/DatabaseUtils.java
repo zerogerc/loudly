@@ -12,18 +12,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.networks.KeyKeeper;
-import ly.loud.loudly.base.entities.Link;
 import ly.loud.loudly.base.entities.Location;
-import ly.loud.loudly.base.multiple.LoudlyImage;
-import ly.loud.loudly.base.multiple.LoudlyPost;
-import ly.loud.loudly.networks.Networks;
-import ly.loud.loudly.base.single.SingleImage;
-import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.base.multiple.LoudlyImage;
+import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.base.single.SingleImage;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.entities.Key;
 import ly.loud.loudly.util.database.entities.StoredAttachment;
@@ -49,11 +48,9 @@ public class DatabaseUtils {
 
     @CheckResult
     @NonNull
-    static Links saveLinks(@NonNull Link[] save) throws DatabaseException {
+    static Links saveLinks(@NonNull String[] save) throws DatabaseException {
         Links links = new Links(null, new String[Networks.NETWORK_COUNT]);
-        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            links.getLinks()[i] = Link.getLink(save[i]);
-        }
+        System.arraycopy(save, 0, links.getLinks(), 0, Networks.NETWORK_COUNT);
 
         PutResult result = getPostsDatabase().put()
                 .object(links)
@@ -69,15 +66,13 @@ public class DatabaseUtils {
 
     @CheckResult
     @NonNull
-    static Link[] loadLinks(long id) throws DatabaseException {
+    static String[] loadLinks(long id) throws DatabaseException {
         Links stored = Links.selectById(id, getPostsDatabase());
         if (stored == null) {
             throw new DatabaseException("Can't load links");
         }
-        Link[] links = new Link[Networks.NETWORK_COUNT];
-        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            links[i] = stored.getLinks()[i] == null ? null : new Link(stored.getLinks()[i], false);
-        }
+        String[] links = new String[Networks.NETWORK_COUNT];
+        System.arraycopy(stored.getLinks(), 0, links, 0, Networks.NETWORK_COUNT);
         return links;
     }
 
@@ -137,8 +132,8 @@ public class DatabaseUtils {
     }
 
     @NonNull
-    private static Link[] instancesToLinks(@NonNull MultipleNetworkElement element) {
-        Link[] links = new Link[Networks.NETWORK_COUNT];
+    private static String[] instancesToLinks(@NonNull MultipleNetworkElement element) {
+        String[] links = new String[Networks.NETWORK_COUNT];
         @SuppressWarnings("unchecked") // Java doesn't infer that it's an array of SingleNetworkElement
                 List<SingleNetworkElement> list = element.getNetworkInstances();
         for (SingleNetworkElement singleNetworkElement : list) {
@@ -171,7 +166,7 @@ public class DatabaseUtils {
             }
             LoudlyImage resulting = attachment.setSingleNetworkInstance(
                     LOUDLY, new SingleImage(attachment.getUrl(), attachment.getSize(),
-                            LOUDLY, new Link(id)));
+                            LOUDLY, Long.toString(id)));
 
             database.lowLevel().setTransactionSuccessful();
             return resulting;
@@ -224,10 +219,11 @@ public class DatabaseUtils {
 
     @CheckResult
     @NonNull
-    private static LoudlyImage fillImageFromLinks(@NonNull LoudlyImage image, @NonNull Link[] links) {
+    private static LoudlyImage fillImageFromLinks(@NonNull LoudlyImage image, @NonNull String[] links) {
         for (int i = 0; i < links.length; i++) {
             if (links[i] != null) {
-                image = image.setSingleNetworkInstance(i, new SingleImage(image.getUrl(), image.getSize(), i, links[i]));
+                image = image.setSingleNetworkInstance(i,
+                        new SingleImage(image.getUrl(), image.getSize(), i, links[i]));
             }
         }
         return image;
@@ -237,8 +233,9 @@ public class DatabaseUtils {
     @NonNull
     private static LoudlyImage finishAttachmentLoading(@NonNull StoredAttachment stored)
             throws DatabaseException {
-        Link[] links = loadLinks(stored.getLinksId());
-        links[LOUDLY] = new Link(stored.getId());
+        String[] links = loadLinks(stored.getLinksId());
+        //noinspection ConstantConditions It's stored, to have IT
+        links[LOUDLY] = Long.toString(stored.getId());
 
         LoudlyImage image = new LoudlyImage(stored.getExtra(), null);
         return fillImageFromLinks(image, links);
@@ -308,7 +305,7 @@ public class DatabaseUtils {
                 }
             }
             LoudlyPost resulting = post.setSingleNetworkInstance(LOUDLY, new SinglePost(post.getText(), post.getDate(),
-                    attachments, post.getLocation(), LOUDLY, new Link(id)));
+                    attachments, post.getLocation(), LOUDLY, Long.toString(id)));
             database.lowLevel().setTransactionSuccessful();
             return resulting;
         } finally {
@@ -328,7 +325,7 @@ public class DatabaseUtils {
 
     @CheckResult
     @NonNull
-    private static LoudlyPost fillPostFromLinks(@NonNull LoudlyPost post, @NonNull Link[] links) {
+    private static LoudlyPost fillPostFromLinks(@NonNull LoudlyPost post, @NonNull String[] links) {
         for (int i = 0; i < links.length; i++) {
             if (links[i] != null) {
                 ArrayList<SingleAttachment> attachments = new ArrayList<>();
@@ -358,8 +355,8 @@ public class DatabaseUtils {
 
         LoudlyPost post = new LoudlyPost(stored.getText(), stored.getDate(), attachments, location);
 
-        Link[] links = loadLinks(stored.getLinksId());
-        links[LOUDLY] = new Link(stored.getId());
+        String[] links = loadLinks(stored.getLinksId());
+        links[LOUDLY] = Long.toString(stored.getId());
 
         return fillPostFromLinks(post, links);
     }
@@ -420,8 +417,8 @@ public class DatabaseUtils {
             // Nothing to delete
             return;
         }
-        String loudlyLink = Link.getLink(loudlyInstance.getLink());
-        if (loudlyLink == null || loudlyLink.isEmpty()) {
+        String loudlyLink = loudlyInstance.getLink();
+        if (loudlyLink.isEmpty()) {
             throw new DatabaseException("Can't delete post with null or empty id");
         }
         long postId = Long.parseLong(loudlyLink);

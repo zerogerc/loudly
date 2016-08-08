@@ -1,4 +1,4 @@
-package ly.loud.loudly.base.entities;
+package ly.loud.loudly.legacy_base;
 
 import android.os.Parcel;
 import android.os.Parcelable;

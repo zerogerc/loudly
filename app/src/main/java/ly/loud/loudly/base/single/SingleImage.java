@@ -7,10 +7,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
-import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainImage;
+import ly.loud.loudly.networks.Networks.Network;
 
 /**
  * Image from some network
@@ -35,12 +34,15 @@ public class SingleImage extends PlainImage implements SingleAttachment {
     private final int network;
 
     @NonNull
-    private final Link link;
+    private final String link;
 
     @NonNull
     private Info info;
 
-    public SingleImage(@Nullable String url, @Nullable Point size, int network, @NonNull Link link) {
+    public SingleImage(@Nullable String url,
+                       @Nullable Point size,
+                       @Network int network,
+                       @NonNull String link) {
         super(url, size);
         this.network = network;
         this.link = link;
@@ -49,8 +51,8 @@ public class SingleImage extends PlainImage implements SingleAttachment {
 
     public SingleImage(@Nullable String url,
                        @Nullable Point size,
-                       int network,
-                       @NonNull Link link,
+                       @Network int network,
+                       @NonNull String link,
                        @NonNull Info info) {
         this(url, size, network, link);
         this.info = info;
@@ -59,7 +61,7 @@ public class SingleImage extends PlainImage implements SingleAttachment {
     private SingleImage(@NonNull Parcel parcel) {
         super(parcel);
         network = parcel.readInt();
-        link = parcel.readParcelable(Link.class.getClassLoader());
+        link = parcel.readString();
         info = parcel.readParcelable(Info.class.getClassLoader());
     }
 
@@ -70,7 +72,7 @@ public class SingleImage extends PlainImage implements SingleAttachment {
 
     @NonNull
     @Override
-    public Link getLink() {
+    public String getLink() {
         return link;
     }
 
@@ -96,7 +98,7 @@ public class SingleImage extends PlainImage implements SingleAttachment {
     public void writeToParcel(@NonNull Parcel parcel, int i) {
         super.writeToParcel(parcel, i);
         parcel.writeInt(network);
-        parcel.writeParcelable(link, i);
+        parcel.writeString(link);
         parcel.writeParcelable(info, i);
     }
 }

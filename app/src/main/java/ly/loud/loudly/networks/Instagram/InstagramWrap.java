@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.legacy_base.Link;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.exceptions.TokenExpiredException;
 import ly.loud.loudly.legacy_base.*;

@@ -17,7 +17,6 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.KeysModel;
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
@@ -218,7 +217,7 @@ public class VKModel implements NetworkContract {
             if (body.response != null) {
                 Photo photo = body.response.get(0);
                 return new SingleImage(photo.photo604, new Point(photo.widthPx, photo.heightPx),
-                        getId(), new Link(photo.id));
+                        getId(), photo.id);
             }
             // ToDo: Null? really?
             return null;
@@ -262,7 +261,7 @@ public class VKModel implements NetworkContract {
                 return null;
             }
             if (body.response != null) {
-                return new SinglePost(post, getId(), new Link(body.response.postId));
+                return new SinglePost(post, getId(), body.response.postId);
             }
             return null;
         });
@@ -307,7 +306,7 @@ public class VKModel implements NetworkContract {
                         }
                         offset++;
                         SinglePost post = new SinglePost(say.text, say.date, toAttachments(say),
-                                null, getId(), new Link(say.id), getInfo(say));
+                                null, getId(), say.id, getInfo(say));
                         posts.add(post);
                     }
                 }
@@ -360,11 +359,7 @@ public class VKModel implements NetworkContract {
                 default:
                     return SolidList.empty();
             }
-            Link elementLink = element.getLink();
-            String elementId = elementLink.get();
-            if (elementId == null) {
-                return SolidList.empty();
-            }
+            String elementId = element.getLink();
 
             Call<VKResponse<VKItems<Profile>>> likersIds = client.getLikersIds(keyKeeper.getUserId(),
                     elementId, type, filter, keyKeeper.getAccessToken());
@@ -411,6 +406,7 @@ public class VKModel implements NetworkContract {
         return counter == null ? 0 : counter.count;
     }
 
+    @NonNull
     private Info getInfo(@NonNull Say say) {
         return new Info(get(say.likes), get(say.reposts), get(say.comments));
     }
@@ -420,7 +416,7 @@ public class VKModel implements NetworkContract {
         Photo photo = attachment.photo;
         if (photo != null) {
             return new SingleImage(attachment.photo.photo604, new Point(photo.widthPx, photo.heightPx),
-                    getId(), new Link(photo.id));
+                    getId(), photo.id);
         }
         return null;
     }
@@ -442,7 +438,7 @@ public class VKModel implements NetworkContract {
     }
 
     @Nullable
-    private Profile getProfileById(@NonNull List<Profile> profiles, String id) {
+    private Profile getProfileById(@NonNull List<Profile> profiles, @NonNull String id) {
         for (Profile profile : profiles) {
             if (profile.id.equals(id)) {
                 return profile;
@@ -461,10 +457,8 @@ public class VKModel implements NetworkContract {
                 return SolidList.empty();
             }
 
-            String id = Link.getLink(element.getLink());
-            if (id == null) {
-                return SolidList.empty();
-            }
+            String id = element.getLink();
+
             Call<VKResponse<VKItems<Say>>> call = client.getComments(
                     keyKeeper.getUserId(), id,
                     keyKeeper.getAccessToken());
@@ -483,7 +477,7 @@ public class VKModel implements NetworkContract {
                         Profile profile = getProfileById(profiles, say.fromId);
 
                         Comment comment = new Comment(say.text, say.date, toAttachments(say),
-                                toPerson(profile), getId(), new Link(say.id), getInfo(say));
+                                toPerson(profile), getId(), say.id, getInfo(say));
                         comments.add(comment);
                     }
                     return ListUtils.asSolidList(comments);

@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 
 import ly.loud.loudly.legacy_base.attachments.Attachment;
-import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.legacy_base.Link;
 import ly.loud.loudly.base.entities.Location;
 
 public class Post extends Say {

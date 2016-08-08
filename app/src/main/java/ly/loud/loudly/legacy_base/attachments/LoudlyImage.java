@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
 
-import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.legacy_base.Link;
 import ly.loud.loudly.legacy_base.MultipleNetwork;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.legacy_base.SingleNetwork;
