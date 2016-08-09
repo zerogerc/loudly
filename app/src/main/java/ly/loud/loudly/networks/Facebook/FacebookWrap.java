@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import ly.loud.loudly.networks.KeyKeeper;
-import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.legacy_base.Link;
 import ly.loud.loudly.legacy_base.NetworkDescription;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.base.entities.Person;

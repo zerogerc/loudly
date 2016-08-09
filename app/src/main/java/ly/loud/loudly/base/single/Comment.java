@@ -8,11 +8,11 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainSay;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.ui.adapters.holders.ItemTypes;
 import ly.loud.loudly.ui.adapters.holders.ItemTypes.ItemType;
 import ly.loud.loudly.ui.adapters.holders.ListItem;
@@ -39,10 +39,11 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
     @NonNull
     private final Person person;
 
+    @Network
     private final int network;
 
     @NonNull
-    private final Link link;
+    private final String link;
 
     @NonNull
     private Info info;
@@ -51,8 +52,8 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
                    long date,
                    @NonNull ArrayList<SingleAttachment> attachments,
                    @NonNull Person person,
-                   int network,
-                   @NonNull Link link) {
+                   @Network int network,
+                   @NonNull String link) {
         super(text, date, attachments);
         this.person = person;
         this.network = network;
@@ -64,8 +65,8 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
                    long date,
                    @NonNull ArrayList<SingleAttachment> attachments,
                    @NonNull Person person,
-                   int network,
-                   @NonNull Link link,
+                   @Network int network,
+                   @NonNull String link,
                    @NonNull Info info) {
         this(text, date, attachments, person, network, link);
         this.info = info;
@@ -74,8 +75,8 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
     protected Comment(@NonNull Parcel parcel) {
         super(parcel);
         network = parcel.readInt();
-        link = Link.CREATOR.createFromParcel(parcel);
-        info = Info.CREATOR.createFromParcel(parcel);
+        link = parcel.readString();
+        info = parcel.readParcelable(Info.class.getClassLoader());
         person = parcel.readParcelable(Person.class.getClassLoader());
     }
 
@@ -91,7 +92,7 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
 
     @Override
     @NonNull
-    public Link getLink() {
+    public String getLink() {
         return link;
     }
 
@@ -118,7 +119,7 @@ public class Comment extends PlainSay<SingleAttachment> implements SingleNetwork
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         dest.writeInt(network);
-        dest.writeParcelable(link, flags);
+        dest.writeString(link);
         dest.writeParcelable(info, flags);
         dest.writeParcelable(person, flags);
     }

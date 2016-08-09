@@ -2,7 +2,7 @@ package ly.loud.loudly.legacy_base.says;
 
 import android.os.Parcel;
 
-import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.legacy_base.Link;
 import ly.loud.loudly.base.entities.Person;
 
 public class Comment extends Say{

@@ -4,19 +4,19 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import ly.loud.loudly.base.entities.Link;
-import ly.loud.loudly.base.multiple.LoudlyPost;
-import ly.loud.loudly.networks.Networks;
-import ly.loud.loudly.base.single.SinglePost;
-import ly.loud.loudly.base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.util.Equality;
-import ly.loud.loudly.test.Generators;
-import ly.loud.loudly.util.TimeInterval;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import ly.loud.loudly.base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.test.Generators;
+import ly.loud.loudly.util.Equality;
+import ly.loud.loudly.util.TimeInterval;
 
 /**
  * @author Danil Kolikov
@@ -35,8 +35,7 @@ public class StoredPostTest extends DatabaseTest<LoudlyPost> {
     protected LoudlyPost get(@NonNull LoudlyPost object) throws DatabaseException {
         SingleNetworkElement element = object.getSingleNetworkInstance(Networks.LOUDLY);
         Assert.assertNotNull(element);
-        String id = Link.getLink(element.getLink());
-        Assert.assertNotNull(id);
+        String id = element.getLink();
 
         return DatabaseUtils.loadPost(Long.parseLong(id));
     }
@@ -66,7 +65,7 @@ public class StoredPostTest extends DatabaseTest<LoudlyPost> {
             LoudlyPost post = new LoudlyPost(random.getText(), i, random.getAttachments(), random.getLocation());
             for (int j = 0; j < Networks.NETWORK_COUNT; j++) {
                 SinglePost instance = random.getSingleNetworkInstance(j);
-                if (instance!= null) {
+                if (instance != null) {
                     post = post.setSingleNetworkInstance(j, new SinglePost(post.getText(), post.getDate(),
                             instance.getAttachments(), post.getLocation(),
                             j, instance.getLink()));

@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 import java.util.Iterator;
 import java.util.List;
 
-import ly.loud.loudly.base.entities.Link;
 import ly.loud.loudly.base.entities.Location;
 import ly.loud.loudly.base.multiple.LoudlyImage;
 import ly.loud.loudly.base.multiple.LoudlyPost;
@@ -59,29 +58,6 @@ public class Equality {
         return equalBuilder(a, b, () -> {
             //noinspection ConstantConditions checked in EqualBuilder
             return a.equals(b);
-        });
-    }
-
-    public static boolean equal(@Nullable Link a, @Nullable Link b) {
-        return equalBuilder(a, b, () -> {
-            //noinspection ConstantConditions checked in EqualBuilder
-            return equal(a.get(), b.get());
-        });
-    }
-
-    public static boolean equal(@Nullable Link[] a, @Nullable Link[] b) {
-        return equalBuilder(a, b, () -> {
-            //noinspection ConstantConditions checked in EqualBuilder
-            if (a.length != b.length) {
-                return false;
-            }
-            // 0 - link for Loudly - not checked now, because it's always null
-            for (int i = 1; i < a.length; i++) {
-                if (!equal(a[i], b[i])) {
-                    return false;
-                }
-            }
-            return true;
         });
     }
 

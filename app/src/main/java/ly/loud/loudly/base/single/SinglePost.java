@@ -8,12 +8,11 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
 import ly.loud.loudly.base.entities.Location;
-import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.networks.Networks.Network;
 
 /**
  * Post that exists in one network
@@ -38,7 +37,7 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     private final int network;
 
     @NonNull
-    private final Link link;
+    private final String link;
 
     @NonNull
     private Info info;
@@ -47,8 +46,8 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
                       long date,
                       @NonNull ArrayList<SingleAttachment> attachments,
                       @Nullable Location location,
-                      int network,
-                      @NonNull Link link,
+                      @Network int network,
+                      @NonNull String link,
                       @NonNull Info info) {
         super(text, date, attachments, location);
         this.network = network;
@@ -57,11 +56,11 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     }
 
     public SinglePost(@Nullable String text,
-                       long date,
-                       @NonNull ArrayList<SingleAttachment> attachments,
-                       @Nullable Location location,
-                       int network,
-                       @NonNull Link link) {
+                      long date,
+                      @NonNull ArrayList<SingleAttachment> attachments,
+                      @Nullable Location location,
+                      @Network int network,
+                      @NonNull String link) {
         super(text, date, attachments, location);
         this.network = network;
         this.link = link;
@@ -70,7 +69,7 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
 
     public SinglePost(@NonNull PlainPost<SingleAttachment> plainPost,
                       @Network int network,
-                      @NonNull Link link) {
+                      @NonNull String link) {
         this(plainPost.getText(), plainPost.getDate(), plainPost.getAttachments(), plainPost.getLocation(),
                 network, link);
     }
@@ -78,7 +77,7 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     private SinglePost(@NonNull Parcel parcel) {
         super(parcel);
         network = parcel.readInt();
-        link = parcel.readParcelable(Link.class.getClassLoader());
+        link = parcel.readString();
         info = parcel.readParcelable(Info.class.getClassLoader());
     }
 
@@ -89,7 +88,7 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
 
     @NonNull
     @Override
-    public Link getLink() {
+    public String getLink() {
         return link;
     }
 
@@ -111,7 +110,7 @@ public class SinglePost extends PlainPost<SingleAttachment> implements SingleNet
     public void writeToParcel(@NonNull Parcel parcel, int i) {
         super.writeToParcel(parcel, i);
         parcel.writeInt(network);
-        parcel.writeParcelable(link, i);
+        parcel.writeString(link);
         parcel.writeParcelable(info, i);
     }
 }
