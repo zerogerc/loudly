@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -325,14 +324,15 @@ public class VKModel implements NetworkContract {
                     if (currentTime > timeInterval.to) {
                         break;
                     }
-                        SinglePost post = new SinglePost(say.text, say.date, toAttachments(say),
-                                null, getId(), say.id, getInfo(say));
-                        posts.add(post);
-                    }
+                    offset++;
+                    SinglePost post = new SinglePost(say.text, say.date, toAttachments(say),
+                            null, getId(), say.id, getInfo(say));
+                    posts.add(post);
                 }
+            }
 
         } while (timeInterval.contains(currentTime));
-        return cached;
+        return posts;
     }
 
     @NonNull

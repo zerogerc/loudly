@@ -4,6 +4,7 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -18,6 +19,7 @@ import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
 import solid.collections.SolidList;
 import solid.collectors.ToList;
+import solid.collectors.ToSolidList;
 
 /**
  * Model for post loading
@@ -37,27 +39,49 @@ public class PostLoadModel {
     }
 
     @NonNull
-    private static SolidList<? extends PlainPost> merge(
-            @NonNull SolidList<? extends PlainPost> oldList,
+    private static SolidList<PlainPost> merge(
+            @NonNull SolidList<PlainPost> oldList,
             @NonNull SolidList<SinglePost> newList) {
-        List<PlainPost> withInstances = oldList.map(post -> {
+        // Set new instances to LoudlyPosts
+        SolidList<PlainPost> withInstances = oldList.map(post -> {
             if (post instanceof LoudlyPost) {
                 LoudlyPost loudlyPost = ((LoudlyPost) post);
-                return newList.filter(single -> {
-                    SinglePost instance = loudlyPost.getSingleNetworkInstance(single.getNetwork());
-                    if (instance == null) {
-                        return false;
-                    }
-                    return
-                })
+                return newList
+                        // Filter posts, which has same IDs as loudlyPost
+                        .filter(single -> {
+                            SinglePost instance = loudlyPost
+                                    .getSingleNetworkInstance(single.getNetwork());
+                            return instance != null && instance.getLink().equals(single.getLink());
+                        }) // And set this posts as instances
+                        .reduce(loudlyPost, (lPost, sPost) -> lPost
+                                .setSingleNetworkInstance(sPost.getNetwork(), sPost));
             }
             return post;
-        }).collect(ToList.toList());
+        }).collect(ToSolidList.toSolidList());
+        // Drop post which instances were set
+        List<SinglePost> notSet = newList.filter(post ->
+                        !withInstances.any(otherPost -> (otherPost instanceof LoudlyPost) &&
+                                ((LoudlyPost) otherPost)
+                                        .getSingleNetworkInstance(post.getNetwork()) == post)
+        ).collect(ToList.toList());
+        // Merge this two lists
+        List<PlainPost> result = new ArrayList<>();
+        result.addAll(withInstances);
+        result.addAll(notSet);
+        Collections.sort(result);
+        return ListUtils.asSolidList(result);
     }
 
+    /**
+     * Get list posts to show
+     *
+     * @param interval Interval to show posts
+     * @return Observable, containing lists of post to show. First list in stream contains
+     * posts from DB, next contains previous list merged with posts from some new network
+     */
     @CheckResult
     @NonNull
-    public Observable<SolidList<? extends PlainPost>> loadPosts(@NonNull TimeInterval interval) {
+    public Observable<SolidList<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
         return Observable
                 .fromCallable(() -> ListUtils.asSolidList(DatabaseUtils.loadPosts(interval)))
                 .flatMap(list -> coreModel.getConnectedNetworksModels()

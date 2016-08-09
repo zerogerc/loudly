@@ -192,7 +192,8 @@ public class FacebookModel implements NetworkContract {
 
                 return null;
             }
-            String attachmentId = post.getAttachments().get(0).getLink();
+            String attachmentId = post.getAttachments().isEmpty() ? null :
+                    post.getAttachments().get(0).getLink();
 
             Call<ElementId> elementIdCall =
                     client.uploadPost(post.getText(), attachmentId, keyKeeper.getAccessToken());
