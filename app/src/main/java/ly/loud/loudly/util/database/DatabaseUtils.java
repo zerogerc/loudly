@@ -19,6 +19,7 @@ import ly.loud.loudly.base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.multiple.LoudlyImage;
 import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.KeyKeeper;
@@ -369,11 +370,11 @@ public class DatabaseUtils {
      * @throws DatabaseException If some error occurs
      */
     @NonNull
-    public static List<LoudlyPost> loadPosts(@NonNull TimeInterval time) throws DatabaseException {
+    public static List<PlainPost> loadPosts(@NonNull TimeInterval time) throws DatabaseException {
         List<StoredPost> stored =
                 StoredPost.selectByTimeInterval(
                         time, getPostsDatabase());
-        List<LoudlyPost> result = new ArrayList<>();
+        List<PlainPost> result = new ArrayList<>();
         for (StoredPost storedPost : stored) {
             result.add(finishPostLoading(storedPost));
         }

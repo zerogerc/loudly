@@ -9,6 +9,7 @@ import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -39,6 +40,7 @@ import ly.loud.loudly.networks.vk.entities.Say;
 import ly.loud.loudly.networks.vk.entities.VKItems;
 import ly.loud.loudly.networks.vk.entities.VKResponse;
 import ly.loud.loudly.util.ListUtils;
+import ly.loud.loudly.util.NetworkUtils;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import okhttp3.MediaType;
@@ -60,9 +62,6 @@ public class VKModel implements NetworkContract {
     static final String AUTHORIZE_URL = "https://oauth.vk.com/authorize";
 
     @NonNull
-    private final List<SinglePost> posts = new ArrayList<>();
-
-    @NonNull
     private Loudly loudlyApplication;
 
     @NonNull
@@ -71,7 +70,8 @@ public class VKModel implements NetworkContract {
     @NonNull
     private VKClient client;
 
-    private int offset;
+    @NonNull
+    private final List<SinglePost> cached;
 
     @Inject
     public VKModel(
@@ -82,8 +82,7 @@ public class VKModel implements NetworkContract {
         this.loudlyApplication = loudlyApplication;
         this.keysModel = keysModel;
         this.client = client;
-        loadFromDB();
-        offset = 0;
+        cached = new ArrayList<>();
     }
 
     @Network
@@ -154,15 +153,7 @@ public class VKModel implements NetworkContract {
     @CheckResult
     @NonNull
     public Single<Boolean> disconnect() {
-        offset = 0;
         return Single.just(true);
-    }
-
-    /**
-     * Load wrap from DataBase
-     */
-    private void loadFromDB() {
-        // TODO: implement
     }
 
     @Override
@@ -279,40 +270,69 @@ public class VKModel implements NetworkContract {
     @NonNull
     public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
         return Observable.fromCallable(() -> {
-            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
-            if (keyKeeper == null) {
-                // ToDo: handle
-                return SolidList.empty();
+            if (cached.isEmpty()) {
+                List<SinglePost> downloaded = downloadPosts(0, timeInterval);
+                cached.addAll(downloaded);
+                return ListUtils.asSolidList(downloaded);
             }
-            Call<VKResponse<VKItems<Say>>> call;
-            long currentTime = 0;
-            do {
-                call = client.getPosts(keyKeeper.getUserId(), offset, keyKeeper.getAccessToken());
-                Response<VKResponse<VKItems<Say>>> execute = call.execute();
-                VKResponse<VKItems<Say>> body = execute.body();
-                if (body.error != null) {
-                    // ToDo: Handle
-                    Log.e(TAG, body.error.errorMessage);
-                    return SolidList.empty();
+            NetworkUtils.DividedList dividedList = NetworkUtils.divideListOfCachedPosts(cached, timeInterval);
+
+            List<SinglePost> before = downloadPosts(0, dividedList.before);
+            List<SinglePost> after = downloadPosts(cached.size() + before.size(),
+                    dividedList.after);
+            cached.addAll(before);
+            cached.addAll(after);
+            Collections.sort(cached);
+
+            List<SinglePost> result = new ArrayList<>();
+            result.addAll(before);
+            result.addAll(dividedList.cached);
+            result.addAll(after);
+            return ListUtils.asSolidList(result);
+        });
+    }
+
+    @NonNull
+    private List<SinglePost> downloadPosts(int offset, @NonNull TimeInterval timeInterval) throws IOException {
+        if (timeInterval.from >= timeInterval.to) {
+            return SolidList.empty();
+        }
+        VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+        if (keyKeeper == null) {
+            // ToDo: handle
+            return SolidList.empty();
+        }
+        Call<VKResponse<VKItems<Say>>> call;
+        long currentTime = 0;
+        List<SinglePost> posts = new ArrayList<>();
+        do {
+            Log.i(TAG, "DOWNLOADING");
+            call = client.getPosts(keyKeeper.getUserId(), offset, keyKeeper.getAccessToken());
+            Response<VKResponse<VKItems<Say>>> execute = call.execute();
+            VKResponse<VKItems<Say>> body = execute.body();
+            if (body.error != null) {
+                // ToDo: Handle
+                Log.e(TAG, body.error.errorMessage);
+                return posts;
+            }
+            if (body.response != null) {
+                if (body.response.items.isEmpty()) {
+                    break;
                 }
-                if (body.response != null) {
-                    if (body.response.items.isEmpty()) {
+                for (Say say : body.response.items) {
+                    currentTime = say.date;
+                    if (currentTime > timeInterval.to) {
                         break;
                     }
-                    for (Say say : body.response.items) {
-                        currentTime = say.date;
-                        if (!timeInterval.contains(currentTime)) {
-                            break;
-                        }
-                        offset++;
-                        SinglePost post = new SinglePost(say.text, say.date, toAttachments(say),
-                                null, getId(), say.id, getInfo(say));
-                        posts.add(post);
-                    }
+                    offset++;
+                    SinglePost post = new SinglePost(say.text, say.date, toAttachments(say),
+                            null, getId(), say.id, getInfo(say));
+                    posts.add(post);
                 }
-            } while (timeInterval.contains(currentTime));
-            return ListUtils.asSolidList(posts);
-        });
+            }
+
+        } while (timeInterval.contains(currentTime));
+        return posts;
     }
 
     @NonNull

@@ -13,7 +13,7 @@ import java.util.ArrayList;
  *
  * @author Danil Kolikov
  */
-public class PlainSay<T extends Attachment> implements Parcelable {
+public class PlainSay<T extends Attachment> implements Parcelable, Comparable<PlainSay> {
     @NonNull
     public static final Creator<PlainSay> CREATOR = new Creator<PlainSay>() {
         @Override
@@ -72,5 +72,16 @@ public class PlainSay<T extends Attachment> implements Parcelable {
         parcel.writeString(text);
         parcel.writeList(attachments);
         parcel.writeLong(date);
+    }
+
+    @Override
+    public int compareTo(@NonNull PlainSay plainSay) {
+        if (plainSay.getDate() < getDate()) {
+            return -1;
+        }
+        if (plainSay.getDate() > getDate()) {
+            return 1;
+        }
+        return 0;
     }
 }
