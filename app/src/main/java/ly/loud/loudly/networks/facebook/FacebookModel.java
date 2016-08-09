@@ -17,11 +17,9 @@ import javax.inject.Inject;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
@@ -57,7 +55,8 @@ import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
 
-import static ly.loud.loudly.application.models.GetterModel.*;
+import static ly.loud.loudly.application.models.GetterModel.LIKES;
+import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 public class FacebookModel implements NetworkContract {
     public static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
@@ -193,8 +192,7 @@ public class FacebookModel implements NetworkContract {
 
                 return null;
             }
-            String attachmentId = post.getAttachments().isEmpty() ? null :
-                    Link.getLink(post.getAttachments().get(0).getLink());
+            String attachmentId = post.getAttachments().get(0).getLink();
 
             Call<ElementId> elementIdCall =
                     client.uploadPost(post.getText(), attachmentId, keyKeeper.getAccessToken());
@@ -207,7 +205,7 @@ public class FacebookModel implements NetworkContract {
                 return null;
             }
             return new SinglePost(post.getText(), post.getDate(), post.getAttachments(), post.getLocation(),
-                    getId(), new Link(id));
+                    getId(), id.id);
         });
     }
 
@@ -220,11 +218,7 @@ public class FacebookModel implements NetworkContract {
                 // ToDo: Handle
                 return false;
             }
-            String id = Link.getLink(post.getLink());
-            if (id == null) {
-                // Nothing to delete
-                return true;
-            }
+            String id = post.getLink();
 
             Call<Result> resultCall = client.deleteElement(id, keyKeeper.getAccessToken());
             Response<Result> execute = resultCall.execute();
@@ -245,10 +239,7 @@ public class FacebookModel implements NetworkContract {
                 //ToDo: handle
                 return SolidList.empty();
             }
-            String id = Link.getLink(element.getLink());
-            if (id == null) {
-                return SolidList.empty();
-            }
+            String id = element.getLink();
             String endpoint;
             switch (requestType) {
                 case LIKES:
@@ -314,12 +305,12 @@ public class FacebookModel implements NetworkContract {
     @NonNull
     private SingleImage toImage(@NonNull Photo photo) {
         // ToDo: Strange ID
-        return new SingleImage(photo.src, new Point(photo.width, photo.height), getId(), new Link(photo.src));
+        return new SingleImage(photo.src, new Point(photo.width, photo.height), getId(), photo.src);
     }
 
     @NonNull
     private SingleImage toImage(@NonNull Picture photo, @NonNull String id) {
-        return new SingleImage(id, new Point(photo.width, photo.height), getId(), new Link(id));
+        return new SingleImage(id, new Point(photo.width, photo.height), getId(), id);
     }
 
     @Nullable
@@ -386,12 +377,12 @@ public class FacebookModel implements NetworkContract {
                         attachments.add(parsed);
                     }
                 }
+                int likes = post.likes != null ? post.likes.summary.totalCount : 0;
+                int shares = post.shares != null ? post.shares.count : 0;
+                int comments = post.comments != null ? post.comments.summary.totalCount : 0;
+                posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
+                        getId(), post.id, new Info(likes, shares, comments)));
             }
-            int likes = post.likes != null ? post.likes.summary.totalCount : 0;
-            int shares = post.shares != null ? post.shares.count : 0;
-            int comments = post.comments != null ? post.comments.summary.totalCount : 0;
-            posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
-                    getId(), new Link(post.id), new Info(likes, shares, comments)));
         }
         return posts;
     }
@@ -431,12 +422,8 @@ public class FacebookModel implements NetworkContract {
                 // ToDo handle
                 return SolidList.empty();
             }
-            String link = Link.getLink(element.getLink());
-            if (link == null) {
-                // Here can't be comments
+            String link = element.getLink();
 
-                return SolidList.empty();
-            }
             Call<Data<List<FbComment>>> dataCall =
                     client.loadComments(link, keyKeeper.getAccessToken());
             Response<Data<List<FbComment>>> executed = dataCall.execute();
@@ -457,7 +444,7 @@ public class FacebookModel implements NetworkContract {
                         ListUtils.asArrayList(toAttachment(comment.attachment));
 
                 comments.add(new Comment(comment.message, comment.createdTime, attachment, toPerson(persons.get(comment.from.id)),
-                        getId(), new Link(comment.id)));
+                        getId(), comment.id));
             }
             return ListUtils.asSolidList(comments);
         });

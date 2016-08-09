@@ -15,6 +15,8 @@
         <item name="android:textColorSecondary">@color/secondary_text</item>
 
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+
+        <item name="android:dialogTheme">@style/AppDialogTheme</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -58,5 +60,10 @@
         <item name="android:textSize">13sp</item>
         <item name="android:drawablePadding">@dimen/list_item_post_buttons_drawable_padding</item>
         <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="AppDialogTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 </resources>

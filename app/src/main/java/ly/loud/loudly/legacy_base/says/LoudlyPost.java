@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
+import ly.loud.loudly.legacy_base.Link;
 import ly.loud.loudly.base.entities.Location;
 import ly.loud.loudly.legacy_base.*;
 import ly.loud.loudly.legacy_base.attachments.Attachment;

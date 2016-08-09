@@ -2,7 +2,6 @@ package ly.loud.loudly.legacy_base;
 
 import android.os.Parcelable;
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.base.entities.Link;
 
 /**
  * Interface for objects which are in some network
