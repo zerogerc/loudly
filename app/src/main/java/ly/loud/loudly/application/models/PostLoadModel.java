@@ -18,8 +18,10 @@ import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
 import solid.collections.SolidList;
-import solid.collectors.ToList;
 import solid.collectors.ToSolidList;
+
+import static solid.collectors.ToList.toList;
+import static solid.collectors.ToSolidList.toSolidList;
 
 /**
  * Model for post loading
@@ -57,13 +59,13 @@ public class PostLoadModel {
                                 .setSingleNetworkInstance(sPost.getNetwork(), sPost));
             }
             return post;
-        }).collect(ToSolidList.toSolidList());
+        }).collect(toSolidList());
         // Drop post which instances were set
         List<SinglePost> notSet = newList.filter(post ->
                         !withInstances.any(otherPost -> (otherPost instanceof LoudlyPost) &&
                                 ((LoudlyPost) otherPost)
                                         .getSingleNetworkInstance(post.getNetwork()) == post)
-        ).collect(ToList.toList());
+        ).collect(toList());
         // Merge this two lists
         List<PlainPost> result = new ArrayList<>();
         result.addAll(withInstances);

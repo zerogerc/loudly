@@ -9,10 +9,14 @@ import ly.loud.loudly.base.single.SinglePost;
 
 public class NetworkUtils {
     public static class DividedList {
+        @NonNull
         public final List<SinglePost> cached;
+        @NonNull
         public final TimeInterval before, after;
 
-        public DividedList(List<SinglePost> cached, TimeInterval before, TimeInterval after) {
+        public DividedList(@NonNull List<SinglePost> cached,
+                           @NonNull TimeInterval before,
+                           @NonNull TimeInterval after) {
             this.cached = cached;
             this.before = before;
             this.after = after;
