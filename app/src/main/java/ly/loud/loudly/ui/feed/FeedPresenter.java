@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
+import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.BasePresenter;
 import rx.Subscription;
 import rx.schedulers.Schedulers;
@@ -48,6 +49,10 @@ public class FeedPresenter extends BasePresenter<FeedView> {
         if (!postLoadSubscription.isUnsubscribed()) {
             postLoadSubscription.unsubscribe();
         }
+    }
+
+    public void deletePost(@NonNull PlainPost post) {
+        //TODO: delete post here
     }
 
 }

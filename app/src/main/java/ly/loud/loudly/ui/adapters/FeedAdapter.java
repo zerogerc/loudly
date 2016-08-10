@@ -72,11 +72,18 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
         listener.onLikesClick(posts.get(position));
     }
 
+    @Override
+    public void onDeleteClick(int position) {
+        listener.onDeleteClick(posts.get(position));
+    }
+
     public interface PostClickListener {
         void onFullPostClick(@NonNull PlainPost post);
 
         void onSharesClick(@NonNull PlainPost post);
 
         void onLikesClick(@NonNull PlainPost post);
+
+        void onDeleteClick(@NonNull PlainPost post);
     }
 }

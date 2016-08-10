@@ -128,4 +128,9 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
         );
         fragment.show(getFragmentManager(), fragment.getTag());
     }
+
+    @Override
+    public void onDeleteClick(@NonNull PlainPost post) {
+        presenter.deletePost(post);
+    }
 }
