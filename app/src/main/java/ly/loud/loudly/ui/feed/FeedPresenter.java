@@ -4,13 +4,16 @@ import android.support.annotation.NonNull;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
+import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
+import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.BasePresenter;
 import rx.Subscription;
 import rx.schedulers.Schedulers;
 
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
+import static rx.schedulers.Schedulers.io;
 
 // TODO: config
 public class FeedPresenter extends BasePresenter<FeedView> {
@@ -22,6 +25,9 @@ public class FeedPresenter extends BasePresenter<FeedView> {
     private GetterModel getterModel;
 
     @NonNull
+    private PostDeleterModel deleterModel;
+
+    @NonNull
     private PostLoadModel postLoadModel;
 
     private Subscription postLoadSubscription;
@@ -29,17 +35,19 @@ public class FeedPresenter extends BasePresenter<FeedView> {
     public FeedPresenter(
             @NonNull Loudly loudlyApp,
             @NonNull PostLoadModel postLoadModel,
-            @NonNull GetterModel getterModel
+            @NonNull GetterModel getterModel,
+            @NonNull PostDeleterModel deleterModel
     ) {
         this.loudlyApp = loudlyApp;
         this.postLoadModel = postLoadModel;
         this.getterModel = getterModel;
+        this.deleterModel = deleterModel;
     }
 
     public void loadPosts() {
         postLoadSubscription = postLoadModel
                 .loadPosts(Loudly.getContext().getTimeInterval())
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(io())
                 .observeOn(mainThread())
                 .doOnNext(list -> executeIfViewBound(view -> view.onNewLoadedPosts(list)))
                 .subscribe();
@@ -52,7 +60,13 @@ public class FeedPresenter extends BasePresenter<FeedView> {
     }
 
     public void deletePost(@NonNull PlainPost post) {
-        //TODO: delete post here
+        if (post instanceof LoudlyPost) {
+            deleterModel
+                    .deletePostFromAllNetworks(((LoudlyPost) post))
+                    .subscribeOn(io())
+                    .observeOn(mainThread())
+                    .subscribe();
+        }
     }
 
 }

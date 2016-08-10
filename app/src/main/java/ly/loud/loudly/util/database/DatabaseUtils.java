@@ -2,7 +2,6 @@ package ly.loud.loudly.util.database;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
@@ -11,7 +10,6 @@ import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
 import java.util.ArrayList;
 import java.util.List;
 
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.entities.Location;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
@@ -22,10 +20,8 @@ import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
-import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.entities.Key;
 import ly.loud.loudly.util.database.entities.StoredAttachment;
 import ly.loud.loudly.util.database.entities.StoredLocation;
 import ly.loud.loudly.util.database.entities.StoredPost;
@@ -39,12 +35,12 @@ import static ly.loud.loudly.networks.Networks.LOUDLY;
 public class DatabaseUtils {
     @NonNull
     static StorIOSQLite getPostsDatabase() {
-        return Loudly.getContext().getDatabaseComponent().getPostsDatabase();
+        return null;
     }
 
     @NonNull
     static StorIOSQLite getKeysDatabase() {
-        return Loudly.getContext().getDatabaseComponent().getKeysDatabase();
+        return null;
     }
 
     @CheckResult
@@ -424,77 +420,5 @@ public class DatabaseUtils {
         }
         long postId = Long.parseLong(loudlyLink);
         deletePost(postId);
-    }
-
-    /**
-     * Function that saves KeyKeepers to database
-     *
-     * @throws DatabaseException if anything went wrong with DB
-     */
-    public static void saveKeys() throws DatabaseException {
-        List<Key> keys = new ArrayList<>();
-        for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
-            KeyKeeper keyKeeper = Loudly.getContext().getKeyKeeper(i);
-            if (keyKeeper != null) {
-                keys.add(new Key(i, keyKeeper.toStringBundle()));
-            }
-        }
-        getKeysDatabase()
-                .put()
-                .objects(keys)
-                .prepare()
-                .executeAsBlocking();
-    }
-
-    /**
-     * Function that loads KeyKeepers from DB
-     *
-     * @throws DatabaseException if anything went wrong with DB
-     */
-    public static void loadKeys() throws DatabaseException {
-        List<Key> keys = Key.selectKeys(getKeysDatabase());
-        for (Key key : keys) {
-            if (key == null) {
-                continue;
-            }
-            String value = key.getValue();
-            if (value == null) {
-                continue;
-            }
-            Loudly.getContext().setKeyKeeper(key.getNetwork(),
-                    KeyKeeper.fromStringBundle(key.getNetwork(), value));
-        }
-    }
-
-    /**
-     * Delete KeyKeeper from DB
-     *
-     * @param network ID of network, whose key should be deleted
-     * @throws DatabaseException if anything went wrong with DB
-     */
-    public static void deleteKey(int network) throws DatabaseException {
-        DeleteResult result = Key.deleteKey(network, getKeysDatabase());
-        if (result.numberOfRowsDeleted() == 0) {
-            throw new DatabaseException("Can't delete key");
-        }
-    }
-
-    /**
-     * Update key in database
-     *
-     * @param network   ID of network
-     * @param keyKeeper New keykeeper
-     * @throws DatabaseException If some error with DB occurs
-     */
-    public static void updateKey(int network, @Nullable KeyKeeper keyKeeper) throws DatabaseException {
-        if (keyKeeper == null) {
-            deleteKey(network);
-        } else {
-            getKeysDatabase()
-                    .put()
-                    .object(new Key(network, keyKeeper.toStringBundle()))
-                    .prepare()
-                    .executeAsBlocking();
-        }
     }
 }

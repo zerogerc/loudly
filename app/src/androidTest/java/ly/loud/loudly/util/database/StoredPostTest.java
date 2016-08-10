@@ -12,6 +12,7 @@ import java.util.List;
 
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.test.Generators;
@@ -81,7 +82,7 @@ public class StoredPostTest extends DatabaseTest<LoudlyPost> {
                 sublist.add(post);
             }
         }
-        List<LoudlyPost> stored = DatabaseUtils.loadPosts(new TimeInterval(begin, end));
+        List<PlainPost> stored = DatabaseUtils.loadPosts(new TimeInterval(begin, end));
         Assert.assertSame(sublist.size(), stored.size());
         for (int i = 0; i < sublist.size(); i++) {
             // Sublist has reversed order

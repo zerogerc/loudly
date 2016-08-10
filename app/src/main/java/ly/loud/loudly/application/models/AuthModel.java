@@ -54,18 +54,9 @@ public class AuthModel {
         if (contract == null) {
             return Single.just(false);
         }
-        return contract.proceedAuthUrls(urls)
-                .flatMap(contract::connect)
-                .map(success -> {
-                    if (success) {
-                        try {
-                            DatabaseUtils.saveKeys();
-                        } catch (DatabaseException e) {
-                            return false;
-                        }
-                    }
-                    return success;
-                });
+        return contract
+                .proceedAuthUrls(urls)
+                .flatMap(keyKeeper -> keysModel.setKeyKeeper(network, keyKeeper));
     }
 
     @CheckResult
@@ -77,16 +68,11 @@ public class AuthModel {
         }
         return contract
                 .disconnect()
-                .map(success -> {
+                .flatMap(success -> {
                     if (success) {
-                        try {
-                            DatabaseUtils.deleteKey(network);
-                            keysModel.disconnectFromNetwork(network);
-                        } catch (DatabaseException e) {
-                            return false;
-                        }
+                        return keysModel.deleteKeyKeeper(network);
                     }
-                    return success;
+                    return Single.just(false);
                 });
     }
 }

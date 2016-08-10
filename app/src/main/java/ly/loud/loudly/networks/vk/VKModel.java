@@ -112,7 +112,7 @@ public class VKModel implements NetworkContract {
 
     @Override
     @NonNull
-    public Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
+    public Single<KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
         return urls
                 .takeFirst(url -> url.startsWith(RESPONSE_URL))
                 .toSingle()
@@ -130,17 +130,6 @@ public class VKModel implements NetworkContract {
                     }
                     return new VKKeyKeeper(accessToken, userId);
                 });
-    }
-
-    @Override
-    @CheckResult
-    @NonNull
-    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
-        if (!(keyKeeper instanceof VKKeyKeeper))
-            throw new AssertionError("KeyKeeper must be VkKeyKeeper");
-
-        keysModel.setVKKeyKeeper((VKKeyKeeper) keyKeeper);
-        return Single.just(true);
     }
 
     @Override

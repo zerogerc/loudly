@@ -16,6 +16,7 @@ import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
+import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.TitledFragment;
@@ -50,6 +51,12 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @Inject
     @NonNull
     GetterModel getterModel;
+
+    @SuppressWarnings("NullableProblems") // Inject
+    @Inject
+    @NonNull
+    PostDeleterModel deleterModel;
+
 
     @SuppressWarnings("NullableProblems") // onViewCreated
     @NonNull
@@ -102,7 +109,8 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
         return new FeedPresenter(
                 loudlyApp,
                 postLoadModel,
-                getterModel
+                getterModel,
+                deleterModel
         );
     }
 
