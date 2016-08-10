@@ -8,9 +8,11 @@ import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.BasePresenter;
 import rx.Subscription;
 import rx.schedulers.Schedulers;
+import solid.collections.SolidList;
 
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 import static rx.schedulers.Schedulers.io;
@@ -44,12 +46,16 @@ public class FeedPresenter extends BasePresenter<FeedView> {
         this.deleterModel = deleterModel;
     }
 
-    public void loadPosts() {
+    public SolidList<PlainPost> getCachedPosts() {
+        return postLoadModel.getCachedPosts();
+    }
+
+    public void updatePosts() {
         postLoadSubscription = postLoadModel
                 .loadPosts(Loudly.getContext().getTimeInterval())
                 .subscribeOn(io())
                 .observeOn(mainThread())
-                .doOnNext(list -> executeIfViewBound(view -> view.onNewLoadedPosts(list)))
+                .doOnNext(list -> executeIfViewBound(view -> view.onPostsUpdated(list)))
                 .subscribe();
     }
 

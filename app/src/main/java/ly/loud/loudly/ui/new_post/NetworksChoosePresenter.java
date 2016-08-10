@@ -23,7 +23,7 @@ public class NetworksChoosePresenter extends BasePresenter<NetworksChooseView> {
 
     public void loadModels() {
         List<NetworkContract> list = new ArrayList<>();
-        coreModel.getAllNetworksModels()
+        coreModel.observeAllNetworksModels()
                 .subscribeOn(Schedulers.io())
                 .observeOn(mainThread())
                 .doOnNext(list::add)
