@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list_item_post_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="4dp"
+    android:layout_marginTop="4dp"
+    android:orientation="vertical"
+    android:padding="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/list_item_post_header_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/list_item_post_social_icon"
+                android:layout_width="@dimen/list_item_post_icon_size"
+                android:layout_height="@dimen/list_item_post_icon_size"
+                android:layout_gravity="center"
+                android:layout_margin="8dp"
+                android:background="@null"
+                android:gravity="center_vertical" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/list_item_post_date"
+                    style="@style/PostInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent" />
+
+                <TextView
+                    android:id="@+id/list_item_post_geo"
+                    style="@style/PostInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/list_item_post_show_more_button"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end|top"
+                android:background="@null"
+                android:padding="10dp"
+                android:src="@drawable/ic_clear"
+                android:tint="@color/grey_color_500" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/list_item_post_body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/list_item_post_text"
+                style="@style/PostTextPrimary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/list_item_post_text_padding" />
+
+            <ly.loud.loudly.ui.views.GlideImageView
+                android:id="@+id/list_item_post_image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/grey_color_300" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/list_item_post_footer_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/list_item_post_comments"
+                style="@style/PostSocialStatView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/ic_post_comment_light"
+                android:drawableStart="@drawable/ic_post_comment_light"
+                android:padding="@dimen/list_item_post_buttons_padding" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/list_item_post_shares"
+                style="@style/PostSocialStatView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/ic_post_share_light"
+                android:drawableStart="@drawable/ic_post_share_light"
+                android:padding="@dimen/list_item_post_buttons_padding" />
+
+            <TextView
+                android:id="@+id/list_item_post_likes"
+                style="@style/PostSocialStatView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/ic_post_favourite_light"
+                android:drawableStart="@drawable/ic_post_favourite_light"
+                android:padding="@dimen/list_item_post_buttons_padding" />
+        </LinearLayout>
+    </LinearLayout>
+
+</android.support.v7.widget.CardView>

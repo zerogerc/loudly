@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="network_error">Network error</string>
+    <string name="comments_load_error">Error while loading comments</string>
+</resources>
