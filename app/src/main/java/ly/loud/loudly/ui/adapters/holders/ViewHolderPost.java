@@ -122,6 +122,13 @@ public class ViewHolderPost extends BindingViewHolder<PlainPost> {
         }
     }
 
+    @OnClick(R.id.list_item_post_show_more_button)
+    public void onDeleteClick() {
+        if (clickListener != null) {
+            clickListener.onDeleteClick(getAdapterPosition());
+        }
+    }
+
     private void reset() {
         dateTextView.setText("");
         geoTextView.setText("");
@@ -188,5 +195,7 @@ public class ViewHolderPost extends BindingViewHolder<PlainPost> {
         void onSharesClick(int position);
 
         void onLikesClick(int position);
+
+        void onDeleteClick(int position);
     }
 }
