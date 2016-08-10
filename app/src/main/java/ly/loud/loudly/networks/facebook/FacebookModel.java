@@ -57,6 +57,7 @@ import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
+import static ly.loud.loudly.util.ListUtils.asSolidList;
 
 public class FacebookModel implements NetworkContract {
     public static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
@@ -266,7 +267,7 @@ public class FacebookModel implements NetworkContract {
             for (String personId : ids) {
                 result.add(toPerson(persons.get(personId)));
             }
-            return ListUtils.asSolidList(result);
+            return asSolidList(result);
         });
     }
 
@@ -319,7 +320,7 @@ public class FacebookModel implements NetworkContract {
             if (cached.isEmpty()) {
                 List<SinglePost> posts = downloadPosts(timeInterval);
                 cached.addAll(posts);
-                return ListUtils.asSolidList(posts);
+                return asSolidList(posts);
             }
             NetworkUtils.DividedList dividedList = NetworkUtils
                     .divideListOfCachedPosts(cached, timeInterval);
@@ -334,8 +335,14 @@ public class FacebookModel implements NetworkContract {
             result.addAll(before);
             result.addAll(dividedList.cached);
             result.addAll(after);
-            return ListUtils.asSolidList(result);
+            return asSolidList(result);
         });
+    }
+
+    @NonNull
+    @Override
+    public SolidList<SinglePost> getCachedPosts() {
+        return asSolidList(cached);
     }
 
     @NonNull
@@ -437,7 +444,7 @@ public class FacebookModel implements NetworkContract {
                 comments.add(new Comment(comment.message, comment.createdTime, attachment, toPerson(persons.get(comment.from.id)),
                         getId(), comment.id));
             }
-            return ListUtils.asSolidList(comments);
+            return asSolidList(comments);
         });
     }
 }

@@ -8,17 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.networks.facebook.FacebookModel;
-import ly.loud.loudly.networks.instagram.InstagramModel;
-import ly.loud.loudly.networks.NetworkContract;
-import ly.loud.loudly.networks.vk.VKModel;
-import ly.loud.loudly.networks.KeyKeeper;
-import ly.loud.loudly.legacy_base.SingleNetwork;
-import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.legacy_base.SingleNetwork;
+import ly.loud.loudly.networks.KeyKeeper;
+import ly.loud.loudly.networks.NetworkContract;
+import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.networks.facebook.FacebookModel;
+import ly.loud.loudly.networks.instagram.InstagramModel;
+import ly.loud.loudly.networks.vk.VKModel;
 import rx.Observable;
 import rx.Single;
+import solid.collections.SolidList;
+
+import static ly.loud.loudly.util.ListUtils.asSolidList;
 
 public class CoreModel {
     @NonNull
@@ -54,14 +57,19 @@ public class CoreModel {
 
     @CheckResult
     @NonNull
-    public Observable<NetworkContract> getAllNetworksModels() {
+    public Observable<NetworkContract> observeAllNetworksModels() {
         return Observable.from(networkModels);
+    }
+
+    @NonNull
+    public SolidList<NetworkContract> getNetworkModels() {
+        return asSolidList(networkModels);
     }
 
     @CheckResult
     @NonNull
     public Observable<NetworkContract> getConnectedNetworksModels() {
-        return getAllNetworksModels().filter(NetworkContract::isConnected);
+        return observeAllNetworksModels().filter(NetworkContract::isConnected);
     }
 
 

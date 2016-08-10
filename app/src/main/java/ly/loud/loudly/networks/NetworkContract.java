@@ -111,6 +111,13 @@ public interface NetworkContract {
     Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval);
 
     /**
+     * Get posts that previously been cached
+     */
+    @CheckResult
+    @NonNull
+    SolidList<SinglePost> getCachedPosts();
+
+    /**
      * Get persons by request type. For example: peoples that like certain post.
      */
     @CheckResult
