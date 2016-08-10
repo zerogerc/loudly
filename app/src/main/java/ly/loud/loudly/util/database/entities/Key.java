@@ -33,7 +33,7 @@ public class Key {
     public Key() {
     }
 
-    public Key(int network, @NonNull String value) {
+    public Key(@Network int network, @NonNull String value) {
         this.network = network;
         this.value = value;
     }
@@ -45,7 +45,7 @@ public class Key {
                 .build();
     }
 
-    public static DeleteQuery deleteByNetwork(int network) {
+    public static DeleteQuery deleteByNetwork(@Network int network) {
         return DeleteQuery.builder()
                 .table(Contract.TABLE_NAME)
                 .where(Contract.COLUMN_NAME_NETWORK + " = ?")
@@ -53,11 +53,12 @@ public class Key {
                 .build();
     }
 
+    @Network
     public int getNetwork() {
         return network;
     }
 
-    public void setNetwork(int network) {
+    public void setNetwork(@Network int network) {
         this.network = network;
     }
 
@@ -68,11 +69,6 @@ public class Key {
 
     public void setValue(@NonNull String value) {
         this.value = value;
-    }
-
-    @Nullable
-    public KeyKeeper toKeyKeeper() {
-        return KeyKeeper.fromStringBundle(getNetwork(), value);
     }
 
     public interface Contract extends BaseColumns {

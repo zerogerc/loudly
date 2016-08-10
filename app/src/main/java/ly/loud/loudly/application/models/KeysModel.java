@@ -96,8 +96,8 @@ public class KeysModel {
                 .byQuery(Key.deleteByNetwork(network))
                 .prepare()
                 .asRxObservable()
-                .first()
                 .map(deleteResult -> deleteResult.numberOfRowsDeleted() > 0)
+                .first()
                 .toSingle();
     }
 
