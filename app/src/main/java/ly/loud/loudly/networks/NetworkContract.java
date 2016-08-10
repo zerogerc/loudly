@@ -56,17 +56,7 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls);
-
-    /**
-     * Connect this network for proper work.
-     *
-     * @param keyKeeper - auth token
-     * @return <code>true</code> if connected successfully
-     */
-    @CheckResult
-    @NonNull
-    Single<Boolean> connect(@NonNull KeyKeeper keyKeeper);
+    Single<KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls);
 
     /**
      * @return <code>true</code> if this network connected.

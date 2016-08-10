@@ -5,10 +5,12 @@ import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.impl.DefaultStorIOSQLite;
 import dagger.Module;
 import dagger.Provides;
+import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.util.database.entities.*;
 import ly.loud.loudly.util.database.entities.links.Links;
 import ly.loud.loudly.util.database.entities.links.LinksTypeMapping;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -20,6 +22,13 @@ import javax.inject.Singleton;
 
 @Module
 public class PostDbModule {
+    @NonNull
+    Loudly loudlyApplication;
+
+    public PostDbModule(@NonNull Loudly loudlyApplication) {
+        this.loudlyApplication = loudlyApplication;
+    }
+
     /**
      * Provide Post Database
      * @param postDbHelper Post Helper
@@ -47,6 +56,6 @@ public class PostDbModule {
     @NonNull
     @Singleton
     public PostDbHelper providePostDbHelper() {
-        return new PostDbHelper();
+        return new PostDbHelper(loudlyApplication);
     }
 }

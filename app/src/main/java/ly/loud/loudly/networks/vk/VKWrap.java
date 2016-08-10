@@ -28,6 +28,7 @@ import ly.loud.loudly.legacy_base.says.Comment;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.legacy_base.says.LoudlyPost;
 import ly.loud.loudly.legacy_base.says.Post;
+import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
 import ly.loud.loudly.util.BackgroundAction;
 import ly.loud.loudly.util.Network;
 import ly.loud.loudly.util.Query;
@@ -147,7 +148,7 @@ public class VKWrap extends Wrap {
         }
         if (post.getAttachments().size() > 0) {
             Image image = (Image) post.getAttachments().get(0);
-            String userID = ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID())).getUserId();
+            String userID = ((VKKeyKeeper) keyKeeper).getUserId();
             query.addParameter("attachments", "photo" + userID + "_" + image.getLink());
         }
 
@@ -167,7 +168,7 @@ public class VKWrap extends Wrap {
     @Override
     protected void upload(Image image, BackgroundAction progress, KeyKeeper keyKeeper) throws IOException {
         Query getUploadServerAddress = makeSignedAPICall(PHOTO_UPLOAD_METHOD, keyKeeper);
-        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
+        VKKeyKeeper keys = ((VKKeyKeeper) keyKeeper);
         getUploadServerAddress.addParameter("user_id", keys.getUserId());
 
         String response = Network.makeGetRequest(getUploadServerAddress);
@@ -199,7 +200,7 @@ public class VKWrap extends Wrap {
             e.printStackTrace();
             return;
         }
-        getPhotoId.addParameter("user_id", ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID())).getUserId());
+//        getPhotoId.addParameter("user_id", ((VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID())).getUserId());
 
         response = Network.makeGetRequest(getPhotoId);
 
@@ -251,7 +252,7 @@ public class VKWrap extends Wrap {
     @Override
     protected void delete(Post post, KeyKeeper keyKeeper) throws IOException {
         Query query = makeSignedAPICall(DELETE_METHOD, keyKeeper);
-        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(NETWORK);
+        VKKeyKeeper keys = ((VKKeyKeeper) keyKeeper);
         query.addParameter("owner_id", keys.getUserId());
         query.addParameter("post_id", post.getLink());
 
@@ -276,7 +277,7 @@ public class VKWrap extends Wrap {
     @Override
     protected List<Pair<Post, Info>> getPostsInfo(List<Post> posts, KeyKeeper keyKeeper) throws IOException {
         Query query = makeSignedAPICall(GET_METHOD, keyKeeper);
-        VKKeyKeeper keys = (VKKeyKeeper) Loudly.getContext().getKeyKeeper(networkID());
+        VKKeyKeeper keys = ((VKKeyKeeper) keyKeeper);
         StringBuilder sb = new StringBuilder();
         for (Post post : posts) {
             if (post.existsIn(networkID())) {

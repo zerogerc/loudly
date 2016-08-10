@@ -8,16 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.networks.NetworkContract;
-import ly.loud.loudly.base.multiple.LoudlyImage;
-import ly.loud.loudly.base.multiple.LoudlyPost;
-import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.Attachment;
 import ly.loud.loudly.base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
+import ly.loud.loudly.base.multiple.LoudlyImage;
+import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainImage;
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
 import solid.collections.SolidList;
@@ -61,9 +61,36 @@ public class PostUploadModel {
                 .toList();
     }
 
+    @NonNull
+    private LoudlyPost setInstance(@NonNull LoudlyPost loudlyPost, @NonNull SinglePost instance) {
+        ArrayList<MultipleAttachment> multipleAttachments = loudlyPost.getAttachments();
+        ArrayList<SingleAttachment> singleAttachments = instance.getAttachments();
+
+        for (int i = 0; i < loudlyPost.getAttachments().size(); i++) {
+            MultipleAttachment multipleAttachment = multipleAttachments.get(i);
+            SingleAttachment singleAttachment = singleAttachments.get(i);
+            MultipleAttachment newAttachment = (MultipleAttachment) multipleAttachment
+                    .setSingleNetworkInstance(singleAttachment.getNetwork(), singleAttachment);
+            multipleAttachments.set(i, newAttachment);
+        }
+
+        LoudlyPost newPost = loudlyPost.setSingleNetworkInstance(instance.getNetwork(), instance);
+        return null;
+    }
+
     public Observable<LoudlyPost> uploadPost(@Nullable String text,
                                              @NonNull SolidList<Attachment> attachments,
                                              @NonNull List<NetworkContract> networks) {
+
+        ArrayList<MultipleAttachment> multipleAttachments = new ArrayList<>();
+        for (Attachment attachment : attachments) {
+            if (attachment instanceof PlainImage) {
+                PlainImage image = (PlainImage) attachment;
+                multipleAttachments.add(new LoudlyImage(image.getUrl(), image.getSize()));
+            }
+        }
+        LoudlyPost initial = new LoudlyPost(text, System.currentTimeMillis(), multipleAttachments,
+                null);
 
         return Observable.from(networks)
                 .flatMap(networkContract -> uploadPost(text, attachments, networkContract))

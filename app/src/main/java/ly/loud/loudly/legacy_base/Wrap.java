@@ -180,7 +180,7 @@ public abstract class Wrap implements Comparable<Wrap> {
 
     @Nullable
     private <T> T doWithKeys(Action<T> action) throws IOException {
-        KeyKeeper keys = Loudly.getContext().getKeyKeeper(networkID());
+        KeyKeeper keys = null;
         if (keys == null) {
             return null;
         }

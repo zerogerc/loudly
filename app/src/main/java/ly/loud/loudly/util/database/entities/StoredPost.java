@@ -11,6 +11,7 @@ import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
 import ly.loud.loudly.util.TimeInterval;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -77,16 +78,18 @@ public class StoredPost {
 
     @NonNull
     public static List<StoredPost> selectByTimeInterval(TimeInterval interval, StorIOSQLite database) {
-        return database.get()
-                .listOfObjects(StoredPost.class)
-                .withQuery(Query.builder()
-                        .table(Contract.TABLE_NAME)
-                        .where("? < " + Contract.COLUMN_NAME_DATE + " and " + Contract.COLUMN_NAME_DATE + " < ?")
-                        .whereArgs(interval.from, interval.to)
-                        .orderBy(Contract._ID + " DESC")
-                        .build())
-                .prepare()
-                .executeAsBlocking();
+        // ToDo: Fix it
+        return Collections.emptyList();
+//        return database.get()
+//                .listOfObjects(StoredPost.class)
+//                .withQuery(Query.builder()
+//                        .table(Contract.TABLE_NAME)
+//                        .where("? < " + Contract.COLUMN_NAME_DATE + " and " + Contract.COLUMN_NAME_DATE + " < ?")
+//                        .whereArgs(interval.from, interval.to)
+//                        .orderBy(Contract._ID + " DESC")
+//                        .build())
+//                .prepare()
+//                .executeAsBlocking();
     }
 
     @Nullable

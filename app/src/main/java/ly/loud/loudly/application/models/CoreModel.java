@@ -80,16 +80,4 @@ public class CoreModel {
         return getConnectedNetworksModels()
                 .filter(networkContract ->  element.getSingleNetworkInstance(networkContract.getId()) != null);
     }
-
-    @CheckResult
-    @NonNull
-    public Single<Boolean> connectToNetworkById(@Network int networkId,
-                                                @NonNull KeyKeeper keyKeeper) {
-        for (NetworkContract model : networkModels) {
-            if (model.getId() == networkId) {
-                return model.connect(keyKeeper);
-            }
-        }
-        return Single.just(false);
-    }
 }

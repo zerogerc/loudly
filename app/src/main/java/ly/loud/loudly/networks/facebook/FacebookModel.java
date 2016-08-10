@@ -110,7 +110,7 @@ public class FacebookModel implements NetworkContract {
 
     @Override
     @NonNull
-    public Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
+    public Single<KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
         return urls
                 .takeFirst(url -> url.startsWith(REDIRECT_URL) ||
                         url.startsWith(RESPONSE_URL))
@@ -128,16 +128,6 @@ public class FacebookModel implements NetworkContract {
                     }
                     return new FacebookKeyKeeper(accessToken);
                 });
-    }
-
-    @Override
-    @NonNull
-    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
-        if (!(keyKeeper instanceof FacebookKeyKeeper)) {
-            throw new IllegalArgumentException("Wrong keykeeper");
-        }
-        keysModel.setFacebookKeyKeeper(((FacebookKeyKeeper) keyKeeper));
-        return Single.just(true);
     }
 
     @Override

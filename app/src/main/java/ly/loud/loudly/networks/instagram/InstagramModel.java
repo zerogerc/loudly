@@ -1,13 +1,11 @@
 package ly.loud.loudly.networks.instagram;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import javax.inject.Inject;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
 import ly.loud.loudly.base.entities.Person;
@@ -70,7 +68,7 @@ public class InstagramModel implements NetworkContract {
 
     @Override
     @NonNull
-    public Single<? extends KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
+    public Single<KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
         return urls
                 .takeFirst(url -> url.startsWith(RESPONSE_URL))
                 .toSingle()
@@ -87,12 +85,6 @@ public class InstagramModel implements NetworkContract {
                     }
                     return new InstagramKeyKeeper(accessToken);
                 });
-    }
-
-    @Override
-    @NonNull
-    public Single<Boolean> connect(@NonNull KeyKeeper keyKeeper) {
-        return Single.just(false);
     }
 
     @Override

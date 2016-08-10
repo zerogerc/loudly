@@ -3,6 +3,9 @@ package ly.loud.loudly.application;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
+import com.pushtorefresh.storio.sqlite.StorIOSQLite;
+
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -19,26 +22,30 @@ import static android.os.Looper.getMainLooper;
  */
 @Module
 public class AppModule {
+    @NonNull
     private final Loudly loudlyApplication;
 
-    public AppModule(Loudly loudlyApplication) {
+    public AppModule(@NonNull Loudly loudlyApplication) {
         this.loudlyApplication = loudlyApplication;
     }
 
     @Provides
     @Singleton
+    @NonNull
     Loudly provideLoudlyApplication() {
         return loudlyApplication;
     }
 
     @Provides
     @Singleton
+    @NonNull
     Handler provideMainThreadHandler() {
         return new Handler(getMainLooper());
     }
 
     @Provides
     @Singleton
+    @NonNull
     GetterModel providePeopleGetterModel(@NonNull CoreModel coreModel) {
         return new GetterModel(
                 loudlyApplication,
@@ -48,6 +55,7 @@ public class AppModule {
 
     @Provides
     @Singleton
+    @NonNull
     CoreModel provideCoreModel(
             @NonNull FacebookModel facebookModel,
             @NonNull VKModel vkModel,
@@ -63,24 +71,28 @@ public class AppModule {
 
     @Provides
     @Singleton
-    KeysModel provideKeysModel(@NonNull Loudly loudlyApplication) {
-        return new KeysModel(loudlyApplication);
+    @NonNull
+    KeysModel provideKeysModel(@NonNull @Named("key") StorIOSQLite keysDatabse) {
+        return new KeysModel(keysDatabse);
     }
 
     @Provides
     @Singleton
+    @NonNull
     PostDeleterModel providePostDeleterModel(@NonNull CoreModel coreModel) {
         return new PostDeleterModel(loudlyApplication, coreModel);
     }
 
     @Provides
     @Singleton
+    @NonNull
     PostUploadModel providePostUploadModel(@NonNull CoreModel coreModel) {
         return new PostUploadModel(loudlyApplication, coreModel);
     }
 
     @Provides
     @Singleton
+    @NonNull
     PostLoadModel providePostLoadModel(@NonNull CoreModel coreModel) {
         return new PostLoadModel(loudlyApplication, coreModel);
     }
