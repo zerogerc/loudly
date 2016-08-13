@@ -598,7 +598,21 @@ public class PostsDatabaseModel {
                 .flatMap(storedPost ->
                         updateLinks(storedPost.getLinksId(), loudlyPost)
                                 .flatMap(ignored -> updateAttachmentsLinks(loudlyPost.getAttachments())))
-                .map(ignored -> loudlyPost);
+                .map(ignored -> {
+                    // Update cached post
+                    for (int i = 0, size = cached.size(); i < size; i++) {
+                        SingleNetworkElement instance = ((LoudlyPost) cached.get(i))
+                                .getSingleNetworkInstance(LOUDLY);
+                        if (instance == null) {
+                            continue;
+                        }
+                        if (instance.getLink().equals(loudlyInstance.getLink())) {
+                            cached.set(i, loudlyPost);
+                            break;
+                        }
+                    }
+                    return loudlyPost;
+                });
     }
 
     public Observable<SolidList<PlainPost>> loadPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
