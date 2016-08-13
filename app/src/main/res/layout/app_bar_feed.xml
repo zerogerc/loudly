@@ -2,6 +2,7 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/app_bar_feed_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
@@ -46,29 +47,30 @@
     </ly.loud.loudly.ui.views.ScrimCoordinatorLayout>
 
     <android.support.design.widget.CoordinatorLayout
-        android:id="@+id/app_bar_feed_new_post_root"
+        android:id="@+id/app_bar_feed_new_post_coordinator"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone">
+        android:layout_height="match_parent">
 
-        <FrameLayout
+        <ly.loud.loudly.ui.views.VisibilitySaveStateFrameLayout
             android:id="@+id/app_bar_feed_new_post_layout"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:padding="8dp">
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:visibility="gone"
+            android:clickable="true">
 
             <android.support.v7.widget.CardView
-                android:id="@+id/app_bar_feed_new_post_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@color/white_color">
 
-                <fragment android:name="ly.loud.loudly.ui.new_post.NewPostFragment"
+                <fragment
                     android:id="@+id/app_bar_feed_new_post_fragment"
+                    android:name="ly.loud.loudly.ui.new_post.NewPostFragment"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
+                    android:layout_height="match_parent" />
             </android.support.v7.widget.CardView>
-        </FrameLayout>
+        </ly.loud.loudly.ui.views.VisibilitySaveStateFrameLayout>
 
         <android.support.v4.widget.NestedScrollView
             android:id="@+id/app_bar_feed_networks_choose_scroll"
@@ -80,7 +82,6 @@
 
             <include layout="@layout/network_choose_layout" />
         </android.support.v4.widget.NestedScrollView>
-
     </android.support.design.widget.CoordinatorLayout>
 
 </android.support.design.widget.CoordinatorLayout>

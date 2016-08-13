@@ -2,15 +2,10 @@ package ly.loud.loudly.ui.new_post;
 
 import android.support.annotation.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.ui.BasePresenter;
-import rx.schedulers.Schedulers;
-
-import static rx.android.schedulers.AndroidSchedulers.mainThread;
+import solid.collections.SolidList;
 
 public class NetworksChoosePresenter extends BasePresenter<NetworksChooseView> {
 
@@ -21,13 +16,8 @@ public class NetworksChoosePresenter extends BasePresenter<NetworksChooseView> {
         this.coreModel = coreModel;
     }
 
-    public void loadModels() {
-        List<NetworkContract> list = new ArrayList<>();
-        coreModel.observeAllNetworksModels()
-                .subscribeOn(Schedulers.io())
-                .observeOn(mainThread())
-                .doOnNext(list::add)
-                .doOnCompleted(() -> executeIfViewBound(view -> view.showModels(list)))
-                .subscribe();
+    public SolidList<NetworkContract> getConnectedNetworks() {
+        // TODO: connected networks
+        return coreModel.getNetworkModels();
     }
 }

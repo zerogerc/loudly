@@ -39,4 +39,5 @@
     <!-- Preferences -->
     <string name="load_for_last">Load for last (days):</string>
 
+    <string name="post">post</string>
 </resources>

@@ -39,6 +39,10 @@ public class ScrimLayoutDelegate {
         layout.invalidate();
     }
 
+    public float getOpacity() {
+        return scrimOpacity;
+    }
+
     public void draw(@NonNull Canvas canvas) {
         final int baseAlpha = (scrimColor & 0xff000000) >>> 24;
         final int imag = (int) (baseAlpha * scrimOpacity);

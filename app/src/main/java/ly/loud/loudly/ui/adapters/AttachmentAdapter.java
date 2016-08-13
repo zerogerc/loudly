@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -17,14 +18,17 @@ import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.interfaces.attachments.Attachment;
 import ly.loud.loudly.base.plain.PlainImage;
+import solid.collections.SolidList;
+
+import static ly.loud.loudly.util.ListUtils.asSolidList;
 
 public class AttachmentAdapter extends RecyclerView.Adapter<AttachmentAdapter.AttachmentHolder>{
 
     @NonNull
     private List<Attachment> attachmentList;
 
-    public AttachmentAdapter(@NonNull List<Attachment> attachmentList) {
-        this.attachmentList = attachmentList;
+    public AttachmentAdapter(@NonNull SolidList<Attachment> attachmentList) {
+        this.attachmentList = new ArrayList<>(attachmentList);
     }
 
     @Override
@@ -39,6 +43,25 @@ public class AttachmentAdapter extends RecyclerView.Adapter<AttachmentAdapter.At
 
     @Override
     public int getItemCount() {
+        return attachmentList.size();
+    }
+
+    @NonNull
+    public SolidList<Attachment> getAttachmentList() {
+        return asSolidList(attachmentList);
+    }
+
+    public void setAttachmentList(@NonNull SolidList<Attachment> attachmentList) {
+        this.attachmentList = new ArrayList<>(attachmentList);
+        notifyDataSetChanged();
+    }
+
+    public void addAttachment(@NonNull Attachment attachment) {
+        attachmentList.add(attachment);
+        notifyItemInserted(attachmentList.size() - 1);
+    }
+
+    public int getAttachmentsCount() {
         return attachmentList.size();
     }
 

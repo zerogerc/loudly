@@ -1,6 +1,7 @@
 package ly.loud.loudly.ui;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -8,6 +9,7 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -17,6 +19,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 
 import java.util.List;
 
@@ -28,7 +31,6 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.ui.feed.FeedFragment;
 import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
-import ly.loud.loudly.ui.new_post.NewPostFragment;
 import ly.loud.loudly.ui.settings.SettingsActivity;
 import ly.loud.loudly.ui.views.ScrimCoordinatorLayout;
 
@@ -36,18 +38,19 @@ import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
 import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static ly.loud.loudly.ui.new_post.NewPostFragment.NetworksProvider;
 
 /**
  * Main activity of Loudly application. It responds for user interaction with behavior of
  * BottomSheet Fragment (for post creation), menu and {@link NavigationView}.
  */
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, FragmentInvoker , NewPostFragment.NetworksProvider {
+        implements OnNavigationItemSelectedListener, FragmentInvoker, NetworksProvider {
 
     @SuppressWarnings("NullableProblems") // Butterknife
-    @BindView(R.id.app_bar_feed_new_post_root)
+    @BindView(R.id.app_bar_feed_root)
     @NonNull
-    View newPostRoot;
+    View globalRootView;
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.app_bar_feed_background)
@@ -62,7 +65,7 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.app_bar_feed_networks_choose_scroll)
     @NonNull
-    View networkChooseScroll;
+    View bottomSheetView;
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.toolbar)
@@ -94,8 +97,7 @@ public class MainActivity extends AppCompatActivity
         public void onStateChanged(@NonNull View bottomSheet, int newState) {
             switch (newState) {
                 case STATE_EXPANDED:
-                    background.setOpacity(1);
-                    newPostRoot.setVisibility(VISIBLE);
+                    showNewPostFragment();
                     break;
                 default:
                     break;
@@ -104,12 +106,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-            int allHeight = ((View) bottomSheet.getParent()).getHeight();
-            int visibleHeight = ((int) (bottomSheet.getHeight() * slideOffset));
-
-            CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams) newPostFragmentView.getLayoutParams());
-            params.height = allHeight - visibleHeight;
-            newPostFragmentView.setLayoutParams(params);
+            setSlideState(bottomSheet, slideOffset);
         }
     };
 
@@ -146,11 +143,27 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Perform initialization of post creation fragment.
+     * Perform initialization iteractions between fragments.
      */
     private void initFragmentsInteraction() {
-        bottomSheetBehavior = BottomSheetBehavior.from(networkChooseScroll);
-        bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
+        /**
+         * It seems like workaround but as soon as I have the proper solution I change this.
+         */
+        globalRootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                    globalRootView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                } else {
+                    globalRootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }
+                bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetView);
+                bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
+                if (bottomSheetBehavior.getState() == STATE_EXPANDED) {
+                    setSlideState(bottomSheetView, 1);
+                }
+            }
+        });
 
         getSupportFragmentManager().addOnBackStackChangedListener(() -> {
             if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
@@ -166,9 +179,7 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if (newPostRoot.getVisibility() == VISIBLE){
-            hidePostCreateFragment();
-        } else {
+        } else if (!tryHidePostCreateLayoutBasedOnBottomSheet()) {
             super.onBackPressed();
         }
     }
@@ -211,18 +222,69 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public List<NetworkContract> getChosenNetworks() {
-        return networksChooseLayout.getChosenNetworks();
+    public void showNetworksChooseLayout() {
+        bottomSheetBehavior.setState(STATE_EXPANDED);
     }
 
-    private void hidePostCreateFragment() {
-        bottomSheetBehavior.setState(STATE_COLLAPSED);
-        newPostRoot.setVisibility(GONE);
-        background.setOpacity(0);
+    @Override
+    public List<NetworkContract> getChosenNetworks() {
+        return networksChooseLayout.getChosenNetworks();
     }
 
     @OnClick(R.id.fab)
     public void onNewPostClicked() {
         bottomSheetBehavior.setState(STATE_EXPANDED);
+        showNewPostFragment();
+    }
+
+    /**
+     * Run before back button super method to check if we need to hide post layout from the screen
+     * or just change state of bottom sheet.
+     */
+    private boolean tryHidePostCreateLayoutBasedOnBottomSheet() {
+        if (newPostFragmentView.getVisibility() != VISIBLE) {
+            return false;
+        }
+
+        if (bottomSheetBehavior.getState() == STATE_COLLAPSED) {
+            hideNewPostFragment();
+        } else {
+            bottomSheetBehavior.setState(STATE_COLLAPSED);
+        }
+        return true;
+    }
+
+    /**
+     * Set PostLayout to the right state based on position of BottomSheet.
+     */
+    private void setSlideState(@NonNull View bottomSheet, float slideOffset) {
+        int allHeight = ((View) bottomSheet.getParent()).getHeight();
+        int visibleHeight = ((int) (bottomSheet.getHeight() * slideOffset));
+
+        CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams) newPostFragmentView.getLayoutParams());
+        params.height = allHeight - visibleHeight;
+        newPostFragmentView.setLayoutParams(params);
+    }
+
+    /**
+     * Show the fragment with new post on the screen
+     */
+    private void showNewPostFragment() {
+        /**
+         * In future we could add animations here.
+         */
+        newPostFragmentView.setVisibility(VISIBLE);
+        background.setOpacity(1);
+    }
+
+    /**
+     * Hides the fragment with new post from the screen
+     */
+    private void hideNewPostFragment() {
+        /**
+         * In future we could add animations here.
+         */
+        newPostFragmentView.setVisibility(GONE);
+        background.setOpacity(0);
     }
 }
