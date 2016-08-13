@@ -2,27 +2,25 @@ package ly.loud.loudly.application.models;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
-import android.support.v4.util.Pair;
 
-import java.util.List;
-
-import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.base.multiple.LoudlyPost;
-import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.NetworkContract;
+import ly.loud.loudly.networks.Networks.Network;
 import rx.Observable;
 import rx.Single;
 
 public class PostDeleterModel {
     @NonNull
-    private Loudly loudlyApplication;
-    @NonNull
     private CoreModel coreModel;
 
-    public PostDeleterModel(@NonNull Loudly loudlyApplication, @NonNull CoreModel coreModel) {
-        this.loudlyApplication = loudlyApplication;
+    @NonNull
+    private PostsDatabaseModel postsDatabaseModel;
+
+    public PostDeleterModel(@NonNull CoreModel coreModel,
+                            @NonNull PostsDatabaseModel postsDatabaseModel) {
         this.coreModel = coreModel;
+        this.postsDatabaseModel = postsDatabaseModel;
     }
 
     @CheckResult
@@ -30,12 +28,12 @@ public class PostDeleterModel {
     public Single<Boolean> deletePostFromNetwork(@NonNull LoudlyPost post,
                                                  @Network int network) {
         if (post.getSingleNetworkInstance(network) == null) {
-            return Single.just(true);
+            return Single.just(false);
         }
         return coreModel.elementExistsIn(post)
                 .filter(n -> n.getId() == network)
-                .take(1)
                 .flatMap(n -> safeDelete(post, n))
+                .first()
                 .toSingle();
     }
 
@@ -50,12 +48,26 @@ public class PostDeleterModel {
         return networkContract.delete(singleNetworkInstance);
     }
 
-    // ToDo: Delete from DB after deletion from networks
     @CheckResult
     @NonNull
-    public Observable<Pair<Integer, Boolean>> deletePostFromAllNetworks(@NonNull LoudlyPost post) {
+    public Observable<LoudlyPost> deletePostFromAllNetworks(@NonNull LoudlyPost post) {
         return coreModel.elementExistsIn(post)
                 .flatMap(networkContract -> safeDelete(post, networkContract)
-                        .map(result -> new Pair<>(networkContract.getId(), result)));
+                        .map(result -> networkContract.getId()))
+                .scan(post, LoudlyPost::deleteNetworkInstance)
+                .flatMap(loudlyPost ->
+                        postsDatabaseModel
+                                .updatePostLinks(loudlyPost)
+                                .toObservable())
+                .flatMap(loudlyPost -> {
+                    if (loudlyPost.getNetworkInstances().size() == 1) {
+                        // Has only one instance in DB - should delete from database
+                        return postsDatabaseModel
+                                .deletePost(loudlyPost)
+                                .toObservable();
+                    } else {
+                        return Observable.just(loudlyPost);
+                    }
+                });
     }
 }

@@ -6,17 +6,18 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.io.File;
+import java.util.ArrayList;
+
 import ly.loud.loudly.base.entities.Info;
-import ly.loud.loudly.networks.Networks;
-import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.LocalFile;
 import ly.loud.loudly.base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainImage;
 import ly.loud.loudly.base.single.SingleImage;
-
-import java.io.File;
-import java.util.ArrayList;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 
 
 /**
@@ -47,7 +48,7 @@ public class LoudlyImage extends PlainImage implements MultipleAttachment, Local
     }
 
     public LoudlyImage(@Nullable String url, @Nullable Point size) {
-        this(url, size,  new SingleImage[Networks.NETWORK_COUNT]);
+        this(url, size, new SingleImage[Networks.NETWORK_COUNT]);
     }
 
     private LoudlyImage(@NonNull Parcel source) {
@@ -64,20 +65,25 @@ public class LoudlyImage extends PlainImage implements MultipleAttachment, Local
     @CheckResult
     @NonNull
     @Override
-    public LoudlyImage setSingleNetworkInstance(@Network int network, @Nullable SingleAttachment instance) {
+    public LoudlyImage setSingleNetworkInstance(@NonNull SingleAttachment instance) {
         SingleImage[] copied = new SingleImage[elements.length];
         System.arraycopy(elements, 0, copied, 0, elements.length);
 
-        if (instance == null) {
-            copied[network] = null;
-            return new LoudlyImage(getUrl(), getSize(), copied);
-        }
         if (instance.getType() == TYPE_IMAGE) {
-            copied[network] = (SingleImage) instance;
+            copied[instance.getNetwork()] = (SingleImage) instance;
             return new LoudlyImage(getUrl(), getSize(), copied);
         }
         // Impossible
         return this;
+    }
+
+    @NonNull
+    @Override
+    public LoudlyImage deleteNetworkInstance(@Network int network) {
+        SingleImage[] copied = new SingleImage[elements.length];
+        System.arraycopy(elements, 0, copied, 0, elements.length);
+        copied[network] = null;
+        return new LoudlyImage(getUrl(), getSize(), copied);
     }
 
     @NonNull

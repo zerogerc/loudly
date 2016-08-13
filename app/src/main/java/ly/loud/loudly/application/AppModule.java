@@ -17,9 +17,6 @@ import ly.loud.loudly.networks.vk.VKModel;
 
 import static android.os.Looper.getMainLooper;
 
-/**
- * Created by ZeRoGerc on 20/07/16.
- */
 @Module
 public class AppModule {
     @NonNull
@@ -79,21 +76,32 @@ public class AppModule {
     @Provides
     @Singleton
     @NonNull
-    PostDeleterModel providePostDeleterModel(@NonNull CoreModel coreModel) {
-        return new PostDeleterModel(loudlyApplication, coreModel);
+    PostDeleterModel providePostDeleterModel(@NonNull CoreModel coreModel,
+                                             @NonNull PostsDatabaseModel postsDatabaseModel) {
+        return new PostDeleterModel(coreModel, postsDatabaseModel);
     }
 
     @Provides
     @Singleton
     @NonNull
-    PostUploadModel providePostUploadModel(@NonNull CoreModel coreModel) {
-        return new PostUploadModel(loudlyApplication, coreModel);
+    PostUploadModel providePostUploadModel(@NonNull CoreModel coreModel,
+                                           @NonNull PostsDatabaseModel postsDatabaseModel) {
+        return new PostUploadModel(coreModel, postsDatabaseModel);
     }
 
     @Provides
     @Singleton
     @NonNull
-    PostLoadModel providePostLoadModel(@NonNull CoreModel coreModel) {
-        return new PostLoadModel(loudlyApplication, coreModel);
+    PostLoadModel providePostLoadModel(@NonNull CoreModel coreModel,
+                                       @NonNull PostsDatabaseModel postsDatabaseModel) {
+        return new PostLoadModel(coreModel, postsDatabaseModel);
+    }
+
+    @Provides
+    @Singleton
+    @NonNull
+    PostsDatabaseModel providePostsDatabaseModel(
+            @NonNull @Named("post") StorIOSQLite postsDatabase) {
+        return new PostsDatabaseModel(postsDatabase);
     }
 }

@@ -251,7 +251,20 @@ public class VKModel implements NetworkContract {
     @CheckResult
     @NonNull
     public Observable<Boolean> delete(@NonNull SinglePost post) {
-        return Observable.just(false);
+        return Observable.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                return null;
+            }
+            Call<VKResponse<Integer>> deleteCall = client
+                    .deletePost(keyKeeper.getUserId(), post.getLink(), keyKeeper.getAccessToken());
+            Response<VKResponse<Integer>> executed = deleteCall.execute();
+            VKResponse<Integer> body = executed.body();
+            if (body == null) {
+                return false;
+            }
+            return body.response == 1;
+        });
     }
 
     @Override

@@ -3,10 +3,9 @@ package ly.loud.loudly.util.database.entities;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import com.pushtorefresh.storio.sqlite.StorIOSQLite;
+
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteColumn;
 import com.pushtorefresh.storio.sqlite.annotations.StorIOSQLiteType;
-import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
 import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
 
@@ -34,52 +33,29 @@ public class StoredLocation {
     public StoredLocation() {
     }
 
-    public StoredLocation(@Nullable String name, double latitude, double longitude) {
+    public StoredLocation(@Nullable Long id, @Nullable String name, double latitude, double longitude) {
+        this.id = id;
         this.name = name;
-        this.longitude = longitude;
         this.latitude = latitude;
-        this.id = null;
+        this.longitude = longitude;
     }
 
-    /**
-     * Select location from DB by it's ID
-     *
-     * @param id ID of location
-     * @param database Posts database
-     * @return StoredLocation (may be null if not found)
-     */
-    @Nullable
-    public static StoredLocation selectById(long id, StorIOSQLite database) {
-        return database.get()
-                .object(StoredLocation.class)
-                .withQuery(Query.builder()
-                        .table(Contract.TABLE_NAME)
-                        .where(Contract._ID + " = ?")
-                        .whereArgs(id)
-                        .build())
-                .prepare()
-                .executeAsBlocking();
-    }
-
-
-    /**
-     * Delete location from DB by it's ID
-     *
-     * @param id ID of location
-     * @param database Posts database
-     * @return Result of deletion
-     */
     @NonNull
-    public static DeleteResult deleteById(long id, StorIOSQLite database) {
-        return database
-                .delete()
-                .byQuery(DeleteQuery.builder()
-                        .table(Contract.TABLE_NAME)
-                        .where(Contract._ID + " = ?")
-                        .whereArgs(id)
-                        .build())
-                .prepare()
-                .executeAsBlocking();
+    public static Query selectById(long id) {
+        return Query.builder()
+                .table(Contract.TABLE_NAME)
+                .where(Contract._ID + " = ?")
+                .whereArgs(id)
+                .build();
+    }
+
+    @NonNull
+    public static DeleteQuery deleteById(long id) {
+        return DeleteQuery.builder()
+                .table(Contract.TABLE_NAME)
+                .where(Contract._ID + " = ?")
+                .whereArgs(id)
+                .build();
     }
 
     @Nullable
@@ -128,11 +104,5 @@ public class StoredLocation {
                         + COLUMN_NAME_LATITUDE + " REAL, "
                         + COLUMN_NAME_LONGITUDE + " REAL, "
                         + COLUMN_NAME_NAME + " TEXT )";
-
-        String[] COLUMNS = {
-                COLUMN_NAME_LATITUDE,
-                COLUMN_NAME_LONGITUDE,
-                COLUMN_NAME_NAME
-        };
     }
 }
