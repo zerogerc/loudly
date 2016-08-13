@@ -75,7 +75,6 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
         super.onAttachedToWindow();
         ButterKnife.bind(this);
         initRecyclerView();
-        presenter.loadModels();
     }
 
     @Override
@@ -90,6 +89,7 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
         adapter = new NetworkChooseAdapter(getContext(), models);
         adapter.setOnItemStateChangeListener(result::set);
         recyclerView.setAdapter(adapter);
+        showModels(presenter.getConnectedNetworks());
     }
 
     @Override

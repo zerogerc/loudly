@@ -39,4 +39,9 @@
     <!-- Preferences -->
     <string name="load_for_last">Load for last (days):</string>
 
+    <string name="large_text">One of the most significant changes to Android design was introduced during the 2014 Google I/O conference, material design. Even though Google had introduced a set of guidelines for their new design philosophy, developers were responsible for implementing the new patterns from scratch.
+This led to many third party libraries that achieved the goals of material design with similar, but different, implementations. To help alleviate some of the development pain of material design, Google introduced the Design support library during the keynote of the 2015 Google I/O conference.
+As with many things in software development, the Design support library improved with time, adding support for bottom sheets with the 23.2 release. In this article, you learn how to easily implement the bottom sheet pattern into your own apps. A sample project for this article can be found on GitHub.</string>
+
+
 </resources>
