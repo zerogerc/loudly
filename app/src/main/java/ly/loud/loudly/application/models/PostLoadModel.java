@@ -83,7 +83,7 @@ public class PostLoadModel {
     @CheckResult
     @NonNull
     public Observable<SolidList<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
-        return postsDatabaseModel.selectPostsByTimeInterval(interval)
+        return postsDatabaseModel.loadPostsByTimeInterval(interval)
                 .flatMap(list -> coreModel.getConnectedNetworksModels()
                         .flatMap(model -> model.loadPosts(interval))
                         .scan(list, PostLoadModel::merge));
@@ -99,7 +99,7 @@ public class PostLoadModel {
                 .map(NetworkContract::getCachedPosts)
                 .collect(ToArrayList.toArrayList());
 
-        SolidList<PlainPost> result = SolidList.empty();
+        SolidList<PlainPost> result = postsDatabaseModel.getCachedPosts();
         for (SolidList<SinglePost> newList : cachedPosts) {
             result = merge(result, newList);
         }

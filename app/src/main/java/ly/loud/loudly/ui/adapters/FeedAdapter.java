@@ -53,8 +53,8 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
     }
 
     public void updatePosts(@NonNull SolidList<PlainPost> newPosts) {
-        posts.addAll(newPosts);
-        notifyDataSetChanged();
+        // ToDo: notify better
+        setPosts(newPosts);
     }
 
     @Override

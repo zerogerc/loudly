@@ -260,7 +260,7 @@ public class VKModel implements NetworkContract {
                     .deletePost(keyKeeper.getUserId(), post.getLink(), keyKeeper.getAccessToken());
             Response<VKResponse<Integer>> executed = deleteCall.execute();
             VKResponse<Integer> body = executed.body();
-            if (body == null) {
+            if (body == null || body.response == null) {
                 return false;
             }
             return body.response == 1;
@@ -277,7 +277,8 @@ public class VKModel implements NetworkContract {
                 cached.addAll(downloaded);
                 return asSolidList(downloaded);
             }
-            NetworkUtils.DividedList dividedList = NetworkUtils.divideListOfCachedPosts(cached, timeInterval);
+            NetworkUtils.DividedList<SinglePost> dividedList =
+                    NetworkUtils.divideListOfCachedPosts(cached, timeInterval);
 
             List<SinglePost> before = downloadPosts(0, dividedList.before);
             List<SinglePost> after = downloadPosts(cached.size() + before.size(),

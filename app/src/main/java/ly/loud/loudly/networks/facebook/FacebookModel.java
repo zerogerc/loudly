@@ -322,8 +322,9 @@ public class FacebookModel implements NetworkContract {
                 cached.addAll(posts);
                 return asSolidList(posts);
             }
-            NetworkUtils.DividedList dividedList = NetworkUtils
-                    .divideListOfCachedPosts(cached, timeInterval);
+            NetworkUtils.DividedList<SinglePost> dividedList =
+                    NetworkUtils.divideListOfCachedPosts(cached, timeInterval);
+
             List<SinglePost> before = downloadPosts(dividedList.before);
             List<SinglePost> after = downloadPosts(dividedList.after);
 

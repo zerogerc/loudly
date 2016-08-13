@@ -8,6 +8,7 @@ import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.operations.put.PutResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -26,6 +27,7 @@ import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.ListUtils;
+import ly.loud.loudly.util.NetworkUtils;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.DatabaseException;
 import ly.loud.loudly.util.database.entities.StoredAttachment;
@@ -39,14 +41,19 @@ import solid.collections.SolidList;
 
 import static ly.loud.loudly.networks.Networks.LOUDLY;
 import static ly.loud.loudly.networks.Networks.NETWORK_COUNT;
+import static ly.loud.loudly.util.ListUtils.asSolidList;
 
 public class PostsDatabaseModel {
     @NonNull
-    private StorIOSQLite postsDatabase;
+    private final StorIOSQLite postsDatabase;
+
+    @NonNull
+    private final List<PlainPost> cached;
 
     @Inject
     public PostsDatabaseModel(@NonNull @Named("posts") StorIOSQLite postsDatabase) {
         this.postsDatabase = postsDatabase;
+        cached = new ArrayList<>();
     }
 
     /* Links part */
@@ -559,7 +566,7 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    public Observable<SolidList<PlainPost>> selectPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
+    private Observable<SolidList<PlainPost>> selectPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
         return selectStoredPostsByTimeInterval(timeInterval)
                 .flatMap(storedPost -> loadPost(storedPost).toObservable())
                 .toList()
@@ -579,5 +586,38 @@ public class PostsDatabaseModel {
                         updateLinks(storedPost.getLinksId(), loudlyPost)
                                 .flatMap(ignored -> updateAttachmentsLinks(loudlyPost.getAttachments())))
                 .map(ignored -> loudlyPost);
+    }
+
+    public Observable<SolidList<PlainPost>> loadPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
+        if (cached.isEmpty()) {
+            return selectPostsByTimeInterval(timeInterval)
+                    .map(list -> {
+                        cached.addAll(list);
+                        return asSolidList(list);
+                    });
+        } else {
+            final NetworkUtils.DividedList<PlainPost> dividedList =
+                    NetworkUtils.divideListOfCachedPosts(cached, timeInterval);
+
+            return selectPostsByTimeInterval(dividedList.before)
+                    .flatMap(before ->
+                            selectPostsByTimeInterval(dividedList.after)
+                                    .map(after -> {
+                                        cached.addAll(before);
+                                        cached.addAll(after);
+                                        Collections.sort(cached);
+
+                                        List<PlainPost> result = new ArrayList<>();
+                                        result.addAll(before);
+                                        result.addAll(dividedList.cached);
+                                        result.addAll(after);
+                                        return asSolidList(result);
+                                    }));
+        }
+    }
+
+    @NonNull
+    public SolidList<PlainPost> getCachedPosts() {
+        return asSolidList(cached);
     }
 }
