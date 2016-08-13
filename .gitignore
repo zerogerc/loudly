@@ -32,3 +32,5 @@ out/
 # Android Studio captures folder
 # Intellij
 *.iml
+
+projectFilesBackup/.idea/workspace.xml
