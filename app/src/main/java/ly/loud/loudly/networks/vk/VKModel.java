@@ -39,7 +39,6 @@ import ly.loud.loudly.networks.vk.entities.Profile;
 import ly.loud.loudly.networks.vk.entities.Say;
 import ly.loud.loudly.networks.vk.entities.VKItems;
 import ly.loud.loudly.networks.vk.entities.VKResponse;
-import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.NetworkUtils;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
@@ -55,6 +54,7 @@ import solid.collections.SolidList;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.RequestType;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
+import static ly.loud.loudly.util.ListUtils.asSolidList;
 
 public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
@@ -275,7 +275,7 @@ public class VKModel implements NetworkContract {
             if (cached.isEmpty()) {
                 List<SinglePost> downloaded = downloadPosts(0, timeInterval);
                 cached.addAll(downloaded);
-                return ListUtils.asSolidList(downloaded);
+                return asSolidList(downloaded);
             }
             NetworkUtils.DividedList dividedList = NetworkUtils.divideListOfCachedPosts(cached, timeInterval);
 
@@ -290,8 +290,14 @@ public class VKModel implements NetworkContract {
             result.addAll(before);
             result.addAll(dividedList.cached);
             result.addAll(after);
-            return ListUtils.asSolidList(result);
+            return asSolidList(result);
         });
+    }
+
+    @NonNull
+    @Override
+    public SolidList<SinglePost> getCachedPosts() {
+        return asSolidList(cached);
     }
 
     @NonNull
@@ -412,7 +418,7 @@ public class VKModel implements NetworkContract {
                     for (Profile profile : personsBody.response) {
                         persons.add(toPerson(profile));
                     }
-                    return ListUtils.asSolidList(persons);
+                    return asSolidList(persons);
                 }
             }
             return SolidList.empty();
@@ -502,7 +508,7 @@ public class VKModel implements NetworkContract {
                                 toPerson(profile), getId(), say.id, getInfo(say));
                         comments.add(comment);
                     }
-                    return ListUtils.asSolidList(comments);
+                    return asSolidList(comments);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

@@ -122,6 +122,12 @@ public class InstagramModel implements NetworkContract {
         return Observable.just(SolidList.empty());
     }
 
+    @NonNull
+    @Override
+    public SolidList<SinglePost> getCachedPosts() {
+        return SolidList.empty();
+    }
+
     @Override
     @NonNull
     public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element,

@@ -12,10 +12,12 @@ import javax.inject.Inject;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
 import solid.collections.SolidList;
+import solid.collectors.ToArrayList;
 
 import static solid.collectors.ToList.toList;
 import static solid.collectors.ToSolidList.toSolidList;
@@ -59,9 +61,9 @@ public class PostLoadModel {
         }).collect(toSolidList());
         // Drop post which instances were set
         List<SinglePost> notSet = newList.filter(post ->
-                        !withInstances.any(otherPost -> (otherPost instanceof LoudlyPost) &&
-                                ((LoudlyPost) otherPost)
-                                        .getSingleNetworkInstance(post.getNetwork()) == post)
+                !withInstances.any(otherPost -> (otherPost instanceof LoudlyPost) &&
+                        ((LoudlyPost) otherPost)
+                                .getSingleNetworkInstance(post.getNetwork()) == post)
         ).collect(toList());
         // Merge this two lists
         List<PlainPost> result = new ArrayList<>();
@@ -85,5 +87,22 @@ public class PostLoadModel {
                 .flatMap(list -> coreModel.getConnectedNetworksModels()
                         .flatMap(model -> model.loadPosts(interval))
                         .scan(list, PostLoadModel::merge));
+    }
+
+    /**
+     * Get list of all cached posts.
+     */
+    @CheckResult
+    @NonNull
+    public SolidList<PlainPost> getCachedPosts() {
+        ArrayList<SolidList<SinglePost>> cachedPosts = coreModel.getNetworkModels()
+                .map(NetworkContract::getCachedPosts)
+                .collect(ToArrayList.toArrayList());
+
+        SolidList<PlainPost> result = SolidList.empty();
+        for (SolidList<SinglePost> newList : cachedPosts) {
+            result = merge(result, newList);
+        }
+        return result;
     }
 }

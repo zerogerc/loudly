@@ -7,8 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import butterknife.BindView;
@@ -25,6 +23,7 @@ import ly.loud.loudly.ui.full_post.FullPostInfoActivity;
 import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.ui.views.FeedRecyclerView;
 import ly.loud.loudly.util.Utils;
+import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
@@ -87,9 +86,8 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
         super.onViewCreated(view, savedInstanceState);
 
         adapter = new FeedAdapter(this);
+        adapter.setPosts(presenter.getCachedPosts());
         feedRecyclerView.setAdapter(adapter);
-
-        presenter.loadPosts();
     }
 
     @Override
@@ -99,8 +97,14 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     }
 
     @Override
-    public void onNewLoadedPosts(@NonNull List<? extends PlainPost> posts) {
-        adapter.setPosts(posts);
+    public void onResume() {
+        super.onResume();
+        presenter.updatePosts();
+    }
+
+    @Override
+    public void onPostsUpdated(@NonNull SolidList<PlainPost> posts) {
+        adapter.updatePosts(posts);
     }
 
     @Override
