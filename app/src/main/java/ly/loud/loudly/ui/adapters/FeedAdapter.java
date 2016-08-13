@@ -11,6 +11,7 @@ import java.util.List;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.adapters.holders.ViewHolderPost;
 import ly.loud.loudly.ui.adapters.holders.ViewHolderPost.ViewHolderPostClickListener;
+import solid.collections.SolidList;
 
 public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
         implements ViewHolderPostClickListener {
@@ -45,16 +46,15 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
         return posts.size();
     }
 
-    public void setPosts(@NonNull List<? extends PlainPost> newPosts) {
+    public void setPosts(@NonNull SolidList<PlainPost> newPosts) {
         posts.clear();
         posts.addAll(newPosts);
         notifyDataSetChanged();
     }
 
-    public void addPosts(@NonNull List<? extends PlainPost> newPosts) {
-        int positionStart = posts.size();
+    public void updatePosts(@NonNull SolidList<PlainPost> newPosts) {
         posts.addAll(newPosts);
-        notifyItemRangeInserted(positionStart, newPosts.size());
+        notifyDataSetChanged();
     }
 
     @Override
