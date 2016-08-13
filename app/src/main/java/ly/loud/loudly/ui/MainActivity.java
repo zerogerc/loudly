@@ -222,6 +222,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void showNetworksChooseLayout() {
+        bottomSheetBehavior.setState(STATE_EXPANDED);
+    }
+
+    @Override
     public List<NetworkContract> getChosenNetworks() {
         return networksChooseLayout.getChosenNetworks();
     }

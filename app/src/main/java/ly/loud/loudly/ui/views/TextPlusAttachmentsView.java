@@ -6,8 +6,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -45,6 +47,9 @@ public class TextPlusAttachmentsView extends LinearLayout {
     @SuppressWarnings("NullableProblems") // onAttachedToWindow
     @NonNull
     private AttachmentAdapter adapter;
+
+    @Nullable
+    TextWatcher editTextWatcher;
 
     public TextPlusAttachmentsView(Context context) {
         super(context);
@@ -84,6 +89,9 @@ public class TextPlusAttachmentsView extends LinearLayout {
         } else {
             attachmentsView.setVisibility(GONE);
         }
+        if (editTextWatcher != null) {
+            textView.addTextChangedListener(editTextWatcher);
+        }
     }
 
     public void addAttachment(@NonNull Attachment attachment) {
@@ -105,9 +113,17 @@ public class TextPlusAttachmentsView extends LinearLayout {
 
     }
 
+    public void addOnEditTextChangeListener(@NonNull TextWatcher watcher) {
+        this.editTextWatcher = watcher;
+
+        if (textView != null) {
+            textView.addTextChangedListener(watcher);
+        }
+    }
+
     @Override
     @NonNull
-    public Parcelable onSaveInstanceState () {
+    public Parcelable onSaveInstanceState() {
         Bundle state = new Bundle();
         state.putParcelable(SUPER_STATE, super.onSaveInstanceState());
         state.putParcelableArrayList(ATTACHMENTS, asArrayList(adapter.getAttachmentList()));
@@ -115,9 +131,9 @@ public class TextPlusAttachmentsView extends LinearLayout {
     }
 
     @Override
-    public void onRestoreInstanceState (@NonNull Parcelable state) {
+    public void onRestoreInstanceState(@NonNull Parcelable state) {
         if (state instanceof Bundle) {
-            Bundle savedState = (Bundle)state;
+            Bundle savedState = (Bundle) state;
             //noinspection WrongConstant
             ArrayList<Attachment> attachments = savedState.getParcelableArrayList(ATTACHMENTS);
             if (attachments == null) {
