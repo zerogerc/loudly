@@ -1,6 +1,8 @@
 package ly.loud.loudly.ui.new_post;
 
 import android.content.Context;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,7 +14,6 @@ import android.util.AttributeSet;
 import com.hannesdorfmann.mosby.mvp.layout.MvpLinearLayout;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -23,6 +24,7 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.networks.NetworkContract;
+import solid.collections.SolidList;
 
 /**
  * Fragment that allows user to choose networks from all connected.
@@ -30,6 +32,9 @@ import ly.loud.loudly.networks.NetworkContract;
  */
 public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, NetworksChoosePresenter>
         implements NetworksChooseView {
+
+    private static final String SUPER_STATE = "super_state";
+    private static final String SELECTED = "selected";
 
     @SuppressWarnings("NullableProblems")
     @BindView(R.id.networks_choose_recycler_view)
@@ -44,14 +49,6 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
     @SuppressWarnings("NullableProblems") // onCreate
     @NonNull
     NetworkChooseAdapter adapter;
-
-    @SuppressWarnings("NullableProblems") // onCreate
-    @NonNull
-    private final List<NetworkContract> models = new ArrayList<>();
-
-    // Has the same size as models
-    @NonNull
-    private final List<Boolean> result = new ArrayList<>();
 
     public NetworksChooseLayout(@NonNull Context context) {
         this(context, null);
@@ -68,6 +65,7 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
     public NetworksChooseLayout(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr, @StyleRes int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         Loudly.getContext().getAppComponent().inject(this);
+        adapter = new NetworkChooseAdapter(getContext());
     }
 
     @Override
@@ -86,17 +84,13 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
     private void initRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new NetworkChooseAdapter(getContext(), models);
-        adapter.setOnItemStateChangeListener(result::set);
         recyclerView.setAdapter(adapter);
         showModels(presenter.getConnectedNetworks());
     }
 
     @Override
-    public void showModels(@NonNull List<NetworkContract> list) {
-        models.addAll(list);
-        result.addAll(Collections.nCopies(list.size(), false));
-        adapter.notifyDataSetChanged();
+    public void showModels(@NonNull SolidList<NetworkContract> models) {
+        adapter.setModels(models);
     }
 
     /**
@@ -104,11 +98,37 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
      */
     public List<NetworkContract> getChosenNetworks() {
         List<NetworkContract> chosen = new ArrayList<>();
-        for (int i = 0, size = result.size(); i < size; i++) {
-            if (result.get(i)) {
-                chosen.add(models.get(i));
+        boolean[] selected = adapter.getSelectedNetworks();
+
+        for (NetworkContract model : adapter.getModels()) {
+            if (selected[model.getId()]) {
+                chosen.add(model);
             }
         }
         return chosen;
+    }
+
+    @Override
+    @NonNull
+    public Parcelable onSaveInstanceState () {
+        Bundle state = new Bundle();
+        state.putParcelable(SUPER_STATE, super.onSaveInstanceState());
+        state.putBooleanArray(SELECTED, adapter.getSelectedNetworks());
+        return state;
+    }
+
+    @Override
+    public void onRestoreInstanceState (@NonNull Parcelable state) {
+        if (state instanceof Bundle) {
+            Bundle savedState = (Bundle)state;
+            boolean[] selected = savedState.getBooleanArray(SELECTED);
+            if (selected != null) {
+                adapter.setSelectedNetworks(selected);
+            }
+            Parcelable superState = savedState.getParcelable(SUPER_STATE);
+            super.onRestoreInstanceState(superState);
+        } else {
+            super.onRestoreInstanceState(state);
+        }
     }
 }

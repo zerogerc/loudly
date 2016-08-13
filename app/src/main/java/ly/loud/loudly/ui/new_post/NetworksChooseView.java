@@ -5,11 +5,10 @@ import android.support.annotation.UiThread;
 
 import com.hannesdorfmann.mosby.mvp.MvpView;
 
-import java.util.List;
-
 import ly.loud.loudly.networks.NetworkContract;
+import solid.collections.SolidList;
 
 @UiThread
 public interface NetworksChooseView extends MvpView {
-    void showModels(@NonNull List<NetworkContract> list);
+    void showModels(@NonNull SolidList<NetworkContract> list);
 }

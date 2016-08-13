@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,7 +25,7 @@ import static ly.loud.loudly.util.ListUtils.asSolidList;
 public class AttachmentAdapter extends RecyclerView.Adapter<AttachmentAdapter.AttachmentHolder>{
 
     @NonNull
-    private ArrayList<Attachment> attachmentList;
+    private List<Attachment> attachmentList;
 
     public AttachmentAdapter(@NonNull SolidList<Attachment> attachmentList) {
         this.attachmentList = new ArrayList<>(attachmentList);

@@ -179,9 +179,7 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if (newPostFragmentView.getVisibility() == VISIBLE) {
-            tryHidePostCreateLayoutBasedOnBottomSheet();
-        } else {
+        } else if (!tryHidePostCreateLayoutBasedOnBottomSheet()) {
             super.onBackPressed();
         }
     }
@@ -238,13 +236,17 @@ public class MainActivity extends AppCompatActivity
      * Run before back button super method to check if we need to hide post layout from the screen
      * or just change state of bottom sheet.
      */
-    private void tryHidePostCreateLayoutBasedOnBottomSheet() {
+    private boolean tryHidePostCreateLayoutBasedOnBottomSheet() {
+        if (newPostFragmentView.getVisibility() != VISIBLE) {
+            return false;
+        }
+
         if (bottomSheetBehavior.getState() == STATE_COLLAPSED) {
-            newPostFragmentView.setVisibility(GONE);
-            background.setOpacity(0);
+            hideNewPostFragment();
         } else {
             bottomSheetBehavior.setState(STATE_COLLAPSED);
         }
+        return true;
     }
 
     /**

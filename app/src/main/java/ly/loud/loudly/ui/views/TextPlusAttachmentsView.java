@@ -20,8 +20,10 @@ import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.interfaces.attachments.Attachment;
 import ly.loud.loudly.ui.adapters.AttachmentAdapter;
-import ly.loud.loudly.util.ListUtils;
 import solid.collections.SolidList;
+
+import static ly.loud.loudly.util.ListUtils.asArrayList;
+import static ly.loud.loudly.util.ListUtils.asSolidList;
 
 public class TextPlusAttachmentsView extends LinearLayout {
 
@@ -88,6 +90,7 @@ public class TextPlusAttachmentsView extends LinearLayout {
         if (adapter.getAttachmentsCount() == 0) {
             attachmentsView.setVisibility(VISIBLE);
         }
+        attachmentsCount++;
         adapter.addAttachment(attachment);
     }
 
@@ -107,7 +110,7 @@ public class TextPlusAttachmentsView extends LinearLayout {
     public Parcelable onSaveInstanceState () {
         Bundle state = new Bundle();
         state.putParcelable(SUPER_STATE, super.onSaveInstanceState());
-        state.putParcelableArrayList(ATTACHMENTS, new ArrayList<>(adapter.getAttachmentList()));
+        state.putParcelableArrayList(ATTACHMENTS, asArrayList(adapter.getAttachmentList()));
         return state;
     }
 
@@ -120,7 +123,7 @@ public class TextPlusAttachmentsView extends LinearLayout {
             if (attachments == null) {
                 adapter.setAttachmentList(SolidList.empty());
             } else {
-                adapter.setAttachmentList(ListUtils.asSolidList(attachments));
+                adapter.setAttachmentList(asSolidList(attachments));
             }
             Parcelable superState = savedState.getParcelable(SUPER_STATE);
             super.onRestoreInstanceState(superState);
