@@ -3,11 +3,12 @@ package ly.loud.loudly.ui.views;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
@@ -19,8 +20,13 @@ import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.base.interfaces.attachments.Attachment;
 import ly.loud.loudly.ui.adapters.AttachmentAdapter;
+import ly.loud.loudly.util.ListUtils;
+import solid.collections.SolidList;
 
 public class TextPlusAttachmentsView extends LinearLayout {
+
+    private static final String SUPER_STATE = "super_state";
+    private static final String ATTACHMENTS = "attachments";
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.text)
@@ -32,10 +38,7 @@ public class TextPlusAttachmentsView extends LinearLayout {
     @NonNull
     RecyclerView attachmentsView;
 
-    private final int attachmentsHeight = getResources().getDimensionPixelOffset(R.dimen.text_with_attachment_attachment_size);
-
-    @NonNull
-    private List<Attachment> attachmentList = new ArrayList<>();
+    private int attachmentsCount = 0;
 
     @SuppressWarnings("NullableProblems") // onAttachedToWindow
     @NonNull
@@ -43,19 +46,27 @@ public class TextPlusAttachmentsView extends LinearLayout {
 
     public TextPlusAttachmentsView(Context context) {
         super(context);
+        init();
     }
 
     public TextPlusAttachmentsView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init();
     }
 
     public TextPlusAttachmentsView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init();
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public TextPlusAttachmentsView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
+        init();
+    }
+
+    private void init() {
+        adapter = new AttachmentAdapter(SolidList.empty());
     }
 
     @Override
@@ -65,36 +76,19 @@ public class TextPlusAttachmentsView extends LinearLayout {
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         attachmentsView.setLayoutManager(layoutManager);
-
-        adapter = new AttachmentAdapter(attachmentList);
         attachmentsView.setAdapter(adapter);
+        if (adapter.getItemCount() > 0) {
+            attachmentsView.setVisibility(VISIBLE);
+        } else {
+            attachmentsView.setVisibility(GONE);
+        }
     }
 
     public void addAttachment(@NonNull Attachment attachment) {
-        attachmentList.add(attachment);
-        setAttachmentsParams();
-        setEditTextParams();
-        adapter.notifyDataSetChanged();
-    }
-
-    private void setEditTextParams() {
-        ViewGroup.LayoutParams params = textView.getLayoutParams();
-        if (attachmentList.isEmpty()) {
-            params.height = LayoutParams.MATCH_PARENT;
-        } else {
-            params.height = LayoutParams.WRAP_CONTENT;
+        if (adapter.getAttachmentsCount() == 0) {
+            attachmentsView.setVisibility(VISIBLE);
         }
-        textView.setLayoutParams(params);
-    }
-
-    private void setAttachmentsParams() {
-        ViewGroup.LayoutParams params = attachmentsView.getLayoutParams();
-        if (attachmentList.isEmpty()) {
-            params.height = 0;
-        } else {
-            params.height = attachmentsHeight;
-        }
-        attachmentsView.setLayoutParams(params);
+        adapter.addAttachment(attachment);
     }
 
     @NonNull
@@ -104,7 +98,34 @@ public class TextPlusAttachmentsView extends LinearLayout {
 
     @NonNull
     public List<Attachment> getAttachmentList() {
-        return attachmentList;
+        return adapter.getAttachmentList();
 
+    }
+
+    @Override
+    @NonNull
+    public Parcelable onSaveInstanceState () {
+        Bundle state = new Bundle();
+        state.putParcelable(SUPER_STATE, super.onSaveInstanceState());
+        state.putParcelableArrayList(ATTACHMENTS, new ArrayList<>(adapter.getAttachmentList()));
+        return state;
+    }
+
+    @Override
+    public void onRestoreInstanceState (@NonNull Parcelable state) {
+        if (state instanceof Bundle) {
+            Bundle savedState = (Bundle)state;
+            //noinspection WrongConstant
+            ArrayList<Attachment> attachments = savedState.getParcelableArrayList(ATTACHMENTS);
+            if (attachments == null) {
+                adapter.setAttachmentList(SolidList.empty());
+            } else {
+                adapter.setAttachmentList(ListUtils.asSolidList(attachments));
+            }
+            Parcelable superState = savedState.getParcelable(SUPER_STATE);
+            super.onRestoreInstanceState(superState);
+        } else {
+            super.onRestoreInstanceState(state);
+        }
     }
 }

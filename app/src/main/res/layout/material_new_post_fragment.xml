@@ -48,7 +48,8 @@
                 <EditText
                     android:id="@+id/text"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
                     android:background="@android:color/transparent"
                     android:gravity="start"
                     android:hint="What's on your mind?"
@@ -57,7 +58,8 @@
                 <android.support.v7.widget.RecyclerView
                     android:id="@+id/attachments"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="@dimen/text_with_attachment_attachment_size"
+                    android:visibility="gone"/>
             </ly.loud.loudly.ui.views.TextPlusAttachmentsView>
         </LinearLayout>
     </ScrollView>
