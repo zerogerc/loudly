@@ -43,7 +43,7 @@ public class PostUploadModel {
                 .filter(attachment -> attachment instanceof PlainImage)
                 .flatMap(attachment ->
                                 networkContract
-                                        .upload(((PlainImage) attachment))
+                                        .upload((PlainImage) attachment)
                                         .cast(SingleAttachment.class)
                 )
                 .toList();

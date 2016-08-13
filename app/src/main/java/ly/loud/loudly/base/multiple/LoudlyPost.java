@@ -81,7 +81,7 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
         SinglePost[] copied = new SinglePost[elements.length];
         System.arraycopy(elements, 0, copied, 0, copied.length);
         copied[instance.getNetwork()] = instance;
-        ArrayList<MultipleAttachment> newAttachments = new ArrayList<>();
+        ArrayList<MultipleAttachment> newAttachments = new ArrayList<>(getAttachments().size());
         for (int i = 0; i < getAttachments().size(); i++) {
             MultipleAttachment multipleAttachment = getAttachments().get(i);
             SingleAttachment singleAttachment = instance.getAttachments().get(i);
@@ -100,7 +100,7 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
         SinglePost[] copied = new SinglePost[elements.length];
         System.arraycopy(elements, 0, copied, 0, copied.length);
         copied[network] = null;
-        ArrayList<MultipleAttachment> newAttachments = new ArrayList<>();
+        ArrayList<MultipleAttachment> newAttachments = new ArrayList<>(getAttachments().size());
         for (MultipleAttachment attachment : getAttachments()) {
             newAttachments.add((MultipleAttachment) attachment.deleteNetworkInstance(network));
         }

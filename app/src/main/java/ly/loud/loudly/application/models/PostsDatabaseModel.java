@@ -27,7 +27,7 @@ import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.ListUtils;
-import ly.loud.loudly.util.NetworkUtils;
+import ly.loud.loudly.util.NetworkUtils.DividedList;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.DatabaseException;
 import ly.loud.loudly.util.database.entities.StoredAttachment;
@@ -42,6 +42,7 @@ import solid.collections.SolidList;
 import static ly.loud.loudly.networks.Networks.LOUDLY;
 import static ly.loud.loudly.networks.Networks.NETWORK_COUNT;
 import static ly.loud.loudly.util.ListUtils.asSolidList;
+import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
 
 public class PostsDatabaseModel {
     @NonNull
@@ -488,6 +489,10 @@ public class PostsDatabaseModel {
                             loudlyPost.getLocation(), LOUDLY, Long.toString(storedPost.getId())
                     );
                     return loudlyPost.setSingleNetworkInstance(loudlyInstance);
+                })
+                .map(post -> {
+                    cached.add(0, post);
+                    return post;
                 });
     }
 
@@ -507,7 +512,15 @@ public class PostsDatabaseModel {
                                 .flatMap(ignored -> deleteAttachments(storedPost.getId()))
                                 .flatMap(ignored -> deleteStoredPost(storedPost))
                 )
-                .map(result -> post.deleteNetworkInstance(LOUDLY));
+                .map(result -> {
+                    ListUtils.removeByPredicateInPlace(cached, somePost -> {
+                        LoudlyPost loudlyPost = (LoudlyPost) somePost;
+                        SingleNetworkElement instance = loudlyPost.getSingleNetworkInstance(LOUDLY);
+                        return instance != null &&
+                                instance.getLink().equals(loudlyInstance.getLink());
+                    });
+                    return post.deleteNetworkInstance(LOUDLY);
+                });
     }
 
     @NonNull
@@ -596,8 +609,8 @@ public class PostsDatabaseModel {
                         return asSolidList(list);
                     });
         } else {
-            final NetworkUtils.DividedList<PlainPost> dividedList =
-                    NetworkUtils.divideListOfCachedPosts(cached, timeInterval);
+            final DividedList<PlainPost> dividedList =
+                    divideListOfCachedPosts(cached, timeInterval);
 
             return selectPostsByTimeInterval(dividedList.before)
                     .flatMap(before ->
