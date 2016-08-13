@@ -136,9 +136,11 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = ((NavigationView) findViewById(R.id.nav_view));
         navigationView.setNavigationItemSelectedListener(this);
 
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new FeedFragment())
-                .commit();
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new FeedFragment())
+                    .commit();
+        }
 
         initFragmentsInteraction();
     }

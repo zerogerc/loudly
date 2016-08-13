@@ -5,11 +5,10 @@ import android.support.annotation.UiThread;
 
 import com.hannesdorfmann.mosby.mvp.MvpView;
 
-import java.util.List;
-
 import ly.loud.loudly.base.plain.PlainPost;
+import solid.collections.SolidList;
 
 @UiThread
 public interface FeedView extends MvpView {
-    void onNewLoadedPosts(@NonNull List<? extends PlainPost> posts);
+    void onPostsUpdated(@NonNull SolidList<PlainPost> posts);
 }
