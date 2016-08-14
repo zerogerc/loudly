@@ -38,7 +38,7 @@ public class NetworkUtils {
                 fromCache.add(post);
             }
         }
-        return new DividedList<>(fromCache, new TimeInterval(timeInterval.from, firstLoadedPostDate),
-                new TimeInterval(lastLoadedPostDate, timeInterval.to));
+        return new DividedList<>(fromCache, new TimeInterval(timeInterval.from, firstLoadedPostDate - 1),
+                new TimeInterval(lastLoadedPostDate + 1, timeInterval.to));
     }
 }

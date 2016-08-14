@@ -28,6 +28,9 @@ public interface FacebookClient {
                                      @Nullable @Query("until") Long until,
                                      @NonNull @Query("access_token") String accessToken);
 
+    @GET
+    @NonNull
+    Call<Data<List<Post>>> continueLoadPostsWithPagination(@NonNull @Url String url);
 
     @GET("{id}/comments?date_format=U&fields=message,from%7Bid%7D,created_time,id,comment_count,like_count,attachment")
     @NonNull
