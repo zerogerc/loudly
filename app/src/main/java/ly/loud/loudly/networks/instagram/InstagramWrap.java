@@ -222,9 +222,6 @@ public class InstagramWrap extends Wrap {
             String username = personParser.getString("");
             String name = personParser.getString("");
             String url = personParser.getString("");
-            Person person = new Person(name, "", url, networkID());
-            person.setId(username);
-            result.add(person);
         }
         return result;
     }
@@ -257,12 +254,6 @@ public class InstagramWrap extends Wrap {
             String username = userParser.getString("");
             String picture = userParser.getString("");
             String id = commentParser.getString("");
-
-            Person person = new Person(name, "", picture, networkID());
-            person.setId(username);
-            Comment comment = new Comment(text, time, person,
-                    networkID(), new Link(id));
-            result.add(comment);
         }
         return result;
     }

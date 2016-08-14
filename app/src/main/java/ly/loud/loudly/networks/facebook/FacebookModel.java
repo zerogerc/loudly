@@ -438,7 +438,9 @@ public class FacebookModel implements NetworkContract {
         } else {
             url = photo.data.url;
         }
-        return new Person(person.firstName, person.lastName, url, getId());
+        String firstName = person.firstName == null ? "" : person.firstName;
+        String lastName = person.lastName == null ? "" : person.lastName;
+        return new Person(firstName, lastName, url, getId(), person.id);
     }
 
     @Override
@@ -476,5 +478,11 @@ public class FacebookModel implements NetworkContract {
             }
             return asSolidList(comments);
         });
+    }
+
+    @NonNull
+    @Override
+    public String getPersonPageUrl(@NonNull Person person) {
+        return "https://www.facebook.com/" + person.getId();
     }
 }

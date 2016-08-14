@@ -2,30 +2,41 @@ package ly.loud.loudly.base.entities;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.ui.adapters.holders.ItemTypes.ItemType;
 import ly.loud.loudly.ui.adapters.holders.ListItem;
 
 import static ly.loud.loudly.ui.adapters.holders.ItemTypes.PERSON;
 
 public class Person implements ListItem, Parcelable {
-    private String firstName, lastName;
-    private String photoUrl;
-    private int network;
-    private String id;
+    @NonNull
+    private final String firstName;
 
-    public Person() {
-        this.firstName = null;
-        this.lastName = null;
-        this.photoUrl = null;
-        this.network = -1;
-    }
+    @NonNull
+    private final String lastName;
 
-    public Person(String firstName, String lastName, String photoUrl, int network) {
+    @Nullable
+    private final String photoUrl;
+
+    @Network
+    private final int network;
+
+    @NonNull
+    private final String id;
+
+    public Person(@NonNull String firstName,
+                  @NonNull String lastName,
+                  @Nullable String photoUrl,
+                  @Network int network,
+                  @NonNull String id) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.photoUrl = photoUrl;
         this.network = network;
+        this.id = id;
     }
 
     public Person(Parcel source) {
@@ -36,38 +47,28 @@ public class Person implements ListItem, Parcelable {
         id = source.readString();
     }
 
+    @NonNull
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
 
+    @NonNull
     public String getFirstName() {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
+    @NonNull
     public String getLastName() {
         return lastName;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
+    @Nullable
     public String getPhotoUrl() {
         return photoUrl;
     }
 
-    public void setPhotoUrl(String photoUrl) {
-        this.photoUrl = photoUrl;
-    }
-
+    @Network
     public int getNetwork() {
         return network;
     }

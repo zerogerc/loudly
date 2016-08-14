@@ -130,4 +130,13 @@ public interface NetworkContract {
     @CheckResult
     @NonNull
     Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element);
+
+    /**
+     * Get url of person's page in this network
+     *
+     * @param person Person from this network
+     * @return URL of page
+     */
+    @NonNull
+    String getPersonPageUrl(@NonNull Person person);
 }

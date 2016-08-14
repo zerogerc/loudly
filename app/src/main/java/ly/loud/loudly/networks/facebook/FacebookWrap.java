@@ -487,10 +487,6 @@ public class FacebookWrap extends Wrap {
             String firstName = pParser.getString("");
             String lastName = pParser.getString("");
             String picture = pParser.getObject().getObject().getString("");
-
-            Person person = new Person(firstName, lastName, picture, networkID());
-            person.setId(id);
-            result.add(person);
         }
 
         return result;

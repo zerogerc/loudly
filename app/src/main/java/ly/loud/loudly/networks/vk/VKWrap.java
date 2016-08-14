@@ -498,9 +498,6 @@ public class VKWrap extends Wrap {
             String firstName = person.getString("");
             String lastName = person.getString("");
             String photo = person.getString("");
-            Person p = new Person(firstName, lastName, photo, networkID());
-            p.setId(id);
-            profiles.add(p);
         }
 
         LinkedList<Comment> comments = new LinkedList<>();
@@ -615,10 +612,6 @@ public class VKWrap extends Wrap {
                 String firstName = person.getString("first_name");
                 String lastName = person.getString("last_name");
                 String photoURL = person.getString("photo_50");
-
-                Person person1 = new Person(firstName, lastName, photoURL, networkID());
-                person1.setId(id);
-                result.add(person1);
             }
         } catch (JSONException e) {
             e.printStackTrace();

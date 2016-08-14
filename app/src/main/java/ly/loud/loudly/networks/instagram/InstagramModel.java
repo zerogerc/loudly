@@ -140,4 +140,10 @@ public class InstagramModel implements NetworkContract {
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.just(null);
     }
+
+    @NonNull
+    @Override
+    public String getPersonPageUrl(@NonNull Person person) {
+        return "";
+    }
 }
