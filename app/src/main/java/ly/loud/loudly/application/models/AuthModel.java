@@ -8,14 +8,11 @@ import javax.inject.Inject;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks.Network;
-import ly.loud.loudly.util.database.DatabaseException;
-import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
 import rx.Single;
 
 /**
  * Model for authorizing in networks
- *
  */
 public class AuthModel {
     @NonNull

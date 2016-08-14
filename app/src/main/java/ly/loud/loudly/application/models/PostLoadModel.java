@@ -9,14 +9,12 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.DatabaseUtils;
 import rx.Observable;
 import solid.collections.SolidList;
 import solid.collectors.ToArrayList;
@@ -31,13 +29,14 @@ import static solid.collectors.ToSolidList.toSolidList;
  */
 public class PostLoadModel {
     @NonNull
-    private Loudly loudlyApplication;
-    @NonNull
     private CoreModel coreModel;
 
+    @NonNull
+    private PostsDatabaseModel postsDatabaseModel;
+
     @Inject
-    public PostLoadModel(@NonNull Loudly loudlyApplication, @NonNull CoreModel coreModel) {
-        this.loudlyApplication = loudlyApplication;
+    public PostLoadModel(@NonNull CoreModel coreModel, @NonNull PostsDatabaseModel databaseModel) {
+        this.postsDatabaseModel = databaseModel;
         this.coreModel = coreModel;
     }
 
@@ -56,8 +55,7 @@ public class PostLoadModel {
                                     .getSingleNetworkInstance(single.getNetwork());
                             return instance != null && instance.getLink().equals(single.getLink());
                         }) // And set this posts as instances
-                        .reduce(loudlyPost, (lPost, sPost) -> lPost
-                                .setSingleNetworkInstance(sPost.getNetwork(), sPost));
+                        .reduce(loudlyPost, LoudlyPost::setSingleNetworkInstance);
             }
             return post;
         }).collect(toSolidList());
@@ -85,8 +83,7 @@ public class PostLoadModel {
     @CheckResult
     @NonNull
     public Observable<SolidList<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
-        return Observable
-                .fromCallable(() -> ListUtils.asSolidList(DatabaseUtils.loadPosts(interval)))
+        return postsDatabaseModel.loadPostsByTimeInterval(interval)
                 .flatMap(list -> coreModel.getConnectedNetworksModels()
                         .flatMap(model -> model.loadPosts(interval))
                         .scan(list, PostLoadModel::merge));
@@ -102,7 +99,7 @@ public class PostLoadModel {
                 .map(NetworkContract::getCachedPosts)
                 .collect(ToArrayList.toArrayList());
 
-        SolidList<PlainPost> result = SolidList.empty();
+        SolidList<PlainPost> result = postsDatabaseModel.getCachedPosts();
         for (SolidList<SinglePost> newList : cachedPosts) {
             result = merge(result, newList);
         }

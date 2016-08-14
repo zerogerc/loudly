@@ -37,9 +37,6 @@ public abstract class DatabaseTest<T> {
     @NonNull
     protected Random random = new Random(1234567890L);
 
-    @NonNull
-    protected StorIOSQLite postsDatabase = DatabaseUtils.getPostsDatabase();
-
     public static void cleanTables(@NonNull StorIOSQLite database, @NonNull String... tables) {
         for (String table : tables) {
             database
@@ -135,22 +132,5 @@ public abstract class DatabaseTest<T> {
 
         delete(ids);
         checkAbsent(ids);
-    }
-
-    private void clean() {
-        // Clean posts DB
-        cleanTables(postsDatabase, StoredPost.Contract.TABLE_NAME,
-                StoredAttachment.Contract.TABLE_NAME, Links.Contract.TABLE_NAME,
-                StoredLocation.Contract.TABLE_NAME);
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        clean();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        clean();
     }
 }

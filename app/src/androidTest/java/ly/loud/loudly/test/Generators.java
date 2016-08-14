@@ -62,7 +62,7 @@ public class Generators {
                 new Point(random.nextInt(), random.nextInt()));
         for (int i = 0; i < Networks.NETWORK_COUNT; i++) {
             if (random.nextBoolean()) {
-                image = image.setSingleNetworkInstance(i, new SingleImage(image.getUrl(),
+                image = image.setSingleNetworkInstance(new SingleImage(image.getUrl(),
                         image.getSize(), i, randomString(maxLinkLength, random)));
             }
         }
@@ -86,7 +86,7 @@ public class Generators {
 
     @NonNull
     public static StoredLocation randomStoredLocation(int nameSize, @NonNull Random random) {
-        return new StoredLocation(randomString(nameSize, random), random.nextDouble(), random.nextDouble());
+        return new StoredLocation(null, randomString(nameSize, random), random.nextDouble(), random.nextDouble());
     }
 
     @NonNull
@@ -113,7 +113,7 @@ public class Generators {
                 for (MultipleAttachment attachment : post.getAttachments()) {
                     attachments1.add(attachment.getSingleNetworkInstance(i));
                 }
-                post = post.setSingleNetworkInstance(i, new SinglePost(post.getText(), post.getDate(),
+                post = post.setSingleNetworkInstance(new SinglePost(post.getText(), post.getDate(),
                         attachments1, post.getLocation(), i, randomString(linkLength, random)));
             }
         }

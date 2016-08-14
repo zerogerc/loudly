@@ -9,12 +9,13 @@ import java.util.ArrayList;
 
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Location;
-import ly.loud.loudly.networks.Networks;
-import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.MultipleAttachment;
+import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 
 /**
  * @author Danil Kolikov
@@ -64,15 +65,46 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
         return elements[network];
     }
 
+    /**
+     * Set instance to this post and all it's
+     *
+     * @param instance New instance (may be null)
+     * @return
+     */
     @CheckResult
     @NonNull
     @Override
-    public LoudlyPost setSingleNetworkInstance(@Network int network, @Nullable SinglePost instance) {
-        // Now single post is always post
+    public LoudlyPost setSingleNetworkInstance(@NonNull SinglePost instance) {
+        if (instance.getAttachments().size() != getAttachments().size()) {
+            throw new IllegalArgumentException("Wrong size of attachments");
+        }
         SinglePost[] copied = new SinglePost[elements.length];
         System.arraycopy(elements, 0, copied, 0, copied.length);
-        copied[network] = instance;
-        return new LoudlyPost(getText(), getDate(), getAttachments(), getLocation(), copied);
+        copied[instance.getNetwork()] = instance;
+        ArrayList<MultipleAttachment> newAttachments = new ArrayList<>(getAttachments().size());
+        for (int i = 0; i < getAttachments().size(); i++) {
+            MultipleAttachment multipleAttachment = getAttachments().get(i);
+            SingleAttachment singleAttachment = instance.getAttachments().get(i);
+
+            newAttachments.add(
+                    (MultipleAttachment) multipleAttachment
+                            .setSingleNetworkInstance(singleAttachment)
+            );
+        }
+        return new LoudlyPost(getText(), getDate(), newAttachments, getLocation(), copied);
+    }
+
+    @NonNull
+    @Override
+    public LoudlyPost deleteNetworkInstance(@Network int network) {
+        SinglePost[] copied = new SinglePost[elements.length];
+        System.arraycopy(elements, 0, copied, 0, copied.length);
+        copied[network] = null;
+        ArrayList<MultipleAttachment> newAttachments = new ArrayList<>(getAttachments().size());
+        for (MultipleAttachment attachment : getAttachments()) {
+            newAttachments.add((MultipleAttachment) attachment.deleteNetworkInstance(network));
+        }
+        return new LoudlyPost(getText(), getDate(), newAttachments, getLocation(), copied);
     }
 
     @NonNull

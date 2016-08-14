@@ -4,8 +4,10 @@ import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
+import rx.functions.Func1;
 import solid.collections.SolidList;
 
 /**
@@ -72,5 +74,23 @@ public class ListUtils {
         }
         //noinspection unchecked
         return (ArrayList<T>) EMPTY_ARRAY_LIST;
+    }
+
+    /**
+     * Remove elements from list, using specified predicate
+     *
+     * @param list      List to remove elements
+     * @param predicate A predicate
+     * @param <T>       Type of elements in list
+     */
+    public static <T> void removeByPredicateInPlace(@NonNull List<T> list,
+                                                    @NonNull Func1<T, Boolean> predicate) {
+        Iterator<T> iterator = list.iterator();
+        while (iterator.hasNext()) {
+            T element = iterator.next();
+            if (predicate.call(element)) {
+                iterator.remove();
+            }
+        }
     }
 }

@@ -3,11 +3,9 @@ package ly.loud.loudly.util.database.entities.links;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import com.pushtorefresh.storio.sqlite.StorIOSQLite;
-import com.pushtorefresh.storio.sqlite.operations.delete.DeleteResult;
+
 import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 import com.pushtorefresh.storio.sqlite.queries.Query;
-import ly.loud.loudly.networks.Networks;
 
 /**
  * Object that represents Links table
@@ -18,67 +16,41 @@ public class Links {
     @Nullable
     Long id;
 
+    @NonNull
     String[] links;
 
     public Links() {
     }
 
-    public Links(@Nullable Long id, String[] links) {
+    public Links(@Nullable Long id, @NonNull String[] links) {
         this.links = links;
         this.id = id;
     }
 
-    @Nullable
-    public static Long getLoudlyId(Links links) {
-        return links.getLinks()[Networks.LOUDLY] == null ? null : Long.parseLong(links.getLinks()[Networks.LOUDLY]);
-    }
-
-    /**
-     * Select link from DB by ID
-     *
-     * @param id       ID of links
-     * @param database Posts database
-     * @return Stored Links, or null, if not found
-     */
-    @Nullable
-    public static Links selectById(long id, @NonNull StorIOSQLite database) {
-        return database
-                .get()
-                .object(Links.class)
-                .withQuery(
-                        Query.builder()
-                                .table(Contract.TABLE_NAME)
-                                .where(Contract._ID + " = ?")
-                                .whereArgs(id)
-                                .build())
-                .prepare()
-                .executeAsBlocking();
-    }
-
-    /**
-     * Delete links from DB by ID
-     * @param id ID of links
-     * @param database Posts database
-     * @return Result of deletion
-     */
     @NonNull
-    public static DeleteResult deleteById(long id, @NonNull StorIOSQLite database) {
-        return database.delete()
-                .byQuery(
-                        DeleteQuery.builder()
-                                .table(Contract.TABLE_NAME)
-                                .where(Contract._ID + " = ?")
-                                .whereArgs(id)
-                                .build())
-                .prepare()
-                .executeAsBlocking();
+    public static Query selectById(long id) {
+        return Query.builder()
+                .table(Contract.TABLE_NAME)
+                .where(Contract._ID + " = ?")
+                .whereArgs(id)
+                .build();
     }
 
+    @NonNull
+    public static DeleteQuery deleteById(long id) {
+        return DeleteQuery.builder()
+                .table(Contract.TABLE_NAME)
+                .where(Contract._ID + " = ?")
+                .whereArgs(id)
+                .build();
+    }
+
+    @NonNull
     public String[] getLinks() {
         return links;
     }
 
-    public void setLinks(String[] links) {
+    public void setLinks(@NonNull String[] links) {
         this.links = links;
     }
 

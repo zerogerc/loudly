@@ -43,7 +43,7 @@ import ly.loud.loudly.networks.facebook.entities.Picture;
 import ly.loud.loudly.networks.facebook.entities.Post;
 import ly.loud.loudly.networks.facebook.entities.Result;
 import ly.loud.loudly.util.ListUtils;
-import ly.loud.loudly.util.NetworkUtils;
+import ly.loud.loudly.util.NetworkUtils.DividedList;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import okhttp3.MediaType;
@@ -58,6 +58,8 @@ import solid.collections.SolidList;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.ListUtils.asSolidList;
+import static ly.loud.loudly.util.ListUtils.removeByPredicateInPlace;
+import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
 
 public class FacebookModel implements NetworkContract {
     public static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
@@ -196,8 +198,16 @@ public class FacebookModel implements NetworkContract {
             if (id == null) {
                 return null;
             }
-            return new SinglePost(post.getText(), post.getDate(), post.getAttachments(), post.getLocation(),
-                    getId(), id.id);
+            SinglePost uploaded = new SinglePost
+                    (post.getText(),
+                    post.getDate(),
+                    post.getAttachments(),
+                    post.getLocation(),
+                    getId(),
+                    id.id
+            );
+            cached.add(0, uploaded);
+            return uploaded;
         });
     }
 
@@ -218,7 +228,12 @@ public class FacebookModel implements NetworkContract {
             if (body == null) {
                 return false;
             }
-            return body.success;
+            if (body.success) {
+                removeByPredicateInPlace(cached, somePost ->
+                        somePost.getLink().equals(post.getLink()));
+                return true;
+            }
+            return false;
         });
     }
 
@@ -322,8 +337,8 @@ public class FacebookModel implements NetworkContract {
                 cached.addAll(posts);
                 return asSolidList(posts);
             }
-            NetworkUtils.DividedList dividedList = NetworkUtils
-                    .divideListOfCachedPosts(cached, timeInterval);
+            DividedList<SinglePost> dividedList = divideListOfCachedPosts(cached, timeInterval);
+
             List<SinglePost> before = downloadPosts(dividedList.before);
             List<SinglePost> after = downloadPosts(dividedList.after);
 

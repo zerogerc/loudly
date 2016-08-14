@@ -39,7 +39,7 @@ import ly.loud.loudly.networks.vk.entities.Profile;
 import ly.loud.loudly.networks.vk.entities.Say;
 import ly.loud.loudly.networks.vk.entities.VKItems;
 import ly.loud.loudly.networks.vk.entities.VKResponse;
-import ly.loud.loudly.util.NetworkUtils;
+import ly.loud.loudly.util.NetworkUtils.DividedList;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
 import okhttp3.MediaType;
@@ -55,6 +55,8 @@ import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.RequestType;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.ListUtils.asSolidList;
+import static ly.loud.loudly.util.ListUtils.removeByPredicateInPlace;
+import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
 
 public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
@@ -241,7 +243,9 @@ public class VKModel implements NetworkContract {
                 return null;
             }
             if (body.response != null) {
-                return new SinglePost(post, getId(), body.response.postId);
+                SinglePost uploaded = new SinglePost(post, getId(), body.response.postId);
+                cached.add(0, uploaded);
+                return uploaded;
             }
             return null;
         });
@@ -251,7 +255,25 @@ public class VKModel implements NetworkContract {
     @CheckResult
     @NonNull
     public Observable<Boolean> delete(@NonNull SinglePost post) {
-        return Observable.just(false);
+        return Observable.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                return null;
+            }
+            Call<VKResponse<Integer>> deleteCall = client
+                    .deletePost(keyKeeper.getUserId(), post.getLink(), keyKeeper.getAccessToken());
+            Response<VKResponse<Integer>> executed = deleteCall.execute();
+            VKResponse<Integer> body = executed.body();
+            if (body == null || body.response == null) {
+                return false;
+            }
+            if (body.response == 1) {
+                removeByPredicateInPlace(cached, somePost ->
+                        somePost.getLink().equals(post.getLink()));
+                return true;
+            }
+            return false;
+        });
     }
 
     @Override
@@ -264,7 +286,7 @@ public class VKModel implements NetworkContract {
                 cached.addAll(downloaded);
                 return asSolidList(downloaded);
             }
-            NetworkUtils.DividedList dividedList = NetworkUtils.divideListOfCachedPosts(cached, timeInterval);
+            DividedList<SinglePost> dividedList = divideListOfCachedPosts(cached, timeInterval);
 
             List<SinglePost> before = downloadPosts(0, dividedList.before);
             List<SinglePost> after = downloadPosts(cached.size() + before.size(),
