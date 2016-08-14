@@ -30,6 +30,7 @@ import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.networks.facebook.entities.Paging;
 import ly.loud.loudly.networks.vk.entities.Attachment;
 import ly.loud.loudly.networks.vk.entities.Counter;
 import ly.loud.loudly.networks.vk.entities.Photo;
@@ -338,6 +339,9 @@ public class VKModel implements NetworkContract {
                 }
                 for (Say say : body.response.items) {
                     currentTime = say.date;
+                    if (currentTime < timeInterval.from) {
+                        continue;
+                    }
                     if (currentTime > timeInterval.to) {
                         break;
                     }

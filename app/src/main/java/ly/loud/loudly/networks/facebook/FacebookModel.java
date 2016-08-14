@@ -376,6 +376,7 @@ public class FacebookModel implements NetworkContract {
         List<SinglePost> posts = new ArrayList<>();
         Call<Data<List<Post>>> dataCall = client.loadPosts(since, until,
                 keyKeeper.getAccessToken());
+        long currentTime = 0;
         do {
             Response<Data<List<Post>>> execute = dataCall.execute();
             Data<List<Post>> body = execute.body();
@@ -383,6 +384,13 @@ public class FacebookModel implements NetworkContract {
                 return posts;
             }
             for (Post post : body.data) {
+                currentTime = post.createdTime;
+                if (currentTime < timeInterval.from) {
+                    continue;
+                }
+                if (currentTime > timeInterval.to) {
+                    break;
+                }
                 ArrayList<SingleAttachment> attachments = new ArrayList<>();
                 if (post.attachments != null) {
                     for (FbAttachment attachment : post.attachments.data) {
@@ -403,7 +411,7 @@ public class FacebookModel implements NetworkContract {
             } else {
                 break;
             }
-        } while (true);
+        } while (timeInterval.contains(currentTime));
         return posts;
     }
 
