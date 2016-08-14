@@ -1,14 +1,14 @@
 package ly.loud.loudly.networks.facebook.entities;
 
-
 import android.support.annotation.Nullable;
 
 /**
- * @author Danil Kolikov
+ * Pagination for Facebook
  */
-public class Data<T> {
-    public T data;
+public class Paging {
+    @Nullable
+    public String next;
 
     @Nullable
-    public Paging paging;
+    public String previous;
 }

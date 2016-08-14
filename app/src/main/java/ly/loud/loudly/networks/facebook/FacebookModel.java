@@ -198,8 +198,8 @@ public class FacebookModel implements NetworkContract {
             if (id == null) {
                 return null;
             }
-            SinglePost uploaded = new SinglePost
-                    (post.getText(),
+            SinglePost uploaded = new SinglePost(
+                    post.getText(),
                     post.getDate(),
                     post.getAttachments(),
                     post.getLocation(),
@@ -369,34 +369,49 @@ public class FacebookModel implements NetworkContract {
         FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
         if (keyKeeper == null) {
             // ToDo: handle
-            return SolidList.empty();
+            return Collections.emptyList();
         }
         Long since = timeInterval.from != Long.MIN_VALUE ? timeInterval.from : null;
         Long until = timeInterval.to != Long.MAX_VALUE ? timeInterval.to : null;
+        List<SinglePost> posts = new ArrayList<>();
         Call<Data<List<Post>>> dataCall = client.loadPosts(since, until,
                 keyKeeper.getAccessToken());
-        Response<Data<List<Post>>> execute = dataCall.execute();
-        Data<List<Post>> body = execute.body();
-        List<SinglePost> posts = new ArrayList<>();
-        if (body == null) {
-            return SolidList.empty();
-        }
-        for (Post post : body.data) {
-            ArrayList<SingleAttachment> attachments = new ArrayList<>();
-            if (post.attachments != null) {
-                for (FbAttachment attachment : post.attachments.data) {
-                    SingleAttachment parsed = toAttachment(attachment);
-                    if (parsed != null) {
-                        attachments.add(parsed);
-                    }
-                }
-                int likes = post.likes != null ? post.likes.summary.totalCount : 0;
-                int shares = post.shares != null ? post.shares.count : 0;
-                int comments = post.comments != null ? post.comments.summary.totalCount : 0;
-                posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
-                        getId(), post.id, new Info(likes, shares, comments)));
+        long currentTime = 0;
+        do {
+            Response<Data<List<Post>>> execute = dataCall.execute();
+            Data<List<Post>> body = execute.body();
+            if (body == null) {
+                return posts;
             }
-        }
+            for (Post post : body.data) {
+                currentTime = post.createdTime;
+                if (currentTime < timeInterval.from) {
+                    continue;
+                }
+                if (currentTime > timeInterval.to) {
+                    break;
+                }
+                ArrayList<SingleAttachment> attachments = new ArrayList<>();
+                if (post.attachments != null) {
+                    for (FbAttachment attachment : post.attachments.data) {
+                        SingleAttachment parsed = toAttachment(attachment);
+                        if (parsed != null) {
+                            attachments.add(parsed);
+                        }
+                    }
+                    int likes = post.likes != null ? post.likes.summary.totalCount : 0;
+                    int shares = post.shares != null ? post.shares.count : 0;
+                    int comments = post.comments != null ? post.comments.summary.totalCount : 0;
+                    posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
+                            getId(), post.id, new Info(likes, shares, comments)));
+                }
+            }
+            if (body.paging != null && body.paging.next != null) {
+                dataCall = client.continueLoadPostsWithPagination(body.paging.next);
+            } else {
+                break;
+            }
+        } while (timeInterval.contains(currentTime));
         return posts;
     }
 
