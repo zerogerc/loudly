@@ -1,14 +1,17 @@
 package ly.loud.loudly.util;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.DisplayMetrics;
@@ -34,7 +37,6 @@ import java.util.Locale;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.legacy_base.attachments.Image;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.base.entities.Person;
@@ -211,5 +213,17 @@ public class Utils {
         } else {
             return Networks.nameResourceOfNetwork(Networks.LOUDLY);
         }
+    }
+
+    @NonNull
+    public static Loudly getApplicationContext(@NonNull Context context) {
+        return (Loudly) context.getApplicationContext();
+    }
+
+    public static void launchCustomTabs(@NonNull String url, @NonNull Activity context) {
+        new CustomTabsIntent.Builder()
+                .enableUrlBarHiding()
+                .build()
+                .launchUrl(context, Uri.parse(url));
     }
 }
