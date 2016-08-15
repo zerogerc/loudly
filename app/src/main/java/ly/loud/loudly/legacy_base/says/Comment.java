@@ -8,11 +8,6 @@ import ly.loud.loudly.base.entities.Person;
 public class Comment extends Say{
     Person person;
 
-    public Comment() {
-        super();
-        person = new Person();
-    }
-
     public Comment(String text, Person person, int network, Link link) {
         super(text, network, link);
         this.person = person;

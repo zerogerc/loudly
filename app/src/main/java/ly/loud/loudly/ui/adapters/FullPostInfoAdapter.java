@@ -9,9 +9,10 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.List;
 
+import ly.loud.loudly.base.entities.Person;
+import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.Comment;
 import ly.loud.loudly.networks.Networks.Network;
-import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.adapters.holders.BindingViewHolder;
 import ly.loud.loudly.ui.adapters.holders.ListItem;
 import ly.loud.loudly.ui.adapters.holders.ViewHolderComment;
@@ -53,9 +54,19 @@ public class FullPostInfoAdapter extends RecyclerView.Adapter<BindingViewHolder>
         }
     };
 
-    private final ViewHolderCommentClickListener commentClickListener = position -> {
-        if (fullPostInfoClickListener != null && (items.get(position) instanceof Comment)) {
-            fullPostInfoClickListener.onCommentLikesClick((Comment) items.get(position));
+    private final ViewHolderCommentClickListener commentClickListener = new ViewHolderCommentClickListener() {
+        @Override
+        public void onLikesClick(int position) {
+            if (fullPostInfoClickListener != null && (items.get(position) instanceof Comment)) {
+                fullPostInfoClickListener.onCommentLikesClick((Comment) items.get(position));
+            }
+        }
+
+        @Override
+        public void onPhotoClick(int position) {
+            if (fullPostInfoClickListener != null && (items.get(position) instanceof Comment)) {
+                fullPostInfoClickListener.onPhotoClick(((Comment) items.get(position)).getPerson());
+            }
         }
     };
 
@@ -116,8 +127,9 @@ public class FullPostInfoAdapter extends RecyclerView.Adapter<BindingViewHolder>
 
     /**
      * Adds delimiter corresponding to the given network following by list of given comments.
+     *
      * @param comments - list of persons to add
-     * @param network - network which delimiter will be inserted
+     * @param network  - network which delimiter will be inserted
      */
     public void addComments(@NonNull SolidList<Comment> comments, @Network int network) {
         int positionStart = items.size();
@@ -136,5 +148,7 @@ public class FullPostInfoAdapter extends RecyclerView.Adapter<BindingViewHolder>
         void onPostLikesClick(@NonNull PlainPost post);
 
         void onCommentLikesClick(@NonNull Comment comment);
+
+        void onPhotoClick(@NonNull Person person);
     }
 }

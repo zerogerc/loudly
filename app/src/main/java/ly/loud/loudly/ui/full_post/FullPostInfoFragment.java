@@ -24,23 +24,27 @@ import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
-import ly.loud.loudly.base.single.Comment;
-import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.plain.PlainPost;
-import ly.loud.loudly.ui.people_list.PeopleListFragment;
+import ly.loud.loudly.base.single.Comment;
+import ly.loud.loudly.networks.NetworkContract;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.ui.TitledFragment;
 import ly.loud.loudly.ui.adapters.FullPostInfoAdapter;
 import ly.loud.loudly.ui.adapters.FullPostInfoAdapter.FullPostInfoClickListener;
+import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.util.Utils;
 import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.ListUtils.asArrayList;
+import static ly.loud.loudly.util.Utils.getApplicationContext;
+import static ly.loud.loudly.util.Utils.launchCustomTabs;
 
 @FragmentWithArgs
 public class FullPostInfoFragment extends TitledFragment<FullPostInfoView, FullPostInfoPresenter>
-        implements FullPostInfoView, FullPostInfoClickListener  {
+        implements FullPostInfoView, FullPostInfoClickListener {
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.full_post_info_layout_recycler)
@@ -146,5 +150,19 @@ public class FullPostInfoFragment extends TitledFragment<FullPostInfoView, FullP
                 LIKES
         );
         fragment.show(getFragmentManager(), fragment.getTag());
+    }
+
+    @Override
+    public void onPhotoClick(@NonNull Person person) {
+        NetworkContract personNetwork = getApplicationContext(getContext())
+                .getAppComponent()
+                .coreModel()
+                .getModelByNetwork(person.getNetwork());
+        if (personNetwork != null) {
+            launchCustomTabs(
+                    personNetwork.getPersonPageUrl(person),
+                    getActivity()
+            );
+        }
     }
 }

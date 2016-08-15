@@ -24,15 +24,20 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
+import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.ui.adapters.PeopleListAdapter;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
+import static ly.loud.loudly.util.Utils.getApplicationContext;
+import static ly.loud.loudly.util.Utils.launchCustomTabs;
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
-public class PeopleListFragment extends DialogFragment {
+public class PeopleListFragment extends DialogFragment
+        implements PeopleListAdapter.PeopleListClickListener {
 
     private static final String SINGLE_NETWORK_KEY = "single_network";
     private static final String REQUEST_TYPE_KEY = "request_type";
@@ -74,6 +79,7 @@ public class PeopleListFragment extends DialogFragment {
      */
     private boolean firstRun = true;
 
+    @NonNull
     public static PeopleListFragment newInstance(@NonNull ArrayList<? extends SingleNetworkElement> element,
                                                  @RequestType int requestType) {
         PeopleListFragment frag = new PeopleListFragment();
@@ -113,6 +119,7 @@ public class PeopleListFragment extends DialogFragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         adapter = new PeopleListAdapter();
+        adapter.setClickListener(this);
         recyclerView.setAdapter(adapter);
 
         recyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -145,6 +152,20 @@ public class PeopleListFragment extends DialogFragment {
                         progress.setVisibility(View.GONE);
                     })
                     .subscribe();
+        }
+    }
+
+    @Override
+    public void onPersonClick(@NonNull Person person) {
+        NetworkContract personNetwork = getApplicationContext(getContext())
+                .getAppComponent()
+                .coreModel()
+                .getModelByNetwork(person.getNetwork());
+        if (personNetwork != null) {
+            launchCustomTabs(
+                    personNetwork.getPersonPageUrl(person),
+                    getActivity()
+            );
         }
     }
 }

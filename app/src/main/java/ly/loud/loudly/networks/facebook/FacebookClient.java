@@ -37,7 +37,7 @@ public interface FacebookClient {
     Call<Data<List<FbComment>>> loadComments(@NonNull @Path("id") String id,
                                              @NonNull @Query("access_token") String accessToken);
 
-    @GET("?fields=first_name,last_name,picture")
+    @GET("?fields=id,first_name,last_name,picture")
     @NonNull
     Call<Map<String, FbPerson>> getPersonsInfo(@NonNull @Query("ids") String ids,
                                                @NonNull @Query("access_token") String accessToken);

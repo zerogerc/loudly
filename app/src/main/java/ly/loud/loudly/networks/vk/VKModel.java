@@ -440,7 +440,7 @@ public class VKModel implements NetworkContract {
 
     @NonNull
     private Person toPerson(Profile profile) {
-        return new Person(profile.firstName, profile.lastName, profile.photo50, getId());
+        return new Person(profile.firstName, profile.lastName, profile.photo50, getId(), profile.id);
     }
 
     private int get(@Nullable Counter counter) {
@@ -528,6 +528,12 @@ public class VKModel implements NetworkContract {
             }
             return SolidList.empty();
         });
+    }
+
+    @NonNull
+    @Override
+    public String getPersonPageUrl(@NonNull Person person) {
+        return "https://www.vk.com/id" + person.getId();
     }
 }
 
