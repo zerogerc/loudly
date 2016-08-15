@@ -1,11 +1,16 @@
 package ly.loud.loudly.ui.feed;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import javax.inject.Inject;
 
@@ -16,6 +21,7 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
+import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.TitledFragment;
 import ly.loud.loudly.ui.adapters.FeedAdapter;
@@ -70,9 +76,7 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.content_feed, container, false);
-        ButterKnife.bind(this, view);
-        return view;
+        return inflater.inflate(R.layout.content_feed, container, false);
     }
 
     @Override
@@ -84,6 +88,7 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        ButterKnife.bind(this, view);
 
         adapter = new FeedAdapter(this);
         adapter.setPosts(presenter.getCachedPosts());
@@ -99,6 +104,10 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @Override
     public void onResume() {
         super.onResume();
+        updatePosts();
+    }
+
+    public void updatePosts() {
         presenter.updatePosts();
     }
 
@@ -143,6 +152,32 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
 
     @Override
     public void onDeleteClick(@NonNull PlainPost post) {
-        presenter.deletePost(post);
+        if (post instanceof LoudlyPost) {
+            showDeleteConfirmationDialog((LoudlyPost) post);
+        } else {
+            Toast.makeText(getContext(), R.string.only_loudly_post_could_be_deleted_error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showDefaultSnackBar(@StringRes int message) {
+        View view = getView();
+        if (view != null) {
+            Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showDeleteConfirmationDialog(@NonNull final LoudlyPost post) {
+        new AlertDialog.Builder(getActivity())
+                .setMessage(R.string.message_post_delete_confirmation)
+                .setPositiveButton(R.string.message_confirmation_yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        showDefaultSnackBar(R.string.message_start_post_deletion);
+                        presenter.deletePost(post);
+                    }
+                })
+                .setNegativeButton(R.string.message_confirmation_no, null)
+                .create()
+                .show();
     }
 }

@@ -5,11 +5,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -28,16 +30,21 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.ui.feed.FeedFragment;
 import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
+import ly.loud.loudly.ui.new_post.NewPostFragment.NewPostFragmentInteractions;
 import ly.loud.loudly.ui.settings.SettingsActivity;
 import ly.loud.loudly.ui.views.ScrimCoordinatorLayout;
 
 import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
 import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
+import static android.support.design.widget.BottomSheetBehavior.STATE_SETTLING;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static ly.loud.loudly.networks.Networks.nameResourceOfNetwork;
 import static ly.loud.loudly.ui.new_post.NewPostFragment.NetworksProvider;
 
 /**
@@ -45,7 +52,9 @@ import static ly.loud.loudly.ui.new_post.NewPostFragment.NetworksProvider;
  * BottomSheet Fragment (for post creation), menu and {@link NavigationView}.
  */
 public class MainActivity extends AppCompatActivity
-        implements OnNavigationItemSelectedListener, FragmentInvoker, NetworksProvider {
+        implements OnNavigationItemSelectedListener, FragmentInvoker, NetworksProvider, NewPostFragmentInteractions {
+
+    private static final String FEED_FRAGMENT = "feed_fragment";
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.app_bar_feed_root)
@@ -91,6 +100,9 @@ public class MainActivity extends AppCompatActivity
     @NonNull
     private BottomSheetBehavior bottomSheetBehavior;
 
+    @Nullable
+    private Snackbar currentSnackBar;
+
     @NonNull
     private final BottomSheetBehavior.BottomSheetCallback bottomSheetCallback = new BottomSheetBehavior.BottomSheetCallback() {
         @Override
@@ -135,7 +147,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new FeedFragment())
+                    .replace(R.id.fragment_container, new FeedFragment(), FEED_FRAGMENT)
                     .commit();
         }
 
@@ -231,6 +243,39 @@ public class MainActivity extends AppCompatActivity
         return networksChooseLayout.getChosenNetworks();
     }
 
+    @Override
+    public void onPostUploadProgress(@NonNull LoudlyPost loudlyPost) {
+        final List<SinglePost> instances = loudlyPost.getNetworkInstances();
+        if (!instances.isEmpty()) {
+            final int network = instances.get(instances.size() - 1).getNetwork();
+            @StringRes final int resource = nameResourceOfNetwork(network);
+            if (currentSnackBar != null && currentSnackBar.isShown()) {
+                currentSnackBar.dismiss();
+            }
+            currentSnackBar = Snackbar.make(
+                    floatingActionButton,
+                    String.format(getString(R.string.message_post_upload_one_network), getString(resource)),
+                    Snackbar.LENGTH_SHORT
+            );
+            currentSnackBar.show();
+        }
+    }
+
+    @Override
+    public void onPostUploaded() {
+        Snackbar.make(floatingActionButton, getString(R.string.message_post_upload_all_networks), Snackbar.LENGTH_SHORT).show();
+        FeedFragment fragment = ((FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT));
+        if (fragment != null) {
+            fragment.updatePosts();
+        }
+    }
+
+    @Override
+    public void onPostButtonClicked() {
+        bottomSheetBehavior.setState(STATE_COLLAPSED);
+        hideNewPostFragment();
+    }
+
     @OnClick(R.id.fab)
     public void onNewPostClicked() {
         bottomSheetBehavior.setState(STATE_EXPANDED);
@@ -244,6 +289,11 @@ public class MainActivity extends AppCompatActivity
     private boolean tryHidePostCreateLayoutBasedOnBottomSheet() {
         if (newPostFragmentView.getVisibility() != VISIBLE) {
             return false;
+        }
+
+        if (bottomSheetBehavior.getState() == STATE_SETTLING && newPostFragmentView.getVisibility() == VISIBLE) {
+            hideNewPostFragment();
+            return true;
         }
 
         if (bottomSheetBehavior.getState() == STATE_COLLAPSED) {

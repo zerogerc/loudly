@@ -17,6 +17,8 @@
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
 
         <item name="android:dialogTheme">@style/AppDialogTheme</item>
+
+        <item name="alertDialogTheme">@style/AppAlertDialog</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -65,5 +67,10 @@
     <style name="AppDialogTheme" parent="Theme.AppCompat.Light.Dialog">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="AppAlertDialog"
+        parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <item name="colorAccent">@color/accent</item>
     </style>
 </resources>

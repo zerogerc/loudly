@@ -5,9 +5,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.adapters.holders.ViewHolderPost;
 import ly.loud.loudly.ui.adapters.holders.ViewHolderPost.ViewHolderPostClickListener;
@@ -17,14 +14,21 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
         implements ViewHolderPostClickListener {
 
     @NonNull
-    private final List<PlainPost> posts;
+    private SolidList<PlainPost> posts;
 
     @NonNull
     private final PostClickListener listener;
 
     public FeedAdapter(@NonNull PostClickListener listener) {
         this.listener = listener;
-        this.posts = new ArrayList<>();
+        this.posts = SolidList.empty();
+        setHasStableIds(true);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        PlainPost post = posts.get(position);
+        return post.getDate();
     }
 
     @Override
@@ -47,13 +51,11 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
     }
 
     public void setPosts(@NonNull SolidList<PlainPost> newPosts) {
-        posts.clear();
-        posts.addAll(newPosts);
+        posts = newPosts;
         notifyDataSetChanged();
     }
 
     public void updatePosts(@NonNull SolidList<PlainPost> newPosts) {
-        // ToDo: notify better
         setPosts(newPosts);
     }
 

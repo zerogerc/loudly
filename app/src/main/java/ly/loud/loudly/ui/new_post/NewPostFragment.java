@@ -1,5 +1,6 @@
 package ly.loud.loudly.ui.new_post;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,10 +23,22 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.base.interfaces.attachments.Attachment;
+import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.ui.views.PostButton;
 import ly.loud.loudly.ui.views.TextPlusAttachmentsView;
 
+import static ly.loud.loudly.util.AssertionsUtils.assertActivityImplementsInterface;
+
+/**
+ * Fragment for creating and uploading post to networks. <br/>
+ * Activity must implement interface {@link NetworksProvider} and provide this fragment with networks
+ * that this fragment need to upload new post. <br/>
+ * Activity could also implement {@link NewPostFragmentInteractions} to notify user about uploading progress.
+ *
+ * @see NetworksProvider
+ * @see NewPostFragmentInteractions
+ */
 public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     implements NewPostView {
 
@@ -85,6 +98,12 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     }
 
     @Override
+    public void onAttach(@NonNull Activity activity) {
+        super.onAttach(activity);
+        assertActivityImplementsInterface(activity, NewPostFragmentInteractions.class);
+    }
+
+    @Override
     @NonNull
     public NewPostPresenter createPresenter() {
         return new NewPostPresenter(postUploadModel);
@@ -100,6 +119,23 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
 
     }
 
+    /**
+     * Triggered by presenter when loudlyPost uploaded to one more network.
+     */
+    @Override
+    public void onPostUploadingProgress(@NonNull LoudlyPost loudlyPost) {
+        // Just notify activity about progress
+        ((NewPostFragmentInteractions) getActivity()).onPostUploadProgress(loudlyPost);
+    }
+
+    /**
+     * Triggered by presenter when loudlyPost have been fully uploaded to all desired networks.
+     */
+    @Override
+    public void onPostUploadCompleted() {
+        ((NewPostFragmentInteractions) getActivity()).onPostUploaded();
+    }
+
     @OnClick(R.id.material_new_post_fragment_send_button)
     public void onSendClicked() {
         List<NetworkContract> models = ((NetworksProvider) getActivity()).getChosenNetworks();
@@ -109,6 +145,7 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
         if (!(text.isEmpty() && attachments.isEmpty())) {
             presenter.uploadPost(text, attachments, models);
         }
+        ((NewPostFragmentInteractions) getActivity()).onPostButtonClicked();
     }
 
     @OnClick(R.id.material_new_post_fragment_camera_button)
@@ -133,5 +170,25 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
         void showNetworksChooseLayout();
 
         List<NetworkContract> getChosenNetworks();
+    }
+
+    /**
+     * Interface to interact with {@link NewPostFragment}.
+     */
+    public interface NewPostFragmentInteractions {
+        /**
+         * Triggered when current loudlyPost uploaded to one more network.
+         */
+        void onPostUploadProgress(@NonNull LoudlyPost loudlyPost);
+
+        /**
+         * Triggered when current loudlyPost have been fully uploaded to all desired networks.
+         */
+        void onPostUploaded();
+
+        /**
+         * Triggered when user clicked on POST button to hide {@link NewPostFragment}
+         */
+        void onPostButtonClicked();
     }
 }

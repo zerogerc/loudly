@@ -5,7 +5,6 @@ import android.content.res.Configuration;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.AttributeSet;
@@ -33,7 +32,6 @@ public class FeedRecyclerView extends RecyclerView {
 
     private void init() {
         setHasFixedSize(true);
-        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             setLayoutManager(new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL));
         } else {
@@ -41,6 +39,5 @@ public class FeedRecyclerView extends RecyclerView {
             int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.recycler_landscape_margin);
             addItemDecoration(new SpacesItemDecoration(spacingInPixels));
         }
-        setItemAnimator(itemAnimator);
     }
 }

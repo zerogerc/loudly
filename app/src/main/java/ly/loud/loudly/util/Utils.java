@@ -12,12 +12,11 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.customtabs.CustomTabsIntent;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -27,9 +26,6 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -37,11 +33,11 @@ import java.util.Locale;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.base.multiple.LoudlyPost;
-import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.base.entities.Person;
-import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.Networks;
 
 public class Utils {
     private static final String TAG = "UTIL_TAG";
@@ -223,6 +219,7 @@ public class Utils {
     public static void launchCustomTabs(@NonNull String url, @NonNull Activity context) {
         new CustomTabsIntent.Builder()
                 .enableUrlBarHiding()
+                .setToolbarColor(ContextCompat.getColor(context, R.color.primary))
                 .build()
                 .launchUrl(context, Uri.parse(url));
     }

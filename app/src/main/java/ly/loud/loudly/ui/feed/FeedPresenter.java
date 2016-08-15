@@ -8,10 +8,7 @@ import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
-import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.BasePresenter;
-import rx.Subscription;
-import rx.schedulers.Schedulers;
 import solid.collections.SolidList;
 
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
@@ -32,8 +29,6 @@ public class FeedPresenter extends BasePresenter<FeedView> {
     @NonNull
     private PostLoadModel postLoadModel;
 
-    private Subscription postLoadSubscription;
-
     public FeedPresenter(
             @NonNull Loudly loudlyApp,
             @NonNull PostLoadModel postLoadModel,
@@ -51,28 +46,21 @@ public class FeedPresenter extends BasePresenter<FeedView> {
     }
 
     public void updatePosts() {
-        postLoadSubscription = postLoadModel
-                .loadPosts(Loudly.getContext().getTimeInterval())
+        postLoadModel.getPostsByIterval(Loudly.getContext().getTimeInterval())
                 .subscribeOn(io())
                 .observeOn(mainThread())
-                .doOnNext(list -> executeIfViewBound(view -> view.onPostsUpdated(list)))
-                .subscribe();
+                .subscribe(result -> executeIfViewBound(view -> view.onPostsUpdated(result)));
     }
 
     public void unsubscribeAll() {
-        if (!postLoadSubscription.isUnsubscribed()) {
-            postLoadSubscription.unsubscribe();
-        }
     }
 
-    public void deletePost(@NonNull PlainPost post) {
-        if (post instanceof LoudlyPost) {
-            deleterModel
-                    .deletePostFromAllNetworks(((LoudlyPost) post))
-                    .subscribeOn(io())
-                    .observeOn(mainThread())
-                    .subscribe();
-        }
+    public void deletePost(@NonNull LoudlyPost post) {
+        deleterModel.deletePostFromAllNetworks(post)
+                .subscribeOn(io())
+                .observeOn(mainThread())
+                .doOnCompleted(this::updatePosts)
+                .subscribe();
     }
 
 }
