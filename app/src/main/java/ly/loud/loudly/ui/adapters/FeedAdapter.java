@@ -1,6 +1,7 @@
 package ly.loud.loudly.ui.adapters;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -18,6 +19,9 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
 
     @NonNull
     private final PostClickListener listener;
+
+    @Nullable
+    private NeedMoreItemsCallback needMoreItemsCallback;
 
     public FeedAdapter(@NonNull PostClickListener listener) {
         this.listener = listener;
@@ -42,6 +46,9 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolderPost holder, int position) {
+        if (position == posts.size() - 1 && needMoreItemsCallback != null) {
+            needMoreItemsCallback.needMoreItems();
+        }
         holder.bind(posts.get(position));
     }
 
@@ -79,6 +86,10 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
         listener.onDeleteClick(posts.get(position));
     }
 
+    public void setNeedMoreItemsCallback(@Nullable NeedMoreItemsCallback needMoreItemsCallback) {
+        this.needMoreItemsCallback = needMoreItemsCallback;
+    }
+
     public interface PostClickListener {
         void onFullPostClick(@NonNull PlainPost post);
 
@@ -87,5 +98,9 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
         void onLikesClick(@NonNull PlainPost post);
 
         void onDeleteClick(@NonNull PlainPost post);
+    }
+
+    public interface NeedMoreItemsCallback {
+        void needMoreItems();
     }
 }

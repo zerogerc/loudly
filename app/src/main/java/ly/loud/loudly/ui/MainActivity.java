@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity
             switch (newState) {
                 case STATE_EXPANDED:
                     showNewPostFragment();
-                    break;
+                     break;
                 default:
                     break;
             }

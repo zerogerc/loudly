@@ -17,6 +17,9 @@ import ly.loud.loudly.ui.adapters.SpacesItemDecoration;
  */
 public class FeedRecyclerView extends RecyclerView {
 
+    @NonNull
+    private StaggeredGridLayoutManager staggeredGridLayoutManager;
+
     public FeedRecyclerView(@NonNull Context context) {
         this(context, null);
     }
@@ -33,9 +36,11 @@ public class FeedRecyclerView extends RecyclerView {
     private void init() {
         setHasFixedSize(true);
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            setLayoutManager(new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL));
+            staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL) ;
+            setLayoutManager(staggeredGridLayoutManager);
         } else {
-            setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+            staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+            setLayoutManager(staggeredGridLayoutManager);
             int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.recycler_landscape_margin);
             addItemDecoration(new SpacesItemDecoration(spacingInPixels));
         }

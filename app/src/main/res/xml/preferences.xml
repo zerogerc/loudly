@@ -14,8 +14,4 @@
         android:key="network_vk"
         android:title="@string/network_vk" />
 
-    <EditTextPreference
-        android:key="loadlast"
-        android:title="@string/load_for_last"/>
-
 </PreferenceScreen>
