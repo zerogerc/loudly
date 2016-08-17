@@ -12,10 +12,10 @@ import com.fuck_boilerplate.rx_paparazzo.RxPaparazzo;
 import java.util.ArrayList;
 import java.util.List;
 
-import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.base.interfaces.attachments.Attachment;
 import ly.loud.loudly.base.plain.PlainImage;
+import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.ui.BasePresenter;
 import ly.loud.loudly.util.ListUtils;
 
@@ -74,6 +74,11 @@ public class NewPostPresenter extends BasePresenter<NewPostView> {
         postUploadModel.uploadPost(text, ListUtils.asSolidList(attachments), networks)
                 .subscribeOn(io())
                 .observeOn(mainThread())
+                .doOnNext(loudlyPost -> {
+
+                    executeIfViewBound(view -> view.onPostUploadingProgress(loudlyPost));
+                })
+                .doOnCompleted(() -> executeIfViewBound(NewPostView::onPostUploadCompleted))
                 .subscribe();
     }
 }

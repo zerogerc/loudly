@@ -16,6 +16,7 @@ import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
+import rx.Single;
 import solid.collections.SolidList;
 import solid.collectors.ToArrayList;
 
@@ -87,6 +88,15 @@ public class PostLoadModel {
                 .flatMap(list -> coreModel.getConnectedNetworksModels()
                         .flatMap(model -> model.loadPosts(interval))
                         .scan(list, PostLoadModel::merge));
+    }
+
+    /**
+     * Get list of posts by {@link TimeInterval} as single.
+     */
+    @CheckResult
+    @NonNull
+    public Single<SolidList<PlainPost>> getPostsByIterval(@NonNull TimeInterval interval) {
+        return loadPosts(interval).last().toSingle();
     }
 
     /**

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="message_start_post_deletion">Post deletion started</string>
+
+    <string name="message_post_upload_one_network">Post has been uploaded to: %s</string>
+    <string name="message_post_upload_all_networks">Post has been uploaded to all networks</string>
+
+    <string name="message_post_delete_confirmation">Do you want to delete post from all networks?</string>
+
+    <string name="message_confirmation_yes">Yes</string>
+    <string name="message_confirmation_no">No</string>
+</resources>

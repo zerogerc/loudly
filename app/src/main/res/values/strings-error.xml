@@ -2,4 +2,5 @@
 <resources>
     <string name="network_error">Network error</string>
     <string name="comments_load_error">Error while loading comments</string>
+    <string name="only_loudly_post_could_be_deleted_error">Only LoudlyPost could be deleted from networks</string>
 </resources>
