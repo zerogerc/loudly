@@ -104,4 +104,11 @@ public class AppModule {
             @NonNull @Named("post") StorIOSQLite postsDatabase) {
         return new PostsDatabaseModel(postsDatabase);
     }
+
+    @Provides
+    @Singleton
+    @NonNull
+    LoadMoreStrategyModel provideLoadMoreStrategy() {
+        return new LoadMoreStrategyModel(loudlyApplication);
+    }
 }

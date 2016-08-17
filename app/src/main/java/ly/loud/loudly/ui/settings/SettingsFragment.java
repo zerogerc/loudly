@@ -8,18 +8,18 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 
 import ly.loud.loudly.R;
-import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.ui.auth.AuthFragment;
 
-import static ly.loud.loudly.networks.Networks.*;
+import static ly.loud.loudly.networks.Networks.FB;
+import static ly.loud.loudly.networks.Networks.INSTAGRAM;
+import static ly.loud.loudly.networks.Networks.VK;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
     private static final String FACEBOOK_KEY = "network_facebook";
     private static final String INSTAGRAM_KEY = "network_instagram";
     private static final String VK_KEY = "network_vk";
-    private static final String LOAD_FOR_KEY = "loadlast";
 
     @NonNull
     public static SettingsFragment newInstance() {
@@ -58,8 +58,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 return true;
             case VK_KEY:
                 openAuthFragment(VK);
-                return true;
-            case LOAD_FOR_KEY:
                 return true;
             default:
                 return super.onPreferenceTreeClick(preference);

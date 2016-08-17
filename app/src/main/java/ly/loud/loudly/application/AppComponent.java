@@ -13,6 +13,7 @@ import ly.loud.loudly.application.models.AuthModel;
 import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.KeysModel;
+import ly.loud.loudly.application.models.LoadMoreStrategyModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.networks.facebook.FacebookClientModule;
@@ -55,6 +56,9 @@ public interface AppComponent {
 
     @NonNull
     CoreModel coreModel();
+
+    @NonNull
+    LoadMoreStrategyModel loadMoreStartegyModel();
 
     /**
      * Get database that stores Post, Keys, Links and Location tables

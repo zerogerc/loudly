@@ -1,11 +1,12 @@
 package ly.loud.loudly.ui.feed;
 
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,7 @@ import butterknife.ButterKnife;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
+import ly.loud.loudly.application.models.LoadMoreStrategyModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
@@ -35,10 +37,15 @@ import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
-        implements FeedView, FeedAdapter.PostClickListener {
+        implements FeedView, FeedAdapter.PostClickListener, FeedAdapter.NeedMoreItemsCallback {
 
     @SuppressWarnings("NullableProblems") // Butterknife
-    @BindView(R.id.feed_recycler_view)
+    @BindView(R.id.content_feed_swipe_refresh_layout)
+    @NonNull
+    SwipeRefreshLayout refreshLayout;
+
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.content_feed_recycler_view)
     @NonNull
     FeedRecyclerView feedRecyclerView;
 
@@ -62,10 +69,16 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @NonNull
     PostDeleterModel deleterModel;
 
+    @SuppressWarnings("NullableProblems") // Inject
+    @Inject
+    @NonNull
+    LoadMoreStrategyModel loadMoreStrategyModel;
 
     @SuppressWarnings("NullableProblems") // onViewCreated
     @NonNull
     private FeedAdapter adapter;
+
+    private int previousSize = 0;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -89,8 +102,14 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
+        refreshLayout.setColorSchemeColors(
+                ContextCompat.getColor(getContext(), R.color.accent),
+                ContextCompat.getColor(getContext(), R.color.primary)
+        );
+        refreshLayout.setOnRefreshListener(this::updatePosts);
 
         adapter = new FeedAdapter(this);
+        adapter.setNeedMoreItemsCallback(this);
         adapter.setPosts(presenter.getCachedPosts());
         feedRecyclerView.setAdapter(adapter);
     }
@@ -114,6 +133,9 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @Override
     public void onPostsUpdated(@NonNull SolidList<PlainPost> posts) {
         adapter.updatePosts(posts);
+        if (refreshLayout.isRefreshing()) {
+            refreshLayout.setRefreshing(false);
+        }
     }
 
     @Override
@@ -123,7 +145,8 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
                 loudlyApp,
                 postLoadModel,
                 getterModel,
-                deleterModel
+                deleterModel,
+                loadMoreStrategyModel
         );
     }
 
@@ -166,15 +189,17 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
         }
     }
 
+    @Override
+    public void needMoreItems() {
+        presenter.updateMorePosts();
+    }
+
     private void showDeleteConfirmationDialog(@NonNull final LoudlyPost post) {
         new AlertDialog.Builder(getActivity())
                 .setMessage(R.string.message_post_delete_confirmation)
-                .setPositiveButton(R.string.message_confirmation_yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        showDefaultSnackBar(R.string.message_start_post_deletion);
-                        presenter.deletePost(post);
-                    }
+                .setPositiveButton(R.string.message_confirmation_yes, (dialogInterface, i) -> {
+                    showDefaultSnackBar(R.string.message_start_post_deletion);
+                    presenter.deletePost(post);
                 })
                 .setNegativeButton(R.string.message_confirmation_no, null)
                 .create()

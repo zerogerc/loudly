@@ -6,9 +6,6 @@ import android.util.Log;
 
 import com.fuck_boilerplate.rx_paparazzo.RxPaparazzo;
 
-import java.util.Calendar;
-
-import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.KeysDbModule;
 import ly.loud.loudly.util.database.PostDbModule;
 
@@ -21,12 +18,10 @@ import static rx.schedulers.Schedulers.io;
  */
 public class Loudly extends Application {
     private static final String TAG = "LOUDLY";
+
     @SuppressWarnings("NullableProblems") // onCreate
     @NonNull
     private static Loudly context;
-
-    @Deprecated
-    private TimeInterval timeInterval;
 
     @SuppressWarnings("NullableProblems") // Inject
     @NonNull
@@ -35,14 +30,11 @@ public class Loudly extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        RxPaparazzo.register(this);
-
-        initInjector();
-
         context = this;
 
-        setPreferences(700);
-        // ToDo: do in better place
+        RxPaparazzo.register(this);
+        initInjector();
+
         appComponent
                 .keysModel()
                 .loadKeys()
@@ -61,17 +53,6 @@ public class Loudly extends Application {
     @NonNull
     public static Loudly getContext() {
         return context;
-    }
-
-    private static void setPreferences(int loadLast) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR, -loadLast);
-        Loudly.getContext().timeInterval = TimeInterval.since(calendar.getTimeInMillis() / 1000);
-    }
-
-    @Deprecated
-    public TimeInterval getTimeInterval() {
-        return timeInterval;
     }
 
     private void initInjector() {
