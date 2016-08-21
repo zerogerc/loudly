@@ -11,4 +11,6 @@ import solid.collections.SolidList;
 @UiThread
 public interface FeedView extends MvpView {
     void onPostsUpdated(@NonNull SolidList<PlainPost> posts);
+
+    void onAllPostsLoaded();
 }

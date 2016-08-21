@@ -7,6 +7,8 @@
 
     <string name="message_post_delete_confirmation">Do you want to delete post from all networks?</string>
 
+    <string name="message_no_more_load_more">All posts have been successfully loaded.</string>
+
     <string name="message_confirmation_yes">Yes</string>
     <string name="message_confirmation_no">No</string>
 </resources>

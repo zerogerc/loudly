@@ -54,6 +54,11 @@ public class FeedPresenter extends BasePresenter<FeedView> {
     }
 
     public void updateMorePosts() {
+        if (loadMoreStrategyModel.isAllPostsLoaded()) {
+            executeIfViewBound(FeedView::onAllPostsLoaded);
+            return;
+        }
+
         int sizePrevious = postLoadModel.getCachedPosts().size();
         loadMoreStrategyModel.generateNextInterval();
         loadPosts().subscribe(
@@ -61,6 +66,9 @@ public class FeedPresenter extends BasePresenter<FeedView> {
                     executeIfViewBound(view -> {
                         if (result.size() != sizePrevious) {
                             view.onPostsUpdated(result);
+                        } else {
+                            // load more items if no posts loaded
+                            updateMorePosts();
                         }
                     });
                 }
