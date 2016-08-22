@@ -18,6 +18,6 @@ public class NetworksChoosePresenter extends BasePresenter<NetworksChooseView> {
 
     public SolidList<NetworkContract> getConnectedNetworks() {
         // TODO: connected networks
-        return coreModel.getNetworkModels();
+        return coreModel.getAllNetworkModels();
     }
 }

@@ -2,6 +2,8 @@ package ly.loud.loudly.ui.views;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
@@ -16,6 +18,9 @@ import ly.loud.loudly.ui.adapters.SpacesItemDecoration;
  * Base class representing feed on the screen.
  */
 public class FeedRecyclerView extends RecyclerView {
+
+    private static final String SUPER_STATE = "super_state";
+    private static final String VISIBILITY = "visibility";
 
     @NonNull
     private StaggeredGridLayoutManager staggeredGridLayoutManager;
@@ -43,6 +48,28 @@ public class FeedRecyclerView extends RecyclerView {
             setLayoutManager(staggeredGridLayoutManager);
             int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.recycler_landscape_margin);
             addItemDecoration(new SpacesItemDecoration(spacingInPixels));
+        }
+    }
+
+    @Override
+    @NonNull
+    public Parcelable onSaveInstanceState () {
+        Bundle state = new Bundle();
+        state.putParcelable(SUPER_STATE, super.onSaveInstanceState());
+        state.putInt(VISIBILITY, getVisibility());
+        return state;
+    }
+
+    @Override
+    public void onRestoreInstanceState (@NonNull Parcelable state) {
+        if (state instanceof Bundle) {
+            Bundle savedState = (Bundle)state;
+            //noinspection WrongConstant
+            setVisibility(savedState.getInt(VISIBILITY, getVisibility()));
+            Parcelable superState = savedState.getParcelable(SUPER_STATE);
+            super.onRestoreInstanceState(superState);
+        } else {
+            super.onRestoreInstanceState(state);
         }
     }
 }

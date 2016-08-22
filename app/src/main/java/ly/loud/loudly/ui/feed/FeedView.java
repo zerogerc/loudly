@@ -10,7 +10,17 @@ import solid.collections.SolidList;
 
 @UiThread
 public interface FeedView extends MvpView {
+
+    /**
+     * Invokes when presenter ensured that download possible and start updating posts.
+     */
+    void onPostsUpdateStarted();
+
     void onPostsUpdated(@NonNull SolidList<PlainPost> posts);
 
     void onAllPostsLoaded();
+
+    void onNetworkProblems();
+
+    void onNoConnectedNetworksDetected();
 }
