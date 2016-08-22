@@ -8,10 +8,14 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
+import java.util.Arrays;
 
 import javax.inject.Inject;
 
@@ -33,11 +37,15 @@ import ly.loud.loudly.ui.views.FeedRecyclerView;
 import ly.loud.loudly.util.Utils;
 import solid.collections.SolidList;
 
+import static android.support.design.widget.Snackbar.LENGTH_SHORT;
+import static android.support.v7.widget.RecyclerView.NO_POSITION;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 
 public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
-        implements FeedView, FeedAdapter.PostClickListener, FeedAdapter.NeedMoreItemsCallback {
+        implements FeedView, FeedAdapter.PostClickListener {
+
+    private static final int MAX_SPAN_NUMBER = 2;
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.content_feed_swipe_refresh_layout)
@@ -78,7 +86,7 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @NonNull
     private FeedAdapter adapter;
 
-    private int previousSize = 0;
+    private boolean isAllPostsLoadedInfoShowedToUser = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -109,9 +117,9 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
         refreshLayout.setOnRefreshListener(this::updatePosts);
 
         adapter = new FeedAdapter(this);
-        adapter.setNeedMoreItemsCallback(this);
         adapter.setPosts(presenter.getCachedPosts());
         feedRecyclerView.setAdapter(adapter);
+        setLoadMoreListener();
     }
 
     @Override
@@ -136,6 +144,17 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
         if (refreshLayout.isRefreshing()) {
             refreshLayout.setRefreshing(false);
         }
+    }
+
+    @Override
+    public void onAllPostsLoaded() {
+        adapter.setNoLoadMore();
+        if (!isAllPostsLoadedInfoShowedToUser) { // show message only once
+            if (getView() != null) {
+                Snackbar.make(getView(), R.string.message_no_more_load_more, LENGTH_SHORT).show();
+            }
+        }
+        isAllPostsLoadedInfoShowedToUser = true;
     }
 
     @Override
@@ -182,16 +201,45 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
         }
     }
 
+
+    /**
+     * Invokes every time when view with feed detects end of list.
+     */
+    public void needMoreItems() {
+        presenter.updateMorePosts();
+    }
+
+    /**
+     * Set listener for loadMore behavior of feed.
+     * Assumes that {@link FeedFragment#feedRecyclerView} already has
+     * {@link android.support.v7.widget.RecyclerView.LayoutManager LayoutManager}
+     */
+    private void setLoadMoreListener() {
+        final StaggeredGridLayoutManager manager = (StaggeredGridLayoutManager) feedRecyclerView.getLayoutManager();
+        int[] cache = new int[MAX_SPAN_NUMBER];
+        Arrays.fill(cache, NO_POSITION);
+
+        feedRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                manager.findLastVisibleItemPositions(cache);
+                for (int i = 0; i < MAX_SPAN_NUMBER; i++) {
+                    // cache[i] - is number of post in i-th span
+                    if (cache[i] == adapter.getItemCount() - 1) {
+                        needMoreItems();
+                    }
+                }
+
+            }
+        });
+    }
+
     private void showDefaultSnackBar(@StringRes int message) {
         View view = getView();
         if (view != null) {
-            Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(view, message, LENGTH_SHORT).show();
         }
-    }
-
-    @Override
-    public void needMoreItems() {
-        presenter.updateMorePosts();
     }
 
     private void showDeleteConfirmationDialog(@NonNull final LoudlyPost post) {

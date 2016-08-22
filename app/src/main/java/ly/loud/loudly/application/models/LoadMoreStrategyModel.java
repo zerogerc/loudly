@@ -47,9 +47,16 @@ public class LoadMoreStrategyModel {
      * Increase current timestamp according to inner startegy.
      */
     public void generateNextInterval() {
-        if (loadLastDays < 10000) { // it hard to imagine user with such a long social media history
+        if (!isAllPostsLoaded()) {
             loadLastDays *= 2;
             updateTimeInterval();
         }
+    }
+
+    /**
+     * Return true if it's likely that no other posts could been loaded if timeInterval increased
+     */
+    public boolean isAllPostsLoaded() {
+        return loadLastDays > 10000; // it hard to imagine user with such a long social media history
     }
 }

@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import static ly.loud.loudly.ui.adapters.holders.ItemTypes.COMMENT;
+import static ly.loud.loudly.ui.adapters.holders.ItemTypes.DELIMITER;
 import static ly.loud.loudly.ui.adapters.holders.ItemTypes.ItemType;
 import static ly.loud.loudly.ui.adapters.holders.ItemTypes.PERSON;
 import static ly.loud.loudly.ui.adapters.holders.ItemTypes.POST;
@@ -22,8 +23,10 @@ public class ViewHolderFactory {
                 return new ViewHolderPerson(inflater, parent);
             case COMMENT:
                 return  new ViewHolderComment(inflater, parent);
-            default:
+            case DELIMITER:
                 return new ViewHolderDelimiter(inflater, parent);
+            default: //LOAD_MORE
+                return new ViewHolderLoadMore(inflater, parent);
         }
     }
 }

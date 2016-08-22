@@ -1,17 +1,21 @@
 package ly.loud.loudly.ui.adapters;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.ui.adapters.holders.BindingViewHolder;
+import ly.loud.loudly.ui.adapters.holders.ItemTypes;
+import ly.loud.loudly.ui.adapters.holders.ItemTypes.ItemType;
+import ly.loud.loudly.ui.adapters.holders.ViewHolderFactory;
 import ly.loud.loudly.ui.adapters.holders.ViewHolderPost;
 import ly.loud.loudly.ui.adapters.holders.ViewHolderPost.ViewHolderPostClickListener;
 import solid.collections.SolidList;
 
-public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
+public class FeedAdapter extends RecyclerView.Adapter<BindingViewHolder>
         implements ViewHolderPostClickListener {
 
     @NonNull
@@ -20,8 +24,7 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
     @NonNull
     private final PostClickListener listener;
 
-    @Nullable
-    private NeedMoreItemsCallback needMoreItemsCallback;
+    private boolean needLoadMore = true;
 
     public FeedAdapter(@NonNull PostClickListener listener) {
         this.listener = listener;
@@ -31,29 +34,54 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
 
     @Override
     public long getItemId(int position) {
-        PlainPost post = posts.get(position);
-        return post.getDate();
-    }
-
-    @Override
-    public ViewHolderPost onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return ViewHolderPost.provideNewHolderWithListener(
-                LayoutInflater.from(parent.getContext()),
-                parent,
-                this
-        );
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull ViewHolderPost holder, int position) {
-        if (position == posts.size() - 1 && needMoreItemsCallback != null) {
-            needMoreItemsCallback.needMoreItems();
+        if (isLoadMoreItem(position)) {
+            return -1;
+        } else {
+            PlainPost post = posts.get(position);
+            return post.getDate();
         }
-        holder.bind(posts.get(position));
+    }
+
+    @Override
+    @ItemType
+    public int getItemViewType(int position) {
+        if (isLoadMoreItem(position)) {
+            return ItemTypes.LOAD_MORE;
+        } else {
+            return ItemTypes.POST;
+        }
+    }
+
+    @Override
+    public BindingViewHolder onCreateViewHolder(@NonNull ViewGroup parent, @ItemType int viewType) {
+        final LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
+        switch (viewType) {
+            case ItemTypes.LOAD_MORE:
+                return ViewHolderFactory.provideViewHolder(layoutInflater, parent, viewType);
+            default:
+                // need to set listener and for consistent initialization don't use factory here
+                return ViewHolderPost.provideNewHolderWithListener(layoutInflater, parent, this);
+        }
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull BindingViewHolder holder, int position) {
+        if (isLoadMoreItem(position)) {
+            //noinspection ConstantConditions (ViewHolderLoadMore don't need ListItem)
+            holder.bind(null);
+            StaggeredGridLayoutManager.LayoutParams layoutParams =
+                    (StaggeredGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
+            layoutParams.setFullSpan(true);
+        } else {
+            ((ViewHolderPost) holder).bind(posts.get(position));
+        }
     }
 
     @Override
     public int getItemCount() {
+        if (needLoadMore) {
+            return posts.size() + 1;
+        }
         return posts.size();
     }
 
@@ -86,8 +114,19 @@ public class FeedAdapter extends RecyclerView.Adapter<ViewHolderPost>
         listener.onDeleteClick(posts.get(position));
     }
 
-    public void setNeedMoreItemsCallback(@Nullable NeedMoreItemsCallback needMoreItemsCallback) {
-        this.needMoreItemsCallback = needMoreItemsCallback;
+    public void setNoLoadMore() {
+        boolean old = needLoadMore;
+        needLoadMore = false;
+        if (old) {
+            notifyItemRemoved(posts.size());
+        }
+    }
+
+    /**
+     * Check if this position is the position with progress bar.
+     */
+    private boolean isLoadMoreItem(int position) {
+        return needLoadMore && getItemCount() - 1 == position;
     }
 
     public interface PostClickListener {
