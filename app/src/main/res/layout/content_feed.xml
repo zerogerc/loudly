@@ -1,13 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content_feed_swipe_refresh_layout"
-    android:layout_height="match_parent"
     android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@color/background">
 
-    <ly.loud.loudly.ui.views.FeedRecyclerView
-        android:id="@+id/content_feed_recycler_view"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/background" />
+        android:layout_height="match_parent">
+
+        <ly.loud.loudly.ui.views.VisibilitySaveStateScrollView
+            android:id="@+id/content_feed_message_view_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/content_feed_message_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:freezesText="true"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:textAlignment="center" />
+        </ly.loud.loudly.ui.views.VisibilitySaveStateScrollView>
+
+        <ly.loud.loudly.ui.views.FeedRecyclerView
+            android:id="@+id/content_feed_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/background" />
+    </FrameLayout>
 </android.support.v4.widget.SwipeRefreshLayout>
