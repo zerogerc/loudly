@@ -188,7 +188,7 @@ public class UpdateInfoService extends Service {
     @NonNull
     private Observable<Info> getUpdates(@NonNull SolidList<LoudlyPost> posts) {
         return coreModel
-                .getConnectedNetworksModels()
+                .observeConnectedNetworksModels()
                 .<Pair<SinglePost, Info>>flatMap(networkContract -> {
                     SolidList<SinglePost> singlePosts = posts
                             .map(post -> post.getSingleNetworkInstance(networkContract.getId()))
