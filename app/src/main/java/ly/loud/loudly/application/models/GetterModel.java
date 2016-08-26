@@ -22,7 +22,7 @@ import solid.collections.SolidList;
  */
 public class GetterModel {
 
-    @IntDef
+    @IntDef({LIKES, SHARES})
     public @interface RequestType {
     }
 

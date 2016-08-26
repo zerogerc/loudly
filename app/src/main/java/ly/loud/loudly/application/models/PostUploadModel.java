@@ -21,14 +21,20 @@ import solid.collections.SolidList;
 
 public class PostUploadModel {
     @NonNull
-    private CoreModel coreModel;
+    private final CoreModel coreModel;
 
     @NonNull
-    private PostsDatabaseModel postsDatabaseModel;
+    private final PostsDatabaseModel postsDatabaseModel;
 
-    public PostUploadModel(@NonNull CoreModel coreModel, @NonNull PostsDatabaseModel postsDatabaseModel) {
+    @NonNull
+    private final InfoUpdateModel infoUpdateModel;
+
+    public PostUploadModel(@NonNull CoreModel coreModel,
+                           @NonNull PostsDatabaseModel postsDatabaseModel,
+                           @NonNull InfoUpdateModel infoUpdateModel) {
         this.coreModel = coreModel;
         this.postsDatabaseModel = postsDatabaseModel;
+        this.infoUpdateModel = infoUpdateModel;
     }
 
     @CheckResult
@@ -55,7 +61,7 @@ public class PostUploadModel {
                                               @NonNull SolidList<Attachment> attachments,
                                               @NonNull NetworkContract network) {
         return uploadAttachments(attachments, network)
-                .map(list -> new PlainPost<>(
+                .<PlainPost>map(list -> new PlainPost<>(
                         post,
                         System.currentTimeMillis(),
                         new ArrayList<>(list),
@@ -84,6 +90,14 @@ public class PostUploadModel {
 
         return postsDatabaseModel
                 .putPost(initial)
+                .flatMap(loudlyPost -> infoUpdateModel
+                        .subscribeOnFrequentUpdates(loudlyPost)
+                        .map(result -> {
+                            if (!result) {
+                                // ToDo: Handle not connected to service
+                            }
+                            return loudlyPost;
+                        }))
                 .flatMapObservable(loudlyPost ->
                                 Observable
                                         .from(networks)

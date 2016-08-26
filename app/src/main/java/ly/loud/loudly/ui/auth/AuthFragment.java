@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,10 +22,13 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.AuthModel;
 import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.util.Utils;
 import rx.Observable;
+import rx.Single;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static ly.loud.loudly.util.RxUtils.changeSubscription;
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 import static rx.schedulers.Schedulers.io;
 
@@ -67,8 +71,9 @@ public class AuthFragment extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Loudly.getContext().getAppComponent().inject(this);
+        Utils.getApplicationContext(getContext()).getAppComponent().inject(this);
         setStyle(STYLE_NO_TITLE, getTheme());
+        //noinspection ResourceType Only network is saved into this field
         network = getArguments().getInt(NETWORK_FIELD);
     }
 
@@ -83,7 +88,6 @@ public class AuthFragment extends DialogFragment {
         builder.setView(rootView);
         return builder.create();
     }
-
 
 
     @Override
@@ -105,11 +109,10 @@ public class AuthFragment extends DialogFragment {
         }
         if (firstRun) {
             circle.setVisibility(VISIBLE);
-            authModel.getAuthUrl(network)
-                    .subscribeOn(mainThread())
-                    .observeOn(io())
-                    .flatMap(url -> authModel
-                            .finishAuthorization(createUrlsObservable(url), network))
+            Single<String> authUrl = authModel.getAuthUrl(network).subscribeOn(io());
+            Observable<String> urls = changeSubscription(authUrl, mainThread())
+                    .flatMapObservable(this::createUrlsObservable);
+            authModel.finishAuthorization(changeSubscription(urls, io()), network)
                     .observeOn(mainThread())
                     .doOnSuccess(success -> {
                         if (success) {
@@ -125,25 +128,25 @@ public class AuthFragment extends DialogFragment {
         }
     }
 
+    @UiThread
     @CheckResult
     @NonNull
     private Observable<String> createUrlsObservable(@Nullable String initialUrl) {
         return Observable.create(observer -> {
-            webView.post(() -> {
-                webView.setWebViewClient(new WebViewClient() {
-                    @Override
-                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                        observer.onNext(url);
-                        return super.shouldOverrideUrlLoading(view, url);
-                    }
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    observer.onNext(url);
+                    return super.shouldOverrideUrlLoading(view, url);
+                }
 
-                    @Override
-                    public void onPageFinished(WebView view, String url) {
-                        super.onPageFinished(view, url);
-                        circle.setVisibility(GONE);}
-                });
-                webView.loadUrl(initialUrl);
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
+                    circle.setVisibility(GONE);
+                }
             });
+            webView.loadUrl(initialUrl);
         });
     }
 

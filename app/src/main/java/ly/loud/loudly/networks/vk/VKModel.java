@@ -5,12 +5,15 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -30,7 +33,6 @@ import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.networks.Networks.Network;
-import ly.loud.loudly.networks.facebook.entities.Paging;
 import ly.loud.loudly.networks.vk.entities.Attachment;
 import ly.loud.loudly.networks.vk.entities.Counter;
 import ly.loud.loudly.networks.vk.entities.Photo;
@@ -51,6 +53,7 @@ import retrofit2.Response;
 import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
+import solid.functions.Action1;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.RequestType;
@@ -58,6 +61,7 @@ import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.ListUtils.asSolidList;
 import static ly.loud.loudly.util.ListUtils.removeByPredicateInPlace;
 import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
+import static solid.collectors.ToList.toList;
 
 public class VKModel implements NetworkContract {
     private static final String TAG = "VK_MODEL";
@@ -369,6 +373,15 @@ public class VKModel implements NetworkContract {
         return sb.toString();
     }
 
+    @NonNull
+    private List<String> addUserId(@NonNull String userId, @NonNull List<String> ids) {
+        List<String> withUser = new ArrayList<>();
+        for (String id : ids) {
+            withUser.add(userId + "_" + id);
+        }
+        return withUser;
+    }
+
     @Override
     @CheckResult
     @NonNull
@@ -532,6 +545,47 @@ public class VKModel implements NetworkContract {
 
     @NonNull
     @Override
+    public Observable<List<Pair<SinglePost, Info>>> getUpdates(@NonNull SolidList<SinglePost> posts) {
+        return Observable.fromCallable(() -> {
+            VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo handle
+                return null;
+            }
+            List<String> ids = posts.map(SinglePost::getLink).collect(toList());
+            String separated = toCommaSeparated(addUserId(keyKeeper.getUserId(), ids));
+            Call<VKResponse<List<Say>>> postsByIdsCall =
+                    client.getPostsByIds(separated, keyKeeper.getAccessToken());
+            Response<VKResponse<List<Say>>> executed = postsByIdsCall.execute();
+            VKResponse<List<Say>> body = executed.body();
+            if (body == null || body.response == null) {
+                // ToDO handle
+                return null;
+            }
+            Map<String, SinglePost> postsByIds = new HashMap<>();
+            Action1<SinglePost> putPost = post -> postsByIds.put(post.getLink(), post);
+            posts.forEach(putPost);
+            List<Pair<SinglePost, Info>> result = new ArrayList<>();
+            for (Say post : body.response) {
+                Info newInfo = getInfo(post);
+                SinglePost oldPost = postsByIds.get(post.id);
+                Info difference = newInfo.subtract(oldPost.getInfo());
+                if (!difference.isEmpty()) {
+                    // Update stored info
+                    for (int i = 0; i < cached.size(); i++) {
+                        if (cached.get(i).getLink().equals(oldPost.getLink())) {
+                            cached.set(i, cached.get(i).setInfo(newInfo));
+                        }
+                    }
+                    result.add(new Pair<>(oldPost, difference));
+                }
+            }
+            return result;
+        });
+    }
+
+    @Override
+    @NonNull
     public String getPersonPageUrl(@NonNull Person person) {
         return "https://www.vk.com/id" + person.getId();
     }

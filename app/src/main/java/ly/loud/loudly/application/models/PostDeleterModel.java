@@ -12,15 +12,20 @@ import rx.Single;
 
 public class PostDeleterModel {
     @NonNull
-    private CoreModel coreModel;
+    private final CoreModel coreModel;
 
     @NonNull
-    private PostsDatabaseModel postsDatabaseModel;
+    private final PostsDatabaseModel postsDatabaseModel;
+
+    @NonNull
+    private final InfoUpdateModel infoUpdateModel;
 
     public PostDeleterModel(@NonNull CoreModel coreModel,
-                            @NonNull PostsDatabaseModel postsDatabaseModel) {
+                            @NonNull PostsDatabaseModel postsDatabaseModel,
+                            @NonNull InfoUpdateModel infoUpdateModel) {
         this.coreModel = coreModel;
         this.postsDatabaseModel = postsDatabaseModel;
+        this.infoUpdateModel = infoUpdateModel;
     }
 
     @CheckResult
@@ -62,8 +67,13 @@ public class PostDeleterModel {
                 .flatMap(loudlyPost -> {
                     if (loudlyPost.getNetworkInstances().size() == 1) {
                         // Has only one instance in DB - should delete from database
-                        return postsDatabaseModel
-                                .deletePost(loudlyPost)
+                        return infoUpdateModel.unSubscribe(loudlyPost)
+                                .flatMap(result -> {
+                                    if (!result) {
+                                        // ToDo: Handle can't connect to service
+                                    }
+                                    return postsDatabaseModel.deletePost(loudlyPost);
+                                })
                                 .toObservable();
                     } else {
                         return Observable.just(loudlyPost);

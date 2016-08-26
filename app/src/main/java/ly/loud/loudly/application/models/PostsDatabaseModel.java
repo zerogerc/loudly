@@ -1,5 +1,6 @@
 package ly.loud.loudly.application.models;
 
+import android.database.Cursor;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,6 +15,8 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import ly.loud.loudly.base.entities.Event;
+import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Location;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
@@ -22,7 +25,6 @@ import ly.loud.loudly.base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.multiple.LoudlyImage;
 import ly.loud.loudly.base.multiple.LoudlyPost;
-import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.Networks;
@@ -31,6 +33,7 @@ import ly.loud.loudly.util.NetworkUtils.DividedList;
 import ly.loud.loudly.util.TimeInterval;
 import ly.loud.loudly.util.database.DatabaseException;
 import ly.loud.loudly.util.database.entities.StoredAttachment;
+import ly.loud.loudly.util.database.entities.StoredEvent;
 import ly.loud.loudly.util.database.entities.StoredLocation;
 import ly.loud.loudly.util.database.entities.StoredPost;
 import ly.loud.loudly.util.database.entities.links.Links;
@@ -39,17 +42,28 @@ import rx.Single;
 import rx.exceptions.Exceptions;
 import solid.collections.SolidList;
 
+import static ly.loud.loudly.base.entities.Event.COMMENT;
+import static ly.loud.loudly.base.entities.Event.LIKE;
+import static ly.loud.loudly.base.entities.Event.SHARE;
 import static ly.loud.loudly.networks.Networks.LOUDLY;
 import static ly.loud.loudly.networks.Networks.NETWORK_COUNT;
 import static ly.loud.loudly.util.ListUtils.asSolidList;
+import static ly.loud.loudly.util.ListUtils.removeByPredicateInPlace;
 import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
+import static ly.loud.loudly.util.database.entities.StoredEvent.selectByPostId;
+import static ly.loud.loudly.util.database.entities.StoredEvent.selectByPostIdAndType;
+import static ly.loud.loudly.util.database.entities.StoredEvent.selectByPostIdNetworkAndType;
+import static ly.loud.loudly.util.database.entities.StoredEvent.selectOldestEvents;
+import static ly.loud.loudly.util.database.entities.StoredEvent.selectTypesByPost;
+import static ly.loud.loudly.util.database.entities.StoredEvent.selectTypesByPostIdAndNetwork;
+import static solid.collectors.ToList.toList;
 
 public class PostsDatabaseModel {
     @NonNull
     private final StorIOSQLite postsDatabase;
 
     @NonNull
-    private final List<PlainPost> cached;
+    private final List<LoudlyPost> cached;
 
     @Inject
     public PostsDatabaseModel(@NonNull @Named("posts") StorIOSQLite postsDatabase) {
@@ -253,6 +267,7 @@ public class PostsDatabaseModel {
                     if (links[i] == null) {
                         continue;
                     }
+                    //noinspection ResourceType i is ID of network
                     elements[i] = new SingleImage(attachment.getExtra(), null, i, links[i]);
                 }
                 return new LoudlyImage(attachment.getExtra(), null, elements);
@@ -463,6 +478,18 @@ public class PostsDatabaseModel {
                 .flatMapObservable(Observable::from);
     }
 
+    @CheckResult
+    @NonNull
+    public Observable<SolidList<LoudlyPost>> selectPostsByIds(@NonNull List<Long> ids) {
+        return Observable
+                .from(ids)
+                .flatMap(id -> selectStoredPost(id).flatMap(this::loadPost).toObservable())
+                .cast(LoudlyPost.class)
+                .toList()
+                .map(ListUtils::asSolidList)
+                .first();
+    }
+
     /* LoudlyPost part */
 
     @CheckResult
@@ -511,10 +538,10 @@ public class PostsDatabaseModel {
                                 .flatMap(ignored -> deleteLocation(storedPost.getLocationId()))
                                 .flatMap(ignored -> deleteAttachments(storedPost.getId()))
                                 .flatMap(ignored -> deleteStoredPost(storedPost))
+                                .flatMap(ignored -> deleteStoredEvents(storedPost.getId()))
                 )
                 .map(result -> {
-                    ListUtils.removeByPredicateInPlace(cached, somePost -> {
-                        LoudlyPost loudlyPost = (LoudlyPost) somePost;
+                    removeByPredicateInPlace(cached, loudlyPost -> {
                         SingleNetworkElement instance = loudlyPost.getSingleNetworkInstance(LOUDLY);
                         return instance != null &&
                                 instance.getLink().equals(loudlyInstance.getLink());
@@ -524,10 +551,10 @@ public class PostsDatabaseModel {
     }
 
     @NonNull
-    private PlainPost fromStored(@NonNull StoredPost storedPost,
-                                 @NonNull String[] links,
-                                 @Nullable Location location,
-                                 @NonNull ArrayList<MultipleAttachment> attachments) {
+    private LoudlyPost fromStored(@NonNull StoredPost storedPost,
+                                  @NonNull String[] links,
+                                  @Nullable Location location,
+                                  @NonNull ArrayList<MultipleAttachment> attachments) {
         SinglePost[] elements = new SinglePost[NETWORK_COUNT];
         //noinspection ConstantConditions StoredPost was loaded from DB, so has ID
         links[LOUDLY] = Long.toString(storedPost.getId());
@@ -538,8 +565,10 @@ public class PostsDatabaseModel {
             }
             ArrayList<SingleAttachment> singleAttachments = new ArrayList<>();
             for (MultipleAttachment attachment : attachments) {
+                //noinspection ResourceType i is ID of network
                 singleAttachments.add(attachment.getSingleNetworkInstance(i));
             }
+            //noinspection ResourceType i is ID of network
             elements[i] = new SinglePost(
                     storedPost.getText(),
                     storedPost.getDate(),
@@ -560,7 +589,7 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<PlainPost> loadPost(@NonNull StoredPost storedPost) {
+    private Single<LoudlyPost> loadPost(@NonNull StoredPost storedPost) {
         //noinspection ConstantConditions StoredPost have ID, because it's loaded from DB
         return loadLinks(storedPost.getLinksId())
                 .flatMap(links -> loadLocation(storedPost.getLocationId())
@@ -574,12 +603,22 @@ public class PostsDatabaseModel {
                                                                 )
                                                 )
                                 )
+                )
+                        // Load cached likes, comments, ...
+                .flatMap(loudlyPost -> Observable
+                                .from(loudlyPost.getNetworkInstances())
+                                .flatMap(instance -> loadInfo(loudlyPost, instance.getNetwork())
+                                                .first()
+                                                .map(instance::setInfo)
+                                )
+                                .reduce(loudlyPost, LoudlyPost::setSingleNetworkInstance)
+                                .toSingle()
                 );
     }
 
     @CheckResult
     @NonNull
-    private Observable<SolidList<PlainPost>> selectPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
+    private Observable<SolidList<LoudlyPost>> selectPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
         return selectStoredPostsByTimeInterval(timeInterval)
                 .flatMap(storedPost -> loadPost(storedPost).toObservable())
                 .toList()
@@ -601,7 +640,7 @@ public class PostsDatabaseModel {
                 .map(ignored -> {
                     // Update cached post
                     for (int i = 0, size = cached.size(); i < size; i++) {
-                        SingleNetworkElement instance = ((LoudlyPost) cached.get(i))
+                        SingleNetworkElement instance = cached.get(i)
                                 .getSingleNetworkInstance(LOUDLY);
                         if (instance == null) {
                             continue;
@@ -615,7 +654,9 @@ public class PostsDatabaseModel {
                 });
     }
 
-    public Observable<SolidList<PlainPost>> loadPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
+    @CheckResult
+    @NonNull
+    public Observable<SolidList<LoudlyPost>> loadPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
         if (cached.isEmpty()) {
             return selectPostsByTimeInterval(timeInterval)
                     .map(list -> {
@@ -623,7 +664,7 @@ public class PostsDatabaseModel {
                         return asSolidList(list);
                     });
         } else {
-            final DividedList<PlainPost> dividedList =
+            final DividedList<LoudlyPost> dividedList =
                     divideListOfCachedPosts(cached, timeInterval);
 
             return selectPostsByTimeInterval(dividedList.before)
@@ -634,7 +675,7 @@ public class PostsDatabaseModel {
                                         cached.addAll(after);
                                         Collections.sort(cached);
 
-                                        List<PlainPost> result = new ArrayList<>();
+                                        List<LoudlyPost> result = new ArrayList<>();
                                         result.addAll(before);
                                         result.addAll(dividedList.cached);
                                         result.addAll(after);
@@ -644,7 +685,295 @@ public class PostsDatabaseModel {
     }
 
     @NonNull
-    public SolidList<PlainPost> getCachedPosts() {
+    public SolidList<LoudlyPost> getCachedPosts() {
         return asSolidList(cached);
+    }
+
+    /* Event part */
+
+    @CheckResult
+    @NonNull
+    public Single<Boolean> saveEvents(@NonNull SolidList<Event> events) {
+        final List<StoredEvent> storedEvents = events
+                .map(event -> {
+                    SinglePost loudlyInstance = event.post.getSingleNetworkInstance(LOUDLY);
+                    if (loudlyInstance == null) {
+                        return null;
+                    }
+                    return new StoredEvent(
+                            null,
+                            event.type,
+                            event.network,
+                            Long.parseLong(loudlyInstance.getLink()),
+                            event.date
+                    );
+                })
+                .filter(event -> event != null)
+                .collect(toList());
+
+        return saveStoredEvents(storedEvents);
+    }
+
+    @CheckResult
+    @NonNull
+    public Observable<Event> getEvents(@NonNull LoudlyPost loudlyPost) {
+        SinglePost loudlyInstance = loudlyPost.getSingleNetworkInstance(LOUDLY);
+        if (loudlyInstance == null) {
+            return Observable.empty();
+        }
+        return getStoredEvents(Long.parseLong(loudlyInstance.getLink()))
+                .map(storedEvent -> new Event(
+                                storedEvent.getType(),
+                                storedEvent.getNetwork(),
+                                loudlyPost,
+                                storedEvent.getDate()
+                        )
+                );
+    }
+
+    @CheckResult
+    @NonNull
+    public Observable<Integer> getEventsCount(@NonNull LoudlyPost post,
+                                              @Event.EventType short type) {
+        SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(LOUDLY);
+        if (loudlyInstance == null) {
+            return Observable.empty();
+        }
+        return postsDatabase
+                .get()
+                .numberOfResults()
+                .withQuery(selectByPostIdAndType(
+                        Long.parseLong(loudlyInstance.getLink()),
+                        type
+                ))
+                .prepare()
+                .asRxObservable();
+    }
+
+    @CheckResult
+    @NonNull
+    public Observable<Integer> getEventsCount(@NonNull LoudlyPost post,
+                                              @Networks.Network int network,
+                                              @Event.EventType short type) {
+        SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(LOUDLY);
+        if (loudlyInstance == null) {
+            return Observable.empty();
+        }
+        return postsDatabase
+                .get()
+                .numberOfResults()
+                .withQuery(selectByPostIdNetworkAndType(
+                        Long.parseLong(loudlyInstance.getLink()),
+                        network,
+                        type
+                ))
+                .prepare()
+                .asRxObservable();
+    }
+
+    /* Info part */
+
+    @CheckResult
+    @NonNull
+    public Observable<Info> loadInfo(@NonNull LoudlyPost post, @Networks.Network int network) {
+        SinglePost loudlyInstance = post.getSingleNetworkInstance(LOUDLY);
+        if (loudlyInstance == null) {
+            return Observable.empty();
+        }
+        return postsDatabase.get()
+                .cursor()
+                .withQuery(selectTypesByPostIdAndNetwork(
+                        Long.parseLong(loudlyInstance.getLink()),
+                        network
+                ))
+                .prepare()
+                .asRxObservable()
+                .map(this::countInfo);
+    }
+
+    @CheckResult
+    @NonNull
+    public Observable<Info> loadInfo(@NonNull LoudlyPost loudlyPost) {
+        SinglePost loudlyInstance = loudlyPost.getSingleNetworkInstance(LOUDLY);
+        if (loudlyInstance == null) {
+            return Observable.empty();
+        }
+        return postsDatabase.get()
+                .cursor()
+                .withQuery(selectTypesByPost(
+                        Long.parseLong(loudlyInstance.getLink())
+                ))
+                .prepare()
+                .asRxObservable()
+                .map(this::countInfo);
+    }
+
+    @CheckResult
+    @NonNull
+    public Observable<Info> updateStoredInfo(@NonNull LoudlyPost loudlyPost,
+                                             @Networks.Network int network,
+                                             @NonNull Info difference) {
+        return updateEvents(loudlyPost, network, LIKE, difference.like)
+                .flatMap(ignored -> updateEvents(loudlyPost, network, SHARE, difference.repost))
+                .flatMap(ignored -> updateEvents(loudlyPost, network, COMMENT, difference.comment))
+                .map(ignored -> {
+                    SinglePost loudlyInstance = loudlyPost.getSingleNetworkInstance(LOUDLY);
+                    for (int i = 0; i < cached.size(); i++) {
+                        SinglePost otherInstance = cached.get(i).getSingleNetworkInstance(LOUDLY);
+                        //noinspection ConstantConditions Cached LoudlyPosts have LOUDLY instances
+                        if (otherInstance.getLink().equals(loudlyInstance.getLink())) {
+                            SinglePost previous = cached.get(i).getSingleNetworkInstance(network);
+                            if (previous == null) {
+                                continue;
+                            }
+                            Info newInfo = previous.getInfo().add(difference);
+                            cached.set(i, cached.get(i)
+                                    .setSingleNetworkInstance(previous.setInfo(newInfo)));
+                        }
+                    }
+                    return difference;
+                })
+                .toObservable();
+    }
+
+    @NonNull
+    private Info countInfo(@NonNull Cursor cursor) {
+        int like = 0;
+        int share = 0;
+        int comment = 0;
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    short type = cursor.getShort(
+                            cursor.getColumnIndexOrThrow(StoredEvent.Contract.COLUMN_NAME_TYPE)
+                    );
+                    switch (type) {
+                        case LIKE:
+                            like++;
+                            break;
+                        case SHARE:
+                            share++;
+                            break;
+                        case COMMENT:
+                            comment++;
+                            break;
+                    }
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            cursor.close();
+        }
+        return new Info(like, share, comment);
+    }
+
+    /* StoredEvent part */
+
+    @CheckResult
+    @NonNull
+    private Single<Boolean> saveStoredEvents(@NonNull List<StoredEvent> events) {
+        return postsDatabase
+                .put()
+                .objects(events)
+                .prepare()
+                .asRxSingle()
+                .map(putResults -> {
+                    if (putResults.numberOfInserts() < events.size()) {
+                        throw Exceptions.propagate(new DatabaseException("Can't save event"));
+                    }
+                    return true;
+                });
+    }
+
+    @CheckResult
+    @NonNull
+    private Single<Boolean> deleteStoredEvents(@NonNull List<StoredEvent> events) {
+        return postsDatabase
+                .delete()
+                .objects(events)
+                .prepare()
+                .asRxSingle()
+                .map(results -> {
+                    for (StoredEvent storedEvent : events) {
+                        if (results.wasNotDeleted(storedEvent)) {
+                            throw Exceptions.propagate(
+                                    new DatabaseException("Can't delete event")
+                            );
+                        }
+                    }
+                    return true;
+                });
+    }
+
+    @CheckResult
+    @NonNull
+    private Single<Boolean> deleteOldestStoredEvent(@NonNull LoudlyPost post,
+                                                    @Event.EventType short type,
+                                                    int count) {
+        SinglePost loudlyPost = post.getSingleNetworkInstance(LOUDLY);
+        if (loudlyPost == null) {
+            return Single.just(false);
+        }
+        return postsDatabase
+                .get()
+                .listOfObjects(StoredEvent.class)
+                .withQuery(selectOldestEvents(
+                        Long.parseLong(loudlyPost.getLink()),
+                        type,
+                        count
+                ))
+                .prepare()
+                .asRxSingle()
+                .flatMap(this::deleteStoredEvents);
+    }
+
+    @CheckResult
+    @NonNull
+    private Single<Boolean> updateEvents(@NonNull LoudlyPost post,
+                                         @Networks.Network int network,
+                                         @Event.EventType short type,
+                                         int count) {
+        if (count == 0) {
+            return Single.just(false);
+        }
+        if (count > 0) {
+            List<Event> events = Collections.nCopies(
+                    count,
+                    new Event(type, network, post, System.currentTimeMillis())
+            );
+            return saveEvents(asSolidList(events));
+        } else {
+            return deleteOldestStoredEvent(post, type, -count);
+        }
+    }
+
+    @CheckResult
+    @NonNull
+    private Observable<StoredEvent> getStoredEvents(long postId) {
+        return postsDatabase
+                .get()
+                .listOfObjects(StoredEvent.class)
+                .withQuery(selectByPostId(postId))
+                .prepare()
+                .asRxObservable()
+                .first()
+                .flatMap(Observable::from);
+    }
+
+    @CheckResult
+    @NonNull
+    private Single<Boolean> deleteStoredEvents(long postId) {
+        return postsDatabase
+                .delete()
+                .byQuery(StoredEvent.deleteByPostId(postId))
+                .prepare()
+                .asRxSingle()
+                .map(deleteResult -> {
+                    if (deleteResult.numberOfRowsDeleted() == 0) {
+                        throw Exceptions.propagate(
+                                new DatabaseException("Can't delete events")
+                        );
+                    }
+                    return true;
+                });
     }
 }

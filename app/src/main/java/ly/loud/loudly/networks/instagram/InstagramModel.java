@@ -1,6 +1,9 @@
 package ly.loud.loudly.networks.instagram;
 
 import android.support.annotation.NonNull;
+import android.util.Pair;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -8,6 +11,8 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
+import ly.loud.loudly.base.entities.Event;
+import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
@@ -143,6 +148,12 @@ public class InstagramModel implements NetworkContract {
 
     @NonNull
     @Override
+    public Observable<List<Pair<SinglePost, Info>>> getUpdates(@NonNull SolidList<SinglePost> posts) {
+        return Observable.empty();
+    }
+
+    @Override
+    @NonNull
     public String getPersonPageUrl(@NonNull Person person) {
         return "";
     }
