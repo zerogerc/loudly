@@ -137,7 +137,7 @@ public class PostLoadModel {
                         })
                         .toObservable()
                 )
-                .flatMap(list -> coreModel.getConnectedNetworksModels()
+                .flatMap(list -> coreModel.observeConnectedNetworksModels().defaultIfEmpty(null)
                         .flatMap(model -> model.loadPosts(interval))
                         .flatMap(posts -> updateStoredInfo(posts, list))
                         .scan(
@@ -151,7 +151,7 @@ public class PostLoadModel {
      */
     @CheckResult
     @NonNull
-    public Single<SolidList<PlainPost>> getPostsByIterval(@NonNull TimeInterval interval) {
+    public Single<SolidList<PlainPost>> getPostsByInterval(@NonNull TimeInterval interval) {
         return loadPosts(interval).last().toSingle();
     }
 
@@ -161,7 +161,7 @@ public class PostLoadModel {
     @CheckResult
     @NonNull
     public SolidList<PlainPost> getCachedPosts() {
-        ArrayList<SolidList<SinglePost>> cachedPosts = coreModel.getNetworkModels()
+        ArrayList<SolidList<SinglePost>> cachedPosts = coreModel.getAllNetworkModels()
                 .map(NetworkContract::getCachedPosts)
                 .collect(ToArrayList.toArrayList());
 

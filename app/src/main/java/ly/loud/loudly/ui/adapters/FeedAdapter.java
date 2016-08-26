@@ -67,10 +67,15 @@ public class FeedAdapter extends RecyclerView.Adapter<BindingViewHolder>
     @Override
     public void onBindViewHolder(@NonNull BindingViewHolder holder, int position) {
         if (isLoadMoreItem(position)) {
-            //noinspection ConstantConditions (ViewHolderLoadMore don't need ListItem)
+            //unchecked (ViewHolderLoadMore don't need ListItem)
             holder.bind(null);
             StaggeredGridLayoutManager.LayoutParams layoutParams =
                     (StaggeredGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
+            if (posts.size() == 0) {
+                layoutParams.height = StaggeredGridLayoutManager.LayoutParams.MATCH_PARENT;
+            } else {
+                layoutParams.height = StaggeredGridLayoutManager.LayoutParams.WRAP_CONTENT;
+            }
             layoutParams.setFullSpan(true);
         } else {
             ((ViewHolderPost) holder).bind(posts.get(position));
@@ -82,6 +87,14 @@ public class FeedAdapter extends RecyclerView.Adapter<BindingViewHolder>
         if (needLoadMore) {
             return posts.size() + 1;
         }
+        return posts.size();
+    }
+
+    /**
+     * @return number of posts on adapter.
+     * Note: this is not the same as {@link #getItemCount()}
+     */
+    public int getPostsCount() {
         return posts.size();
     }
 

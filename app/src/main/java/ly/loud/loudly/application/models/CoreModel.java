@@ -11,17 +11,16 @@ import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.legacy_base.SingleNetwork;
-import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.FacebookModel;
 import ly.loud.loudly.networks.instagram.InstagramModel;
 import ly.loud.loudly.networks.vk.VKModel;
 import rx.Observable;
-import rx.Single;
 import solid.collections.SolidList;
 
 import static ly.loud.loudly.util.ListUtils.asSolidList;
+import static solid.collectors.ToSolidList.toSolidList;
 
 public class CoreModel {
     @NonNull
@@ -62,16 +61,20 @@ public class CoreModel {
     }
 
     @NonNull
-    public SolidList<NetworkContract> getNetworkModels() {
+    public SolidList<NetworkContract> getAllNetworkModels() {
         return asSolidList(networkModels);
     }
 
     @CheckResult
     @NonNull
-    public Observable<NetworkContract> getConnectedNetworksModels() {
+    public Observable<NetworkContract> observeConnectedNetworksModels() {
         return observeAllNetworksModels().filter(NetworkContract::isConnected);
     }
 
+    @NonNull
+    public SolidList<NetworkContract> getConnectedNetworksModels() {
+        return getAllNetworkModels().filter(NetworkContract::isConnected).collect(toSolidList());
+    }
 
     /**
      * Get models where given {@link SingleNetwork} exists in.
@@ -79,13 +82,13 @@ public class CoreModel {
     @CheckResult
     @NonNull
     public Observable<NetworkContract> elementExistsIn(@NonNull SingleNetworkElement element) {
-        return getConnectedNetworksModels().filter(network -> element.getNetwork() == network.getId());
+        return observeConnectedNetworksModels().filter(network -> element.getNetwork() == network.getId());
     }
 
     @CheckResult
     @NonNull
     public Observable<NetworkContract> elementExistsIn(@NonNull MultipleNetworkElement element) {
-        return getConnectedNetworksModels()
-                .filter(networkContract ->  element.getSingleNetworkInstance(networkContract.getId()) != null);
+        return observeConnectedNetworksModels()
+                .filter(networkContract -> element.getSingleNetworkInstance(networkContract.getId()) != null);
     }
 }
