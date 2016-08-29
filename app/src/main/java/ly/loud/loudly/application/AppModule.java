@@ -10,7 +10,15 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import ly.loud.loudly.application.models.*;
+import ly.loud.loudly.application.models.CoreModel;
+import ly.loud.loudly.application.models.GetterModel;
+import ly.loud.loudly.application.models.InfoUpdateModel;
+import ly.loud.loudly.application.models.KeysModel;
+import ly.loud.loudly.application.models.LoadMoreStrategyModel;
+import ly.loud.loudly.application.models.PostDeleterModel;
+import ly.loud.loudly.application.models.PostLoadModel;
+import ly.loud.loudly.application.models.PostUploadModel;
+import ly.loud.loudly.application.models.PostsDatabaseModel;
 import ly.loud.loudly.networks.facebook.FacebookModel;
 import ly.loud.loudly.networks.instagram.InstagramModel;
 import ly.loud.loudly.networks.vk.VKModel;
@@ -77,24 +85,27 @@ public class AppModule {
     @Singleton
     @NonNull
     PostDeleterModel providePostDeleterModel(@NonNull CoreModel coreModel,
-                                             @NonNull PostsDatabaseModel postsDatabaseModel) {
-        return new PostDeleterModel(coreModel, postsDatabaseModel);
+                                             @NonNull PostsDatabaseModel postsDatabaseModel,
+                                             @NonNull InfoUpdateModel infoUpdateModel) {
+        return new PostDeleterModel(coreModel, postsDatabaseModel, infoUpdateModel);
     }
 
     @Provides
     @Singleton
     @NonNull
     PostUploadModel providePostUploadModel(@NonNull CoreModel coreModel,
-                                           @NonNull PostsDatabaseModel postsDatabaseModel) {
-        return new PostUploadModel(coreModel, postsDatabaseModel);
+                                           @NonNull PostsDatabaseModel postsDatabaseModel,
+                                           @NonNull InfoUpdateModel infoUpdateModel) {
+        return new PostUploadModel(coreModel, postsDatabaseModel, infoUpdateModel);
     }
 
     @Provides
     @Singleton
     @NonNull
     PostLoadModel providePostLoadModel(@NonNull CoreModel coreModel,
-                                       @NonNull PostsDatabaseModel postsDatabaseModel) {
-        return new PostLoadModel(coreModel, postsDatabaseModel);
+                                       @NonNull PostsDatabaseModel postsDatabaseModel,
+                                       @NonNull InfoUpdateModel infoUpdateModel) {
+        return new PostLoadModel(coreModel, postsDatabaseModel, infoUpdateModel);
     }
 
     @Provides
@@ -110,5 +121,12 @@ public class AppModule {
     @NonNull
     LoadMoreStrategyModel provideLoadMoreStrategy() {
         return new LoadMoreStrategyModel(loudlyApplication);
+    }
+
+    @Provides
+    @Singleton
+    @NonNull
+    InfoUpdateModel provideInfoUpdateModel() {
+        return new InfoUpdateModel(loudlyApplication);
     }
 }

@@ -69,7 +69,7 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
      * Set instance to this post and all it's
      *
      * @param instance New instance (may be null)
-     * @return
+     * @return New loudly post with instance set
      */
     @CheckResult
     @NonNull
@@ -125,7 +125,7 @@ public class LoudlyPost extends PlainPost<MultipleAttachment>
         Info info = new Info();
         for (SinglePost post : elements) {
             if (post != null) {
-                info.add(post.getInfo());
+                info = info.add(post.getInfo());
             }
         }
         return info;

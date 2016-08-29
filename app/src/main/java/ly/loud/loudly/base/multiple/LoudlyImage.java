@@ -104,7 +104,7 @@ public class LoudlyImage extends PlainImage implements MultipleAttachment, Local
         Info info = new Info();
         for (SingleImage image : elements) {
             if (image != null) {
-                info.add(image.getInfo());
+                info = info.add(image.getInfo());
             }
         }
         return info;

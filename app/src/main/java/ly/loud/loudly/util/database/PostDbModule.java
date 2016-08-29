@@ -10,7 +10,6 @@ import ly.loud.loudly.util.database.entities.*;
 import ly.loud.loudly.util.database.entities.links.Links;
 import ly.loud.loudly.util.database.entities.links.LinksTypeMapping;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -45,6 +44,7 @@ public class PostDbModule {
                 .addTypeMapping(StoredAttachment.class, new StoredAttachmentSQLiteTypeMapping())
                 .addTypeMapping(Links.class, new LinksTypeMapping())
                 .addTypeMapping(StoredPost.class, new StoredPostSQLiteTypeMapping())
+                .addTypeMapping(StoredEvent.class, new StoredEventSQLiteTypeMapping())
                 .build();
     }
 

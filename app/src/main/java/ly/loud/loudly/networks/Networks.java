@@ -23,7 +23,7 @@ public class Networks {
     public static final int NETWORK_COUNT = 7;
 
     // It's important to add new network to the LinksContract, so we could save it to DB
-    @IntDef
+    @IntDef({LOUDLY, FB, TWITTER, INSTAGRAM, VK, OK, MAILRU})
     public @interface Network {
     }
 

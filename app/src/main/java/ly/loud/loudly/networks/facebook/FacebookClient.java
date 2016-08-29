@@ -18,7 +18,7 @@ import java.util.Map;
 public interface FacebookClient {
     String CLIENT_ID = "443913362466352";
     String LIKES_ENDPOINT = "likes";
-    String REPOSTS_ENDPOINT = "sharedposts";
+    String SHARES_ENDPOINT = "sharedposts";
 
     @GET("me/feed?date_format=U&" +
             "fields=message,created_time,id,likes.limit(0).summary(true),shares,comments.limit(0).summary(true)," +
@@ -27,6 +27,11 @@ public interface FacebookClient {
     Call<Data<List<Post>>> loadPosts(@Nullable @Query("since") Long since,
                                      @Nullable @Query("until") Long until,
                                      @NonNull @Query("access_token") String accessToken);
+
+    @GET("?fields=likes.limit(0).summary(true),comments.limit(0).summary(true),shares")
+    @NonNull
+    Call<Map<String, Post>> getInfo(@NonNull @Query("ids") String ids,
+                                   @NonNull @Query("access_token") String accessToken);
 
     @GET
     @NonNull

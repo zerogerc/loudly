@@ -3,7 +3,7 @@ package ly.loud.loudly.ui.adapters.holders;
 import android.support.annotation.IntDef;
 
 public abstract class ItemTypes {
-    @IntDef
+    @IntDef({POST, PERSON, COMMENT, DELIMITER, LOAD_MORE})
     public @interface ItemType {}
     public static final int POST = 0;
     public static final int PERSON = 1;

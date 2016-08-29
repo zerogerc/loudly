@@ -2,13 +2,13 @@ package ly.loud.loudly.application.models;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
-
+import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SinglePost;
@@ -30,15 +30,20 @@ import static solid.collectors.ToSolidList.toSolidList;
  */
 public class PostLoadModel {
     @NonNull
-    private CoreModel coreModel;
+    private final CoreModel coreModel;
 
     @NonNull
-    private PostsDatabaseModel postsDatabaseModel;
+    private final PostsDatabaseModel postsDatabaseModel;
 
-    @Inject
-    public PostLoadModel(@NonNull CoreModel coreModel, @NonNull PostsDatabaseModel databaseModel) {
-        this.postsDatabaseModel = databaseModel;
+    @NonNull
+    private final InfoUpdateModel infoUpdateModel;
+
+    public PostLoadModel(@NonNull CoreModel coreModel,
+                         @NonNull PostsDatabaseModel postsDatabaseModel,
+                         @NonNull InfoUpdateModel infoUpdateModel) {
         this.coreModel = coreModel;
+        this.postsDatabaseModel = postsDatabaseModel;
+        this.infoUpdateModel = infoUpdateModel;
     }
 
     @NonNull
@@ -51,20 +56,17 @@ public class PostLoadModel {
                 LoudlyPost loudlyPost = ((LoudlyPost) post);
                 return newList
                         // Filter posts, which has same IDs as loudlyPost
-                        .filter(single -> {
-                            SinglePost instance = loudlyPost
-                                    .getSingleNetworkInstance(single.getNetwork());
-                            return instance != null && instance.getLink().equals(single.getLink());
-                        }) // And set this posts as instances
+                        .filter(single -> equals(single, loudlyPost))
+                                // And set this posts as instances
                         .reduce(loudlyPost, LoudlyPost::setSingleNetworkInstance);
             }
             return post;
         }).collect(toSolidList());
         // Drop post which instances were set
         List<SinglePost> notSet = newList.filter(post ->
-                !withInstances.any(otherPost -> (otherPost instanceof LoudlyPost) &&
-                        ((LoudlyPost) otherPost)
-                                .getSingleNetworkInstance(post.getNetwork()) == post)
+                        !withInstances.any(otherPost -> (otherPost instanceof LoudlyPost) &&
+                                ((LoudlyPost) otherPost)
+                                        .getSingleNetworkInstance(post.getNetwork()) == post)
         ).collect(toList());
         // Merge this two lists
         List<PlainPost> result = new ArrayList<>();
@@ -72,6 +74,46 @@ public class PostLoadModel {
         result.addAll(notSet);
         Collections.sort(result);
         return ListUtils.asSolidList(result);
+    }
+
+    private static boolean equals(@NonNull SinglePost post, @NonNull LoudlyPost loudlyPost) {
+        SinglePost loudlyInstance = loudlyPost.getSingleNetworkInstance(post.getNetwork());
+        return loudlyInstance != null && loudlyInstance.getLink().equals(post.getLink());
+    }
+
+    @NonNull
+    private Observable<SolidList<SinglePost>> updateStoredInfo(
+            @NonNull SolidList<SinglePost> newPosts,
+            @NonNull SolidList<LoudlyPost> loudlyPosts) {
+        List<Pair<Pair<LoudlyPost, Integer>, Info>> needUpdate = newPosts
+                .map(post -> {
+                            LoudlyPost corresponding = loudlyPosts
+                                    .filter(loudlyPost -> equals(post, loudlyPost))
+                                    .first()
+                                    .orNull();
+                            if (corresponding == null) {
+                                return null;
+                            }
+                            SinglePost oldPost = corresponding
+                                    .getSingleNetworkInstance(post.getNetwork());
+                            //noinspection ConstantConditions corresponding has required instance
+                            Info difference = post
+                                    .getInfo()
+                                    .subtract(oldPost.getInfo());
+                            if (difference.isEmpty()) {
+                                return null;
+                            }
+                            return new Pair<>(new Pair<>(corresponding, post.getNetwork()), difference);
+                        }
+                )
+                .filter(a -> a != null)
+                .collect(toList());
+        //noinspection ResourceType Second element in first pair is network ID
+        return Observable.from(needUpdate)
+                .flatMap(pair -> postsDatabaseModel
+                        .updateStoredInfo(pair.first.first, pair.first.second, pair.second))
+                .lastOrDefault(null)    // Save all
+                .map(ignored -> newPosts);
     }
 
     /**
@@ -85,9 +127,23 @@ public class PostLoadModel {
     @NonNull
     public Observable<SolidList<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
         return postsDatabaseModel.loadPostsByTimeInterval(interval)
+                .flatMap(list -> infoUpdateModel
+                        .subscribeOnUpdates(list)
+                        .map(result -> {
+                            if (!result) {
+                                // ToDO: Handle not connected to server
+                            }
+                            return list;
+                        })
+                        .toObservable()
+                )
                 .flatMap(list -> coreModel.observeConnectedNetworksModels().defaultIfEmpty(null)
                         .flatMap(model -> model.loadPosts(interval))
-                        .scan(list, PostLoadModel::merge));
+                        .flatMap(posts -> updateStoredInfo(posts, list))
+                        .scan(
+                                list.cast(PlainPost.class).collect(toSolidList()),
+                                PostLoadModel::merge)
+                );
     }
 
     /**
@@ -109,7 +165,10 @@ public class PostLoadModel {
                 .map(NetworkContract::getCachedPosts)
                 .collect(ToArrayList.toArrayList());
 
-        SolidList<PlainPost> result = postsDatabaseModel.getCachedPosts();
+        SolidList<PlainPost> result = postsDatabaseModel
+                .getCachedPosts()
+                .cast(PlainPost.class)
+                .collect(toSolidList());
         for (SolidList<SinglePost> newList : cachedPosts) {
             result = merge(result, newList);
         }

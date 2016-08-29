@@ -87,4 +87,6 @@ public interface AppComponent {
     void inject(@NonNull AuthFragment authFragment);
 
     void inject(@NonNull NetworksChooseLayout networksChooseLayout);
+
+    void inject(@NonNull UpdateInfoService updateInfoService);
 }

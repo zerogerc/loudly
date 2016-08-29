@@ -1,9 +1,11 @@
 package ly.loud.loudly.networks.facebook;
 
 import android.graphics.Point;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +62,7 @@ import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.ListUtils.asSolidList;
 import static ly.loud.loudly.util.ListUtils.removeByPredicateInPlace;
 import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
+import static solid.collectors.ToList.toList;
 
 public class FacebookModel implements NetworkContract {
     public static final String AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth";
@@ -253,7 +256,7 @@ public class FacebookModel implements NetworkContract {
                     endpoint = FacebookClient.LIKES_ENDPOINT;
                     break;
                 case SHARES:
-                    endpoint = FacebookClient.REPOSTS_ENDPOINT;
+                    endpoint = FacebookClient.SHARES_ENDPOINT;
                     break;
                 default:
                     endpoint = "";
@@ -272,7 +275,7 @@ public class FacebookModel implements NetworkContract {
             }
 
             Call<Map<String, FbPerson>> personsInfoCall =
-                    client.getPersonsInfo(toCommaSeparated(ids), keyKeeper.getAccessToken());
+                    client.getPersonsInfo(toCommaSeparatedUserIds(ids), keyKeeper.getAccessToken());
             Response<Map<String, FbPerson>> executedPersonsCall = personsInfoCall.execute();
             Map<String, FbPerson> persons = executedPersonsCall.body();
             if (persons == null) {
@@ -293,7 +296,7 @@ public class FacebookModel implements NetworkContract {
             return Collections.emptyMap();
         }
         Call<Map<String, Picture>> pictureInfos =
-                client.getPictureInfos(toCommaSeparated(images), keyKeeper.getAccessToken());
+                client.getPictureInfos(toCommaSeparatedUserIds(images), keyKeeper.getAccessToken());
         Response<Map<String, Picture>> executed = pictureInfos.execute();
         if (executed == null) {
             return Collections.emptyMap();
@@ -399,11 +402,8 @@ public class FacebookModel implements NetworkContract {
                             attachments.add(parsed);
                         }
                     }
-                    int likes = post.likes != null ? post.likes.summary.totalCount : 0;
-                    int shares = post.shares != null ? post.shares.count : 0;
-                    int comments = post.comments != null ? post.comments.summary.totalCount : 0;
                     posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
-                            getId(), post.id, new Info(likes, shares, comments)));
+                            getId(), post.id, getInfo(post)));
                 }
             }
             if (body.paging != null && body.paging.next != null) {
@@ -416,17 +416,37 @@ public class FacebookModel implements NetworkContract {
     }
 
     @NonNull
+    private Info getInfo(@NonNull Post post) {
+        int likes = post.likes != null ? post.likes.summary.totalCount : 0;
+        int shares = post.shares != null ? post.shares.count : 0;
+        int comments = post.comments != null ? post.comments.summary.totalCount : 0;
+        return new Info(likes, shares, comments);
+    }
+
+    @NonNull
+    private String toCommaSeparatedUserIds(@NonNull List<String> ids) {
+        List<String> userIDs = new ArrayList<>();
+        for (String id : ids) {
+            if (id.indexOf('_') != -1) {
+                userIDs.add(id.substring(0, id.indexOf("_")));
+            } else {
+                userIDs.add(id);
+            }
+        }
+        return toCommaSeparated(userIDs);
+    }
+
+    @NonNull
     private String toCommaSeparated(@NonNull List<String> ids) {
         StringBuilder sb = new StringBuilder();
         for (String id : ids) {
-            if (id.indexOf('_') != -1) id = id.substring(0, id.indexOf("_"));
             sb.append(id);
             sb.append(',');
         }
         if (sb.length() > 0) {
             sb.delete(sb.length() - 1, sb.length());
         }
-        return ids.toString();
+        return sb.toString();
     }
 
     @NonNull
@@ -463,7 +483,7 @@ public class FacebookModel implements NetworkContract {
             }
 
             Call<Map<String, FbPerson>> personsInfoCall =
-                    client.getPersonsInfo(toCommaSeparated(personIds), keyKeeper.getAccessToken());
+                    client.getPersonsInfo(toCommaSeparatedUserIds(personIds), keyKeeper.getAccessToken());
             Response<Map<String, FbPerson>> personsCallExecuted =
                     personsInfoCall.execute();
             Map<String, FbPerson> persons = personsCallExecuted.body();
@@ -480,8 +500,50 @@ public class FacebookModel implements NetworkContract {
         });
     }
 
-    @NonNull
+    @CheckResult
     @Override
+    @NonNull
+    public Observable<List<Pair<SinglePost, Info>>> getUpdates(@NonNull SolidList<SinglePost> posts) {
+        return Observable.fromCallable(() -> {
+            FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: Handle
+                return null;
+            }
+            List<String> ids = posts.map(SinglePost::getLink).collect(toList());
+            Call<Map<String, Post>> infoCall =
+                    client.getInfo(toCommaSeparated(ids), keyKeeper.getAccessToken());
+            Response<Map<String, Post>> executed = infoCall.execute();
+            Map<String, Post> body = executed.body();
+            if (body == null) {
+                // ToDo: handle
+                return null;
+            }
+            List<Pair<SinglePost, Info>> events = new ArrayList<>();
+            for (SinglePost post : posts) {
+                if (!body.containsKey(post.getLink())) {
+                    continue;
+                }
+                Post got = body.get(post.getLink());
+                Info newInfo = getInfo(got);
+                Info difference = newInfo.subtract(post.getInfo());
+                if (!difference.isEmpty()) {
+                    // Update info in cached posts
+                    for (int i = 0; i < cached.size(); i++) {
+                        if (cached.get(i).getLink().equals(post.getLink())) {
+                            cached.set(i, cached.get(i).setInfo(newInfo));
+                            break;
+                        }
+                    }
+                    events.add(new Pair<>(post, difference));
+                }
+            }
+            return events;
+        });
+    }
+
+    @Override
+    @NonNull
     public String getPersonPageUrl(@NonNull Person person) {
         return "https://www.facebook.com/" + person.getId();
     }

@@ -2,7 +2,11 @@ package ly.loud.loudly.networks;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
+import java.util.List;
+
+import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
@@ -130,6 +134,17 @@ public interface NetworkContract {
     @CheckResult
     @NonNull
     Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element);
+
+    /**
+     * Get new updates of specified post. Updates is new like, share or comment
+     *
+     * @param posts List of posts to find update
+     * @return Observable from list of pairs. First element in pair is post,
+     * second - difference in infos between stored and updated
+     */
+    @CheckResult
+    @NonNull
+    Observable<List<Pair<SinglePost, Info>>> getUpdates(@NonNull SolidList<SinglePost> posts);
 
     /**
      * Get url of person's page in this network

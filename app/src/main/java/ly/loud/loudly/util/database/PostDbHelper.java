@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 
+import ly.loud.loudly.util.database.entities.StoredEvent;
 import ly.loud.loudly.util.database.entities.StoredAttachment;
 import ly.loud.loudly.util.database.entities.StoredLocation;
 import ly.loud.loudly.util.database.entities.StoredPost;
@@ -27,6 +28,7 @@ public class PostDbHelper extends SQLiteOpenHelper {
         db.execSQL(Links.Contract.SQL_CREATE_TABLE);
         db.execSQL(StoredPost.Contract.SQL_CREATE_POST_TABLE);
         db.execSQL(StoredAttachment.Contract.SQL_CREATE_TABLE);
+        db.execSQL(StoredEvent.Contract.SQL_CREATE_TABLE);
     }
 
     @Override
