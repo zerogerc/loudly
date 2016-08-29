@@ -67,16 +67,16 @@ public class InfoUpdateModel {
 
     @CheckResult
     @NonNull
-    public Single<Boolean> unSubscribe(@NonNull LoudlyPost loudlyPost) {
+    public Single<Boolean> unsubscribe(@NonNull LoudlyPost loudlyPost) {
         return getService()
-                .map(service -> service.unSubscribe(loudlyPost));
+                .map(service -> service.unsubscribe(loudlyPost));
     }
 
     @CheckResult
     @NonNull
-    public Single<Boolean> unSubscribe(@NonNull List<LoudlyPost> loudlyPost) {
+    public Single<Boolean> unsubscribe(@NonNull List<LoudlyPost> loudlyPost) {
         return getService()
-                .map(service -> service.unSubscribe(loudlyPost));
+                .map(service -> service.unsubscribe(loudlyPost));
     }
 
     @CheckResult
@@ -107,7 +107,8 @@ public class InfoUpdateModel {
                     Intent startService = new Intent(loudlyApplication, UpdateInfoService.class);
                     loudlyApplication.bindService(startService, new ServiceConnection() {
                         @Override
-                        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+                        public void onServiceConnected(@Nullable ComponentName componentName,
+                                                       @Nullable IBinder iBinder) {
                             UpdateInfoService.UpdateInfoServiceBinder binder =
                                     (UpdateInfoService.UpdateInfoServiceBinder) iBinder;
                             serviceBinder = binder;
@@ -116,7 +117,7 @@ public class InfoUpdateModel {
                         }
 
                         @Override
-                        public void onServiceDisconnected(ComponentName componentName) {
+                        public void onServiceDisconnected(@Nullable ComponentName componentName) {
                             serviceBinder = null;
                         }
                     }, Context.BIND_AUTO_CREATE);

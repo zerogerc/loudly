@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import ly.loud.loudly.base.entities.Event;
+import ly.loud.loudly.base.entities.Event.EventType;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Location;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
@@ -28,6 +29,7 @@ import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.NetworkUtils.DividedList;
 import ly.loud.loudly.util.TimeInterval;
@@ -734,7 +736,7 @@ public class PostsDatabaseModel {
     @CheckResult
     @NonNull
     public Observable<Integer> getEventsCount(@NonNull LoudlyPost post,
-                                              @Event.EventType short type) {
+                                              @EventType short type) {
         SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(LOUDLY);
         if (loudlyInstance == null) {
             return Observable.empty();
@@ -753,8 +755,8 @@ public class PostsDatabaseModel {
     @CheckResult
     @NonNull
     public Observable<Integer> getEventsCount(@NonNull LoudlyPost post,
-                                              @Networks.Network int network,
-                                              @Event.EventType short type) {
+                                              @Network int network,
+                                              @EventType short type) {
         SingleNetworkElement loudlyInstance = post.getSingleNetworkInstance(LOUDLY);
         if (loudlyInstance == null) {
             return Observable.empty();
@@ -775,7 +777,7 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    public Observable<Info> loadInfo(@NonNull LoudlyPost post, @Networks.Network int network) {
+    public Observable<Info> loadInfo(@NonNull LoudlyPost post, @Network int network) {
         SinglePost loudlyInstance = post.getSingleNetworkInstance(LOUDLY);
         if (loudlyInstance == null) {
             return Observable.empty();
@@ -811,7 +813,7 @@ public class PostsDatabaseModel {
     @CheckResult
     @NonNull
     public Observable<Info> updateStoredInfo(@NonNull LoudlyPost loudlyPost,
-                                             @Networks.Network int network,
+                                             @Network int network,
                                              @NonNull Info difference) {
         return updateEvents(loudlyPost, network, LIKE, difference.like)
                 .flatMap(ignored -> updateEvents(loudlyPost, network, SHARE, difference.repost))
@@ -907,7 +909,7 @@ public class PostsDatabaseModel {
     @CheckResult
     @NonNull
     private Single<Boolean> deleteOldestStoredEvent(@NonNull LoudlyPost post,
-                                                    @Event.EventType short type,
+                                                    @EventType short type,
                                                     int count) {
         SinglePost loudlyPost = post.getSingleNetworkInstance(LOUDLY);
         if (loudlyPost == null) {
@@ -929,8 +931,8 @@ public class PostsDatabaseModel {
     @CheckResult
     @NonNull
     private Single<Boolean> updateEvents(@NonNull LoudlyPost post,
-                                         @Networks.Network int network,
-                                         @Event.EventType short type,
+                                         @Network int network,
+                                         @EventType short type,
                                          int count) {
         if (count == 0) {
             return Single.just(false);

@@ -37,16 +37,4 @@ public class Event {
         this.post = post;
         this.date = date;
     }
-
-    @NonNull
-    public Info toInfo() {
-        switch (type) {
-            case LIKE:
-                return new Info(1, 0, 0);
-            case SHARE:
-                return new Info(0, 1, 0);
-            default:    // Comment
-                return new Info(0, 0, 1);
-        }
-    }
 }

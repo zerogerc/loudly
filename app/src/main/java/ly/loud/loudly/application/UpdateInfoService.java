@@ -70,7 +70,7 @@ public class UpdateInfoService extends Service {
 
     @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(@Nullable Intent intent) {
         return new UpdateInfoServiceBinder();
     }
 
@@ -97,7 +97,7 @@ public class UpdateInfoService extends Service {
      * @param loudlyPost Post to remove subscription
      * @return True, if subscription was removed, false otherwise
      */
-    public boolean unSubscribe(@NonNull LoudlyPost loudlyPost) {
+    public boolean unsubscribe(@NonNull LoudlyPost loudlyPost) {
         SinglePost loudlyInstance = loudlyPost.getSingleNetworkInstance(LOUDLY);
         if (loudlyInstance == null) {
             return false;
@@ -136,10 +136,10 @@ public class UpdateInfoService extends Service {
      * @param loudlyPosts List of posts for drop subscription
      * @return True, if any subscription was dropped
      */
-    public boolean unSubscribe(@NonNull List<LoudlyPost> loudlyPosts) {
+    public boolean unsubscribe(@NonNull List<LoudlyPost> loudlyPosts) {
         boolean unSubscribed = false;
         for (LoudlyPost post : loudlyPosts) {
-            unSubscribed |= unSubscribe(post);
+            unSubscribed |= unsubscribe(post);
         }
         return unSubscribed;
     }

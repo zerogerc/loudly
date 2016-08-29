@@ -67,7 +67,7 @@ public class PostDeleterModel {
                 .flatMap(loudlyPost -> {
                     if (loudlyPost.getNetworkInstances().size() == 1) {
                         // Has only one instance in DB - should delete from database
-                        return infoUpdateModel.unSubscribe(loudlyPost)
+                        return infoUpdateModel.unsubscribe(loudlyPost)
                                 .flatMap(result -> {
                                     if (!result) {
                                         // ToDo: Handle can't connect to service
