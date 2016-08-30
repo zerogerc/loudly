@@ -14,6 +14,7 @@ android {
         versionName "1.0"
         generatedDensities = []
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
     aaptOptions {
         additionalParameters "--no-version-vectors"
@@ -25,15 +26,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        force 'com.android.support:support-annotations:24.1.1'
+    }
+}
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+
     testCompile 'junit:junit:4.12'
+    testCompile 'com.squareup.assertj:assertj-android:1.1.0'
+    testCompile 'org.robolectric:robolectric:3.0'
 
     androidTestCompile 'junit:junit:4.12'
     androidTestCompile('com.android.support.test:runner:0.3') {
@@ -83,5 +94,4 @@ dependencies {
 
     compile 'com.hannesdorfmann.fragmentargs:annotation:3.0.2'
     apt 'com.hannesdorfmann.fragmentargs:processor:3.0.2'
-
 }

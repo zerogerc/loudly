@@ -1,6 +1,7 @@
 package ly.loud.loudly.application;
 
 import android.app.Application;
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -33,7 +34,7 @@ public class Loudly extends Application {
         context = this;
 
         RxPaparazzo.register(this);
-        initInjector();
+        appComponent = getComponent();
 
         appComponent
                 .keysModel()
@@ -55,8 +56,14 @@ public class Loudly extends Application {
         return context;
     }
 
-    private void initInjector() {
-        appComponent = DaggerAppComponent.builder()
+    @NonNull
+    public static Loudly getApplication(@NonNull Context context) {
+        return (Loudly) context.getApplicationContext();
+    }
+
+    @NonNull
+    protected AppComponent getComponent() {
+        return DaggerAppComponent.builder()
                 .appModule(new AppModule(this))
                 .keysDbModule(new KeysDbModule(this))
                 .postDbModule(new PostDbModule(this))

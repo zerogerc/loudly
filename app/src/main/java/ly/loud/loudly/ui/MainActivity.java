@@ -25,11 +25,14 @@ import android.view.ViewTreeObserver;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
@@ -96,6 +99,11 @@ public class MainActivity extends AppCompatActivity
     @NonNull
     NetworksChooseLayout networksChooseLayout;
 
+    @SuppressWarnings("NullableProblems")
+    @Inject
+    @NonNull
+    PostLoadModel postLoadModel;
+
     @SuppressWarnings("NullableProblems") // onCreate
     @NonNull
     private BottomSheetBehavior bottomSheetBehavior;
@@ -124,7 +132,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        Loudly.getContext().getAppComponent().inject(this);
+        Loudly.getApplication(this).getAppComponent().inject(this);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed);
