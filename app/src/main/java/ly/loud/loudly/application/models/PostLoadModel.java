@@ -112,8 +112,9 @@ public class PostLoadModel {
         return Observable.from(needUpdate)
                 .flatMap(pair -> postsDatabaseModel
                         .updateStoredInfo(pair.first.first, pair.first.second, pair.second))
-                .lastOrDefault(null)    // Save all
-                .map(ignored -> newPosts);
+                .toCompletable()
+                .toSingleDefault(newPosts)
+                .toObservable();
     }
 
     /**
@@ -128,21 +129,17 @@ public class PostLoadModel {
     public Observable<SolidList<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
         return postsDatabaseModel.loadPostsByTimeInterval(interval)
                 .flatMap(list -> infoUpdateModel
-                        .subscribeOnUpdates(list)
-                        .map(result -> {
-                            if (!result) {
-                                // ToDO: Handle not connected to server
-                            }
-                            return list;
-                        })
-                        .toObservable()
+                                .subscribeOnUpdates(list)
+                                .toSingleDefault(list)
+                                .toObservable()
                 )
                 .flatMap(list -> coreModel.observeConnectedNetworksModels().defaultIfEmpty(null)
-                        .flatMap(model -> model.loadPosts(interval))
-                        .flatMap(posts -> updateStoredInfo(posts, list))
-                        .scan(
-                                list.cast(PlainPost.class).collect(toSolidList()),
-                                PostLoadModel::merge)
+                                .flatMap(model -> model.loadPosts(interval))
+                                .flatMap(posts -> updateStoredInfo(posts, list))
+                                .scan(
+                                        list.cast(PlainPost.class).collect(toSolidList()),
+                                        PostLoadModel::merge
+                                )
                 );
     }
 

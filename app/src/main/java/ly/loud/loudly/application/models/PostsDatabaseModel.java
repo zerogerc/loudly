@@ -39,6 +39,7 @@ import ly.loud.loudly.util.database.entities.StoredEvent;
 import ly.loud.loudly.util.database.entities.StoredLocation;
 import ly.loud.loudly.util.database.entities.StoredPost;
 import ly.loud.loudly.util.database.entities.links.Links;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import rx.exceptions.Exceptions;
@@ -130,7 +131,7 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteLinks(long id) {
+    private Completable deleteLinks(long id) {
         return postsDatabase
                 .delete()
                 .byQuery(Links.deleteById(id))
@@ -141,12 +142,13 @@ public class PostsDatabaseModel {
                         throw Exceptions.propagate(new DatabaseException("Can't delete links"));
                     }
                     return true;
-                });
+                })
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    private <T extends SingleNetworkElement> Single<Boolean> updateLinks(
+    private <T extends SingleNetworkElement> Completable updateLinks(
             long id,
             @NonNull MultipleNetworkElement<T> element) {
         return putLinks(id, element)
@@ -155,7 +157,8 @@ public class PostsDatabaseModel {
                         throw Exceptions.propagate(new DatabaseException("Can't update links"));
                     }
                     return true;
-                });
+                })
+                .toCompletable();
 
     }
 
@@ -179,26 +182,6 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteStoredAttachment(@NonNull StoredAttachment attachment) {
-        if (attachment.getId() == null) {
-            // Can't be deleted
-            return Single.just(false);
-        }
-        return postsDatabase
-                .delete()
-                .byQuery(StoredAttachment.deleteById(attachment.getId()))
-                .prepare()
-                .asRxSingle()
-                .map(deleteResult -> {
-                    if (deleteResult.numberOfRowsDeleted() == 0) {
-                        throw Exceptions.propagate(new DatabaseException("Can't delete attachment"));
-                    }
-                    return true;
-                });
-    }
-
-    @CheckResult
-    @NonNull
     private Single<StoredAttachment> selectStoredAttachment(long id) {
         return postsDatabase
                 .get()
@@ -212,6 +195,27 @@ public class PostsDatabaseModel {
                     }
                     return storedAttachment;
                 });
+    }
+
+    @CheckResult
+    @NonNull
+    private Completable deleteStoredAttachment(@NonNull StoredAttachment attachment) {
+        if (attachment.getId() == null) {
+            // Can't be deleted
+            return Completable.complete();
+        }
+        return postsDatabase
+                .delete()
+                .byQuery(StoredAttachment.deleteById(attachment.getId()))
+                .prepare()
+                .asRxSingle()
+                .map(deleteResult -> {
+                    if (deleteResult.numberOfRowsDeleted() == 0) {
+                        throw Exceptions.propagate(new DatabaseException("Can't delete attachment"));
+                    }
+                    return true;
+                })
+                .toCompletable();
     }
 
     @CheckResult
@@ -280,33 +284,34 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteAttachment(@NonNull StoredAttachment attachment) {
+    private Completable deleteAttachment(@NonNull StoredAttachment attachment) {
         return deleteLinks(attachment.getLinksId())
-                .flatMap(ignored -> deleteStoredAttachment(attachment));
+                .andThen(deleteStoredAttachment(attachment));
     }
 
     @CheckResult
     @NonNull
-    private Single<Boolean> updateAttachmentLinks(@NonNull MultipleAttachment attachment) {
+    private Completable updateAttachmentLinks(@NonNull MultipleAttachment attachment) {
         SingleAttachment loudlyInstance = attachment.getSingleNetworkInstance(LOUDLY);
         if (loudlyInstance == null) {
             // Can't update links in DB
-            return Single.just(false);
+            return Completable.complete();
         }
         return selectStoredAttachment(Long.parseLong(loudlyInstance.getLink()))
-                .flatMap(storedAttachment -> updateLinks(storedAttachment.getLinksId(), attachment));
+                .flatMap(storedAttachment ->
+                        updateLinks(storedAttachment.getLinksId(), attachment)
+                                .toSingleDefault(storedAttachment))
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    private Single<List<Boolean>> updateAttachmentsLinks(
+    private Completable updateAttachmentsLinks(
             @NonNull List<MultipleAttachment> attachments
     ) {
         return Observable.from(attachments)
                 .flatMap(attachment -> updateAttachmentLinks(attachment).toObservable())
-                .toList()
-                .first()
-                .toSingle();
+                .toCompletable();
     }
 
     @CheckResult
@@ -329,8 +334,7 @@ public class PostsDatabaseModel {
         return selectStoredAttachments(postId)
                 .flatMap(storedAttachment ->
                         loadLinks(storedAttachment.getLinksId())
-                                .map(links ->
-                                        fromStored(storedAttachment, links))
+                                .map(links -> fromStored(storedAttachment, links))
                                 .toObservable())
                 .toList()
                 .first()
@@ -340,12 +344,10 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<List<Boolean>> deleteAttachments(long postId) {
+    private Completable deleteAttachments(long postId) {
         return selectStoredAttachments(postId)
                 .flatMap(attachment -> deleteAttachment(attachment).toObservable())
-                .toList()
-                .first()
-                .toSingle();
+                .toCompletable();
     }
 
     /* Locations part */
@@ -371,9 +373,9 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteLocation(@Nullable Long id) {
+    private Completable deleteLocation(@Nullable Long id) {
         if (id == null || id < 1) {
-            return Single.just(false);
+            return Completable.complete();
         }
         return postsDatabase
                 .delete()
@@ -385,7 +387,8 @@ public class PostsDatabaseModel {
                         throw Exceptions.propagate(new DatabaseException("Can't delete location"));
                     }
                     return true;
-                });
+                })
+                .toCompletable();
 
     }
 
@@ -433,10 +436,9 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteStoredPost(@NonNull StoredPost storedPost) {
+    private Completable deleteStoredPost(@NonNull StoredPost storedPost) {
         if (storedPost.getId() == null) {
-            // Can't be deleted
-            return Single.just(false);
+            return Completable.complete();
         }
         return postsDatabase
                 .delete()
@@ -448,7 +450,8 @@ public class PostsDatabaseModel {
                         throw Exceptions.propagate(new DatabaseException("Can't delete post"));
                     }
                     return true;
-                });
+                })
+                .toCompletable();
     }
 
     @CheckResult
@@ -535,21 +538,25 @@ public class PostsDatabaseModel {
         }
         //noinspection ConstantConditions StoredPost will have ID, because it's stored
         return selectStoredPost(Long.parseLong(loudlyInstance.getLink()))
-                .flatMap(storedPost -> Single.just(storedPost.getLinksId())
-                                .flatMap(this::deleteLinks)
-                                .flatMap(ignored -> deleteLocation(storedPost.getLocationId()))
-                                .flatMap(ignored -> deleteAttachments(storedPost.getId()))
-                                .flatMap(ignored -> deleteStoredPost(storedPost))
-                                .flatMap(ignored -> deleteStoredEvents(storedPost.getId()))
+                .flatMap(storedPost -> deleteLinks(storedPost.getLinksId())
+                                .andThen(deleteLocation(storedPost.getLocationId()))
+                                .andThen(deleteAttachments(storedPost.getId()))
+                                .andThen(deleteStoredPost(storedPost))
+                                .andThen(deleteStoredEvents(storedPost.getId()))
+                                .toSingleDefault(storedPost)
                 )
-                .map(result -> {
-                    removeByPredicateInPlace(cached, loudlyPost -> {
-                        SingleNetworkElement instance = loudlyPost.getSingleNetworkInstance(LOUDLY);
-                        return instance != null &&
-                                instance.getLink().equals(loudlyInstance.getLink());
-                    });
-                    return post.deleteNetworkInstance(LOUDLY);
-                });
+                .toCompletable()
+                .andThen(Single.fromCallable(
+                        () -> {
+                            removeByPredicateInPlace(cached, loudlyPost -> {
+                                SingleNetworkElement instance =
+                                        loudlyPost.getSingleNetworkInstance(LOUDLY);
+                                return instance != null &&
+                                        instance.getLink().equals(loudlyInstance.getLink());
+                            });
+                            return post.deleteNetworkInstance(LOUDLY);
+                        }
+                ));
     }
 
     @NonNull
@@ -620,7 +627,8 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Observable<SolidList<LoudlyPost>> selectPostsByTimeInterval(@NonNull TimeInterval timeInterval) {
+    private Observable<SolidList<LoudlyPost>> selectPostsByTimeInterval(
+            @NonNull TimeInterval timeInterval) {
         return selectStoredPostsByTimeInterval(timeInterval)
                 .flatMap(storedPost -> loadPost(storedPost).toObservable())
                 .toList()
@@ -637,9 +645,12 @@ public class PostsDatabaseModel {
         }
         return selectStoredPost(Long.parseLong(loudlyInstance.getLink()))
                 .flatMap(storedPost ->
-                        updateLinks(storedPost.getLinksId(), loudlyPost)
-                                .flatMap(ignored -> updateAttachmentsLinks(loudlyPost.getAttachments())))
-                .map(ignored -> {
+                                updateLinks(storedPost.getLinksId(), loudlyPost)
+                                        .andThen(updateAttachmentsLinks(loudlyPost.getAttachments()))
+                                        .toSingleDefault(loudlyInstance)
+                )
+                .toCompletable()
+                .andThen(Completable.fromAction(() -> {
                     // Update cached post
                     for (int i = 0, size = cached.size(); i < size; i++) {
                         SingleNetworkElement instance = cached.get(i)
@@ -652,8 +663,8 @@ public class PostsDatabaseModel {
                             break;
                         }
                     }
-                    return loudlyPost;
-                });
+                }))
+                .toSingleDefault(loudlyPost);
     }
 
     @CheckResult
@@ -695,7 +706,7 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    public Single<Boolean> saveEvents(@NonNull SolidList<Event> events) {
+    public Completable saveEvents(@NonNull SolidList<Event> events) {
         final List<StoredEvent> storedEvents = events
                 .map(event -> {
                     SinglePost loudlyInstance = event.post.getSingleNetworkInstance(LOUDLY);
@@ -816,25 +827,27 @@ public class PostsDatabaseModel {
                                              @Network int network,
                                              @NonNull Info difference) {
         return updateEvents(loudlyPost, network, LIKE, difference.like)
-                .flatMap(ignored -> updateEvents(loudlyPost, network, SHARE, difference.repost))
-                .flatMap(ignored -> updateEvents(loudlyPost, network, COMMENT, difference.comment))
-                .map(ignored -> {
-                    SinglePost loudlyInstance = loudlyPost.getSingleNetworkInstance(LOUDLY);
-                    for (int i = 0; i < cached.size(); i++) {
-                        SinglePost otherInstance = cached.get(i).getSingleNetworkInstance(LOUDLY);
-                        //noinspection ConstantConditions Cached LoudlyPosts have LOUDLY instances
-                        if (otherInstance.getLink().equals(loudlyInstance.getLink())) {
-                            SinglePost previous = cached.get(i).getSingleNetworkInstance(network);
-                            if (previous == null) {
-                                continue;
+                .andThen(updateEvents(loudlyPost, network, SHARE, difference.repost))
+                .andThen(updateEvents(loudlyPost, network, COMMENT, difference.comment))
+                .andThen(Single.fromCallable(
+                        () -> {
+                            SinglePost loudlyInstance = loudlyPost.getSingleNetworkInstance(LOUDLY);
+                            for (int i = 0; i < cached.size(); i++) {
+                                SinglePost otherInstance = cached.get(i).getSingleNetworkInstance(LOUDLY);
+                                //noinspection ConstantConditions Cached LoudlyPosts have LOUDLY instances
+                                if (otherInstance.getLink().equals(loudlyInstance.getLink())) {
+                                    SinglePost previous = cached.get(i).getSingleNetworkInstance(network);
+                                    if (previous == null) {
+                                        continue;
+                                    }
+                                    Info newInfo = previous.getInfo().add(difference);
+                                    cached.set(i, cached.get(i)
+                                            .setSingleNetworkInstance(previous.setInfo(newInfo)));
+                                }
                             }
-                            Info newInfo = previous.getInfo().add(difference);
-                            cached.set(i, cached.get(i)
-                                    .setSingleNetworkInstance(previous.setInfo(newInfo)));
+                            return difference;
                         }
-                    }
-                    return difference;
-                })
+                ))
                 .toObservable();
     }
 
@@ -872,7 +885,7 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<Boolean> saveStoredEvents(@NonNull List<StoredEvent> events) {
+    private Completable saveStoredEvents(@NonNull List<StoredEvent> events) {
         return postsDatabase
                 .put()
                 .objects(events)
@@ -883,12 +896,13 @@ public class PostsDatabaseModel {
                         throw Exceptions.propagate(new DatabaseException("Can't save event"));
                     }
                     return true;
-                });
+                })
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteStoredEvents(@NonNull List<StoredEvent> events) {
+    private Completable deleteStoredEvents(@NonNull List<StoredEvent> events) {
         return postsDatabase
                 .delete()
                 .objects(events)
@@ -903,17 +917,18 @@ public class PostsDatabaseModel {
                         }
                     }
                     return true;
-                });
+                })
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteOldestStoredEvent(@NonNull LoudlyPost post,
-                                                    @EventType short type,
-                                                    int count) {
+    private Completable deleteOldestStoredEvent(@NonNull LoudlyPost post,
+                                                @EventType short type,
+                                                int count) {
         SinglePost loudlyPost = post.getSingleNetworkInstance(LOUDLY);
         if (loudlyPost == null) {
-            return Single.just(false);
+            return Completable.complete();
         }
         return postsDatabase
                 .get()
@@ -925,17 +940,18 @@ public class PostsDatabaseModel {
                 ))
                 .prepare()
                 .asRxSingle()
-                .flatMap(this::deleteStoredEvents);
+                .flatMap(event -> deleteStoredEvents(event).toSingleDefault(event))
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    private Single<Boolean> updateEvents(@NonNull LoudlyPost post,
-                                         @Network int network,
-                                         @EventType short type,
-                                         int count) {
+    private Completable updateEvents(@NonNull LoudlyPost post,
+                                     @Network int network,
+                                     @EventType short type,
+                                     int count) {
         if (count == 0) {
-            return Single.just(false);
+            return Completable.complete();
         }
         if (count > 0) {
             List<Event> events = Collections.nCopies(
@@ -963,19 +979,12 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteStoredEvents(long postId) {
+    private Completable deleteStoredEvents(long postId) {
         return postsDatabase
                 .delete()
                 .byQuery(StoredEvent.deleteByPostId(postId))
                 .prepare()
                 .asRxSingle()
-                .map(deleteResult -> {
-                    if (deleteResult.numberOfRowsDeleted() == 0) {
-                        throw Exceptions.propagate(
-                                new DatabaseException("Can't delete events")
-                        );
-                    }
-                    return true;
-                });
+                .toCompletable();
     }
 }

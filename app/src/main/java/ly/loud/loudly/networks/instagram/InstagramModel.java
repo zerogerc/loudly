@@ -11,7 +11,6 @@ import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
-import ly.loud.loudly.base.entities.Event;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
@@ -26,6 +25,7 @@ import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
@@ -99,8 +99,8 @@ public class InstagramModel implements NetworkContract {
 
     @Override
     @NonNull
-    public Single<Boolean> disconnect() {
-        return Single.just(false);
+    public Completable disconnect() {
+        return Completable.complete();
     }
 
     @Override
@@ -117,8 +117,8 @@ public class InstagramModel implements NetworkContract {
 
     @Override
     @NonNull
-    public Observable<Boolean> delete(@NonNull SinglePost post) {
-        return Observable.just(false);
+    public Completable delete(@NonNull SinglePost post) {
+        return Completable.complete();
     }
 
     @Override
