@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="message_start_post_deletion">Post deletion started</string>
+
+    <string name="message_post_upload_one_network">Post has been uploaded to: %s</string>
+    <string name="message_post_upload_all_networks">Post has been uploaded to all networks</string>
+
+    <string name="message_post_delete_confirmation">Do you want to delete post from all networks?</string>
+
+    <string name="message_no_more_load_more">All posts have been successfully loaded.</string>
+
+    <string name="message_no_connected_networks">Yoy haven\'t connected any of network accounts now. Try to connect some networks in settings.</string>
+    <string name="message_no_posts_in_networks">It seems like you don\'t have any posts on your accounts. Want to post something?</string>
+    <string name="message_network_problems">It seems like you don\'t have internet connection. Please check you network any try again.</string>
+
+    <string name="message_confirmation_yes">Yes</string>
+    <string name="message_confirmation_no">No</string>
+</resources>
