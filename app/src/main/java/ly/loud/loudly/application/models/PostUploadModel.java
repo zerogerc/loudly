@@ -91,13 +91,9 @@ public class PostUploadModel {
         return postsDatabaseModel
                 .putPost(initial)
                 .flatMap(loudlyPost -> infoUpdateModel
-                        .subscribeOnFrequentUpdates(loudlyPost)
-                        .map(result -> {
-                            if (!result) {
-                                // ToDo: Handle not connected to service
-                            }
-                            return loudlyPost;
-                        }))
+                                .subscribeOnFrequentUpdates(loudlyPost)
+                                .toSingleDefault(loudlyPost)
+                )
                 .flatMapObservable(loudlyPost ->
                                 Observable
                                         .from(networks)

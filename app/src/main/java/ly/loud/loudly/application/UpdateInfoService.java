@@ -113,7 +113,7 @@ public class UpdateInfoService extends Service {
     }
 
     /**
-     * Subcribe list of posts for updates with same interval
+     * Subscribe list of posts for updates with same interval
      *
      * @param loudlyPosts  Posts to subscribe
      * @param timeInterval Initial update interval

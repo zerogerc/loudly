@@ -53,6 +53,7 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
@@ -143,8 +144,8 @@ public class FacebookModel implements NetworkContract {
 
     @Override
     @NonNull
-    public Single<Boolean> disconnect() {
-        return Single.just(true);
+    public Completable disconnect() {
+        return Completable.fromAction(cached::clear);
     }
 
     @NonNull
@@ -216,8 +217,8 @@ public class FacebookModel implements NetworkContract {
 
     @Override
     @NonNull
-    public Observable<Boolean> delete(@NonNull SinglePost post) {
-        return Observable.fromCallable(() -> {
+    public Completable delete(@NonNull SinglePost post) {
+        return Completable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
                 // ToDo: Handle

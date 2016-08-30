@@ -7,8 +7,8 @@ import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks.Network;
+import rx.Completable;
 import rx.Observable;
-import rx.Single;
 
 public class PostDeleterModel {
     @NonNull
@@ -30,25 +30,26 @@ public class PostDeleterModel {
 
     @CheckResult
     @NonNull
-    public Single<Boolean> deletePostFromNetwork(@NonNull LoudlyPost post,
-                                                 @Network int network) {
+    public Completable deletePostFromNetwork(@NonNull LoudlyPost post,
+                                             @Network int network) {
         if (post.getSingleNetworkInstance(network) == null) {
-            return Single.just(false);
+            return Completable.complete();
         }
         return coreModel.elementExistsIn(post)
                 .filter(n -> n.getId() == network)
-                .flatMap(n -> safeDelete(post, n))
                 .first()
-                .toSingle();
+                .flatMap(n -> safeDelete(post, n).toObservable())
+                .first()
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    private Observable<Boolean> safeDelete(@NonNull LoudlyPost post,
-                                           @NonNull NetworkContract networkContract) {
+    private Completable safeDelete(@NonNull LoudlyPost post,
+                                   @NonNull NetworkContract networkContract) {
         SinglePost singleNetworkInstance = post.getSingleNetworkInstance(networkContract.getId());
         if (singleNetworkInstance == null) {
-            return Observable.just(true);
+            return Completable.complete();
         }
         return networkContract.delete(singleNetworkInstance);
     }
@@ -56,9 +57,12 @@ public class PostDeleterModel {
     @CheckResult
     @NonNull
     public Observable<LoudlyPost> deletePostFromAllNetworks(@NonNull LoudlyPost post) {
-        return coreModel.elementExistsIn(post)
-                .flatMap(networkContract -> safeDelete(post, networkContract)
-                        .map(result -> networkContract.getId()))
+        return coreModel
+                .elementExistsIn(post)
+                .flatMap(networkContract ->
+                        safeDelete(post, networkContract)
+                                .toSingle(networkContract::getId)
+                                .toObservable())
                 .scan(post, LoudlyPost::deleteNetworkInstance)
                 .flatMap(loudlyPost ->
                         postsDatabaseModel
@@ -67,13 +71,10 @@ public class PostDeleterModel {
                 .flatMap(loudlyPost -> {
                     if (loudlyPost.getNetworkInstances().size() == 1) {
                         // Has only one instance in DB - should delete from database
-                        return infoUpdateModel.unsubscribe(loudlyPost)
-                                .flatMap(result -> {
-                                    if (!result) {
-                                        // ToDo: Handle can't connect to service
-                                    }
-                                    return postsDatabaseModel.deletePost(loudlyPost);
-                                })
+                        return infoUpdateModel
+                                .unsubscribe(loudlyPost)
+                                .toSingleDefault(loudlyPost)
+                                .flatMap(postsDatabaseModel::deletePost)
                                 .toObservable();
                     } else {
                         return Observable.just(loudlyPost);

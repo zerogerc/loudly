@@ -17,6 +17,7 @@ import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.TimeInterval;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
@@ -70,12 +71,10 @@ public interface NetworkContract {
 
     /**
      * Disconnect from network
-     *
-     * @return <code>true</code> if disconnected successfully
      */
     @CheckResult
     @NonNull
-    Single<Boolean> disconnect();
+    Completable disconnect();
 
     /**
      * Upload image to network
@@ -102,7 +101,7 @@ public interface NetworkContract {
      */
     @CheckResult
     @NonNull
-    Observable<Boolean> delete(@NonNull SinglePost post);
+    Completable delete(@NonNull SinglePost post);
 
     /**
      * Load posts from network
