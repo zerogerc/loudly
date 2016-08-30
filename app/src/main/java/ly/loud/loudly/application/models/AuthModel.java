@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks.Network;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 
@@ -45,31 +46,29 @@ public class AuthModel {
 
     @CheckResult
     @NonNull
-    public Single<Boolean> finishAuthorization(@NonNull Observable<String> urls,
-                                               @Network int network) {
+    public Completable finishAuthorization(@NonNull Observable<String> urls,
+                                           @Network int network) {
         NetworkContract contract = coreModel.getModelByNetwork(network);
         if (contract == null) {
-            return Single.just(false);
+            return Completable.complete();
         }
         return contract
                 .proceedAuthUrls(urls)
-                .flatMap(keyKeeper -> keysModel.setKeyKeeper(network, keyKeeper));
+                .flatMap(keyKeeper -> keysModel
+                        .setKeyKeeper(network, keyKeeper)
+                        .toSingle(() -> keyKeeper))
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    public Single<Boolean> logout(@Network int network) {
+    public Completable logout(@Network int network) {
         NetworkContract contract = coreModel.getModelByNetwork(network);
         if (contract == null) {
-            return Single.just(false);
+            return Completable.complete();
         }
         return contract
                 .disconnect()
-                .flatMap(success -> {
-                    if (success) {
-                        return keysModel.deleteKeyKeeper(network);
-                    }
-                    return Single.just(false);
-                });
+                .andThen(keysModel.deleteStoredKeyKeeper(network));
     }
 }

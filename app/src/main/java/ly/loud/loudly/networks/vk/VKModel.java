@@ -50,6 +50,7 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
@@ -148,8 +149,8 @@ public class VKModel implements NetworkContract {
     @Override
     @CheckResult
     @NonNull
-    public Single<Boolean> disconnect() {
-        return Single.just(true);
+    public Completable disconnect() {
+        return Completable.fromAction(cached::clear);
     }
 
     @Override
@@ -259,10 +260,11 @@ public class VKModel implements NetworkContract {
     @Override
     @CheckResult
     @NonNull
-    public Observable<Boolean> delete(@NonNull SinglePost post) {
-        return Observable.fromCallable(() -> {
+    public Completable delete(@NonNull SinglePost post) {
+        return Completable.fromCallable(() -> {
             VKKeyKeeper keyKeeper = keysModel.getVKKeyKeeper();
             if (keyKeeper == null) {
+                // ToDo: handle
                 return null;
             }
             Call<VKResponse<Integer>> deleteCall = client

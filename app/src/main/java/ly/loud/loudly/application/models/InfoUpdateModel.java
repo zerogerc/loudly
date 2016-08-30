@@ -15,6 +15,7 @@ import java.util.List;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.UpdateInfoService;
 import ly.loud.loudly.base.multiple.LoudlyPost;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 
@@ -39,44 +40,50 @@ public class InfoUpdateModel {
 
     @CheckResult
     @NonNull
-    public Single<Boolean> subscribeOnUpdates(@NonNull LoudlyPost loudlyPost) {
+    public Completable subscribeOnUpdates(@NonNull LoudlyPost loudlyPost) {
         return getService()
-                .map(service -> service.subscribe(loudlyPost, MAXIMAL_UPDATE_INTERVAL));
+                .map(service -> service.subscribe(loudlyPost, MAXIMAL_UPDATE_INTERVAL))
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    public Single<Boolean> subscribeOnUpdates(@NonNull List<LoudlyPost> loudlyPosts) {
+    public Completable subscribeOnUpdates(@NonNull List<LoudlyPost> loudlyPosts) {
         return getService()
-                .map(service -> service.subscribe(loudlyPosts, MAXIMAL_UPDATE_INTERVAL));
+                .map(service -> service.subscribe(loudlyPosts, MAXIMAL_UPDATE_INTERVAL))
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    public Single<Boolean> subscribeOnFrequentUpdates(@NonNull LoudlyPost loudlyPost) {
+    public Completable subscribeOnFrequentUpdates(@NonNull LoudlyPost loudlyPost) {
         return getService()
-                .map(service -> service.subscribe(loudlyPost, MINIMAL_UPDATE_INTERVAL));
+                .map(service -> service.subscribe(loudlyPost, MINIMAL_UPDATE_INTERVAL))
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    public Single<Boolean> subscribeOnFrequentUpdates(@NonNull List<LoudlyPost> loudlyPosts) {
+    public Completable subscribeOnFrequentUpdates(@NonNull List<LoudlyPost> loudlyPosts) {
         return getService()
-                .map(service -> service.subscribe(loudlyPosts, MINIMAL_UPDATE_INTERVAL));
+                .map(service -> service.subscribe(loudlyPosts, MINIMAL_UPDATE_INTERVAL))
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    public Single<Boolean> unsubscribe(@NonNull LoudlyPost loudlyPost) {
+    public Completable unsubscribe(@NonNull LoudlyPost loudlyPost) {
         return getService()
-                .map(service -> service.unsubscribe(loudlyPost));
+                .map(service -> service.unsubscribe(loudlyPost))
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    public Single<Boolean> unsubscribe(@NonNull List<LoudlyPost> loudlyPost) {
+    public Completable unsubscribe(@NonNull List<LoudlyPost> loudlyPost) {
         return getService()
-                .map(service -> service.unsubscribe(loudlyPost));
+                .map(service -> service.unsubscribe(loudlyPost))
+                .toCompletable();
     }
 
     @CheckResult

@@ -19,7 +19,6 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ly.loud.loudly.R;
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.AuthModel;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.Utils;
@@ -114,16 +113,10 @@ public class AuthFragment extends DialogFragment {
                     .flatMapObservable(this::createUrlsObservable);
             authModel.finishAuthorization(changeSubscription(urls, io()), network)
                     .observeOn(mainThread())
-                    .doOnSuccess(success -> {
-                        if (success) {
-                            // ToDo: handle success
-                        } else {
-                            // ToDo: handle failure
-                        }
+                    .subscribe(() -> {
                         clearWebView();
                         dismiss();
-                    })
-                    .subscribe();
+                    });
             firstRun = false;
         }
     }

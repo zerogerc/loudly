@@ -41,7 +41,7 @@ public class Loudly extends Application {
                 .loadKeys()
                 .subscribeOn(io())
                 .observeOn(mainThread())
-                .subscribe(result -> Log.i(TAG, "Keys loaded"),
+                .subscribe(() -> Log.i(TAG, "Keys loaded"),
                         error -> Log.e(TAG, "Can't load keys", error));
     }
 

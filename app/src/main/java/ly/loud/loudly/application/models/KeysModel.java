@@ -13,8 +13,11 @@ import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.vk.VKKeyKeeper;
+import ly.loud.loudly.util.database.DatabaseException;
 import ly.loud.loudly.util.database.entities.Key;
+import rx.Completable;
 import rx.Single;
+import rx.exceptions.Exceptions;
 
 import static ly.loud.loudly.networks.Networks.FB;
 import static ly.loud.loudly.networks.Networks.VK;
@@ -56,73 +59,63 @@ public class KeysModel {
 
     @CheckResult
     @NonNull
-    public Single<Boolean> loadKeys() {
+    public Completable loadKeys() {
         return keysDatabase
                 .get()
                 .listOfObjects(Key.class)
                 .withQuery(Key.selectAll())
                 .prepare()
-                .asRxObservable()
+                .asRxSingle()
                 .map(list -> {
                     for (Key key : list) {
                         int network = key.getNetwork();
                         setKeyKeeperInMemory(network,
                                 KeyKeeper.fromStringBundle(network, key.getValue()));
                     }
-                    return true;
+                    return null;
                 })
-                .first()
-                .toSingle();
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    private Single<Boolean> putKeyKeeper(@Network int network, @NonNull KeyKeeper keyKeeper) {
+    private Completable putKeyKeeper(@Network int network, @NonNull KeyKeeper keyKeeper) {
         return keysDatabase
                 .put()
                 .object(new Key(network, keyKeeper.toStringBundle()))
                 .prepare()
-                .asRxObservable()
-                .map(result -> result.wasInserted() || result.wasUpdated())
-                .first()
-                .toSingle();
+                .asRxSingle()
+                .map(result -> {
+                    if (!result.wasInserted() && !result.wasUpdated()) {
+                        throw Exceptions.propagate(new DatabaseException("Can't update keys"));
+                    }
+                    return null;
+                })
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    private Single<Boolean> deleteStoredKeyKeeper(@Network int network) {
+    public Completable deleteStoredKeyKeeper(@Network int network) {
         return keysDatabase
                 .delete()
                 .byQuery(Key.deleteByNetwork(network))
                 .prepare()
-                .asRxObservable()
-                .map(deleteResult -> deleteResult.numberOfRowsDeleted() > 0)
-                .first()
-                .toSingle();
+                .asRxSingle()
+                .map(deleteResult -> {
+                    if (deleteResult.numberOfRowsDeleted() == 0) {
+                        throw Exceptions.propagate(new DatabaseException("Can't delete keys"));
+                    }
+                    return null;
+                })
+                .toCompletable();
     }
 
     @CheckResult
     @NonNull
-    public Single<Boolean> setKeyKeeper(@Network int network, @NonNull KeyKeeper keyKeeper) {
+    public Completable setKeyKeeper(@Network int network, @NonNull KeyKeeper keyKeeper) {
         return putKeyKeeper(network, keyKeeper)
-                .map(result -> {
-                    if (result) {
-                        setKeyKeeperInMemory(network, keyKeeper);
-                    }
-                    return result;
-                });
-    }
-
-    @CheckResult
-    @NonNull
-    public Single<Boolean> deleteKeyKeeper(@Network int network) {
-        return deleteStoredKeyKeeper(network)
-                .map(result -> {
-                    if (result) {
-                        setKeyKeeperInMemory(network, null);
-                    }
-                    return result;
-                });
+                .andThen(Completable.fromAction(() -> setKeyKeeperInMemory(network, keyKeeper)));
     }
 
     private void setKeyKeeperInMemory(@Network int network, @Nullable KeyKeeper keyKeeper) {
