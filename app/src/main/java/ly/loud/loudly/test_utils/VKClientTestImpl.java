@@ -20,61 +20,102 @@ import retrofit2.http.Part;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
 
+// TODO: implement
 public class VKClientTestImpl implements VKClient {
     @NonNull
     @Override
-    public Call<VKResponse<VKItems<Say>>> getComments(@Query("owner_id") @NonNull String ownerId, @Query("post_id") @NonNull String postId, @Query("access_token") @NonNull String token) {
+    public Call<VKResponse<VKItems<Say>>> getComments(
+            @Query("owner_id") @NonNull String ownerId,
+            @Query("post_id") @NonNull String postId,
+            @Query("access_token") @NonNull String token
+    ) {
         return null;
     }
 
     @NonNull
     @Override
-    public Call<VKResponse<VKItems<Say>>> getPosts(@Query("owner_id") @NonNull String ownerId, @Query("offset") int offset, @Query("access_token") @NonNull String token) {
+    public Call<VKResponse<VKItems<Say>>> getPosts(
+            @Query("owner_id") @NonNull String ownerId,
+            @Query("offset") int offset,
+            @Query("access_token") @NonNull String token
+    ) {
         return null;
     }
 
     @NonNull
     @Override
-    public Call<VKResponse<VKItems<Profile>>> getLikersIds(@Query("owner_id") @NonNull String ownerId, @Query("item_id") @NonNull String itemId, @Query("type") @NonNull String type, @Query("filter") @Nullable String filter, @Query("access_token") @NonNull String token) {
+    public Call<VKResponse<VKItems<Profile>>> getLikersIds(
+            @Query("owner_id") @NonNull String ownerId,
+            @Query("item_id") @NonNull String itemId,
+            @Query("type") @NonNull String type,
+            @Query("filter") @Nullable String filter,
+            @Query("access_token") @NonNull String token
+    ) {
         return null;
     }
 
     @NonNull
     @Override
-    public Call<VKResponse<List<Profile>>> getProfiles(@Query("user_ids") @NonNull String ids, @Query("access_token") @NonNull String token) {
+    public Call<VKResponse<List<Profile>>> getProfiles(
+            @Query("user_ids") @NonNull String ids,
+            @Query("access_token") @NonNull String token
+    ) {
         return null;
     }
 
     @NonNull
     @Override
-    public Call<VKResponse<List<Say>>> getPostsByIds(@Query("posts") @NonNull String ids, @Query("access_token") @NonNull String token) {
+    public Call<VKResponse<List<Say>>> getPostsByIds(
+            @Query("posts") @NonNull String ids,
+            @Query("access_token") @NonNull String token
+    ) {
         return null;
     }
 
     @NonNull
     @Override
-    public Call<VKResponse<Integer>> deletePost(@Query("owner_id") @NonNull String ownerId, @Query("post_id") @NonNull String postId, @Query("access_token") @NonNull String token) {
+    public Call<VKResponse<Integer>> deletePost(
+            @Query("owner_id") @NonNull String ownerId,
+            @Query("post_id") @NonNull String postId,
+            @Query("access_token") @NonNull String token
+    ) {
         return null;
     }
 
     @NonNull
     @Override
-    public Call<VKResponse<Post>> uploadPost(@Query("message") @Nullable String message, @Query("attachment") @Nullable String attachmentIds, @Query("access_token") @NonNull String token) {
+    public Call<VKResponse<Post>> uploadPost(
+            @Query("message") @Nullable String message,
+            @Query("attachment") @Nullable String attachmentIds,
+            @Query("access_token") @NonNull String token
+    ) {
         return null;
     }
 
     @Override
-    public Call<VKResponse<PhotoUploadServer>> getPhotoUploadServer(@Query("user_id") String userId, @Query("access_token") String token) {
+    public Call<VKResponse<PhotoUploadServer>> getPhotoUploadServer
+            (@Query("user_id") String userId,
+             @Query("access_token") String token
+            ) {
         return null;
     }
 
     @Override
-    public Call<PhotoUploadServerResponse> uploadPhoto(@NonNull @Url String url, @NonNull @Part MultipartBody.Part file) {
+    public Call<PhotoUploadServerResponse> uploadPhoto(
+            @NonNull @Url String url,
+            @NonNull @Part MultipartBody.Part file
+    ) {
         return null;
     }
 
     @Override
-    public Call<VKResponse<List<Photo>>> saveWallPhoto(@Query("user_id") String userId, @Query("photo") String photo, @Query("server") String server, @Query("hash") String hash, @Query("access_token") String token) {
+    public Call<VKResponse<List<Photo>>> saveWallPhoto(
+            @Query("user_id") String userId,
+            @Query("photo") String photo,
+            @Query("server") String server,
+            @Query("hash") String hash,
+            @Query("access_token") String token
+    ) {
         return null;
     }
 }

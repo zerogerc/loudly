@@ -4,14 +4,14 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 
 import org.junit.runners.model.InitializationError;
-import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.internal.bytecode.ShadowMap;
 
 import java.util.Properties;
 
-public class LoudlyIntegrationTestRunner extends RobolectricGradleTestRunner {
+public class LoudlyIntegrationTestRunner extends RobolectricTestRunner {
 
     @NonNull
     private static Class[] shadows = new Class[]{
