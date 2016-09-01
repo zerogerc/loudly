@@ -12,7 +12,6 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".ui.MainActivity"
             android:label="@string/loudly"
@@ -25,7 +24,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:parentActivityName=".ui.MainActivity"
@@ -35,7 +33,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.MainActivity" />
         </activity>
-
         <activity
             android:name=".ui.full_post.FullPostInfoActivity"
             android:parentActivityName=".ui.MainActivity"
@@ -45,9 +42,9 @@
                 android:value=".ui.MainActivity" />
         </activity>
 
-        <service
-            android:name=".application.UpdateInfoService"
-            />
+        <service android:name=".application.UpdateInfoService" />
+
+        <activity android:name=".application.TempActivity"></activity>
     </application>
 
 </manifest>

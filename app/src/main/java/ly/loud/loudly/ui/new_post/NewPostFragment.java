@@ -65,7 +65,7 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Loudly.getContext().getAppComponent().inject(this);
+        Loudly.getApplication(getContext()).getAppComponent().inject(this);
     }
 
     @Nullable
