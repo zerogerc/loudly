@@ -129,7 +129,7 @@ public class PostLoadModel {
     public Observable<SolidList<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
         return postsDatabaseModel.loadPostsByTimeInterval(interval)
                 .flatMap(list -> infoUpdateModel
-                                .subscribeOnUpdates(list)
+                                .subscribeOnFrequentUpdates(list)
                                 .toSingleDefault(list)
                                 .toObservable()
                 )
