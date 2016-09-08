@@ -19,7 +19,7 @@ addons:
 env:
   global:
     - BUILD_TOOLS_VERSION=23.0.3
-    - COMPILE_SDK_VERSION=24
+    - COMPILE_SDK_VERSION=23
 
 
 android:
