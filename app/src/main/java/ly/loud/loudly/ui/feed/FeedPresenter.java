@@ -1,6 +1,7 @@
 package ly.loud.loudly.ui.feed;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.CoreModel;
@@ -11,6 +12,7 @@ import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.ui.BasePresenter;
+import rx.Subscription;
 import rx.functions.Action1;
 import solid.collections.SolidList;
 
@@ -37,6 +39,9 @@ public class FeedPresenter extends BasePresenter<FeedView> {
 
     @NonNull
     private LoadMoreStrategyModel loadMoreStrategyModel;
+
+    @Nullable
+    private Subscription loader;
 
     public FeedPresenter(
             @NonNull Loudly loudlyApp,
@@ -103,7 +108,11 @@ public class FeedPresenter extends BasePresenter<FeedView> {
     }
 
     private void loadPosts(@NonNull Action1<SolidList<PlainPost>> resultAction) {
-        postLoadModel.getPostsByInterval(loadMoreStrategyModel.getCurrentTimeInterval())
+        if (loader != null && !loader.isUnsubscribed()) {
+            loader.unsubscribe();
+        }
+
+        loader = postLoadModel.observePostsByIntervalWithUpdates(loadMoreStrategyModel.getCurrentTimeInterval())
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe(
