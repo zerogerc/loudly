@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 23
     buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "ly.loud.loudly"
         minSdkVersion 16
-        targetSdkVersion 24
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
         generatedDensities = []
@@ -58,7 +58,7 @@ dependencies {
 
 
     def versionsSolid = '2.0.3'
-    def versionsSupportLibs = '24.2.0';
+    def versionsSupportLibs = '23.4.0';
 
     compile 'com.android.support:appcompat-v7:' + versionsSupportLibs
     compile 'com.android.support:cardview-v7:' + versionsSupportLibs

@@ -73,6 +73,9 @@ public class ViewHolderPost extends BindingViewHolder<PlainPost> {
     @Nullable
     private ViewHolderPostClickListener clickListener;
 
+    @Nullable
+    private PlainPost currentPost;
+
     @NonNull
     public static ViewHolderPost provideNewHolderWithListener(
             @NonNull LayoutInflater inflater,
@@ -91,10 +94,16 @@ public class ViewHolderPost extends BindingViewHolder<PlainPost> {
 
     @Override
     public void bind(@NonNull PlainPost post) {
+        currentPost = post;
         reset();
         bindHeader(post);
         bindBody(post);
         bindFooter(post);
+    }
+
+    @Nullable
+    public PlainPost getCurrentPost() {
+        return currentPost;
     }
 
     public void setClickListener(@Nullable ViewHolderPostClickListener clickListener) {
