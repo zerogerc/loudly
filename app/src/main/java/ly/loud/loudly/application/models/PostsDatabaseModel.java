@@ -885,6 +885,17 @@ public class PostsDatabaseModel {
 
     @CheckResult
     @NonNull
+    public Observable<Integer> getEventsCount() {
+        return postsDatabase
+                .get()
+                .numberOfResults()
+                .withQuery(StoredEvent.selectAll())
+                .prepare()
+                .asRxObservable();
+    }
+
+    @CheckResult
+    @NonNull
     private Completable saveStoredEvents(@NonNull List<StoredEvent> events) {
         return postsDatabase
                 .put()

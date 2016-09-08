@@ -72,6 +72,13 @@ public class StoredEvent {
     }
 
     @NonNull
+    public static Query selectAll() {
+        return Query.builder()
+                .table(Contract.TABLE_NAME)
+                .build();
+    }
+
+    @NonNull
     public static Query selectByPostId(long postId) {
         return Query.builder()
                 .table(Contract.TABLE_NAME)

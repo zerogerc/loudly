@@ -144,12 +144,35 @@ public class PostLoadModel {
     }
 
     /**
+     * Get updated lists of posts
+     */
+    @CheckResult
+    @NonNull
+    public Observable<SolidList<PlainPost>> getUpdatedList() {
+        return postsDatabaseModel
+                .getEventsCount()
+                .skip(1)    // Skip first value, because it's old number of events
+                .map(count -> getCachedPosts());
+    }
+
+    /**
      * Get list of posts by {@link TimeInterval} as single.
      */
     @CheckResult
     @NonNull
     public Single<SolidList<PlainPost>> getPostsByInterval(@NonNull TimeInterval interval) {
         return loadPosts(interval).last().toSingle();
+    }
+
+    /**
+     * Load posts from DB and networks, then after receiving updates return updates list of posts
+     */
+    @CheckResult
+    @NonNull
+    public Observable<SolidList<PlainPost>> getPostsByIntervalWithUpdates(
+            @NonNull TimeInterval interval) {
+        return loadPosts(interval)
+                .concatWith(getUpdatedList());
     }
 
     /**
