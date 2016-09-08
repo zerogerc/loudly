@@ -3,7 +3,7 @@ package ly.loud.loudly.util.database;
 import java.io.IOException;
 
 /**
- * Created by Данил on 11/19/2015.
+ * Exception for Database errors
  */
 public class DatabaseException extends IOException {
     public DatabaseException(String detailMessage) {

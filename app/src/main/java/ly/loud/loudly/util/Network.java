@@ -10,7 +10,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import ly.loud.loudly.base.attachments.LocalFile;
+import ly.loud.loudly.legacy_base.Wrap;
+import ly.loud.loudly.legacy_base.attachments.LocalFile;
 import ly.loud.loudly.util.parsers.Parser;
 import ly.loud.loudly.util.parsers.StringParser;
 
@@ -38,6 +39,20 @@ public class Network {
         }
     }
 
+    public static <T> T makeGetRequestAndParse(Query query, Parser<T> parser, Wrap w) throws IOException {
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) new URL(query.toURL()).openConnection();
+            conn.setRequestMethod("GET");
+            conn.setUseCaches(false);
+            conn.setConnectTimeout(5000);
+            return getResponse(conn, parser, w);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
     /**
      * Make GET-request
      *
@@ -101,7 +116,7 @@ public class Network {
 
             if (file == null) {
                 // If we should send only text
-                String request = query.parametersToString(); // Get parameters in proper format
+                String request = query.parametersToString().toString(); // Get parameters in proper format
                 pw.append(request);
                 pw.flush();
             } else {
@@ -221,9 +236,42 @@ public class Network {
                 Utils.closeQuietly(stream);
             }
         } else {
-            throw new IOException("Server returned non-OK status: " + status);
+                InputStream stream = null;
+                try {
+                    stream = conn.getErrorStream();
+                    String parsed = new StringParser().parse(stream);
+                    throw new IOException("Server returned non-OK status: " + status + "\n Detailed: " + parsed);
+                } finally {
+                    Utils.closeQuietly(stream);
+                }
+            }
+
+    }
+
+    private static <T> T getResponse(HttpURLConnection conn, Parser<T> parser, Wrap w) throws IOException {
+        int status = conn.getResponseCode();
+        if (status == HttpURLConnection.HTTP_OK) {
+            InputStream stream = null;
+            try {
+                stream = conn.getInputStream();
+                return parser.parse(stream);
+            } finally {
+                Utils.closeQuietly(stream);
+            }
+        } else if (status == HttpURLConnection.HTTP_NOT_FOUND) {
+            throw new IOException("No internet connection");
+        } else {
+            InputStream stream = null;
+            try {
+                stream = conn.getErrorStream();
+                w.handleError(stream);
+                throw new IOException("Server returned non-OK status: " + status);
+            } finally {
+                Utils.closeQuietly(stream);
+            }
         }
     }
+
 
     /**
      * Writes text parameter as form-value in POST request

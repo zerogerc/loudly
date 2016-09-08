@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="list_item_post_text_primary_text_color">@color/black_color</color>
+    <color name="list_item_post_secondary_text_color">@color/secondary_text</color>
+
+    <color name="list_item_post_icons_bright_color">@color/accent</color>
+    <color name="list_item_post_icons_light_color">@color/accent_light</color>
+
+    <color name="list_item_post_button_text_color">@color/grey_color_500</color>
+
+    <color name="list_item_comment_title_color">@color/primary_dark</color>
+    <color name="list_item_comment_text_color">@color/black_color</color>
+    <color name="list_item_comment_date_color">@color/grey_color_500</color>
+</resources>
