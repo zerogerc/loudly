@@ -10,6 +10,9 @@ import static ly.loud.loudly.base.entities.Info.emptyInfo;
 import static ly.loud.loudly.networks.Networks.INSTAGRAM;
 import static ly.loud.loudly.util.ListUtils.emptyArrayList;
 
+/**
+ * Comment in Instagram
+ */
 public class InstagramComment {
     @SerializedName("created_time")
     public long createdTime;

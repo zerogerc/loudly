@@ -14,6 +14,6 @@ public class InstagramClientTestModule {
     @Singleton
     @NonNull
     InstagramClient provideInstagramClient() {
-        return null;
+        return new InstagramClientTestImpl();
     }
 }

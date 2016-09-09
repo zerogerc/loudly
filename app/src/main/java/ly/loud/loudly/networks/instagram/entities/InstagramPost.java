@@ -17,6 +17,9 @@ import static ly.loud.loudly.networks.Networks.INSTAGRAM;
 import static ly.loud.loudly.util.ListUtils.asArrayList;
 import static ly.loud.loudly.util.ListUtils.emptyArrayList;
 
+/**
+ * Post in Instagram
+ */
 public class InstagramPost {
     public Caption caption;
 

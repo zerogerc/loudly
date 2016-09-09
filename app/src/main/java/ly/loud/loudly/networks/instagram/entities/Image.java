@@ -1,9 +1,9 @@
 package ly.loud.loudly.networks.instagram.entities;
 
-import android.support.annotation.NonNull;
-
+/**
+ * Image in Instagram
+ */
 public class Image {
-    @NonNull
     public String url;
 
     public int width;

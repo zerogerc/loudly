@@ -8,6 +8,9 @@ import ly.loud.loudly.base.entities.Person;
 
 import static ly.loud.loudly.networks.Networks.INSTAGRAM;
 
+/**
+ * Person in Instagram
+ */
 public class InstagramPerson {
     public String username;
 

@@ -254,7 +254,7 @@ public class InstagramModel implements NetworkContract {
                     client.getComments(element.getLink(), keyKeeper.getAccessToken());
             Response<Data<List<InstagramComment>>> execute = getComments.execute();
             Data<List<InstagramComment>> body = execute.body();
-            if (body.data == null) {
+            if (body == null || body.data == null) {
                 // ToDo: Handle
                 return SolidList.empty();
             }
