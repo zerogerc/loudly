@@ -8,4 +8,7 @@ public class Data<T> {
 
     @Nullable
     public Pagination pagination;
+
+    @Nullable
+    public Meta meta;
 }

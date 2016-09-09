@@ -165,18 +165,6 @@ public class PostLoadModel {
     }
 
     /**
-     * Load posts from DB and networks, then after receiving updates return updates list of posts
-     */
-    @CheckResult
-    @NonNull
-    public Observable<SolidList<PlainPost>> observePostsByIntervalWithUpdates(
-            @NonNull TimeInterval interval) {
-        return getPostsByInterval(interval)
-                .toObservable()
-                .concatWith(observeUpdatedList());
-    }
-
-    /**
      * Get list of all cached posts.
      */
     @CheckResult

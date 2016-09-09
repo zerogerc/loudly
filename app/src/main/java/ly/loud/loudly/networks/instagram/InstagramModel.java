@@ -1,6 +1,5 @@
 package ly.loud.loudly.networks.instagram;
 
-import android.graphics.Point;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -30,9 +29,9 @@ import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.networks.instagram.entities.Data;
-import ly.loud.loudly.networks.instagram.entities.Image;
+import ly.loud.loudly.networks.instagram.entities.InstagramComment;
+import ly.loud.loudly.networks.instagram.entities.InstagramPerson;
 import ly.loud.loudly.networks.instagram.entities.InstagramPost;
-import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.NetworkUtils;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
@@ -43,9 +42,7 @@ import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
 
-import static ly.loud.loudly.util.ListUtils.asArrayList;
 import static ly.loud.loudly.util.ListUtils.asSolidList;
-import static ly.loud.loudly.util.ListUtils.emptyArrayList;
 import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
 
 public class InstagramModel implements NetworkContract {
@@ -62,6 +59,7 @@ public class InstagramModel implements NetworkContract {
     @NonNull
     private final KeysModel keysModel;
 
+    @NonNull
     private final List<SinglePost> cached;
 
     @Inject
@@ -175,6 +173,7 @@ public class InstagramModel implements NetworkContract {
         });
     }
 
+    @NonNull
     private List<SinglePost> downloadPosts(@Nullable SinglePost beforeId,
                                            @NonNull TimeInterval interval) throws IOException {
         InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
@@ -198,29 +197,8 @@ public class InstagramModel implements NetworkContract {
                 if (!interval.contains(currentTime)) {
                     continue;
                 }
-                ArrayList<SingleAttachment> attachments;
-                if (post.images != null) {
-                    Image instagramImage = post.images.standardResolution;
-                    SingleImage image = new SingleImage(
-                            instagramImage.url,
-                            new Point(instagramImage.width, instagramImage.height),
-                            getId(),
-                            instagramImage.url
-                    );
-                    attachments = asArrayList(image);
-                } else {
-                    attachments = emptyArrayList();
-                }
-                SinglePost singlePost = new SinglePost(
-                        post.caption.text,
-                        post.createdTime,
-                        attachments,
-                        null,
-                        getId(),
-                        post.id,
-                        extractInfo(post)
-                );
-                posts.add(singlePost);
+
+                posts.add(post.toPost());
             }
             if (body.pagination == null || body.pagination.nextUrl == null) {
                 break;
@@ -231,38 +209,73 @@ public class InstagramModel implements NetworkContract {
     }
 
     @NonNull
-    private Info extractInfo(@NonNull InstagramPost post) {
-        return new Info(post.likes.count, 0, post.comments.count);
-    }
-
-    @NonNull
     @Override
     public SolidList<SinglePost> getCachedPosts() {
-        return SolidList.empty();
+        return asSolidList(cached);
     }
 
     @Override
     @NonNull
     public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element,
                                                     @RequestType int requestType) {
-        return Observable.just(SolidList.empty());
+        return Observable.fromCallable(() -> {
+            InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: Handle
+                return SolidList.empty();
+            }
+            // There is no shares in Instagram
+            Call<Data<List<InstagramPerson>>> likers =
+                    client.getLikers(element.getLink(), keyKeeper.getAccessToken());
+            Response<Data<List<InstagramPerson>>> execute = likers.execute();
+            Data<List<InstagramPerson>> body = execute.body();
+            if (body == null || body.data == null) {
+                // ToDo: Handle
+                return SolidList.empty();
+            }
+            List<Person> persons = new ArrayList<>();
+            for (InstagramPerson instagramPerson : body.data) {
+                persons.add(instagramPerson.toPerson());
+            }
+            return asSolidList(persons);
+        });
     }
 
     @Override
     @NonNull
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
-        return Observable.just(null);
+        return Observable.fromCallable(() -> {
+            InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: Handle
+                return SolidList.empty();
+            }
+            Call<Data<List<InstagramComment>>> getComments =
+                    client.getComments(element.getLink(), keyKeeper.getAccessToken());
+            Response<Data<List<InstagramComment>>> execute = getComments.execute();
+            Data<List<InstagramComment>> body = execute.body();
+            if (body.data == null) {
+                // ToDo: Handle
+                return SolidList.empty();
+            }
+            List<Comment> comments = new ArrayList<>();
+            for (InstagramComment comment : body.data) {
+                comments.add(comment.toComment());
+            }
+            return asSolidList(comments);
+        });
     }
 
     @NonNull
     @Override
     public Observable<List<Pair<SinglePost, Info>>> getUpdates(@NonNull SolidList<SinglePost> posts) {
+        // ToDo: update
         return Observable.empty();
     }
 
     @Override
     @NonNull
     public String getPersonPageUrl(@NonNull Person person) {
-        return "";
+        return "https://www.instagram.com/" + person.getId();
     }
 }
