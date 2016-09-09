@@ -23,6 +23,10 @@ import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Person;
+import ly.loud.loudly.base.exceptions.FatalException;
+import ly.loud.loudly.base.exceptions.FatalNetworkException;
+import ly.loud.loudly.base.exceptions.NetworkException;
+import ly.loud.loudly.base.exceptions.TokenExpiredException;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainImage;
@@ -56,6 +60,7 @@ import retrofit2.Response;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
+import rx.exceptions.Exceptions;
 import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
@@ -125,13 +130,11 @@ public class FacebookModel implements NetworkContract {
                 .map(url -> {
                     Query response = Query.fromResponseUrl(url);
                     if (response == null) {
-                        // ToDo: Handle
-                        return null;
+                        throw Exceptions.propagate(new FatalNetworkException(getId()));
                     }
                     String accessToken = response.getParameter("access_token");
                     if (accessToken == null) {
-                        // ToDo: Handle
-                        return null;
+                        throw Exceptions.propagate(new FatalNetworkException(getId()));
                     }
                     return new FacebookKeyKeeper(accessToken);
                 });
@@ -154,12 +157,11 @@ public class FacebookModel implements NetworkContract {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
-                // ToDo: handle
-                return null;
+                throw new TokenExpiredException(getId());
             }
             String url = image.getUrl();
             if (url == null) {
-                return null;
+                throw new FatalException("No image url");
             }
             File file = new File(image.getUrl());
 

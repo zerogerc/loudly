@@ -2,6 +2,7 @@ package ly.loud.loudly.ui.feed;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.CoreModel;
@@ -117,7 +118,10 @@ public class FeedPresenter extends BasePresenter<FeedView> {
                 .observeOn(mainThread())
                 .subscribe(
                         resultAction,
-                        error -> executeIfViewBound(FeedView::onNetworkProblems)
+                        error -> {
+                            Log.e("tag", "error", error);
+                            executeIfViewBound(FeedView::onNetworkProblems);
+                        }
                 );
     }
 

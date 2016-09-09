@@ -8,8 +8,6 @@ import android.support.test.runner.AndroidJUnit4;
 import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import com.pushtorefresh.storio.sqlite.queries.DeleteQuery;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,11 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import ly.loud.loudly.base.exceptions.DatabaseException;
 import ly.loud.loudly.test.Generators;
-import ly.loud.loudly.util.database.entities.StoredAttachment;
-import ly.loud.loudly.util.database.entities.StoredLocation;
-import ly.loud.loudly.util.database.entities.StoredPost;
-import ly.loud.loudly.util.database.entities.links.Links;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
