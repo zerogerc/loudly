@@ -367,7 +367,7 @@ public class FacebookModel implements NetworkContract {
     @NonNull
     private List<SinglePost> downloadPosts(@NonNull TimeInterval timeInterval) throws IOException {
         if (timeInterval.from >= timeInterval.to) {
-            return SolidList.empty();
+            return Collections.emptyList();
         }
         Log.i("FACEBOOK", "DOWNLOADING");
         FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();

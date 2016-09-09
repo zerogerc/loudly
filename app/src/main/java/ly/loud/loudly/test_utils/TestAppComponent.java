@@ -11,6 +11,6 @@ import ly.loud.loudly.util.database.PostDbModule;
 @Singleton
 @Component(modules = {
         AppModule.class, KeysDbModule.class, PostDbModule.class,
-        VKClientTestModule.class, FacebookClientTestModule.class})
+        VKClientTestModule.class, FacebookClientTestModule.class, InstagramClientTestModule.class})
 public interface TestAppComponent extends AppComponent {
 }
