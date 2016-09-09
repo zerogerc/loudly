@@ -171,7 +171,8 @@ public class PostLoadModel {
     @NonNull
     public Observable<SolidList<PlainPost>> observePostsByIntervalWithUpdates(
             @NonNull TimeInterval interval) {
-        return loadPosts(interval)
+        return getPostsByInterval(interval)
+                .toObservable()
                 .concatWith(observeUpdatedList());
     }
 

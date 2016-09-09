@@ -3,6 +3,7 @@ package ly.loud.loudly.networks.instagram;
 import android.graphics.Point;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.util.Pair;
 
 import java.io.IOException;
@@ -49,7 +50,8 @@ import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
 
 public class InstagramModel implements NetworkContract {
     public static final String AUTHORIZE_URL = "https://api.instagram.com/oauth/authorize/";
-    public static final String RESPONSE_URL = "loudly:";
+    public static final String RESPONSE_URL = "loudly://";
+    public static final String REDIRECT_URL = "loudly:";
 
     @NonNull
     private final InstagramClient client;
@@ -100,7 +102,7 @@ public class InstagramModel implements NetworkContract {
     @NonNull
     public Single<KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
         return urls
-                .takeFirst(url -> url.startsWith(RESPONSE_URL))
+                .takeFirst(url -> url.startsWith(REDIRECT_URL))
                 .toSingle()
                 .map(url -> {
                     Query query = Query.fromResponseUrl(url);
@@ -119,7 +121,7 @@ public class InstagramModel implements NetworkContract {
 
     @Override
     public boolean isConnected() {
-        return false;
+        return keysModel.getInstagramKeyKeeper() != null;
     }
 
     @Override
@@ -181,10 +183,11 @@ public class InstagramModel implements NetworkContract {
             return Collections.emptyList();
         }
         String maxId = beforeId == null ? "" : beforeId.getLink();
-        Call<Data<List<InstagramPost>>> dataCall = client.loadPosts("", keyKeeper.getAccessToken());
+        Call<Data<List<InstagramPost>>> dataCall = client.loadPosts(maxId, keyKeeper.getAccessToken());
         List<SinglePost> posts = new ArrayList<>();
         long currentTime = 0;
         do {
+            Log.i("INSTAGRAM", "DOWNLOADING");
             Response<Data<List<InstagramPost>>> executed = dataCall.execute();
             Data<List<InstagramPost>> body = executed.body();
             if (body == null || body.data == null) {
