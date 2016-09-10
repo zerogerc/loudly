@@ -112,7 +112,7 @@ public class FeedPresenter extends BasePresenter<FeedView> {
             loader.unsubscribe();
         }
 
-        loader = postLoadModel.observePostsByIntervalWithUpdates(loadMoreStrategyModel.getCurrentTimeInterval())
+        loader = postLoadModel.getPostsByInterval(loadMoreStrategyModel.getCurrentTimeInterval())
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe(

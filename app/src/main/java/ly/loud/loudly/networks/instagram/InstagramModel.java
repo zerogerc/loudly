@@ -2,8 +2,13 @@ package ly.loud.loudly.networks.instagram;
 
 import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.Log;
 import android.util.Pair;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -24,28 +29,48 @@ import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.instagram.entities.Data;
+import ly.loud.loudly.networks.instagram.entities.InstagramComment;
+import ly.loud.loudly.networks.instagram.entities.InstagramPerson;
+import ly.loud.loudly.networks.instagram.entities.InstagramPost;
+import ly.loud.loudly.util.NetworkUtils;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
+import retrofit2.Call;
+import retrofit2.Response;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import solid.collections.SolidList;
 
+import static ly.loud.loudly.util.ListUtils.asSolidList;
+import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
+
 public class InstagramModel implements NetworkContract {
     public static final String AUTHORIZE_URL = "https://api.instagram.com/oauth/authorize/";
     public static final String RESPONSE_URL = "loudly://";
+    public static final String REDIRECT_URL = "loudly:";
 
     @NonNull
-    private Loudly loudlyApplication;
+    private final InstagramClient client;
 
     @NonNull
-    private KeysModel keysModel;
+    private final Loudly loudlyApplication;
+
+    @NonNull
+    private final KeysModel keysModel;
+
+    @NonNull
+    private final List<SinglePost> cached;
 
     @Inject
-    public InstagramModel(@NonNull Loudly loudlyApplication,
+    public InstagramModel(@NonNull InstagramClient client,
+                          @NonNull Loudly loudlyApplication,
                           @NonNull KeysModel keysModel) {
+        this.client = client;
         this.loudlyApplication = loudlyApplication;
         this.keysModel = keysModel;
+        cached = new ArrayList<>();
     }
 
     @Networks.Network
@@ -87,7 +112,7 @@ public class InstagramModel implements NetworkContract {
     @NonNull
     public Single<KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
         return urls
-                .takeFirst(url -> url.startsWith(RESPONSE_URL))
+                .takeFirst(url -> url.startsWith(REDIRECT_URL))
                 .toSingle()
                 .map(url -> {
                     Query query = Query.fromResponseUrl(url);
@@ -106,7 +131,7 @@ public class InstagramModel implements NetworkContract {
 
     @Override
     public boolean isConnected() {
-        return false;
+        return keysModel.getInstagramKeyKeeper() != null;
     }
 
     @Override
@@ -118,13 +143,13 @@ public class InstagramModel implements NetworkContract {
     @Override
     @NonNull
     public Observable<SingleImage> upload(@NonNull PlainImage image) {
-        return Observable.just(null);
+        return Observable.empty();
     }
 
     @Override
     @NonNull
     public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
-        return Observable.just(null);
+        return Observable.empty();
     }
 
     @Override
@@ -136,37 +161,133 @@ public class InstagramModel implements NetworkContract {
     @Override
     @NonNull
     public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return Observable.just(SolidList.empty());
+        return Observable.fromCallable(() -> {
+            if (cached.isEmpty()) {
+                List<SinglePost> loaded = downloadPosts(null, timeInterval);
+                cached.addAll(loaded);
+                return asSolidList(cached);
+            }
+            NetworkUtils.DividedList<SinglePost> dividedList =
+                    divideListOfCachedPosts(cached, timeInterval);
+
+            List<SinglePost> before = downloadPosts(null, dividedList.before);
+            List<SinglePost> after = downloadPosts(cached.get(cached.size() - 1), dividedList.after);
+
+            cached.addAll(before);
+            cached.addAll(after);
+            Collections.sort(cached);
+
+            List<SinglePost> result = new ArrayList<>();
+            result.addAll(before);
+            result.addAll(dividedList.cached);
+            result.addAll(after);
+            return asSolidList(result);
+        });
+    }
+
+    @NonNull
+    private List<SinglePost> downloadPosts(@Nullable SinglePost beforeId,
+                                           @NonNull TimeInterval interval) throws IOException {
+        InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
+        if (keyKeeper == null) {
+            // ToDo: handle
+            return Collections.emptyList();
+        }
+        String maxId = beforeId == null ? "" : beforeId.getLink();
+        Call<Data<List<InstagramPost>>> dataCall = client.loadPosts(maxId, keyKeeper.getAccessToken());
+        List<SinglePost> posts = new ArrayList<>();
+        long currentTime = 0;
+        do {
+            Log.i("INSTAGRAM", "DOWNLOADING");
+            Response<Data<List<InstagramPost>>> executed = dataCall.execute();
+            Data<List<InstagramPost>> body = executed.body();
+            if (body == null || body.data == null) {
+                return posts;
+            }
+            for (InstagramPost post : body.data) {
+                currentTime = post.createdTime;
+                if (!interval.contains(currentTime)) {
+                    continue;
+                }
+
+                posts.add(post.toPost());
+            }
+            if (body.pagination == null || body.pagination.nextUrl == null) {
+                break;
+            }
+            dataCall = client.continueLoadPostsWithPagination(body.pagination.nextUrl);
+        } while (interval.contains(currentTime));
+        return posts;
     }
 
     @NonNull
     @Override
     public SolidList<SinglePost> getCachedPosts() {
-        return SolidList.empty();
+        return asSolidList(cached);
     }
 
     @Override
     @NonNull
     public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element,
                                                     @RequestType int requestType) {
-        return Observable.just(SolidList.empty());
+        return Observable.fromCallable(() -> {
+            InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: Handle
+                return SolidList.empty();
+            }
+            // There is no shares in Instagram
+            Call<Data<List<InstagramPerson>>> likers =
+                    client.getLikers(element.getLink(), keyKeeper.getAccessToken());
+            Response<Data<List<InstagramPerson>>> execute = likers.execute();
+            Data<List<InstagramPerson>> body = execute.body();
+            if (body == null || body.data == null) {
+                // ToDo: Handle
+                return SolidList.empty();
+            }
+            List<Person> persons = new ArrayList<>();
+            for (InstagramPerson instagramPerson : body.data) {
+                persons.add(instagramPerson.toPerson());
+            }
+            return asSolidList(persons);
+        });
     }
 
     @Override
     @NonNull
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
-        return Observable.just(null);
+        return Observable.fromCallable(() -> {
+            InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
+            if (keyKeeper == null) {
+                // ToDo: Handle
+                return SolidList.empty();
+            }
+            Call<Data<List<InstagramComment>>> getComments =
+                    client.getComments(element.getLink(), keyKeeper.getAccessToken());
+            Response<Data<List<InstagramComment>>> execute = getComments.execute();
+            Data<List<InstagramComment>> body = execute.body();
+            if (body == null || body.data == null) {
+                // ToDo: Handle
+                return SolidList.empty();
+            }
+            List<Comment> comments = new ArrayList<>();
+            for (InstagramComment comment : body.data) {
+                comments.add(comment.toComment());
+            }
+            return asSolidList(comments);
+        });
     }
 
     @NonNull
     @Override
     public Observable<List<Pair<SinglePost, Info>>> getUpdates(@NonNull SolidList<SinglePost> posts) {
+        // ToDo: update
         return Observable.empty();
     }
 
     @Override
     @NonNull
     public String getPersonPageUrl(@NonNull Person person) {
-        return "";
+        return "https://www.instagram.com/" + person.getId();
     }
 }

@@ -1,4 +1,4 @@
-package ly.loud.loudly.networks.facebook;
+package ly.loud.loudly.networks.instagram;
 
 import android.support.annotation.NonNull;
 
@@ -9,24 +9,19 @@ import dagger.Provides;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * Module for Facebook API client
- *
- * @author Danil Kolikov
- */
 @Module
-public class FacebookClientModule {
-    private static final String MAIN_SERVER = "https://graph.facebook.com/v2.5/";
+public class InstagramClientModule {
+    private static final String MAIN_SERVER = "https://api.instagram.com/v1/";
 
     @Provides
     @Singleton
     @NonNull
-    public FacebookClient provideFacebookClient() {
-        return provideRetrofit().create(FacebookClient.class);
+    public InstagramClient provideInstagramClient() {
+        return provideRetrofit().create(InstagramClient.class);
     }
 
     @NonNull
-    private Retrofit provideRetrofit() {
+    private static Retrofit provideRetrofit() {
         return new Retrofit.Builder()
                 .baseUrl(MAIN_SERVER)
                 .addConverterFactory(GsonConverterFactory.create())

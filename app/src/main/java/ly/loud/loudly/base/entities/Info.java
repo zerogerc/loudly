@@ -9,6 +9,8 @@ import android.support.annotation.NonNull;
  * Information about likes, shares and comments in social network
  */
 public class Info implements Parcelable {
+    private static final Info EMPTY_INFO = new Info(0, 0, 0);
+
     public final int like;
     public final int repost;
     public final int comment;
@@ -29,6 +31,11 @@ public class Info implements Parcelable {
         this.like = source.readInt();
         this.repost = source.readInt();
         this.comment = source.readInt();
+    }
+
+    @NonNull
+    public static Info emptyInfo() {
+        return EMPTY_INFO;
     }
 
     @CheckResult
