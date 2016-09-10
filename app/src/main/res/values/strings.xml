@@ -18,6 +18,7 @@
     <string name="token_expired_end">. Please, login in settings</string>
 
     <!-- Networks -->
+    <string name="everything">Everything</string>
     <string name="network_loudly">Loudly</string>
     <string name="network_facebook">Facebook</string>
     <string name="network_twitter">Twitter</string>

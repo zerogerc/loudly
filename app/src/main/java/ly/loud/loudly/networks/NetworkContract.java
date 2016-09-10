@@ -1,6 +1,8 @@
 package ly.loud.loudly.networks;
 
 import android.support.annotation.CheckResult;
+import android.support.annotation.ColorRes;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.util.Pair;
 
@@ -43,6 +45,18 @@ public interface NetworkContract {
     @CheckResult
     @NonNull
     String getFullName();
+
+    /**
+     * Icon of this network
+     */
+    @DrawableRes
+    int getNetworkIconResource();
+
+    /**
+     * Main color of this network
+     */
+    @ColorRes
+    int getBrandColorResourcePrimary();
 
     /**
      * Get URL of initial web page for authorization

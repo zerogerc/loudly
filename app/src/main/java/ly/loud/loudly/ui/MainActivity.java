@@ -36,10 +36,13 @@ import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.ui.feed.FeedFragment;
 import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
 import ly.loud.loudly.ui.new_post.NewPostFragment.NewPostFragmentInteractions;
 import ly.loud.loudly.ui.settings.SettingsActivity;
+import ly.loud.loudly.ui.sidebar.SideBarFragment;
+import ly.loud.loudly.ui.sidebar.SideBarFragment.SideBarFragmentCallbacks;
 import ly.loud.loudly.ui.views.ScrimCoordinatorLayout;
 
 import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
@@ -55,7 +58,12 @@ import static ly.loud.loudly.ui.new_post.NewPostFragment.NetworksProvider;
  * BottomSheet Fragment (for post creation), menu and {@link NavigationView}.
  */
 public class MainActivity extends AppCompatActivity
-        implements OnNavigationItemSelectedListener, FragmentInvoker, NetworksProvider, NewPostFragmentInteractions {
+        implements
+        FragmentInvoker,
+        NetworksProvider,
+        NewPostFragmentInteractions,
+        SideBarFragmentCallbacks
+{
 
     private static final String FEED_FRAGMENT = "feed_fragment";
 
@@ -151,7 +159,6 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = ((NavigationView) findViewById(R.id.nav_view));
-        navigationView.setNavigationItemSelectedListener(this);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
@@ -220,13 +227,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     /**
@@ -344,5 +344,24 @@ public class MainActivity extends AppCompatActivity
          */
         newPostFragmentView.setVisibility(GONE);
         background.setOpacity(0);
+    }
+
+    @Override
+    public void onNoFiltersClicked() {
+        closeDrawer();
+    }
+
+    @Override
+    public void onSettingsClicked() {
+        closeDrawer();
+    }
+
+    @Override
+    public void onNetworkClicked(@Networks.Network int networkId) {
+        closeDrawer();
+    }
+
+    private void closeDrawer() {
+        drawerLayout.closeDrawer(GravityCompat.START);
     }
 }

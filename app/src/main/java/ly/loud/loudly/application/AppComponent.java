@@ -20,11 +20,13 @@ import ly.loud.loudly.networks.facebook.FacebookClientModule;
 import ly.loud.loudly.networks.vk.VKClientModule;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.auth.AuthFragment;
-import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.ui.feed.FeedFragment;
 import ly.loud.loudly.ui.full_post.FullPostInfoFragment;
 import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
 import ly.loud.loudly.ui.new_post.NewPostFragment;
+import ly.loud.loudly.ui.people_list.PeopleListFragment;
+import ly.loud.loudly.ui.sidebar.SideBarFragment.SideBarComponent;
+import ly.loud.loudly.ui.sidebar.SideBarFragment.SideBarModule;
 import ly.loud.loudly.util.database.KeysDbModule;
 import ly.loud.loudly.util.database.PostDbModule;
 
@@ -89,4 +91,7 @@ public interface AppComponent {
     void inject(@NonNull NetworksChooseLayout networksChooseLayout);
 
     void inject(@NonNull UpdateInfoService updateInfoService);
+
+    @NonNull
+    SideBarComponent plus(@NonNull SideBarModule sideBarModule);
 }

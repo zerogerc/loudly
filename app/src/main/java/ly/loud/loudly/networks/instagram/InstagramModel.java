@@ -1,5 +1,6 @@
 package ly.loud.loudly.networks.instagram;
 
+import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
 import android.util.Pair;
 
@@ -57,6 +58,17 @@ public class InstagramModel implements NetworkContract {
     @NonNull
     public String getFullName() {
         return loudlyApplication.getString(R.string.network_instagram);
+    }
+
+    @Override
+    public int getNetworkIconResource() {
+        return R.drawable.instagram_icon_black;
+    }
+
+    @ColorRes
+    @Override
+    public int getBrandColorResourcePrimary() {
+        return R.color.instagram_color;
     }
 
     @Override

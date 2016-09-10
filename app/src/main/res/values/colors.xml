@@ -16,10 +16,18 @@
     <color name="black_color">#000000</color>
     <color name="white_color">#FFFFFF</color>
 
+    <color name="nav_bar_background">#263238</color>
 
     <!-- Material design colors -->
     <color name="grey_color_900">#212121</color>
     <color name="grey_color_500">#9E9E9E</color>
     <color name="grey_color_300">#E0E0E0</color>
+
+    <color name="sidebar_icon_color">#737373</color>
+    <color name="sidebar_text_color">#212121</color>
+
+    <color name="facebook_color">#3b5998</color>
+    <color name="vk_color">#45668e</color>
+    <color name="instagram_color">#e1306c</color>
 
 </resources>

@@ -2,6 +2,7 @@ package ly.loud.loudly.networks.vk;
 
 import android.graphics.Point;
 import android.support.annotation.CheckResult;
+import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -103,6 +104,17 @@ public class VKModel implements NetworkContract {
     @NonNull
     public String getFullName() {
         return loudlyApplication.getString(R.string.network_vk);
+    }
+
+    @Override
+    public int getNetworkIconResource() {
+        return R.drawable.vk_icon_black;
+    }
+
+    @ColorRes
+    @Override
+    public int getBrandColorResourcePrimary() {
+        return R.color.vk_color;
     }
 
     @Override
