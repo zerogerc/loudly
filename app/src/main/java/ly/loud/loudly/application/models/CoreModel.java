@@ -10,7 +10,6 @@ import java.util.List;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
-import ly.loud.loudly.legacy_base.SingleNetwork;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.FacebookModel;
@@ -77,7 +76,7 @@ public class CoreModel {
     }
 
     /**
-     * Get models where given {@link SingleNetwork} exists in.
+     * Get models where given {@link SingleNetworkElement} exists in.
      */
     @CheckResult
     @NonNull

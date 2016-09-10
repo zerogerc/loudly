@@ -10,6 +10,7 @@ import com.google.gson.annotations.SerializedName;
 public class Error {
     @SerializedName("error_code")
     public int errorCode;
+
     @SerializedName("error_msg")
     public String errorMessage;
 }
