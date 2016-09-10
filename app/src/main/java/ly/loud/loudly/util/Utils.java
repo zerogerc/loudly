@@ -16,16 +16,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.DisplayMetrics;
-import android.util.Log;
-import android.webkit.CookieManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -117,8 +113,7 @@ public class Utils {
         return resource;
     }
 
-    public static Bitmap toGrayscale(Bitmap bmpOriginal)
-    {
+    public static Bitmap toGrayscale(Bitmap bmpOriginal) {
         int width, height;
         height = bmpOriginal.getHeight();
         width = bmpOriginal.getWidth();
@@ -132,29 +127,6 @@ public class Utils {
         paint.setColorFilter(f);
         c.drawBitmap(bmpOriginal, 0, 0, paint);
         return bmpGrayscale;
-    }
-
-    /**
-     * Close instance of Closeable without throwing exception
-     */
-    public static void closeQuietly(Closeable c) {
-        if (c != null) {
-            try {
-                c.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Exception while closing: " + e.getMessage());
-            }
-        }
-    }
-
-    public static void clearCookies(String domain) {
-        CookieManager cookieManager = CookieManager.getInstance();
-        String cookiestring = cookieManager.getCookie(domain);
-        String[] cookies =  cookiestring.split(";");
-        for (int i=0; i<cookies.length; i++) {
-            String[] cookieparts = cookies[i].split("=");
-            cookieManager.setCookie(domain, cookieparts[0].trim()+"=; Expires=Wed, 31 Dec 2025 23:59:59 GMT");
-        }
     }
 
     public static void loadAvatar(final Person person, final ImageView icon) {
@@ -182,13 +154,9 @@ public class Utils {
         }
     }
 
-    public static void loadName(Person person, TextView name) {
-        if (person.getFirstName() != null && person.getLastName() != null) {
-            String text = person.getFirstName() + " " + person.getLastName();
-            name.setText(text);
-        } else {
-            name.setText("");
-        }
+    public static void loadName(@NonNull Person person, @NonNull TextView name) {
+        String text = person.getFirstName() + " " + person.getLastName();
+        name.setText(text);
     }
 
     @NonNull
@@ -196,7 +164,7 @@ public class Utils {
         if (post instanceof SinglePost) {
             return ListUtils.asArrayList(((SinglePost) post));
         } else if (post instanceof LoudlyPost) {
-             return ((LoudlyPost) post).getNetworkInstances();
+            return ((LoudlyPost) post).getNetworkInstances();
         } else {
             return ListUtils.emptyArrayList();
         }
@@ -205,7 +173,7 @@ public class Utils {
     @StringRes
     public static int getNetworkTitleResourceByPost(@NonNull PlainPost post) {
         if (post instanceof SinglePost) {
-            return  Networks.nameResourceOfNetwork(((SinglePost) post).getNetwork());
+            return Networks.nameResourceOfNetwork(((SinglePost) post).getNetwork());
         } else {
             return Networks.nameResourceOfNetwork(Networks.LOUDLY);
         }

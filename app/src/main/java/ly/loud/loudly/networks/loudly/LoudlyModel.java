@@ -9,7 +9,7 @@ import javax.inject.Inject;
 
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.application.models.GetterModel;
+import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
@@ -21,7 +21,7 @@ import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
-import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Completable;
 import rx.Observable;
@@ -40,6 +40,7 @@ public class LoudlyModel implements NetworkContract {
         this.loudlyApplication = loudlyApplication;
     }
 
+    @Network
     @Override
     public int getId() {
         return LOUDLY;
@@ -64,13 +65,13 @@ public class LoudlyModel implements NetworkContract {
     @NonNull
     @Override
     public Single<String> getBeginAuthUrl() {
-        return null;
+        return Single.just("");
     }
 
     @NonNull
     @Override
     public Single<KeyKeeper> proceedAuthUrls(@NonNull Observable<String> urls) {
-        return null;
+        return Single.just(null);
     }
 
     @Override
@@ -81,60 +82,61 @@ public class LoudlyModel implements NetworkContract {
     @NonNull
     @Override
     public Completable disconnect() {
-        return null;
+        return Completable.complete();
     }
 
     @NonNull
     @Override
     public Observable<SingleImage> upload(@NonNull PlainImage image) {
-        return null;
+        return Observable.empty();
     }
 
     @NonNull
     @Override
     public Observable<SinglePost> upload(@NonNull PlainPost<SingleAttachment> post) {
-        return null;
+        return Observable.empty();
     }
 
     @NonNull
     @Override
     public Completable delete(@NonNull SinglePost post) {
-        return null;
+        return Completable.complete();
     }
 
     @NonNull
     @Override
     public Observable<SolidList<SinglePost>> loadPosts(@NonNull TimeInterval timeInterval) {
-        return null;
+        return Observable.empty();
     }
 
     @NonNull
     @Override
     public SolidList<SinglePost> getCachedPosts() {
-        return null;
+        return SolidList.empty();
     }
 
     @NonNull
     @Override
-    public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element, @GetterModel.RequestType int requestType) {
-        return null;
+    public Observable<SolidList<Person>> getPersons(@NonNull SingleNetworkElement element,
+                                                    @RequestType int requestType) {
+        return Observable.empty();
     }
 
     @NonNull
     @Override
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
-        return null;
+        return Observable.empty();
     }
 
     @NonNull
     @Override
     public Observable<List<Pair<SinglePost, Info>>> getUpdates(@NonNull SolidList<SinglePost> posts) {
-        return null;
+        return Observable.empty();
     }
 
     @NonNull
     @Override
     public String getPersonPageUrl(@NonNull Person person) {
-        return null;
+        return "";
     }
 }
