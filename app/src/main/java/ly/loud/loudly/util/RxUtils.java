@@ -2,6 +2,7 @@ package ly.loud.loudly.util;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -83,5 +84,15 @@ public class RxUtils {
                                         .delay(intervalSupplier.call(), SECONDS)
                         )
                 );
+    }
+
+    /**
+     * Non null predicate
+     * @param object Object to check
+     * @param <T> Type of object
+     * @return True, if object is not null, false otherwise
+     */
+    public static <T> boolean nonNull(@Nullable T object) {
+        return object != null;
     }
 }

@@ -15,4 +15,8 @@ public class Data<T> {
 
     @Nullable
     public Meta meta;
+
+    public boolean isError() {
+        return meta != null && meta.code != 200;
+    }
 }

@@ -113,10 +113,17 @@ public class AuthFragment extends DialogFragment {
                     .flatMapObservable(this::createUrlsObservable);
             authModel.finishAuthorization(changeSubscription(urls, io()), network)
                     .observeOn(mainThread())
-                    .subscribe(() -> {
-                        clearWebView();
-                        dismiss();
-                    });
+                    .subscribe(
+                            () -> {
+                                clearWebView();
+                                dismiss();
+                            },
+                            error -> {
+                                // ToDo: Handle NetworkError
+                                clearWebView();
+                                dismiss();
+                            }
+                    );
             firstRun = false;
         }
     }

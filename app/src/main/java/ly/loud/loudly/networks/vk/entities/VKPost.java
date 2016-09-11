@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
  *
  * @author Danil Kolikov
  */
-public class Post {
+public class VKPost {
     @SerializedName("post_id")
     public String postId;
 }

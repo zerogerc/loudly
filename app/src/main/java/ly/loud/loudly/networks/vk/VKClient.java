@@ -2,12 +2,25 @@ package ly.loud.loudly.networks.vk;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ly.loud.loudly.networks.vk.entities.*;
-import okhttp3.MultipartBody;
-import retrofit2.Call;
-import retrofit2.http.*;
 
 import java.util.List;
+
+import ly.loud.loudly.networks.vk.entities.Photo;
+import ly.loud.loudly.networks.vk.entities.PhotoUploadServer;
+import ly.loud.loudly.networks.vk.entities.PhotoUploadServerResponse;
+import ly.loud.loudly.networks.vk.entities.Profile;
+import ly.loud.loudly.networks.vk.entities.Say;
+import ly.loud.loudly.networks.vk.entities.VKItems;
+import ly.loud.loudly.networks.vk.entities.VKPost;
+import ly.loud.loudly.networks.vk.entities.VKResponse;
+import okhttp3.MultipartBody;
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Multipart;
+import retrofit2.http.POST;
+import retrofit2.http.Part;
+import retrofit2.http.Query;
+import retrofit2.http.Url;
 
 /**
  * Client for VK api
@@ -118,7 +131,7 @@ public interface VKClient {
      */
     @POST("wall.post")
     @NonNull
-    Call<VKResponse<Post>> uploadPost(@Query("message") @Nullable String message,
+    Call<VKResponse<VKPost>> uploadPost(@Query("message") @Nullable String message,
                                       @Query("attachment") @Nullable String attachmentIds,
                                       @Query("access_token") @NonNull String token);
 

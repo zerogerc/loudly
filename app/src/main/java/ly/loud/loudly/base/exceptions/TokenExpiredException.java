@@ -7,11 +7,8 @@ import ly.loud.loudly.networks.Networks.Network;
  *
  * @author Danil Kolikov
  */
-public class TokenExpiredException extends FatalException {
-    @Network
-    public final int network;
-
+public class TokenExpiredException extends FatalNetworkException {
     public TokenExpiredException(@Network int network) {
-        this.network = network;
+        super(network);
     }
 }
