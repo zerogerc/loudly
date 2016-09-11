@@ -5,15 +5,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 
 import ly.loud.loudly.R;
-import ly.loud.loudly.legacy_base.Wrap;
 import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
-import ly.loud.loudly.networks.facebook.FacebookWrap;
 import ly.loud.loudly.networks.instagram.InstagramKeyKeeper;
-import ly.loud.loudly.networks.instagram.InstagramWrap;
-import ly.loud.loudly.networks.loudly.LoudlyKeyKeeper;
-import ly.loud.loudly.networks.loudly.LoudlyWrap;
 import ly.loud.loudly.networks.vk.VKKeyKeeper;
-import ly.loud.loudly.networks.vk.VKWrap;
 
 /**
  * Constants for getting proper social network for holders
@@ -71,21 +65,6 @@ public class Networks {
         }
     }
 
-    public static Wrap makeWrap(@Network int network) {
-        switch (network) {
-            case LOUDLY:
-                return new LoudlyWrap();
-            case FB:
-                return new FacebookWrap();
-            case VK:
-                return new VKWrap();
-            case INSTAGRAM:
-                return new InstagramWrap();
-            default:
-                return null;
-        }
-    }
-
     /**
      * Make proper instance of KeyKeeper for the network and fill it with values, stored in DB
      *
@@ -95,8 +74,6 @@ public class Networks {
      */
     public static KeyKeeper makeKeyKeeper(@Network int network, @NonNull String[] strings) {
         switch (network) {
-            case LOUDLY:
-                return new LoudlyKeyKeeper(strings);
             case FB:
                 return new FacebookKeyKeeper(strings);
             case VK:

@@ -2,6 +2,7 @@ package ly.loud.loudly.networks.facebook;
 
 import android.graphics.Point;
 import android.support.annotation.CheckResult;
+import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -107,6 +108,17 @@ public class FacebookModel implements NetworkContract {
     @NonNull
     public String getFullName() {
         return loudlyApplication.getString(R.string.network_facebook);
+    }
+
+    @Override
+    public int getNetworkIconResource() {
+        return R.drawable.facebook_icon_black;
+    }
+
+    @ColorRes
+    @Override
+    public int getBrandColorResourcePrimary() {
+        return R.color.facebook_color;
     }
 
     @Override
@@ -369,7 +381,7 @@ public class FacebookModel implements NetworkContract {
     @NonNull
     private List<SinglePost> downloadPosts(@NonNull TimeInterval timeInterval) throws IOException {
         if (timeInterval.from >= timeInterval.to) {
-            return SolidList.empty();
+            return Collections.emptyList();
         }
         Log.i("FACEBOOK", "DOWNLOADING");
         FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();

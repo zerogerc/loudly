@@ -12,6 +12,7 @@ import javax.inject.Named;
 import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
+import ly.loud.loudly.networks.instagram.InstagramKeyKeeper;
 import ly.loud.loudly.networks.vk.VKKeyKeeper;
 import ly.loud.loudly.base.exceptions.DatabaseException;
 import ly.loud.loudly.util.database.entities.Key;
@@ -19,6 +20,7 @@ import rx.Completable;
 import rx.exceptions.Exceptions;
 
 import static ly.loud.loudly.networks.Networks.FB;
+import static ly.loud.loudly.networks.Networks.INSTAGRAM;
 import static ly.loud.loudly.networks.Networks.VK;
 
 public class KeysModel {
@@ -30,6 +32,9 @@ public class KeysModel {
 
     @Nullable
     private FacebookKeyKeeper facebookKeyKeeper;
+
+    @Nullable
+    private InstagramKeyKeeper instagramKeyKeeper;
 
     @Inject
     public KeysModel(@NonNull @Named("keys") StorIOSQLite keysDatabase) {
@@ -54,6 +59,15 @@ public class KeysModel {
 
     public void setFacebookKeyKeeper(@Nullable FacebookKeyKeeper facebookKeyKeeper) {
         this.facebookKeyKeeper = facebookKeyKeeper;
+    }
+
+    @Nullable
+    public InstagramKeyKeeper getInstagramKeyKeeper() {
+        return instagramKeyKeeper;
+    }
+
+    public void setInstagramKeyKeeper(@Nullable InstagramKeyKeeper instagramKeyKeeper) {
+        this.instagramKeyKeeper = instagramKeyKeeper;
     }
 
     @CheckResult
@@ -125,6 +139,8 @@ public class KeysModel {
             case VK:
                 setVKKeyKeeper(((VKKeyKeeper) keyKeeper));
                 return;
+            case INSTAGRAM:
+                setInstagramKeyKeeper(((InstagramKeyKeeper) keyKeeper));
         }
     }
 }
