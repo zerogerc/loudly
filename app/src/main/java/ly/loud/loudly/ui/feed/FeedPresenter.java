@@ -40,8 +40,15 @@ public class FeedPresenter extends BasePresenter<FeedView> {
     @NonNull
     private LoadMoreStrategyModel loadMoreStrategyModel;
 
+    private volatile boolean isInitialLoadInProgress = false;
+
+    private volatile boolean isLoadMoreInProgress = false;
+
     @Nullable
     private Subscription loader;
+
+    @Nullable
+    private Subscription updater;
 
     public FeedPresenter(
             @NonNull Loudly loudlyApp,
@@ -59,47 +66,75 @@ public class FeedPresenter extends BasePresenter<FeedView> {
         this.loadMoreStrategyModel = loadMoreStrategyModel;
     }
 
-    public SolidList<PlainPost> getCachedPosts() {
-        return postLoadModel.getCachedPosts();
+    public void loadCachedPosts() {
+        executeIfViewBound(view -> view.onCachedPostsReceived(postLoadModel.getCachedPosts()));
     }
 
-    public void updateMorePosts() {
-        if (loadMoreStrategyModel.isAllPostsLoaded()) {
-            executeIfViewBound(FeedView::onAllPostsLoaded);
-            return;
-        }
-
-        int sizePrevious = postLoadModel.getCachedPosts().size();
-        loadMoreStrategyModel.generateNextInterval();
-
-        loadPosts(result -> executeIfViewBound(view -> {
-            if (result.size() != sizePrevious) {
-                view.onPostsUpdated(result);
-            } else {
-                // load more items if no posts loaded
-                updateMorePosts();
-            }
-        }));
-    }
-
-    public void startUpdatePosts() {
+    public void initialLoad() {
         if (!isAnyNetworkConnected()) {
             executeIfViewBound(FeedView::onNoConnectedNetworksDetected);
             return;
         }
 
-        executeIfViewBound(FeedView::onPostsUpdateStarted);
-        loadPosts(result -> executeIfViewBound(view -> view.onPostsUpdated(result)));
+        isInitialLoadInProgress = true;
+        postLoadModel.loadPosts(loadMoreStrategyModel.getCurrentTimeInterval())
+                .subscribeOn(io())
+                .observeOn(mainThread())
+                .doOnNext(posts -> executeIfViewBound(view -> view.onInitialLoadProgress(posts)))
+                .doOnCompleted(() -> {
+                    isInitialLoadInProgress = false;
+                    executeIfViewBound(FeedView::onInitialLoadFinished);
+                    subscribeOnUpdates();
+                })
+                .doOnError(error -> executeIfViewBound(FeedView::onNetworkProblems))
+                .subscribe(
+                        result -> {},
+                        error -> isInitialLoadInProgress = false
+                );
     }
 
-    public void unsubscribeAll() {
+    public void refreshPosts() {
+        if (!isAnyNetworkConnected()) {
+            executeIfViewBound(FeedView::onNoConnectedNetworksDetected);
+            return;
+        }
+
+        if (isLoadMoreInProgress || isInitialLoadInProgress) {
+            return;
+        }
+
+        loadPosts(posts -> executeIfViewBound(view -> view.onPostsRefreshed(posts)));
     }
+
+    public void loadMorePosts() {
+        if (loadMoreStrategyModel.isAllPostsLoaded()) {
+            executeIfViewBound(FeedView::onAllPostsLoaded);
+            return;
+        }
+
+        /**
+         * View invokes loadMore through LayoutManager. It could invokes it really often.
+         * It's better to add some sync here.
+         */
+        if (isLoadMoreInProgress || isInitialLoadInProgress) {
+            return;
+        } else {
+            isLoadMoreInProgress = true;
+        }
+
+        loadMoreStrategyModel.generateNextInterval();
+        loadPosts(result -> {
+            isLoadMoreInProgress = false;
+            executeIfViewBound(view -> view.onLoadMorePosts(result));
+        });
+    }
+
 
     public void deletePost(@NonNull LoudlyPost post) {
         deleterModel.deletePostFromAllNetworks(post)
                 .subscribeOn(io())
                 .observeOn(mainThread())
-                .doOnCompleted(this::startUpdatePosts)
+                .doOnCompleted(this::refreshPosts)
                 .subscribe();
     }
 
@@ -116,9 +151,24 @@ public class FeedPresenter extends BasePresenter<FeedView> {
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe(
-                        resultAction,
+                        posts -> {
+                            resultAction.call(posts);
+                            subscribeOnUpdates();
+                        },
                         error -> executeIfViewBound(FeedView::onNetworkProblems)
                 );
+    }
+
+    private void subscribeOnUpdates() {
+        if (updater != null && !updater.isUnsubscribed()) {
+            updater.unsubscribe();
+        }
+        updater = postLoadModel.observeUpdatedList()
+                .subscribeOn(io())
+                .observeOn(mainThread())
+                .subscribe(updatedPosts -> {
+                    executeIfViewBound(view -> view.onPostsUpdated(updatedPosts));
+                });
     }
 
 }

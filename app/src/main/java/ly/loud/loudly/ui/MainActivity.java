@@ -10,9 +10,9 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -37,11 +37,12 @@ import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.ui.LoadingFragment.LoadingFragmentCallback;
 import ly.loud.loudly.ui.feed.FeedFragment;
+import ly.loud.loudly.ui.feed.FeedFragment.FeedFragmentCallback;
 import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
 import ly.loud.loudly.ui.new_post.NewPostFragment.NewPostFragmentInteractions;
 import ly.loud.loudly.ui.settings.SettingsActivity;
-import ly.loud.loudly.ui.sidebar.SideBarFragment;
 import ly.loud.loudly.ui.sidebar.SideBarFragment.SideBarFragmentCallbacks;
 import ly.loud.loudly.ui.views.ScrimCoordinatorLayout;
 
@@ -62,7 +63,9 @@ public class MainActivity extends AppCompatActivity
         FragmentInvoker,
         NetworksProvider,
         NewPostFragmentInteractions,
-        SideBarFragmentCallbacks
+        SideBarFragmentCallbacks,
+        FeedFragmentCallback,
+        LoadingFragmentCallback
 {
 
     private static final String FEED_FRAGMENT = "feed_fragment";
@@ -162,11 +165,24 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new FeedFragment(), FEED_FRAGMENT)
+                    .replace(R.id.app_bar_feed_fragment_container, new FeedFragment(), FEED_FRAGMENT)
                     .commit();
         }
 
         initFragmentsInteraction();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        showFeed();
+
+        final FeedFragment feedFragment =
+                (FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT);
+
+        if (feedFragment != null) {
+            feedFragment.refreshPosts();
+        }
     }
 
     /**
@@ -236,7 +252,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void startFragment(@NonNull Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment, fragment.getTag())
+                .replace(R.id.app_bar_feed_fragment_container, fragment, fragment.getTag())
                 .addToBackStack(null)
                 .commit();
     }
@@ -274,7 +290,7 @@ public class MainActivity extends AppCompatActivity
         Snackbar.make(floatingActionButton, getString(R.string.message_post_upload_all_networks), Snackbar.LENGTH_SHORT).show();
         FeedFragment fragment = ((FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT));
         if (fragment != null) {
-            fragment.updatePosts();
+            fragment.refreshPosts();
         }
     }
 
@@ -363,5 +379,74 @@ public class MainActivity extends AppCompatActivity
 
     private void closeDrawer() {
         drawerLayout.closeDrawer(GravityCompat.START);
+    }
+
+    @Override
+    public void showFeedLoading() {
+        final FragmentManager manager = getSupportFragmentManager();
+        final LoadingFragment loadingFragment = ((LoadingFragment) manager.findFragmentById(R.id.app_bar_feed_loading_fragment));
+
+        loadingFragment.showLoading();
+
+        manager.beginTransaction()
+                .hide(manager.findFragmentByTag(FEED_FRAGMENT))
+                .show(loadingFragment)
+                .commit();
+    }
+
+    @Override
+    public void showFeedGlobalError(@StringRes int errorMessage) {
+        final FragmentManager manager = getSupportFragmentManager();
+        final LoadingFragment loadingFragment = ((LoadingFragment) manager.findFragmentById(R.id.app_bar_feed_loading_fragment));
+        loadingFragment.showError(errorMessage);
+
+        manager.beginTransaction()
+                .hide(manager.findFragmentByTag(FEED_FRAGMENT))
+                .show(loadingFragment)
+                .commit();
+    }
+
+    @Override
+    public void showFeedError(@StringRes int errorMessage) {
+        Snackbar.make(globalRootView, errorMessage, Snackbar.LENGTH_SHORT);
+    }
+
+    @Override
+    public void hideFeed() {
+        final FragmentManager manager = getSupportFragmentManager();
+
+        manager.beginTransaction()
+                .hide(manager.findFragmentByTag(FEED_FRAGMENT))
+                .show(manager.findFragmentById(R.id.app_bar_feed_loading_fragment))
+                .commit();
+    }
+
+    @Override
+    public void showFeed() {
+        final FragmentManager manager = getSupportFragmentManager();
+
+        manager.beginTransaction()
+                .hide(manager.findFragmentById(R.id.app_bar_feed_loading_fragment))
+                .show(manager.findFragmentByTag(FEED_FRAGMENT))
+                .commit();
+    }
+
+    @Override
+    public void onLoadingRefresh() {
+        final LoadingFragment loadingFragment =
+                (LoadingFragment) getSupportFragmentManager().findFragmentById(R.id.app_bar_feed_loading_fragment);
+
+        final FeedFragment feedFragment =
+                (FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT);
+
+        showFeed();
+
+        if (feedFragment != null) {
+            feedFragment.refreshPosts();
+        }
+
+        if (loadingFragment != null) {
+            loadingFragment.hideProgress();
+        }
     }
 }
