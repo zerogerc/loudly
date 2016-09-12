@@ -11,7 +11,7 @@ import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
-import ly.loud.loudly.ui.BasePresenter;
+import ly.loud.loudly.util.BasePresenter;
 import rx.Subscription;
 import rx.functions.Action1;
 import solid.collections.SolidList;
@@ -21,9 +21,6 @@ import static rx.schedulers.Schedulers.io;
 
 // TODO: config
 public class FeedPresenter extends BasePresenter<FeedView> {
-
-    @NonNull
-    private Loudly loudlyApp;
 
     @NonNull
     private CoreModel coreModel;
@@ -58,7 +55,7 @@ public class FeedPresenter extends BasePresenter<FeedView> {
             @NonNull PostDeleterModel deleterModel,
             @NonNull LoadMoreStrategyModel loadMoreStrategyModel
     ) {
-        this.loudlyApp = loudlyApp;
+        super(loudlyApp);
         this.coreModel = coreModel;
         this.postLoadModel = postLoadModel;
         this.getterModel = getterModel;

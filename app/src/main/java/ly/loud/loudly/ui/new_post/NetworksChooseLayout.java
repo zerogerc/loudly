@@ -1,5 +1,6 @@
 package ly.loud.loudly.ui.new_post;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -10,8 +11,7 @@ import android.support.annotation.StyleRes;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-
-import com.hannesdorfmann.mosby.mvp.layout.MvpLinearLayout;
+import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,17 +21,17 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ly.loud.loudly.R;
-import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.networks.NetworkContract;
 import solid.collections.SolidList;
+
+import static ly.loud.loudly.application.Loudly.getApplication;
 
 /**
  * Fragment that allows user to choose networks from all connected.
  *
  */
-public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, NetworksChoosePresenter>
-        implements NetworksChooseView {
+public class NetworksChooseLayout extends LinearLayout {
 
     private static final String SUPER_STATE = "super_state";
     private static final String SELECTED = "selected";
@@ -60,11 +60,17 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
 
     public NetworksChooseLayout(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr) {
         this(context, attrs, defStyleAttr, 0);
+        init();
     }
 
+    @TargetApi(21)
     public NetworksChooseLayout(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr, @StyleRes int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        Loudly.getContext().getAppComponent().inject(this);
+        init();
+    }
+
+    private void init() {
+        getApplication(getContext()).getAppComponent().inject(this);
         adapter = new NetworkChooseAdapter(getContext());
     }
 
@@ -75,22 +81,11 @@ public class NetworksChooseLayout extends MvpLinearLayout<NetworksChooseView, Ne
         initRecyclerView();
     }
 
-    @Override
-    @NonNull
-    public NetworksChoosePresenter createPresenter() {
-        return new NetworksChoosePresenter(coreModel);
-    }
-
     private void initRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         recyclerView.setAdapter(adapter);
-        showModels(presenter.getConnectedNetworks());
-    }
-
-    @Override
-    public void showModels(@NonNull SolidList<NetworkContract> models) {
-        adapter.setModels(models);
+        adapter.setModels(coreModel.getConnectedNetworksModels());
     }
 
     /**

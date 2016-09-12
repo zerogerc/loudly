@@ -1,6 +1,6 @@
 package ly.loud.loudly.ui.feed;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +22,10 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
+import dagger.Module;
+import dagger.Provides;
+import dagger.Subcomponent;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.CoreModel;
@@ -41,12 +45,12 @@ import solid.collections.SolidList;
 
 import static android.support.design.widget.Snackbar.LENGTH_SHORT;
 import static android.support.v7.widget.RecyclerView.NO_POSITION;
+import static ly.loud.loudly.application.Loudly.getApplication;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.AssertionsUtils.assertActivityImplementsInterface;
 
-public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
-        implements FeedView, FeedAdapter.PostClickListener {
+public class FeedFragment extends TitledFragment implements FeedView, FeedAdapter.PostClickListener {
 
     private static final int MAX_SPAN_NUMBER = 2;
 
@@ -63,39 +67,17 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @SuppressWarnings("NullableProblems") // Inject
     @Inject
     @NonNull
-    Loudly loudlyApp;
-
-    @SuppressWarnings("NullableProblems") // Inject
-    @Inject
-    @NonNull
-    CoreModel coreModel;
-
-    @SuppressWarnings("NullableProblems") // Inject
-    @Inject
-    @NonNull
-    PostLoadModel postLoadModel;
-
-    @SuppressWarnings("NullableProblems") // Inject
-    @Inject
-    @NonNull
-    GetterModel getterModel;
-
-    @SuppressWarnings("NullableProblems") // Inject
-    @Inject
-    @NonNull
-    PostDeleterModel deleterModel;
-
-    @SuppressWarnings("NullableProblems") // Inject
-    @Inject
-    @NonNull
-    LoadMoreStrategyModel loadMoreStrategyModel;
+    FeedPresenter presenter;
 
     @SuppressWarnings("NullableProblems") // onViewCreated
     @NonNull
     private FeedAdapter adapter;
 
-    private boolean isAllPostsLoadedInfoShowedToUser = false;
+    @SuppressWarnings("NullableProblems") // onViewCreated
+    @NonNull
+    private Unbinder unbinder;
 
+    private boolean isAllPostsLoadedInfoShowedToUser = false;
 
     @Override
     @NonNull
@@ -107,12 +89,12 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Loudly.getContext().getAppComponent().inject(this);
+        getApplication(getContext()).getAppComponent().plus(new FeedModule()).inject(this);
     }
 
     @Override
-    public void onAttach(@NonNull Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
         assertActivityImplementsInterface(getActivity(), FeedFragmentCallback.class);
     }
 
@@ -126,7 +108,8 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ((FeedFragmentCallback) getActivity()).showFeedLoading();
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
+        presenter.onBindView(this);
         refreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getContext(), R.color.accent),
                 ContextCompat.getColor(getContext(), R.color.primary)
@@ -141,7 +124,8 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
 
     @Override
     public void onDestroyView() {
-        // TODO: presenter unsubscribe
+        presenter.onUnbindView(this);
+        unbinder.unbind();
         super.onDestroyView();
     }
 
@@ -231,19 +215,6 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
             refreshLayout.setRefreshing(false);
         }
         ((FeedFragmentCallback) getActivity()).showFeedGlobalError(R.string.message_no_connected_networks);
-    }
-
-    @Override
-    @NonNull
-    public FeedPresenter createPresenter() {
-        return new FeedPresenter(
-                loudlyApp,
-                coreModel,
-                postLoadModel,
-                getterModel,
-                deleterModel,
-                loadMoreStrategyModel
-        );
     }
 
     @Override
@@ -355,5 +326,34 @@ public class FeedFragment extends TitledFragment<FeedView, FeedPresenter>
          * Indicates that fragment have feed to show
          */
         void showFeed();
+    }
+
+    @Module
+    public static class FeedModule {
+        @Provides
+        @NonNull
+        public FeedPresenter provideFeedPresenter(
+                @NonNull Loudly loudlyApp,
+                @NonNull CoreModel coreModel,
+                @NonNull PostLoadModel postLoadModel,
+                @NonNull GetterModel getterModel,
+                @NonNull PostDeleterModel deleterModel,
+                @NonNull LoadMoreStrategyModel loadMoreStrategyModel
+        ) {
+            return new FeedPresenter(
+                    loudlyApp,
+                    coreModel,
+                    postLoadModel,
+                    getterModel,
+                    deleterModel,
+                    loadMoreStrategyModel
+            );
+        }
+    }
+
+    @Subcomponent(modules = FeedModule.class)
+    public interface FeedComponent {
+
+        void inject(@NonNull FeedFragment fragment);
     }
 }
