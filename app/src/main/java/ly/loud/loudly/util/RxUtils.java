@@ -88,11 +88,32 @@ public class RxUtils {
 
     /**
      * Non null predicate
+     *
      * @param object Object to check
-     * @param <T> Type of object
+     * @param <T>    Type of object
      * @return True, if object is not null, false otherwise
      */
     public static <T> boolean nonNull(@Nullable T object) {
         return object != null;
+    }
+
+    /**
+     * Retry this observable N times with exponential backoff (1 sec, 2 sec, 4, 8, ...) and
+     * throw and exception if retrying didn't help
+     *
+     * @param initial       Initial observable
+     * @param throwIfFailed Exception which will be thrown after fail
+     * @param <T>           Type of elements
+     * @return Resulting observable
+     */
+    @CheckResult
+    @NonNull
+    public static <T> Observable<T> retry3TimesAndFail(@NonNull Observable<T> initial,
+                                                       @NonNull Exception throwIfFailed) {
+        return initial
+                .retryWhen(handler -> Observable.range(0, 3)
+                        // ToDo: Don't repeat on fatal
+                        .flatMap(time -> Observable.timer(2 ^ time, SECONDS))
+                        .concatWith(Observable.error(throwIfFailed)));
     }
 }

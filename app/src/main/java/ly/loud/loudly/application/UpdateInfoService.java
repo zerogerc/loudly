@@ -148,14 +148,11 @@ public class UpdateInfoService extends Service {
         if (updateSubscription != null && !updateSubscription.isUnsubscribed()) {
             updateSubscription.unsubscribe();
         }
-        // ToDo: handle errors
         updateSubscription = repeat(Observable.defer(this::getUpdates), this::getRefreshInterval)
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe(info -> {
                     Log.i(TAG, "new info: " + info.like + " " + info.repost + " " + info.comment);
-                }, error -> {
-                    Log.e(TAG, "error", error);
                 });
     }
 
@@ -192,12 +189,10 @@ public class UpdateInfoService extends Service {
                 .<Pair<SinglePost, Info>>flatMap(networkContract -> {
                     SolidList<SinglePost> singlePosts = posts
                             .map(post -> post.getSingleNetworkInstance(networkContract.getId()))
-                            .filter(a -> a != null)
                             .collect(toSolidList());
-                    // ToDo: remove nullability check
                     return networkContract
                             .getUpdates(singlePosts)
-                            .filter(list -> list != null)
+                            .onErrorResumeNext(Observable.empty())
                             .flatMap(Observable::from);
                 })
                 .flatMap(pair -> saveChanges(pair, posts))
@@ -220,7 +215,9 @@ public class UpdateInfoService extends Service {
         if (loudlyPost == null) {
             return Observable.empty();
         }
-        return postsDatabaseModel.updateStoredInfo(loudlyPost, post.getNetwork(), diff);
+        return postsDatabaseModel
+                .updateStoredInfo(loudlyPost, post.getNetwork(), diff)
+                .onErrorReturn(error -> Info.emptyInfo());
     }
 
     private long getRefreshInterval() {

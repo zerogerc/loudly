@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+import ly.loud.loudly.base.exceptions.FatalNetworkException;
 import ly.loud.loudly.base.interfaces.attachments.Attachment;
 import ly.loud.loudly.base.interfaces.attachments.MultipleAttachment;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
@@ -17,7 +18,11 @@ import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
 import rx.Observable;
+import rx.subjects.PublishSubject;
 import solid.collections.SolidList;
+
+import static ly.loud.loudly.util.ListUtils.asArrayList;
+import static ly.loud.loudly.util.RxUtils.retry3TimesAndFail;
 
 public class PostUploadModel {
     @NonNull
@@ -29,6 +34,9 @@ public class PostUploadModel {
     @NonNull
     private final InfoUpdateModel infoUpdateModel;
 
+    @Nullable
+    private PublishSubject<Throwable> uploadErrors;
+
     public PostUploadModel(@NonNull CoreModel coreModel,
                            @NonNull PostsDatabaseModel postsDatabaseModel,
                            @NonNull InfoUpdateModel infoUpdateModel) {
@@ -37,22 +45,63 @@ public class PostUploadModel {
         this.infoUpdateModel = infoUpdateModel;
     }
 
+    @NonNull
+    public PublishSubject<Throwable> getUploadErrors() {
+        if (uploadErrors == null) {
+            uploadErrors = PublishSubject.create();
+        }
+        return uploadErrors;
+    }
+
     @CheckResult
     @NonNull
-    private Observable<List<SingleAttachment>> uploadAttachments(
-            @NonNull SolidList<Attachment> attachments,
-            @NonNull NetworkContract networkContract) {
+    public Observable<Throwable> observeUploadErrors() {
+        return getUploadErrors().asObservable();
+    }
 
-        // ToDo: Handle error
-        return Observable
-                .from(attachments)
-                .filter(attachment -> attachment instanceof PlainImage)
-                .flatMap(attachment ->
-                                networkContract
-                                        .upload((PlainImage) attachment)
-                                        .cast(SingleAttachment.class)
-                )
+    @CheckResult
+    @NonNull
+    private Observable<SingleAttachment> safeUploadAttachment(
+            @NonNull Attachment attachment,
+            @NonNull NetworkContract networkContract) {
+        if (attachment instanceof PlainImage) {
+            return retry3TimesAndFail(
+                    networkContract
+                            .upload((PlainImage) attachment)
+                            .cast(SingleAttachment.class),
+                    new FatalNetworkException(networkContract.getId())
+            );
+        }
+        return Observable.empty();
+    }
+
+    @CheckResult
+    @NonNull
+    private Observable<List<SingleAttachment>> safeUploadAttachments(
+            @NonNull List<Attachment> attachments,
+            @NonNull NetworkContract networkContract) {
+        return Observable.from(attachments)
+                .flatMap(attachment -> safeUploadAttachment(attachment, networkContract))
                 .toList();
+    }
+
+    @CheckResult
+    @NonNull
+    private Observable<SinglePost> safeUploadPost(@Nullable String text,
+                                                  @NonNull List<SingleAttachment> attachments,
+                                                  @NonNull NetworkContract networkContract) {
+        final PlainPost<SingleAttachment> post = new PlainPost<>(
+                text,
+                System.currentTimeMillis(),
+                asArrayList(attachments),
+                null
+        );
+        return retry3TimesAndFail(
+                networkContract.upload(post),
+                new FatalNetworkException(networkContract.getId())
+        )
+                .doOnError(getUploadErrors()::onNext)
+                .onErrorResumeNext(Observable.empty());
     }
 
     @CheckResult
@@ -60,20 +109,15 @@ public class PostUploadModel {
     private Observable<SinglePost> uploadPost(@Nullable String post,
                                               @NonNull SolidList<Attachment> attachments,
                                               @NonNull NetworkContract network) {
-        return uploadAttachments(attachments, network)
-                .<PlainPost>map(list -> new PlainPost<>(
-                        post,
-                        System.currentTimeMillis(),
-                        new ArrayList<>(list),
-                        null
-                ))
-                .flatMap(network::upload);
+        return safeUploadAttachments(attachments, network)
+                .flatMap(singleAttachments -> safeUploadPost(post, singleAttachments, network));
     }
 
+    @CheckResult
+    @NonNull
     public Observable<LoudlyPost> uploadPost(@Nullable String text,
                                              @NonNull SolidList<Attachment> attachments,
                                              @NonNull List<NetworkContract> networks) {
-
         ArrayList<MultipleAttachment> multipleAttachments = new ArrayList<>();
         for (Attachment attachment : attachments) {
             if (attachment instanceof PlainImage) {
@@ -90,11 +134,14 @@ public class PostUploadModel {
 
         return postsDatabaseModel
                 .putPost(initial)
+                .doOnError(getUploadErrors()::onNext)
                 .flatMap(loudlyPost -> infoUpdateModel
                                 .subscribeOnFrequentUpdates(loudlyPost)
                                 .toSingleDefault(loudlyPost)
                 )
-                .flatMapObservable(loudlyPost ->
+                .toObservable()
+                .onErrorResumeNext(Observable.empty())
+                .flatMap(loudlyPost ->
                                 Observable
                                         .from(networks)
                                         .flatMap(networkContract ->
