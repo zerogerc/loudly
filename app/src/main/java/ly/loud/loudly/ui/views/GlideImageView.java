@@ -75,7 +75,7 @@ public class GlideImageView extends ImageView {
         } else {
             setScale(((double) size.y) / size.x);
         }
-        Glide.with(Loudly.getContext())
+        Glide.with(getContext())
                 .load(image.getUrl())
                 .fitCenter()
                 .into(this);
@@ -88,7 +88,7 @@ public class GlideImageView extends ImageView {
      */
     public void loadCircularShapeImageByUrl(@NonNull String url) {
         setScale(1);
-        Glide.with(Loudly.getContext())
+        Glide.with(getContext())
                 .load(url)
                 .asBitmap()
                 .fitCenter()
@@ -96,7 +96,7 @@ public class GlideImageView extends ImageView {
                     @Override
                     protected void setResource(Bitmap resource) {
                         RoundedBitmapDrawable circularBitmapDrawable =
-                                RoundedBitmapDrawableFactory.create(Loudly.getContext().getResources(), resource);
+                                RoundedBitmapDrawableFactory.create(getContext().getResources(), resource);
                         circularBitmapDrawable.setCircular(true);
                         setImageDrawable(circularBitmapDrawable);
                     }

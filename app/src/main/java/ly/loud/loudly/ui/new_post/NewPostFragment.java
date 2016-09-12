@@ -1,16 +1,15 @@
 package ly.loud.loudly.ui.new_post;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.hannesdorfmann.mosby.mvp.MvpFragment;
 
 import java.util.List;
 
@@ -19,6 +18,10 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
+import dagger.Module;
+import dagger.Provides;
+import dagger.Subcomponent;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.PostUploadModel;
@@ -28,6 +31,7 @@ import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.ui.views.PostButton;
 import ly.loud.loudly.ui.views.TextPlusAttachmentsView;
 
+import static ly.loud.loudly.application.Loudly.getApplication;
 import static ly.loud.loudly.util.AssertionsUtils.assertActivityImplementsInterface;
 
 /**
@@ -39,8 +43,7 @@ import static ly.loud.loudly.util.AssertionsUtils.assertActivityImplementsInterf
  * @see NetworksProvider
  * @see NewPostFragmentInteractions
  */
-public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
-    implements NewPostView {
+public class NewPostFragment extends Fragment implements NewPostView {
 
     @SuppressWarnings("NullableProblems") // Butterknife
     @BindView(R.id.material_new_post_fragment_send_button)
@@ -57,19 +60,29 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     @NonNull
     View galleryButton;
 
-    @SuppressWarnings("NullableProblems") // Butterknife
+    @SuppressWarnings("NullableProblems") // Inject
     @Inject
     @NonNull
-    PostUploadModel postUploadModel;
+    NewPostPresenter presenter;
+
+    @SuppressWarnings("NullableProblems") // onViewCreated
+    @NonNull
+    private Unbinder unbinder;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Loudly.getApplication(getContext()).getAppComponent().inject(this);
+        getApplication(getContext()).getAppComponent().plus(new NewPostModule()).inject(this);
     }
 
-    @Nullable
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        assertActivityImplementsInterface(getActivity(), NewPostFragmentInteractions.class);
+    }
+
+    @Override
+    @NonNull
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.material_new_post_fragment, container, false);
     }
@@ -77,7 +90,9 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
+        presenter.onBindView(this);
+
         textPlusAttachmentsView.addOnEditTextChangeListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
@@ -94,19 +109,13 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
             @Override
             public void afterTextChanged(Editable editable) { }
         });
-
     }
 
     @Override
-    public void onAttach(@NonNull Activity activity) {
-        super.onAttach(activity);
-        assertActivityImplementsInterface(activity, NewPostFragmentInteractions.class);
-    }
-
-    @Override
-    @NonNull
-    public NewPostPresenter createPresenter() {
-        return new NewPostPresenter(postUploadModel);
+    public void onDestroyView() {
+        presenter.onUnbindView(this);
+        unbinder.unbind();
+        super.onDestroyView();
     }
 
     @Override
@@ -190,5 +199,24 @@ public class NewPostFragment extends MvpFragment<NewPostView, NewPostPresenter>
          * Triggered when user clicked on POST button to hide {@link NewPostFragment}
          */
         void onPostButtonClicked();
+    }
+
+    @Module
+    public static class NewPostModule {
+
+        @Provides
+        @NonNull
+        public NewPostPresenter provideNewPostPresenter(
+                @NonNull Loudly loudlyApplication,
+                @NonNull PostUploadModel postUploadModel
+        ) {
+            return new NewPostPresenter(loudlyApplication, postUploadModel);
+        }
+    }
+
+    @Subcomponent(modules = NewPostModule.class)
+    public interface NewPostComponent {
+
+        void inject(@NonNull NewPostFragment fragment);
     }
 }

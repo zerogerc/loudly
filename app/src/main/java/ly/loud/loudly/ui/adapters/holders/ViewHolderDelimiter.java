@@ -1,6 +1,7 @@
 package ly.loud.loudly.ui.adapters.holders;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Px;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -21,18 +22,21 @@ public class ViewHolderDelimiter extends BindingViewHolder<NetworkDelimiter> {
     @NonNull
     ImageView icon;
 
+    @Px
+    int iconSize;
 
     public ViewHolderDelimiter(@NonNull LayoutInflater inflater, @NonNull ViewGroup parent) {
         super(inflater.inflate(R.layout.list_item_delimeter, parent, false));
 
         ButterKnife.bind(this, itemView);
+        iconSize = itemView.getResources().getDimensionPixelSize(R.dimen.standard_icon_size_48);
     }
 
     @Override
     public void bind(@NonNull NetworkDelimiter delimiter) {
-        Glide.with(Loudly.getContext())
+        Glide.with(itemView.getContext())
                 .load(Utils.getResourceByNetwork(delimiter.getNetwork()))
-                .override(Utils.dpToPx(48), Utils.dpToPx(48))
+                .override(iconSize, iconSize)
                 .fitCenter()
                 .into(icon);
     }

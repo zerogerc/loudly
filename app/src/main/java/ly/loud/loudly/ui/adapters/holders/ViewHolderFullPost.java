@@ -137,7 +137,7 @@ public class ViewHolderFullPost extends BindingViewHolder<PlainPost> {
 
     private void setIcon(@NonNull TextView icon, @DrawableRes int iconRes) {
         icon.setCompoundDrawablesWithIntrinsicBounds(
-                ContextCompat.getDrawable(Loudly.getContext(), iconRes),
+                ContextCompat.getDrawable(icon.getContext(), iconRes),
                 null,
                 null,
                 null

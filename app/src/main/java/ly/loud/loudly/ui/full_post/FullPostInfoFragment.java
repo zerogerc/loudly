@@ -21,9 +21,17 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
+import dagger.Module;
+import dagger.Provides;
+import dagger.Subcomponent;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.GetterModel;
+import ly.loud.loudly.application.models.LoadMoreStrategyModel;
+import ly.loud.loudly.application.models.PostDeleterModel;
+import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.Comment;
@@ -32,10 +40,12 @@ import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.ui.TitledFragment;
 import ly.loud.loudly.ui.adapters.FullPostInfoAdapter;
 import ly.loud.loudly.ui.adapters.FullPostInfoAdapter.FullPostInfoClickListener;
+import ly.loud.loudly.ui.feed.FeedPresenter;
 import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.util.Utils;
 import solid.collections.SolidList;
 
+import static ly.loud.loudly.application.Loudly.getApplication;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.ListUtils.asArrayList;
@@ -43,7 +53,7 @@ import static ly.loud.loudly.util.Utils.getApplicationContext;
 import static ly.loud.loudly.util.Utils.launchCustomTabs;
 
 @FragmentWithArgs
-public class FullPostInfoFragment extends TitledFragment<FullPostInfoView, FullPostInfoPresenter>
+public class FullPostInfoFragment extends TitledFragment
         implements FullPostInfoView, FullPostInfoClickListener {
 
     @SuppressWarnings("NullableProblems") // Butterknife
@@ -56,15 +66,24 @@ public class FullPostInfoFragment extends TitledFragment<FullPostInfoView, FullP
     @NonNull
     GetterModel getterModel;
 
-    @SuppressWarnings("NullableProblems") // onViewCreated
+    @SuppressWarnings("NullableProblems") // Inject
+    @Inject
     @NonNull
-    private FullPostInfoAdapter fullPostInfoAdapter;
+    FullPostInfoPresenter presenter;
 
     @SuppressWarnings("NullableProblems") // Arg
     @Arg
     @NonNull
     PlainPost post;
+    
+    @SuppressWarnings("NullableProblems") // onViewCreated
+    @NonNull
+    private FullPostInfoAdapter fullPostInfoAdapter;
 
+    @SuppressWarnings("NullableProblems") // onViewCreated
+    @NonNull
+    private Unbinder unbinder;
+    
     public static FullPostInfoFragment newInstance(@NonNull PlainPost post) {
         return new FullPostInfoFragmentBuilder(post).build();
     }
@@ -72,7 +91,7 @@ public class FullPostInfoFragment extends TitledFragment<FullPostInfoView, FullP
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Loudly.getContext().getAppComponent().inject(this);
+        getApplication(getContext()).getAppComponent().plus(new FullPostInfoModule()).inject(this);
         FragmentArgs.inject(this);
         setHasOptionsMenu(true);
 
@@ -89,21 +108,24 @@ public class FullPostInfoFragment extends TitledFragment<FullPostInfoView, FullP
     }
 
     @Override
-    @NonNull
-    public FullPostInfoPresenter createPresenter() {
-        return new FullPostInfoPresenter(getterModel);
-    }
-
-    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
+        presenter.onBindView(this);
+
         fullPostInfoAdapter = new FullPostInfoAdapter(post);
         fullPostInfoAdapter.setFullPostInfoClickListener(this);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(fullPostInfoAdapter);
         presenter.loadComments(post);
+    }
+
+    @Override
+    public void onDestroyView() {
+        presenter.onUnbindView(this);
+        unbinder.unbind();
+        super.onDestroyView();
     }
 
     @Override
@@ -164,5 +186,23 @@ public class FullPostInfoFragment extends TitledFragment<FullPostInfoView, FullP
                     getActivity()
             );
         }
+    }
+
+    @Module
+    public static class FullPostInfoModule {
+        @Provides
+        @NonNull
+        public FullPostInfoPresenter provideFullPostInfoPresenter(
+                @NonNull Loudly loudlyApp,
+                @NonNull GetterModel getterModel
+        ) {
+            return new FullPostInfoPresenter(loudlyApp, getterModel);
+        }
+    }
+
+    @Subcomponent(modules = FullPostInfoModule.class)
+    public interface FullPostInfoComponent {
+
+        void inject(@NonNull FullPostInfoFragment fragment);
     }
 }

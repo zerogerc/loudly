@@ -20,6 +20,7 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.GetterModel;
@@ -31,6 +32,7 @@ import ly.loud.loudly.ui.adapters.PeopleListAdapter;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
+import static ly.loud.loudly.application.Loudly.getApplication;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.Utils.getApplicationContext;
 import static ly.loud.loudly.util.Utils.launchCustomTabs;
@@ -79,6 +81,9 @@ public class PeopleListFragment extends DialogFragment
      */
     private boolean firstRun = true;
 
+    @Nullable
+    private Unbinder unbinder;
+
     @NonNull
     public static PeopleListFragment newInstance(@NonNull ArrayList<? extends SingleNetworkElement> element,
                                                  @RequestType int requestType) {
@@ -93,10 +98,11 @@ public class PeopleListFragment extends DialogFragment
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Loudly.getContext().getAppComponent().inject(this);
+        getApplication(getContext()).getAppComponent().inject(this);
 
         //noinspection ConstantConditions
         instances = getArguments().getParcelableArrayList(SINGLE_NETWORK_KEY);
+        //noinspection WrongConstant
         requestType = getArguments().getInt(REQUEST_TYPE_KEY);
     }
 
@@ -108,7 +114,7 @@ public class PeopleListFragment extends DialogFragment
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View rootView = inflater.inflate(R.layout.list_fragment, null);
 
-        ButterKnife.bind(this, rootView);
+        unbinder = ButterKnife.bind(this, rootView);
 
         int titleRes = R.string.people_fragment_title_likes;
         if (requestType == SHARES) {
@@ -153,6 +159,14 @@ public class PeopleListFragment extends DialogFragment
                     })
                     .subscribe();
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (unbinder != null) {
+            unbinder.unbind();
+        }
+        super.onDestroyView();
     }
 
     @Override

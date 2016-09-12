@@ -20,10 +20,6 @@ import static rx.schedulers.Schedulers.io;
 public class Loudly extends Application {
     private static final String TAG = "LOUDLY";
 
-    @SuppressWarnings("NullableProblems") // onCreate
-    @NonNull
-    private static Loudly context;
-
     @SuppressWarnings("NullableProblems") // Inject
     @NonNull
     private AppComponent appComponent;
@@ -31,8 +27,6 @@ public class Loudly extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        context = this;
-
         RxPaparazzo.register(this);
         appComponent = getComponent();
 
@@ -43,17 +37,6 @@ public class Loudly extends Application {
                 .observeOn(mainThread())
                 .subscribe(() -> Log.i(TAG, "Keys loaded"),
                         error -> Log.e(TAG, "Can't load keys", error));
-    }
-
-    /**
-     * Get context of the Application.
-     * As the application can't die until user kills it, it's possible to store the context here
-     *
-     * @return link to the Loudly
-     */
-    @NonNull
-    public static Loudly getContext() {
-        return context;
     }
 
     @NonNull

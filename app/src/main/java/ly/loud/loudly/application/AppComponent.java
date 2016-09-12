@@ -22,9 +22,15 @@ import ly.loud.loudly.networks.vk.VKClientModule;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.auth.AuthFragment;
 import ly.loud.loudly.ui.feed.FeedFragment;
+import ly.loud.loudly.ui.feed.FeedFragment.FeedComponent;
+import ly.loud.loudly.ui.feed.FeedFragment.FeedModule;
 import ly.loud.loudly.ui.full_post.FullPostInfoFragment;
+import ly.loud.loudly.ui.full_post.FullPostInfoFragment.FullPostInfoComponent;
+import ly.loud.loudly.ui.full_post.FullPostInfoFragment.FullPostInfoModule;
 import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
 import ly.loud.loudly.ui.new_post.NewPostFragment;
+import ly.loud.loudly.ui.new_post.NewPostFragment.NewPostComponent;
+import ly.loud.loudly.ui.new_post.NewPostFragment.NewPostModule;
 import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.ui.sidebar.SideBarFragment.SideBarComponent;
 import ly.loud.loudly.ui.sidebar.SideBarFragment.SideBarModule;
@@ -84,9 +90,7 @@ public interface AppComponent {
     void inject(@NonNull MainActivity mainActivity);
 
     void inject(@NonNull PeopleListFragment peopleListFragment);
-    void inject(@NonNull NewPostFragment newPostFragment);
-    void inject(@NonNull FeedFragment feedFragment);
-    void inject(@NonNull FullPostInfoFragment fullPostInfoFragment);
+
     void inject(@NonNull AuthFragment authFragment);
 
     void inject(@NonNull NetworksChooseLayout networksChooseLayout);
@@ -95,4 +99,13 @@ public interface AppComponent {
 
     @NonNull
     SideBarComponent plus(@NonNull SideBarModule sideBarModule);
+    
+    @NonNull
+    FeedComponent plus(@NonNull FeedModule FeedModule);
+
+    @NonNull
+    FullPostInfoComponent plus(@NonNull FullPostInfoModule fullPostInfoModule);
+
+    @NonNull
+    NewPostComponent plus(@NonNull NewPostModule newPostModule);
 }
