@@ -40,37 +40,41 @@ public class NewPostPresenter extends BasePresenter<NewPostView> {
     }
 
     public <T extends Fragment & NewPostView> void takePhoto(@NonNull T target) {
-        RxPaparazzo.takeImage(target)
-                .crop()
-                .usingCamera()
-                .subscribe(response -> {
-                    if (response.resultCode() != Activity.RESULT_OK) {
-                        executeIfViewBound(NewPostView::showGalleryError);
-                        return;
-                    }
+        unsubscribeOnUnbindView(
+                RxPaparazzo.takeImage(target)
+                        .crop()
+                        .usingCamera()
+                        .subscribe(response -> {
+                            if (response.resultCode() != Activity.RESULT_OK) {
+                                executeIfViewBound(NewPostView::showGalleryError);
+                                return;
+                            }
 
-                    PlainImage image = new PlainImage(response.data(), new Point(0, 0));
-                    attachments.add(image);
+                            PlainImage image = new PlainImage(response.data(), new Point(0, 0));
+                            attachments.add(image);
 
-                    response.targetUI().showNewAttachment(image);
-                });
+                            response.targetUI().showNewAttachment(image);
+                        })
+        );
     }
 
     public <T extends Fragment & NewPostView> void loadImageFromGallery(@NonNull T target) {
-        RxPaparazzo.takeImage(target)
-                .useInternalStorage()
-                .usingGallery()
-                .subscribe(response -> {
-                    if (response.resultCode() != Activity.RESULT_OK) {
-                        executeIfViewBound(NewPostView::showGalleryError);
-                        return;
-                    }
-                    PlainImage image = new PlainImage(Uri.parse(response.data()).getPath(),
-                            new Point(0, 0));
-                    attachments.add(image);
+        unsubscribeOnUnbindView(
+                RxPaparazzo.takeImage(target)
+                        .useInternalStorage()
+                        .usingGallery()
+                        .subscribe(response -> {
+                            if (response.resultCode() != Activity.RESULT_OK) {
+                                executeIfViewBound(NewPostView::showGalleryError);
+                                return;
+                            }
+                            PlainImage image = new PlainImage(Uri.parse(response.data()).getPath(),
+                                    new Point(0, 0));
+                            attachments.add(image);
 
-                    response.targetUI().showNewAttachment(image);
-                });
+                            response.targetUI().showNewAttachment(image);
+                        })
+        );
     }
 
     public void uploadPost(@Nullable String text,

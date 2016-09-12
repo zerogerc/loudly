@@ -18,6 +18,7 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.models.AuthModel;
 import ly.loud.loudly.networks.Networks.Network;
@@ -52,6 +53,9 @@ public class AuthFragment extends DialogFragment {
     @Network
     int network;
 
+    @Nullable
+    private Unbinder unbinder;
+
     /**
      * Indicates whether this fragment created view for the first time.
      * Should be accessed only from main thread.
@@ -83,11 +87,18 @@ public class AuthFragment extends DialogFragment {
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View rootView = inflater.inflate(R.layout.auth_fragment, null);
-        ButterKnife.bind(this, rootView);
+        unbinder = ButterKnife.bind(this, rootView);
         builder.setView(rootView);
         return builder.create();
     }
 
+    @Override
+    public void onDestroyView() {
+        if (unbinder != null) {
+            unbinder.unbind();
+        }
+        super.onDestroyView();
+    }
 
     @Override
     public void onSaveInstanceState(@Nullable Bundle outState) {

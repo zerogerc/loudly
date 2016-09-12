@@ -72,9 +72,12 @@ public class FeedPresenter extends BasePresenter<FeedView> {
             executeIfViewBound(FeedView::onNoConnectedNetworksDetected);
             return;
         }
+        if (loader != null && !loader.isUnsubscribed()) {
+            loader.unsubscribe();
+        }
 
         isInitialLoadInProgress = true;
-        postLoadModel.loadPosts(loadMoreStrategyModel.getCurrentTimeInterval())
+        loader = postLoadModel.loadPosts(loadMoreStrategyModel.getCurrentTimeInterval())
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .doOnNext(posts -> executeIfViewBound(view -> view.onInitialLoadProgress(posts)))
