@@ -14,4 +14,6 @@
     <dimen name="text_with_attachment_attachment_size">256dp</dimen>
 
     <dimen name="app_bar_feed_bottom_sheet_peek_height">200dp</dimen>
+
+    <dimen name="standard_icon_size_48">48dp</dimen>
 </resources>

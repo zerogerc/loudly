@@ -46,15 +46,6 @@ public class Utils {
         return formatter.format(cal.getTime());
     }
 
-    public static int dpToPx(int dp) {
-        DisplayMetrics displayMetrics = Loudly.getContext().getResources().getDisplayMetrics();
-        return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
-    }
-
-    public static Bitmap getIconByNetwork(int network) {
-        return BitmapFactory.decodeResource(Loudly.getContext().getResources(), getResourceByNetwork(network));
-    }
-
     public static int getResourceByPost(@NonNull PlainPost post) {
         if (post instanceof SinglePost) {
             return getResourceByNetwork(((SinglePost) post).getNetwork());
@@ -129,26 +120,28 @@ public class Utils {
         return bmpGrayscale;
     }
 
-    public static void loadAvatar(final Person person, final ImageView icon) {
+    public static void loadAvatar(@NonNull Person person, @NonNull ImageView icon) {
+        int iconSize = icon.getResources().getDimensionPixelSize(R.dimen.standard_icon_size_48);
+
         if (person.getPhotoUrl() != null) {
-            Glide.with(Loudly.getContext())
+            Glide.with(icon.getContext())
                     .load(person.getPhotoUrl())
                     .asBitmap()
-                    .override(Utils.dpToPx(48), Utils.dpToPx(48))
+                    .override(iconSize, iconSize)
                     .fitCenter()
                     .into(new BitmapImageViewTarget(icon) {
                         @Override
                         protected void setResource(Bitmap resource) {
                             RoundedBitmapDrawable circularBitmapDrawable =
-                                    RoundedBitmapDrawableFactory.create(Loudly.getContext().getResources(), resource);
+                                    RoundedBitmapDrawableFactory.create(icon.getResources(), resource);
                             circularBitmapDrawable.setCircular(true);
                             icon.setImageDrawable(circularBitmapDrawable);
                         }
                     });
         } else {
-            Glide.with(Loudly.getContext())
+            Glide.with(icon.getContext())
                     .load(R.mipmap.ic_launcher)
-                    .override(Utils.dpToPx(48), Utils.dpToPx(48))
+                    .override(iconSize, iconSize)
                     .fitCenter()
                     .into(icon);
         }
