@@ -13,4 +13,8 @@ public class FatalException extends IOException {
     public FatalException(String detailMessage) {
         super(detailMessage);
     }
+
+    public FatalException(Throwable cause) {
+        super(cause);
+    }
 }

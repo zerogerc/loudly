@@ -22,6 +22,7 @@ import ly.loud.loudly.application.models.PostsDatabaseModel;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.util.RxUtils;
 import ly.loud.loudly.util.Utils;
 import rx.Observable;
 import solid.collections.SolidList;
@@ -189,6 +190,7 @@ public class UpdateInfoService extends Service {
                 .<Pair<SinglePost, Info>>flatMap(networkContract -> {
                     SolidList<SinglePost> singlePosts = posts
                             .map(post -> post.getSingleNetworkInstance(networkContract.getId()))
+                            .filter(RxUtils::nonNull)
                             .collect(toSolidList());
                     return networkContract
                             .getUpdates(singlePosts)

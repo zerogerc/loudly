@@ -8,17 +8,18 @@ import android.os.IBinder;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.UiThread;
 
 import java.util.List;
 
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.UpdateInfoService;
+import ly.loud.loudly.base.exceptions.FatalException;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import rx.Completable;
 import rx.Observable;
-import rx.Single;
+import rx.subjects.BehaviorSubject;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static ly.loud.loudly.application.UpdateInfoService.MAXIMAL_UPDATE_INTERVAL;
 import static ly.loud.loudly.application.UpdateInfoService.MINIMAL_UPDATE_INTERVAL;
 import static ly.loud.loudly.util.RxUtils.changeSubscription;
@@ -32,7 +33,7 @@ public class InfoUpdateModel {
     private Loudly loudlyApplication;
 
     @Nullable
-    private UpdateInfoService.UpdateInfoServiceBinder serviceBinder;
+    private BehaviorSubject<UpdateInfoService> serviceSubject;
 
     public InfoUpdateModel(@NonNull Loudly loudlyApplication) {
         this.loudlyApplication = loudlyApplication;
@@ -88,48 +89,48 @@ public class InfoUpdateModel {
 
     @CheckResult
     @NonNull
-    private Single<UpdateInfoService> getService() {
-        return changeSubscription(
-                getBinder().map(UpdateInfoService.UpdateInfoServiceBinder::getService),
-                io()
-        );
+    private Observable<UpdateInfoService> getService() {
+        return changeSubscription(safeGetService(), io());
     }
 
     @CheckResult
     @NonNull
-    private Single<UpdateInfoService.UpdateInfoServiceBinder> getBinder() {
-        if (serviceBinder == null) {
-            return bindToService();
-        } else {
-            return Single.just(serviceBinder);
+    private Observable<UpdateInfoService> safeGetService() {
+        return getServiceSubject()
+                .asObservable()
+                .doOnError(fatalError -> bindToService()) // Try to reconnect to service after some time
+                .retryWhen(errors -> errors.flatMap(ignored -> Observable.timer(5, SECONDS)))
+                .first();
+    }
+
+    @NonNull
+    public BehaviorSubject<UpdateInfoService> getServiceSubject() {
+        if (serviceSubject == null) {
+            serviceSubject = BehaviorSubject.create();
+            bindToService();
         }
+        return serviceSubject;
     }
 
-    @UiThread
-    @CheckResult
-    @NonNull
-    private Single<UpdateInfoService.UpdateInfoServiceBinder> bindToService() {
-        return Observable
-                .<UpdateInfoService.UpdateInfoServiceBinder>create(observer -> {
-                    Intent startService = new Intent(loudlyApplication, UpdateInfoService.class);
-                    loudlyApplication.bindService(startService, new ServiceConnection() {
-                        @Override
-                        public void onServiceConnected(@Nullable ComponentName componentName,
-                                                       @Nullable IBinder iBinder) {
-                            UpdateInfoService.UpdateInfoServiceBinder binder =
-                                    (UpdateInfoService.UpdateInfoServiceBinder) iBinder;
-                            serviceBinder = binder;
-                            observer.onNext(binder);
-                            observer.onCompleted();
-                        }
+    private void bindToService() {
+        Intent startService = new Intent(loudlyApplication, UpdateInfoService.class);
+        loudlyApplication.bindService(startService, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(@Nullable ComponentName componentName,
+                                           @Nullable IBinder iBinder) {
+                UpdateInfoService.UpdateInfoServiceBinder binder =
+                        (UpdateInfoService.UpdateInfoServiceBinder) iBinder;
+                if (binder == null) {
+                    getServiceSubject().onError(new FatalException());
+                } else {
+                    getServiceSubject().onNext(binder.getService());
+                }
+            }
 
-                        @Override
-                        public void onServiceDisconnected(@Nullable ComponentName componentName) {
-                            serviceBinder = null;
-                        }
-                    }, Context.BIND_AUTO_CREATE);
-                })
-                .first()
-                .toSingle();
+            @Override
+            public void onServiceDisconnected(@Nullable ComponentName componentName) {
+                getServiceSubject().onError(new FatalException());
+            }
+        }, Context.BIND_AUTO_CREATE);
     }
 }

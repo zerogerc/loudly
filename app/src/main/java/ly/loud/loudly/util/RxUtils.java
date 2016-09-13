@@ -4,6 +4,10 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.net.UnknownHostException;
+
+import ly.loud.loudly.base.exceptions.FatalException;
+import ly.loud.loudly.base.exceptions.NoNetworkConnectionException;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
@@ -111,8 +115,18 @@ public class RxUtils {
     public static <T> Observable<T> retry3TimesAndFail(@NonNull Observable<T> initial,
                                                        @NonNull Exception throwIfFailed) {
         return initial
-                .retryWhen(handler -> Observable.range(0, 3)
-                        // ToDo: Don't repeat on fatal
+                .retryWhen(handler -> handler
+                        .flatMap(error -> {
+                            // Don't retry if fatal
+                            if (error instanceof FatalException) {
+                                return Observable.error(error);
+                            }
+                            if (error instanceof UnknownHostException) {
+                                return Observable.error(new NoNetworkConnectionException(error));
+                            }
+                            return Observable.just(error);
+                        })
+                        .zipWith(Observable.range(0, 3), (e, i) -> i)
                         .flatMap(time -> Observable.timer(2 ^ time, SECONDS))
                         .concatWith(Observable.error(throwIfFailed)));
     }
