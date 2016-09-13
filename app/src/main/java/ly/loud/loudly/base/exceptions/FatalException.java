@@ -1,5 +1,7 @@
 package ly.loud.loudly.base.exceptions;
 
+import android.support.annotation.NonNull;
+
 import java.io.IOException;
 
 /**
@@ -10,11 +12,11 @@ public class FatalException extends IOException {
         super();
     }
 
-    public FatalException(String detailMessage) {
+    public FatalException(@NonNull String detailMessage) {
         super(detailMessage);
     }
 
-    public FatalException(Throwable cause) {
+    public FatalException(@NonNull Throwable cause) {
         super(cause);
     }
 }

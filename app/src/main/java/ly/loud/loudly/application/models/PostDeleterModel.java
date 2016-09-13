@@ -2,7 +2,6 @@ package ly.loud.loudly.application.models;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import ly.loud.loudly.base.exceptions.FatalNetworkException;
@@ -26,8 +25,8 @@ public class PostDeleterModel {
     @NonNull
     private final InfoUpdateModel infoUpdateModel;
 
-    @Nullable
-    private PublishSubject<Pair<LoudlyPost, Throwable>> deleteErrors;
+    @NonNull
+    private final PublishSubject<Pair<LoudlyPost, Throwable>> deleteErrors;
 
     public PostDeleterModel(@NonNull CoreModel coreModel,
                             @NonNull PostsDatabaseModel postsDatabaseModel,
@@ -35,19 +34,12 @@ public class PostDeleterModel {
         this.coreModel = coreModel;
         this.postsDatabaseModel = postsDatabaseModel;
         this.infoUpdateModel = infoUpdateModel;
-    }
-
-    @NonNull
-    private PublishSubject<Pair<LoudlyPost, Throwable>> getDeleteErrors() {
-        if (deleteErrors == null) {
-            deleteErrors = PublishSubject.create();
-        }
-        return deleteErrors;
+        deleteErrors = PublishSubject.create();
     }
 
     @NonNull
     public Observable<Pair<LoudlyPost, Throwable>> observeDeleteErrors() {
-        return getDeleteErrors().asObservable();
+        return deleteErrors.asObservable();
     }
 
     @CheckResult
@@ -87,7 +79,7 @@ public class PostDeleterModel {
                 safeDelete(post, networkContract),
                 new FatalNetworkException(networkContract.getId())
         )
-                .doOnError(error -> getDeleteErrors().onNext(new Pair<>(post, error)))
+                .doOnError(error -> deleteErrors.onNext(new Pair<>(post, error)))
                 .onErrorResumeNext(Observable.empty());
     }
 
@@ -102,7 +94,7 @@ public class PostDeleterModel {
                                 postsDatabaseModel
                                         .updatePostLinks(loudlyPost)
                                         .toObservable()
-                                        .doOnError(error -> getDeleteErrors().onNext(new Pair<>(loudlyPost, error)))
+                                        .doOnError(error -> deleteErrors.onNext(new Pair<>(loudlyPost, error)))
                                         .onErrorReturn(error -> loudlyPost)
                 )
                 .flatMap(loudlyPost -> {

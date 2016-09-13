@@ -2,7 +2,6 @@ package ly.loud.loudly.application.models;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import java.util.ArrayList;
@@ -42,8 +41,8 @@ public class PostLoadModel {
     @NonNull
     private final InfoUpdateModel infoUpdateModel;
 
-    @Nullable
-    private PublishSubject<Throwable> loadErrors;
+    @NonNull
+    private final PublishSubject<Throwable> loadErrors;
 
     public PostLoadModel(@NonNull CoreModel coreModel,
                          @NonNull PostsDatabaseModel postsDatabaseModel,
@@ -51,20 +50,13 @@ public class PostLoadModel {
         this.coreModel = coreModel;
         this.postsDatabaseModel = postsDatabaseModel;
         this.infoUpdateModel = infoUpdateModel;
-    }
-
-    @NonNull
-    private PublishSubject<Throwable> getLoadErrors() {
-        if (loadErrors == null) {
-            loadErrors = PublishSubject.create();
-        }
-        return loadErrors;
+        loadErrors = PublishSubject.create();
     }
 
     @CheckResult
     @NonNull
     public Observable<Throwable> observeLoadErrors() {
-        return getLoadErrors().asObservable();
+        return loadErrors.asObservable();
     }
 
     @NonNull
@@ -146,7 +138,8 @@ public class PostLoadModel {
         return retry3TimesAndFail(
                 networkContract.loadPosts(timeInterval),
                 new FatalNetworkException(networkContract.getId())
-        ).doOnError(getLoadErrors()::onNext)
+        )
+                .doOnError(loadErrors::onNext)
                 .onErrorResumeNext(Observable.empty());
     }
 
@@ -161,7 +154,7 @@ public class PostLoadModel {
     @NonNull
     public Observable<SolidList<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
         return postsDatabaseModel.loadPostsByTimeInterval(interval)
-                .doOnError(getLoadErrors()::onNext)
+                .doOnError(loadErrors::onNext)
                 .onErrorResumeNext(Observable.just(SolidList.empty()))
                 .flatMap(list -> infoUpdateModel
                                 .subscribeOnFrequentUpdates(list)

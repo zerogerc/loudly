@@ -1,5 +1,7 @@
 package ly.loud.loudly.base.exceptions;
 
+import android.support.annotation.NonNull;
+
 /**
  * Exception that rises when there is no internet connection
  */
@@ -8,7 +10,7 @@ public class NoNetworkConnectionException extends FatalException {
         super();
     }
 
-    public NoNetworkConnectionException(Throwable cause) {
+    public NoNetworkConnectionException(@NonNull Throwable cause) {
         super(cause);
     }
 }

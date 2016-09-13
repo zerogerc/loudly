@@ -3,7 +3,6 @@ package ly.loud.loudly.application.models;
 import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import java.util.List;
@@ -43,11 +42,11 @@ public class GetterModel {
     @NonNull
     private CoreModel coreModel;
 
-    @Nullable
-    private PublishSubject<Pair<SingleNetworkElement, Throwable>> getErrors;
+    @NonNull
+    private final PublishSubject<Pair<SingleNetworkElement, Throwable>> getErrors;
 
-    @Nullable
-    private PublishSubject<Pair<SingleNetworkElement, Throwable>> getCommentsErrors;
+    @NonNull
+    private final PublishSubject<Pair<SingleNetworkElement, Throwable>> getCommentsErrors;
 
     @Inject
     public GetterModel(
@@ -56,34 +55,20 @@ public class GetterModel {
     ) {
         this.loudlyApplication = loudlyApplication;
         this.coreModel = coreModel;
-    }
-
-    @NonNull
-    private PublishSubject<Pair<SingleNetworkElement, Throwable>> getGetErrors() {
-        if (getErrors == null) {
-            getErrors = PublishSubject.create();
-        }
-        return getErrors;
+        getErrors = PublishSubject.create();
+        getCommentsErrors = PublishSubject.create();
     }
 
     @CheckResult
     @NonNull
     public Observable<Pair<SingleNetworkElement, Throwable>> observeGetErrors() {
-        return getGetErrors().asObservable();
-    }
-
-    @NonNull
-    private PublishSubject<Pair<SingleNetworkElement, Throwable>> getGetCommentsErrors() {
-        if (getCommentsErrors == null) {
-            getCommentsErrors = PublishSubject.create();
-        }
-        return getCommentsErrors;
+        return getErrors.asObservable();
     }
 
     @CheckResult
     @NonNull
     public Observable<Pair<SingleNetworkElement, Throwable>> observeGetCommentsErrors() {
-        return getGetCommentsErrors().asObservable();
+        return getErrors.asObservable();
     }
 
     @CheckResult
@@ -95,8 +80,9 @@ public class GetterModel {
                 networkContract
                         .getPersons(element, type)
                         .map(persons -> new PersonsFromNetwork(persons, networkContract.getId())),
-                new FatalNetworkException(networkContract.getId()))
-                .doOnError(error -> getGetErrors().onNext(new Pair<>(element, error)))
+                new FatalNetworkException(networkContract.getId())
+        )
+                .doOnError(error -> getErrors.onNext(new Pair<>(element, error)))
                 .onErrorResumeNext(Observable.empty());
     }
 
@@ -108,8 +94,9 @@ public class GetterModel {
                 networkContract
                         .getComments(element)
                         .map(comments -> new CommentsFromNetwork(comments, networkContract.getId())),
-                new FatalNetworkException(networkContract.getId()))
-                .doOnError(error -> getGetCommentsErrors().onNext(new Pair<>(element, error)))
+                new FatalNetworkException(networkContract.getId())
+        )
+                .doOnError(error -> getCommentsErrors.onNext(new Pair<>(element, error)))
                 .onErrorResumeNext(Observable.empty());
     }
 
@@ -138,7 +125,7 @@ public class GetterModel {
     @CheckResult
     @NonNull
     public Observable<PersonsFromNetwork> getPersonsByType(@NonNull MultipleNetworkElement<?> element,
-                                                     @RequestType int requestType) {
+                                                           @RequestType int requestType) {
         return Observable.from(element.getNetworkInstances())
                 .flatMap(instance -> getPersonsByType(instance, requestType));
     }

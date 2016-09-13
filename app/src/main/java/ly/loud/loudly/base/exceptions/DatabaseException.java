@@ -1,12 +1,12 @@
 package ly.loud.loudly.base.exceptions;
 
-import java.io.IOException;
+import android.support.annotation.NonNull;
 
 /**
  * Exception for Database errors
  */
 public class DatabaseException extends FatalException {
-    public DatabaseException(String detailMessage) {
+    public DatabaseException(@NonNull String detailMessage) {
         super(detailMessage);
     }
 }

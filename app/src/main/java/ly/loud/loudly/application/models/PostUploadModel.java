@@ -34,8 +34,8 @@ public class PostUploadModel {
     @NonNull
     private final InfoUpdateModel infoUpdateModel;
 
-    @Nullable
-    private PublishSubject<Throwable> uploadErrors;
+    @NonNull
+    private final PublishSubject<Throwable> uploadErrors;
 
     public PostUploadModel(@NonNull CoreModel coreModel,
                            @NonNull PostsDatabaseModel postsDatabaseModel,
@@ -43,20 +43,13 @@ public class PostUploadModel {
         this.coreModel = coreModel;
         this.postsDatabaseModel = postsDatabaseModel;
         this.infoUpdateModel = infoUpdateModel;
-    }
-
-    @NonNull
-    public PublishSubject<Throwable> getUploadErrors() {
-        if (uploadErrors == null) {
-            uploadErrors = PublishSubject.create();
-        }
-        return uploadErrors;
+        uploadErrors = PublishSubject.create();
     }
 
     @CheckResult
     @NonNull
     public Observable<Throwable> observeUploadErrors() {
-        return getUploadErrors().asObservable();
+        return uploadErrors.asObservable();
     }
 
     @CheckResult
@@ -100,7 +93,7 @@ public class PostUploadModel {
                 networkContract.upload(post),
                 new FatalNetworkException(networkContract.getId())
         )
-                .doOnError(getUploadErrors()::onNext)
+                .doOnError(uploadErrors::onNext)
                 .onErrorResumeNext(Observable.empty());
     }
 
@@ -134,7 +127,7 @@ public class PostUploadModel {
 
         return postsDatabaseModel
                 .putPost(initial)
-                .doOnError(getUploadErrors()::onNext)
+                .doOnError(uploadErrors::onNext)
                 .flatMap(loudlyPost -> infoUpdateModel
                                 .subscribeOnFrequentUpdates(loudlyPost)
                                 .toSingleDefault(loudlyPost)
