@@ -35,6 +35,7 @@ import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.ui.TitledFragment;
 import ly.loud.loudly.ui.adapters.FeedAdapter;
 import ly.loud.loudly.ui.full_post.FullPostInfoActivity;
@@ -77,8 +78,6 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
     @NonNull
     private Unbinder unbinder;
 
-    private boolean isAllPostsLoadedInfoShowedToUser = false;
-
     @Override
     @NonNull
     public String getTitle() {
@@ -109,7 +108,6 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
         super.onViewCreated(view, savedInstanceState);
         ((FeedFragmentCallback) getActivity()).showFeedLoading();
         unbinder = ButterKnife.bind(this, view);
-        presenter.onBindView(this);
         refreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getContext(), R.color.accent),
                 ContextCompat.getColor(getContext(), R.color.primary)
@@ -117,6 +115,8 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
         refreshLayout.setOnRefreshListener(this::refreshPosts);
 
         adapter = new FeedAdapter(this);
+
+        presenter.onBindView(this);
         presenter.loadCachedPosts();
         feedRecyclerView.setAdapter(adapter);
         setLoadMoreListener();
@@ -192,21 +192,25 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
     @Override
     public void onAllPostsLoaded() {
         adapter.setNoLoadMore();
-        if (!isAllPostsLoadedInfoShowedToUser) { // show message only once
-            if (getView() != null) {
-                Snackbar.make(getView(), R.string.message_no_more_load_more, LENGTH_SHORT).show();
-            }
-        }
-        isAllPostsLoadedInfoShowedToUser = true;
     }
 
     @Override
     public void onNetworkProblems() {
         if (adapter.getPostsCount() == 0) { // if no posts already loaded than show this message
-            ((FeedFragmentCallback) getActivity()).showFeedGlobalError(R.string.message_network_problems);
+            ((FeedFragmentCallback) getActivity()).showFeedGlobalError(getString(R.string.message_network_problems));
         } else {
-            ((FeedFragmentCallback) getActivity()).showFeedError(R.string.message_network_problems);
+            ((FeedFragmentCallback) getActivity()).showFeedError(getString(R.string.message_network_problems));
         }
+    }
+
+    @Override
+    public void onTokenExpiredException(@Networks.Network int expiredNetwork) {
+        final String error = String.format(
+                getString(R.string.token_expired_error),
+                getString(Networks.nameResourceOfNetwork(expiredNetwork))
+        );
+
+        ((FeedFragmentCallback) getActivity()).showFeedError(error);
     }
 
     @Override
@@ -214,7 +218,7 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
         if (refreshLayout.isRefreshing()) {
             refreshLayout.setRefreshing(false);
         }
-        ((FeedFragmentCallback) getActivity()).showFeedGlobalError(R.string.message_no_connected_networks);
+        ((FeedFragmentCallback) getActivity()).showFeedGlobalError(getString(R.string.message_no_connected_networks));
     }
 
     @Override
@@ -310,12 +314,12 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
         /**
          * Indicates fatal error while loading. Activity should hide feed and show error message.
          */
-        void showFeedGlobalError(@StringRes int errorMessage);
+        void showFeedGlobalError(@NonNull String errorMessage);
 
         /**
          * Indicates error while loading. Activity should only inform user about this error.
          */
-        void showFeedError(@StringRes int errorMessage);
+        void showFeedError(@NonNull String errorMessage);
 
         /**
          * Indicates that fragment load feed and already have progress view
