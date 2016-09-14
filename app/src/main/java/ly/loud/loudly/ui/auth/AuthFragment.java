@@ -11,6 +11,8 @@ import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -21,6 +23,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.models.AuthModel;
+import ly.loud.loudly.base.exceptions.NoNetworkConnectionException;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.Utils;
 import rx.Observable;
@@ -95,6 +98,7 @@ public class AuthFragment extends DialogFragment {
     @Override
     public void onDestroyView() {
         if (unbinder != null) {
+            clearWebView();
             unbinder.unbind();
         }
         super.onDestroyView();
@@ -124,10 +128,17 @@ public class AuthFragment extends DialogFragment {
                     .flatMapObservable(this::createUrlsObservable);
             authModel.finishAuthorization(changeSubscription(urls, io()), network)
                     .observeOn(mainThread())
-                    .subscribe(() -> {
-                        clearWebView();
-                        dismiss();
-                    });
+                    .subscribe(
+                            () -> {
+                                clearWebView();
+                                dismiss();
+                            },
+                            error -> {
+                                // ToDo: Handle NetworkError
+                                clearWebView();
+                                dismiss();
+                            }
+                    );
             firstRun = false;
         }
     }
@@ -138,6 +149,19 @@ public class AuthFragment extends DialogFragment {
     private Observable<String> createUrlsObservable(@Nullable String initialUrl) {
         return Observable.create(observer -> {
             webView.setWebViewClient(new WebViewClient() {
+                @SuppressWarnings("deprecation") // deprecated in 23 api
+                @Override
+                public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                    super.onReceivedError(view, errorCode, description, failingUrl);
+                    observer.onError(new NoNetworkConnectionException());
+                }
+
+                @Override
+                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                    super.onReceivedError(view, request, error);
+                    observer.onError(new NoNetworkConnectionException());
+                }
+
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
                     observer.onNext(url);
@@ -147,7 +171,10 @@ public class AuthFragment extends DialogFragment {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
-                    circle.setVisibility(GONE);
+                    //noinspection ConstantConditions Circle is null after ButterKnife unbinds it
+                    if (circle != null) {
+                        circle.setVisibility(GONE);
+                    }
                 }
             });
             webView.loadUrl(initialUrl);
@@ -155,6 +182,9 @@ public class AuthFragment extends DialogFragment {
     }
 
     public void clearWebView() {
-        this.webView.loadUrl("about:blank");
+        //noinspection ConstantConditions webView is null after ButterKnife unbinds it
+        if (webView != null) {
+            webView.loadUrl("about:blank");
+        }
     }
 }

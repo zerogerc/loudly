@@ -33,7 +33,7 @@ import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.NetworkUtils.DividedList;
 import ly.loud.loudly.util.TimeInterval;
-import ly.loud.loudly.util.database.DatabaseException;
+import ly.loud.loudly.base.exceptions.DatabaseException;
 import ly.loud.loudly.util.database.entities.StoredAttachment;
 import ly.loud.loudly.util.database.entities.StoredEvent;
 import ly.loud.loudly.util.database.entities.StoredLocation;

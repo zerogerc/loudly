@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ly.loud.loudly.base.entities.Info;
+import ly.loud.loudly.base.exceptions.FatalNetworkException;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SinglePost;
@@ -17,9 +18,11 @@ import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.TimeInterval;
 import rx.Observable;
 import rx.Single;
+import rx.subjects.PublishSubject;
 import solid.collections.SolidList;
 import solid.collectors.ToArrayList;
 
+import static ly.loud.loudly.util.RxUtils.retry3TimesAndFail;
 import static solid.collectors.ToList.toList;
 import static solid.collectors.ToSolidList.toSolidList;
 
@@ -38,12 +41,22 @@ public class PostLoadModel {
     @NonNull
     private final InfoUpdateModel infoUpdateModel;
 
+    @NonNull
+    private final PublishSubject<Throwable> loadErrors;
+
     public PostLoadModel(@NonNull CoreModel coreModel,
                          @NonNull PostsDatabaseModel postsDatabaseModel,
                          @NonNull InfoUpdateModel infoUpdateModel) {
         this.coreModel = coreModel;
         this.postsDatabaseModel = postsDatabaseModel;
         this.infoUpdateModel = infoUpdateModel;
+        loadErrors = PublishSubject.create();
+    }
+
+    @CheckResult
+    @NonNull
+    public Observable<Throwable> observeLoadErrors() {
+        return loadErrors.asObservable();
     }
 
     @NonNull
@@ -117,6 +130,19 @@ public class PostLoadModel {
                 .toObservable();
     }
 
+    @CheckResult
+    @NonNull
+    private Observable<SolidList<SinglePost>> safeLoadPosts(
+            @NonNull TimeInterval timeInterval,
+            @NonNull NetworkContract networkContract) {
+        return retry3TimesAndFail(
+                networkContract.loadPosts(timeInterval),
+                new FatalNetworkException(networkContract.getId())
+        )
+                .doOnError(loadErrors::onNext)
+                .onErrorResumeNext(Observable.empty());
+    }
+
     /**
      * Get list posts to show
      *
@@ -128,13 +154,16 @@ public class PostLoadModel {
     @NonNull
     public Observable<SolidList<PlainPost>> loadPosts(@NonNull TimeInterval interval) {
         return postsDatabaseModel.loadPostsByTimeInterval(interval)
+                .doOnError(loadErrors::onNext)
+                .onErrorResumeNext(Observable.just(SolidList.empty()))
                 .flatMap(list -> infoUpdateModel
                                 .subscribeOnFrequentUpdates(list)
                                 .toSingleDefault(list)
                                 .toObservable()
                 )
-                .flatMap(list -> coreModel.observeConnectedNetworksModels().defaultIfEmpty(null)
-                                .flatMap(model -> model.loadPosts(interval))
+                .flatMap(list -> coreModel
+                                .observeConnectedNetworksModels()
+                                .flatMap(networkContract -> safeLoadPosts(interval, networkContract))
                                 .flatMap(posts -> updateStoredInfo(posts, list))
                                 .scan(
                                         list.cast(PlainPost.class).collect(toSolidList()),

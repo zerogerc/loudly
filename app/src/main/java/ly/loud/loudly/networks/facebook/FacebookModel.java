@@ -1,10 +1,8 @@
 package ly.loud.loudly.networks.facebook;
 
-import android.graphics.Point;
 import android.support.annotation.CheckResult;
 import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Pair;
 
@@ -24,6 +22,10 @@ import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Person;
+import ly.loud.loudly.base.exceptions.FatalException;
+import ly.loud.loudly.base.exceptions.FatalNetworkException;
+import ly.loud.loudly.base.exceptions.NoTokenException;
+import ly.loud.loudly.base.exceptions.TokenExpiredException;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainImage;
@@ -33,19 +35,14 @@ import ly.loud.loudly.base.single.SingleImage;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.NetworkContract;
-import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.entities.Data;
-import ly.loud.loudly.networks.facebook.entities.Element;
 import ly.loud.loudly.networks.facebook.entities.ElementId;
-import ly.loud.loudly.networks.facebook.entities.FbAttachment;
 import ly.loud.loudly.networks.facebook.entities.FbComment;
 import ly.loud.loudly.networks.facebook.entities.FbPerson;
-import ly.loud.loudly.networks.facebook.entities.Photo;
 import ly.loud.loudly.networks.facebook.entities.Picture;
 import ly.loud.loudly.networks.facebook.entities.Post;
 import ly.loud.loudly.networks.facebook.entities.Result;
-import ly.loud.loudly.util.ListUtils;
 import ly.loud.loudly.util.NetworkUtils.DividedList;
 import ly.loud.loudly.util.Query;
 import ly.loud.loudly.util.TimeInterval;
@@ -57,10 +54,12 @@ import retrofit2.Response;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
+import rx.exceptions.Exceptions;
 import solid.collections.SolidList;
 
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
+import static ly.loud.loudly.networks.Networks.FB;
 import static ly.loud.loudly.util.ListUtils.asSolidList;
 import static ly.loud.loudly.util.ListUtils.removeByPredicateInPlace;
 import static ly.loud.loudly.util.NetworkUtils.divideListOfCachedPosts;
@@ -96,7 +95,7 @@ public class FacebookModel implements NetworkContract {
     @Network
     @Override
     public int getId() {
-        return Networks.FB;
+        return FB;
     }
 
     @Override
@@ -137,13 +136,11 @@ public class FacebookModel implements NetworkContract {
                 .map(url -> {
                     Query response = Query.fromResponseUrl(url);
                     if (response == null) {
-                        // ToDo: Handle
-                        return null;
+                        throw Exceptions.propagate(new FatalNetworkException(getId()));
                     }
                     String accessToken = response.getParameter("access_token");
                     if (accessToken == null) {
-                        // ToDo: Handle
-                        return null;
+                        throw Exceptions.propagate(new FatalNetworkException(getId()));
                     }
                     return new FacebookKeyKeeper(accessToken);
                 });
@@ -166,12 +163,11 @@ public class FacebookModel implements NetworkContract {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
-                // ToDo: handle
-                return null;
+                throw new TokenExpiredException(getId());
             }
             String url = image.getUrl();
             if (url == null) {
-                return null;
+                throw new FatalException("No image url");
             }
             File file = new File(image.getUrl());
 
@@ -179,12 +175,9 @@ public class FacebookModel implements NetworkContract {
             MultipartBody.Part part = MultipartBody.Part.createFormData("source", file.getName(), requestBody);
             Call<ElementId> elementIdCall = client.uploadPhoto(part, keyKeeper.getAccessToken());
             Response<ElementId> execute = elementIdCall.execute();
-            if (execute == null) {
-                return null;
-            }
             ElementId id = execute.body();
-            if (id == null) {
-                return null;
+            if (id.error != null) {
+                throw id.error.toException();
             }
             Map<String, SingleImage> images = getImageInfos(Collections.singletonList(id.id));
             return images.get(id.id);
@@ -197,9 +190,7 @@ public class FacebookModel implements NetworkContract {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
-                // ToDo: handle
-
-                return null;
+                throw new NoTokenException(getId());
             }
             String attachmentId = post.getAttachments().isEmpty() ? null :
                     post.getAttachments().get(0).getLink();
@@ -207,20 +198,18 @@ public class FacebookModel implements NetworkContract {
             Call<ElementId> elementIdCall =
                     client.uploadPost(post.getText(), attachmentId, keyKeeper.getAccessToken());
             Response<ElementId> execute = elementIdCall.execute();
-            if (execute == null) {
-                return null;
+            ElementId executedBody = execute.body();
+            if (executedBody.error != null) {
+                throw executedBody.error.toException();
             }
-            ElementId id = execute.body();
-            if (id == null) {
-                return null;
-            }
+            //noinspection ConstantConditions Body without error has id
             SinglePost uploaded = new SinglePost(
                     post.getText(),
                     post.getDate(),
                     post.getAttachments(),
                     post.getLocation(),
                     getId(),
-                    id.id
+                    executedBody.id
             );
             cached.add(0, uploaded);
             return uploaded;
@@ -233,16 +222,15 @@ public class FacebookModel implements NetworkContract {
         return Completable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
-                // ToDo: Handle
-                return false;
+                throw new NoTokenException(getId());
             }
             String id = post.getLink();
 
             Call<Result> resultCall = client.deleteElement(id, keyKeeper.getAccessToken());
             Response<Result> execute = resultCall.execute();
             Result body = execute.body();
-            if (body == null) {
-                return false;
+            if (body.error != null) {
+                throw body.error.toException();
             }
             if (body.success) {
                 removeByPredicateInPlace(cached, somePost ->
@@ -259,8 +247,7 @@ public class FacebookModel implements NetworkContract {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
-                //ToDo: handle
-                return SolidList.empty();
+                throw new NoTokenException(getId());
             }
             String id = element.getLink();
             String endpoint;
@@ -280,9 +267,10 @@ public class FacebookModel implements NetworkContract {
                     likesOrSharesCall.execute();
             List<String> ids = new ArrayList<>();
             Data<List<FbPerson>> body = executed.body();
-            if (body == null) {
-                return SolidList.empty();
+            if (body.error != null) {
+                throw body.error.toException();
             }
+            //noinspection ConstantConditions Body without error has data
             for (FbPerson person : body.data) {
                 ids.add(person.id);
             }
@@ -296,7 +284,7 @@ public class FacebookModel implements NetworkContract {
             }
             List<Person> result = new ArrayList<>();
             for (String personId : ids) {
-                result.add(toPerson(persons.get(personId)));
+                result.add(persons.get(personId).toPerson());
             }
             return asSolidList(result);
         });
@@ -306,7 +294,7 @@ public class FacebookModel implements NetworkContract {
     private Map<String, SingleImage> getImageInfos(List<String> images) throws IOException {
         FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
         if (keyKeeper == null) {
-            return Collections.emptyMap();
+            throw new NoTokenException(getId());
         }
         Call<Map<String, Picture>> pictureInfos =
                 client.getPictureInfos(toCommaSeparatedUserIds(images), keyKeeper.getAccessToken());
@@ -320,28 +308,9 @@ public class FacebookModel implements NetworkContract {
         }
         Map<String, SingleImage> result = new HashMap<>();
         for (Map.Entry<String, Picture> entry : response.entrySet()) {
-            result.put(entry.getKey(), toImage(entry.getValue(), entry.getKey()));
+            result.put(entry.getKey(), entry.getValue().toImage(entry.getKey()));
         }
         return result;
-    }
-
-    @NonNull
-    private SingleImage toImage(@NonNull Photo photo) {
-        // ToDo: Strange ID
-        return new SingleImage(photo.src, new Point(photo.width, photo.height), getId(), photo.src);
-    }
-
-    @NonNull
-    private SingleImage toImage(@NonNull Picture photo, @NonNull String id) {
-        return new SingleImage(id, new Point(photo.width, photo.height), getId(), id);
-    }
-
-    @Nullable
-    private SingleAttachment toAttachment(@NonNull FbAttachment attachment) {
-        if (attachment.media.image != null) {
-            return toImage(attachment.media.image);
-        }
-        return null;
     }
 
     @Override
@@ -384,8 +353,7 @@ public class FacebookModel implements NetworkContract {
         Log.i("FACEBOOK", "DOWNLOADING");
         FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
         if (keyKeeper == null) {
-            // ToDo: handle
-            return Collections.emptyList();
+            throw new NoTokenException(getId());
         }
         Long since = timeInterval.from != Long.MIN_VALUE ? timeInterval.from : null;
         Long until = timeInterval.to != Long.MAX_VALUE ? timeInterval.to : null;
@@ -396,9 +364,10 @@ public class FacebookModel implements NetworkContract {
         do {
             Response<Data<List<Post>>> execute = dataCall.execute();
             Data<List<Post>> body = execute.body();
-            if (body == null) {
-                return posts;
+            if (body.error != null) {
+                throw body.error.toException();
             }
+            //noinspection ConstantConditions Post without error has data
             for (Post post : body.data) {
                 currentTime = post.createdTime;
                 if (currentTime < timeInterval.from) {
@@ -407,17 +376,7 @@ public class FacebookModel implements NetworkContract {
                 if (currentTime > timeInterval.to) {
                     break;
                 }
-                ArrayList<SingleAttachment> attachments = new ArrayList<>();
-                if (post.attachments != null) {
-                    for (FbAttachment attachment : post.attachments.data) {
-                        SingleAttachment parsed = toAttachment(attachment);
-                        if (parsed != null) {
-                            attachments.add(parsed);
-                        }
-                    }
-                    posts.add(new SinglePost(post.message, post.createdTime, attachments, null,
-                            getId(), post.id, getInfo(post)));
-                }
+                posts.add(post.toPost());
             }
             if (body.paging != null && body.paging.next != null) {
                 dataCall = client.continueLoadPostsWithPagination(body.paging.next);
@@ -428,13 +387,6 @@ public class FacebookModel implements NetworkContract {
         return posts;
     }
 
-    @NonNull
-    private Info getInfo(@NonNull Post post) {
-        int likes = post.likes != null ? post.likes.summary.totalCount : 0;
-        int shares = post.shares != null ? post.shares.count : 0;
-        int comments = post.comments != null ? post.comments.summary.totalCount : 0;
-        return new Info(likes, shares, comments);
-    }
 
     @NonNull
     private String toCommaSeparatedUserIds(@NonNull List<String> ids) {
@@ -462,36 +414,26 @@ public class FacebookModel implements NetworkContract {
         return sb.toString();
     }
 
-    @NonNull
-    private Person toPerson(@NonNull FbPerson person) {
-        Data<Element> photo = person.picture;
-        String url;
-        if (photo == null) {
-            url = null;
-        } else {
-            url = photo.data.url;
-        }
-        String firstName = person.firstName == null ? "" : person.firstName;
-        String lastName = person.lastName == null ? "" : person.lastName;
-        return new Person(firstName, lastName, url, getId(), person.id);
-    }
-
     @Override
     @NonNull
     public Observable<SolidList<Comment>> getComments(@NonNull SingleNetworkElement element) {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
-                // ToDo handle
-                return SolidList.empty();
+                throw new NoTokenException(getId());
             }
             String link = element.getLink();
 
             Call<Data<List<FbComment>>> dataCall =
                     client.loadComments(link, keyKeeper.getAccessToken());
             Response<Data<List<FbComment>>> executed = dataCall.execute();
+            Data<List<FbComment>> body = executed.body();
+            if (body.error != null) {
+                throw body.error.toException();
+            }
             List<String> personIds = new ArrayList<>();
-            for (FbComment comment : executed.body().data) {
+            //noinspection ConstantConditions body without error has data
+            for (FbComment comment : body.data) {
                 personIds.add(comment.from.id);
             }
 
@@ -502,12 +444,8 @@ public class FacebookModel implements NetworkContract {
             Map<String, FbPerson> persons = personsCallExecuted.body();
 
             List<Comment> comments = new ArrayList<>();
-            for (FbComment comment : executed.body().data) {
-                ArrayList<SingleAttachment> attachment = comment.attachment == null ? ListUtils.emptyArrayList() :
-                        ListUtils.asArrayList(toAttachment(comment.attachment));
-
-                comments.add(new Comment(comment.message, comment.createdTime, attachment, toPerson(persons.get(comment.from.id)),
-                        getId(), comment.id));
+            for (FbComment comment : body.data) {
+                comments.add(comment.toComment(persons.get(comment.from.id)));
             }
             return asSolidList(comments);
         });
@@ -520,8 +458,7 @@ public class FacebookModel implements NetworkContract {
         return Observable.fromCallable(() -> {
             FacebookKeyKeeper keyKeeper = keysModel.getFacebookKeyKeeper();
             if (keyKeeper == null) {
-                // ToDo: Handle
-                return null;
+                throw new NoTokenException(getId());
             }
             List<String> ids = posts.map(SinglePost::getLink).collect(toList());
             Call<Map<String, Post>> infoCall =
@@ -529,8 +466,7 @@ public class FacebookModel implements NetworkContract {
             Response<Map<String, Post>> executed = infoCall.execute();
             Map<String, Post> body = executed.body();
             if (body == null) {
-                // ToDo: handle
-                return null;
+                return Collections.emptyList();
             }
             List<Pair<SinglePost, Info>> events = new ArrayList<>();
             for (SinglePost post : posts) {
@@ -538,7 +474,7 @@ public class FacebookModel implements NetworkContract {
                     continue;
                 }
                 Post got = body.get(post.getLink());
-                Info newInfo = getInfo(got);
+                Info newInfo = got.getInfo();
                 Info difference = newInfo.subtract(post.getInfo());
                 if (!difference.isEmpty()) {
                     // Update info in cached posts

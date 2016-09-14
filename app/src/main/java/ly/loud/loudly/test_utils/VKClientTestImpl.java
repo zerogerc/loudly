@@ -9,10 +9,10 @@ import ly.loud.loudly.networks.vk.VKClient;
 import ly.loud.loudly.networks.vk.entities.Photo;
 import ly.loud.loudly.networks.vk.entities.PhotoUploadServer;
 import ly.loud.loudly.networks.vk.entities.PhotoUploadServerResponse;
-import ly.loud.loudly.networks.vk.entities.Post;
 import ly.loud.loudly.networks.vk.entities.Profile;
 import ly.loud.loudly.networks.vk.entities.Say;
 import ly.loud.loudly.networks.vk.entities.VKItems;
+import ly.loud.loudly.networks.vk.entities.VKPost;
 import ly.loud.loudly.networks.vk.entities.VKResponse;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
@@ -84,7 +84,7 @@ public class VKClientTestImpl implements VKClient {
 
     @NonNull
     @Override
-    public Call<VKResponse<Post>> uploadPost(
+    public Call<VKResponse<VKPost>> uploadPost(
             @Query("message") @Nullable String message,
             @Query("attachment") @Nullable String attachmentIds,
             @Query("access_token") @NonNull String token

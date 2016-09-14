@@ -1,5 +1,7 @@
 package ly.loud.loudly.networks.vk.entities;
 
+import android.support.annotation.Nullable;
+
 /**
  * Response from photo upload server
  *
@@ -7,4 +9,7 @@ package ly.loud.loudly.networks.vk.entities;
  */
 public class PhotoUploadServerResponse {
     public String server, photo, hash;
+
+    @Nullable
+    public Error error;
 }

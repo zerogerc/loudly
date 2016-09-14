@@ -19,6 +19,8 @@ import ly.loud.loudly.application.models.GetterModel.RequestType;
 import ly.loud.loudly.application.models.KeysModel;
 import ly.loud.loudly.base.entities.Info;
 import ly.loud.loudly.base.entities.Person;
+import ly.loud.loudly.base.exceptions.NetworkException;
+import ly.loud.loudly.base.exceptions.NoTokenException;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
 import ly.loud.loudly.base.interfaces.attachments.SingleAttachment;
 import ly.loud.loudly.base.plain.PlainImage;
@@ -41,6 +43,7 @@ import retrofit2.Response;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
+import rx.exceptions.Exceptions;
 import solid.collections.SolidList;
 
 import static ly.loud.loudly.util.ListUtils.asSolidList;
@@ -117,13 +120,11 @@ public class InstagramModel implements NetworkContract {
                 .map(url -> {
                     Query query = Query.fromResponseUrl(url);
                     if (query == null) {
-                        // ToDO: handle
-                        return null;
+                        throw Exceptions.propagate(new NetworkException(getId()));
                     }
                     String accessToken = query.getParameter("access_token");
                     if (accessToken == null) {
-                        // ToDo: handle
-                        return null;
+                        throw Exceptions.propagate(new NetworkException(getId()));
                     }
                     return new InstagramKeyKeeper(accessToken);
                 });
@@ -190,8 +191,7 @@ public class InstagramModel implements NetworkContract {
                                            @NonNull TimeInterval interval) throws IOException {
         InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
         if (keyKeeper == null) {
-            // ToDo: handle
-            return Collections.emptyList();
+            throw new NoTokenException(getId());
         }
         String maxId = beforeId == null ? "" : beforeId.getLink();
         Call<Data<List<InstagramPost>>> dataCall = client.loadPosts(maxId, keyKeeper.getAccessToken());
@@ -201,9 +201,11 @@ public class InstagramModel implements NetworkContract {
             Log.i("INSTAGRAM", "DOWNLOADING");
             Response<Data<List<InstagramPost>>> executed = dataCall.execute();
             Data<List<InstagramPost>> body = executed.body();
-            if (body == null || body.data == null) {
-                return posts;
+            if (body.isError()) {
+                //noinspection ConstantConditions If it's error, then it can be converted to exception
+                throw body.meta.getException();
             }
+            //noinspection ConstantConditions If it doesn't has error, it has data
             for (InstagramPost post : body.data) {
                 currentTime = post.createdTime;
                 if (!interval.contains(currentTime)) {
@@ -233,19 +235,19 @@ public class InstagramModel implements NetworkContract {
         return Observable.fromCallable(() -> {
             InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
             if (keyKeeper == null) {
-                // ToDo: Handle
-                return SolidList.empty();
+                throw new NoTokenException(getId());
             }
             // There is no shares in Instagram
             Call<Data<List<InstagramPerson>>> likers =
                     client.getLikers(element.getLink(), keyKeeper.getAccessToken());
             Response<Data<List<InstagramPerson>>> execute = likers.execute();
             Data<List<InstagramPerson>> body = execute.body();
-            if (body == null || body.data == null) {
-                // ToDo: Handle
-                return SolidList.empty();
+            if (body.isError()) {
+                //noinspection ConstantConditions errors can be converted to exceptions
+                throw body.meta.getException();
             }
             List<Person> persons = new ArrayList<>();
+            //noinspection ConstantConditions If body has no error, it has data
             for (InstagramPerson instagramPerson : body.data) {
                 persons.add(instagramPerson.toPerson());
             }
@@ -259,18 +261,18 @@ public class InstagramModel implements NetworkContract {
         return Observable.fromCallable(() -> {
             InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
             if (keyKeeper == null) {
-                // ToDo: Handle
-                return SolidList.empty();
+                throw new NoTokenException(getId());
             }
             Call<Data<List<InstagramComment>>> getComments =
                     client.getComments(element.getLink(), keyKeeper.getAccessToken());
             Response<Data<List<InstagramComment>>> execute = getComments.execute();
             Data<List<InstagramComment>> body = execute.body();
-            if (body == null || body.data == null) {
-                // ToDo: Handle
-                return SolidList.empty();
+            if (body.isError()) {
+                //noinspection ConstantConditions errors can be transformed to exceptions
+                throw body.meta.getException();
             }
             List<Comment> comments = new ArrayList<>();
+            //noinspection ConstantConditions If body has no error, it has data
             for (InstagramComment comment : body.data) {
                 comments.add(comment.toComment());
             }

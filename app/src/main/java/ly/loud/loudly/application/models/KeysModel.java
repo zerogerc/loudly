@@ -14,10 +14,9 @@ import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.instagram.InstagramKeyKeeper;
 import ly.loud.loudly.networks.vk.VKKeyKeeper;
-import ly.loud.loudly.util.database.DatabaseException;
+import ly.loud.loudly.base.exceptions.DatabaseException;
 import ly.loud.loudly.util.database.entities.Key;
 import rx.Completable;
-import rx.Single;
 import rx.exceptions.Exceptions;
 
 import static ly.loud.loudly.networks.Networks.FB;

@@ -29,7 +29,6 @@ import static ly.loud.loudly.application.models.GetterModel.RequestType;
 /**
  * Interface that all Network models must implement.
  */
-//TODO: nonnull annoations
 public interface NetworkContract {
 
     /**
