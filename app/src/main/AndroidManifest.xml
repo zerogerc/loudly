@@ -3,6 +3,7 @@
     package="ly.loud.loudly">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -43,8 +44,11 @@
         </activity>
 
         <service android:name=".application.UpdateInfoService" />
-
-        <activity android:name=".application.TempActivity"></activity>
+        <receiver android:name=".application.ConnectionStateBroadcastsReceiver">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
