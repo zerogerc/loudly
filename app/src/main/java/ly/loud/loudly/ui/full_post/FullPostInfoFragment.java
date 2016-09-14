@@ -27,11 +27,7 @@ import dagger.Provides;
 import dagger.Subcomponent;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.GetterModel;
-import ly.loud.loudly.application.models.LoadMoreStrategyModel;
-import ly.loud.loudly.application.models.PostDeleterModel;
-import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.Comment;
@@ -40,7 +36,6 @@ import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.ui.TitledFragment;
 import ly.loud.loudly.ui.adapters.FullPostInfoAdapter;
 import ly.loud.loudly.ui.adapters.FullPostInfoAdapter.FullPostInfoClickListener;
-import ly.loud.loudly.ui.feed.FeedPresenter;
 import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.util.Utils;
 import solid.collections.SolidList;
@@ -130,7 +125,7 @@ public class FullPostInfoFragment extends TitledFragment
 
     @Override
     @NonNull
-    public String getTitle() {
+    public String getDefaultTitle() {
         return String.format(
                 getString(R.string.full_post_info_title),
                 getString(Utils.getNetworkTitleResourceByPost(post))

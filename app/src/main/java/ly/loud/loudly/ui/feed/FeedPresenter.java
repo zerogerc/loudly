@@ -3,6 +3,8 @@ package ly.loud.loudly.ui.feed;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import icepick.State;
+import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.GetterModel;
@@ -11,13 +13,19 @@ import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.util.BasePresenter;
+import ly.loud.loudly.util.RxUtils;
 import rx.Subscription;
 import rx.functions.Action1;
 import solid.collections.SolidList;
 
+import static ly.loud.loudly.networks.Networks.LOUDLY;
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 import static rx.schedulers.Schedulers.io;
+import static solid.collectors.ToSolidList.toSolidList;
 
 // TODO: config
 public class FeedPresenter extends BasePresenter<FeedView> {
@@ -41,6 +49,13 @@ public class FeedPresenter extends BasePresenter<FeedView> {
 
     private volatile boolean isLoadMoreInProgress = false;
 
+    @State
+    volatile boolean filterPosts = false;
+
+    @State
+    @Network
+    volatile int filterPostsByNetwork = LOUDLY;
+
     @Nullable
     private Subscription loader;
 
@@ -63,8 +78,49 @@ public class FeedPresenter extends BasePresenter<FeedView> {
         this.loadMoreStrategyModel = loadMoreStrategyModel;
     }
 
+    public void clearFilter() {
+        filterPosts = false;
+        executeIfViewBound(view -> view.shouldChangeTitle(R.string.feed));
+        loadCachedPosts();
+    }
+
+    public void filterPostsByNetwork(@Network int network) {
+        filterPosts = true;
+        filterPostsByNetwork = network;
+        executeIfViewBound(view -> view.shouldChangeTitle(Networks.nameResourceOfNetwork(network)));
+        loadCachedPosts();
+    }
+
+    @NonNull
+    private SolidList<PlainPost> filterPosts(@NonNull SolidList<PlainPost> posts) {
+        if (filterPosts) {
+            return posts
+                    .map(post -> {
+                        if (post instanceof SinglePost) {
+                            SinglePost singlePost = (SinglePost) post;
+                            return singlePost.getNetwork() == filterPostsByNetwork ?
+                                    post : null;
+                        }
+                        if (post instanceof LoudlyPost) {
+                            if (filterPostsByNetwork == LOUDLY) {
+                                return post;
+                            }
+                            return ((LoudlyPost) post)
+                                    .getSingleNetworkInstance(filterPostsByNetwork);
+                        }
+                        return null;
+                    })
+                    .filter(RxUtils::nonNull)
+                    .collect(toSolidList());
+        } else {
+            return posts;
+        }
+    }
+
     public void loadCachedPosts() {
-        executeIfViewBound(view -> view.onCachedPostsReceived(postLoadModel.getCachedPosts()));
+        executeIfViewBound(view -> view.onCachedPostsReceived(
+                filterPosts(postLoadModel.getCachedPosts()))
+        );
     }
 
     public void initialLoad() {
@@ -77,7 +133,9 @@ public class FeedPresenter extends BasePresenter<FeedView> {
         }
 
         isInitialLoadInProgress = true;
-        loader = postLoadModel.loadPosts(loadMoreStrategyModel.getCurrentTimeInterval())
+        loader = postLoadModel
+                .loadPosts(loadMoreStrategyModel.getCurrentTimeInterval())
+                .map(this::filterPosts)
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .doOnNext(posts -> executeIfViewBound(view -> view.onInitialLoadProgress(posts)))
@@ -88,7 +146,8 @@ public class FeedPresenter extends BasePresenter<FeedView> {
                 })
                 .doOnError(error -> executeIfViewBound(FeedView::onNetworkProblems))
                 .subscribe(
-                        result -> {},
+                        result -> {
+                        },
                         error -> isInitialLoadInProgress = false
                 );
     }
@@ -147,7 +206,9 @@ public class FeedPresenter extends BasePresenter<FeedView> {
             loader.unsubscribe();
         }
 
-        loader = postLoadModel.getPostsByInterval(loadMoreStrategyModel.getCurrentTimeInterval())
+        loader = postLoadModel
+                .getPostsByInterval(loadMoreStrategyModel.getCurrentTimeInterval())
+                .map(this::filterPosts)
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe(
@@ -163,7 +224,9 @@ public class FeedPresenter extends BasePresenter<FeedView> {
         if (updater != null && !updater.isUnsubscribed()) {
             updater.unsubscribe();
         }
-        updater = postLoadModel.observeUpdatedList()
+        updater = postLoadModel
+                .observeUpdatedList()
+                .map(this::filterPosts)
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe(updatedPosts -> {
