@@ -27,20 +27,14 @@ import dagger.Provides;
 import dagger.Subcomponent;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
-import ly.loud.loudly.application.models.CoreModel;
 import ly.loud.loudly.application.models.GetterModel;
-import ly.loud.loudly.application.models.LoadMoreStrategyModel;
-import ly.loud.loudly.application.models.PostDeleterModel;
-import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.Comment;
-import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks;
 import ly.loud.loudly.ui.TitledFragment;
 import ly.loud.loudly.ui.adapters.FullPostInfoAdapter;
 import ly.loud.loudly.ui.adapters.FullPostInfoAdapter.FullPostInfoClickListener;
-import ly.loud.loudly.ui.feed.FeedPresenter;
 import ly.loud.loudly.ui.people_list.PeopleListFragment;
 import ly.loud.loudly.util.Utils;
 import solid.collections.SolidList;
@@ -49,7 +43,6 @@ import static ly.loud.loudly.application.Loudly.getApplication;
 import static ly.loud.loudly.application.models.GetterModel.LIKES;
 import static ly.loud.loudly.application.models.GetterModel.SHARES;
 import static ly.loud.loudly.util.ListUtils.asArrayList;
-import static ly.loud.loudly.util.Utils.getApplicationContext;
 import static ly.loud.loudly.util.Utils.launchCustomTabs;
 
 @FragmentWithArgs
@@ -75,7 +68,7 @@ public class FullPostInfoFragment extends TitledFragment
     @Arg
     @NonNull
     PlainPost post;
-    
+
     @SuppressWarnings("NullableProblems") // onViewCreated
     @NonNull
     private FullPostInfoAdapter fullPostInfoAdapter;
@@ -83,7 +76,7 @@ public class FullPostInfoFragment extends TitledFragment
     @SuppressWarnings("NullableProblems") // onViewCreated
     @NonNull
     private Unbinder unbinder;
-    
+
     public static FullPostInfoFragment newInstance(@NonNull PlainPost post) {
         return new FullPostInfoFragmentBuilder(post).build();
     }
@@ -143,6 +136,11 @@ public class FullPostInfoFragment extends TitledFragment
     }
 
     @Override
+    public void onGotWebPageUrl(@NonNull String url) {
+        launchCustomTabs(url, getActivity());
+    }
+
+    @Override
     public void onError(@StringRes int errorRes) {
         Toast.makeText(getContext(), errorRes, Toast.LENGTH_SHORT).show();
     }
@@ -176,16 +174,12 @@ public class FullPostInfoFragment extends TitledFragment
 
     @Override
     public void onPhotoClick(@NonNull Person person) {
-        NetworkContract personNetwork = getApplicationContext(getContext())
-                .getAppComponent()
-                .coreModel()
-                .getModelByNetwork(person.getNetwork());
-        if (personNetwork != null) {
-            launchCustomTabs(
-                    personNetwork.getPersonPageUrl(person),
-                    getActivity()
-            );
-        }
+        presenter.getUserPageUrl(person);
+    }
+
+    @Override
+    public void onCommentClick(@NonNull Comment comment) {
+        presenter.getCommentPageUrl(comment, post);
     }
 
     @Module
