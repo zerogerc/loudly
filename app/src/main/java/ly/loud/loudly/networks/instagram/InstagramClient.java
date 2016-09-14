@@ -35,4 +35,9 @@ public interface InstagramClient {
     @NonNull
     Call<Data<List<InstagramComment>>> getComments(@NonNull @Path("id") String id,
                                                    @NonNull @Query("access_token") String accessToken);
+
+    @GET("media/{id}")
+    @NonNull
+    Call<Data<InstagramPost>> getPost(@NonNull @Path("id") String id,
+                                      @NonNull @Query("access_token") String accessToken);
 }

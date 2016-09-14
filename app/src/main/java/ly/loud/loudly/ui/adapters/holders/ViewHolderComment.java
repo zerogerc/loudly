@@ -101,9 +101,18 @@ public class ViewHolderComment extends BindingViewHolder<Comment> {
         }
     }
 
+    @OnClick(R.id.list_item_comment_layout)
+    public void onCommentClick() {
+        if (clickListener != null) {
+            clickListener.onCommentClick(getAdapterPosition());
+        }
+    }
+
     public interface ViewHolderCommentClickListener {
         void onLikesClick(int position);
 
         void onPhotoClick(int position);
+
+        void onCommentClick(int position);
     }
 }
