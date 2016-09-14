@@ -38,6 +38,7 @@ public class InfoUpdateModel {
     public InfoUpdateModel(@NonNull Loudly loudlyApplication) {
         this.loudlyApplication = loudlyApplication;
         serviceSubject = BehaviorSubject.create();
+        bindToService();
     }
 
     @CheckResult
@@ -85,6 +86,14 @@ public class InfoUpdateModel {
     public Completable unsubscribe(@NonNull List<LoudlyPost> loudlyPost) {
         return getService()
                 .map(service -> service.unsubscribe(loudlyPost))
+                .toCompletable();
+    }
+
+    @CheckResult
+    @NonNull
+    public Completable unsubscribeAll() {
+        return getService()
+                .map(UpdateInfoService::unsubscribeAll)
                 .toCompletable();
     }
 

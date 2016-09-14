@@ -107,6 +107,9 @@ public class UpdateInfoService extends Service {
 
         if (updateIntervals.containsKey(id)) {
             updateIntervals.remove(id);
+            if (updateIntervals.isEmpty()) {
+                stopUpdates();
+            }
             return true;
         } else {
             return false;
@@ -145,10 +148,20 @@ public class UpdateInfoService extends Service {
         return unSubscribed;
     }
 
-    private void restartUpdates() {
+    public boolean unsubscribeAll() {
+        updateIntervals.clear();
+        stopUpdates();
+        return true;
+    }
+
+    private void stopUpdates() {
         if (updateSubscription != null && !updateSubscription.isUnsubscribed()) {
             updateSubscription.unsubscribe();
         }
+    }
+
+    private void restartUpdates() {
+        stopUpdates();
         updateSubscription = repeat(Observable.defer(this::getUpdates), this::getRefreshInterval)
                 .subscribeOn(io())
                 .observeOn(mainThread())

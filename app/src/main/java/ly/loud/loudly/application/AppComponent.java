@@ -21,14 +21,11 @@ import ly.loud.loudly.networks.instagram.InstagramClientModule;
 import ly.loud.loudly.networks.vk.VKClientModule;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.auth.AuthFragment;
-import ly.loud.loudly.ui.feed.FeedFragment;
 import ly.loud.loudly.ui.feed.FeedFragment.FeedComponent;
 import ly.loud.loudly.ui.feed.FeedFragment.FeedModule;
-import ly.loud.loudly.ui.full_post.FullPostInfoFragment;
 import ly.loud.loudly.ui.full_post.FullPostInfoFragment.FullPostInfoComponent;
 import ly.loud.loudly.ui.full_post.FullPostInfoFragment.FullPostInfoModule;
 import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
-import ly.loud.loudly.ui.new_post.NewPostFragment;
 import ly.loud.loudly.ui.new_post.NewPostFragment.NewPostComponent;
 import ly.loud.loudly.ui.new_post.NewPostFragment.NewPostModule;
 import ly.loud.loudly.ui.people_list.PeopleListFragment;
@@ -96,6 +93,8 @@ public interface AppComponent {
     void inject(@NonNull NetworksChooseLayout networksChooseLayout);
 
     void inject(@NonNull UpdateInfoService updateInfoService);
+
+    void inject(@NonNull ConnectionStateBroadcastsReceiver connectionStateBroadcastsReceiver);
 
     @NonNull
     SideBarComponent plus(@NonNull SideBarModule sideBarModule);
