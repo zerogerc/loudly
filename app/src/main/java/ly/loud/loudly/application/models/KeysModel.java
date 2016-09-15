@@ -9,18 +9,20 @@ import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import ly.loud.loudly.base.exceptions.DatabaseException;
 import ly.loud.loudly.networks.KeyKeeper;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.FacebookKeyKeeper;
 import ly.loud.loudly.networks.instagram.InstagramKeyKeeper;
+import ly.loud.loudly.networks.ok.OkKeyKeeper;
 import ly.loud.loudly.networks.vk.VKKeyKeeper;
-import ly.loud.loudly.base.exceptions.DatabaseException;
 import ly.loud.loudly.util.database.entities.Key;
 import rx.Completable;
 import rx.exceptions.Exceptions;
 
 import static ly.loud.loudly.networks.Networks.FB;
 import static ly.loud.loudly.networks.Networks.INSTAGRAM;
+import static ly.loud.loudly.networks.Networks.OK;
 import static ly.loud.loudly.networks.Networks.VK;
 
 public class KeysModel {
@@ -35,6 +37,9 @@ public class KeysModel {
 
     @Nullable
     private InstagramKeyKeeper instagramKeyKeeper;
+
+    @Nullable
+    private OkKeyKeeper okKeyKeeper;
 
     @Inject
     public KeysModel(@NonNull @Named("keys") StorIOSQLite keysDatabase) {
@@ -68,6 +73,15 @@ public class KeysModel {
 
     public void setInstagramKeyKeeper(@Nullable InstagramKeyKeeper instagramKeyKeeper) {
         this.instagramKeyKeeper = instagramKeyKeeper;
+    }
+
+    @Nullable
+    public OkKeyKeeper getOkKeyKeeper() {
+        return okKeyKeeper;
+    }
+
+    public void setOkKeyKeeper(@Nullable OkKeyKeeper okKeyKeeper) {
+        this.okKeyKeeper = okKeyKeeper;
     }
 
     @CheckResult
@@ -141,6 +155,8 @@ public class KeysModel {
                 return;
             case INSTAGRAM:
                 setInstagramKeyKeeper(((InstagramKeyKeeper) keyKeeper));
+            case OK:
+                setOkKeyKeeper((OkKeyKeeper) keyKeeper);
         }
     }
 }

@@ -14,6 +14,7 @@ import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.networks.facebook.FacebookModel;
 import ly.loud.loudly.networks.instagram.InstagramModel;
+import ly.loud.loudly.networks.ok.OkModel;
 import ly.loud.loudly.networks.vk.VKModel;
 import rx.Observable;
 import solid.collections.SolidList;
@@ -32,7 +33,8 @@ public class CoreModel {
             @NonNull Loudly loudlyApplication,
             @NonNull FacebookModel facebookModel,
             @NonNull VKModel vkModel,
-            @NonNull InstagramModel instagramModel
+            @NonNull InstagramModel instagramModel,
+            @NonNull OkModel okModel
     ) {
         this.loudlyApplication = loudlyApplication;
 
@@ -40,6 +42,7 @@ public class CoreModel {
         networkModels.add(facebookModel);
         networkModels.add(vkModel);
         networkModels.add(instagramModel);
+        networkModels.add(okModel);
     }
 
     @CheckResult

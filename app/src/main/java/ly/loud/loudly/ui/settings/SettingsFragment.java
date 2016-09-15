@@ -13,13 +13,16 @@ import ly.loud.loudly.ui.auth.AuthFragment;
 
 import static ly.loud.loudly.networks.Networks.FB;
 import static ly.loud.loudly.networks.Networks.INSTAGRAM;
+import static ly.loud.loudly.networks.Networks.OK;
 import static ly.loud.loudly.networks.Networks.VK;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
+    // ToDo: It's ugly, fix it
     private static final String FACEBOOK_KEY = "network_facebook";
     private static final String INSTAGRAM_KEY = "network_instagram";
     private static final String VK_KEY = "network_vk";
+    private static final String OK_KEY = "network_ok";
 
     @NonNull
     public static SettingsFragment newInstance() {
@@ -58,6 +61,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 return true;
             case VK_KEY:
                 openAuthFragment(VK);
+                return true;
+            case OK_KEY:
+                openAuthFragment(OK);
                 return true;
             default:
                 return super.onPreferenceTreeClick(preference);

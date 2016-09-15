@@ -14,4 +14,7 @@
         android:key="network_vk"
         android:title="@string/network_vk" />
 
+    <Preference
+        android:key="network_ok"
+        android:title="@string/network_ok" />
 </PreferenceScreen>

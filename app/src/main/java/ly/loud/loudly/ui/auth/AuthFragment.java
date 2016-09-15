@@ -1,7 +1,9 @@
 package ly.loud.loudly.ui.auth;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
@@ -153,13 +155,22 @@ public class AuthFragment extends DialogFragment {
                 @Override
                 public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                     super.onReceivedError(view, errorCode, description, failingUrl);
-                    observer.onError(new NoNetworkConnectionException());
+                    if (errorCode == ERROR_BAD_URL ||
+                            errorCode == ERROR_CONNECT ||
+                            errorCode == ERROR_TIMEOUT) {
+                        observer.onError(new NoNetworkConnectionException());
+                    }
                 }
 
+                @TargetApi(Build.VERSION_CODES.M)
                 @Override
                 public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                     super.onReceivedError(view, request, error);
-                    observer.onError(new NoNetworkConnectionException());
+                    if (error.getErrorCode() == ERROR_BAD_URL ||
+                            error.getErrorCode() == ERROR_CONNECT ||
+                            error.getErrorCode() == ERROR_TIMEOUT) {
+                        observer.onError(new NoNetworkConnectionException());
+                    }
                 }
 
                 @Override

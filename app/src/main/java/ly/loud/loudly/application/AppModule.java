@@ -21,6 +21,7 @@ import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.application.models.PostsDatabaseModel;
 import ly.loud.loudly.networks.facebook.FacebookModel;
 import ly.loud.loudly.networks.instagram.InstagramModel;
+import ly.loud.loudly.networks.ok.OkModel;
 import ly.loud.loudly.networks.vk.VKModel;
 
 import static android.os.Looper.getMainLooper;
@@ -64,13 +65,15 @@ public class AppModule {
     CoreModel provideCoreModel(
             @NonNull FacebookModel facebookModel,
             @NonNull VKModel vkModel,
-            @NonNull InstagramModel instagramModel
+            @NonNull InstagramModel instagramModel,
+            @NonNull OkModel okModel
     ) {
         return new CoreModel(
                 loudlyApplication,
                 facebookModel,
                 vkModel,
-                instagramModel
+                instagramModel,
+                okModel
         );
     }
 

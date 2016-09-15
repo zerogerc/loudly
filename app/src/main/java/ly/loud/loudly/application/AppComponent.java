@@ -18,6 +18,7 @@ import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostUploadModel;
 import ly.loud.loudly.networks.facebook.FacebookClientModule;
 import ly.loud.loudly.networks.instagram.InstagramClientModule;
+import ly.loud.loudly.networks.ok.OkClientModule;
 import ly.loud.loudly.networks.vk.VKClientModule;
 import ly.loud.loudly.ui.MainActivity;
 import ly.loud.loudly.ui.auth.AuthFragment;
@@ -36,7 +37,11 @@ import ly.loud.loudly.util.database.PostDbModule;
 
 @Singleton @Component (modules = {
         AppModule.class, KeysDbModule.class, PostDbModule.class,
-        VKClientModule.class, FacebookClientModule.class, InstagramClientModule.class})
+        VKClientModule.class,
+        FacebookClientModule.class,
+        InstagramClientModule.class,
+        OkClientModule.class
+})
 public interface AppComponent {
 
     @NonNull
