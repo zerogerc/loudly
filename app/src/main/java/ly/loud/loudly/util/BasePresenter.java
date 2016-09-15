@@ -1,6 +1,5 @@
 package ly.loud.loudly.util;
 
-import android.support.annotation.AnyThread;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -93,7 +92,6 @@ public class BasePresenter<V> {
      * Executes action on the view if view is not-null. Otherwise just ignore the action.
      * You may assume that <code>>view</code> is not-null in action clojure.
      */
-    @AnyThread
     protected void executeIfViewBound(@NonNull Action1<V> action) {
         final V currentView = getView();
 
@@ -105,7 +103,6 @@ public class BasePresenter<V> {
     /**
      * Guarantees that given action will be unbounded in {@link #onUnbindView(V)}
      */
-    @AnyThread
     protected final void unsubscribeOnUnbindView(@NonNull Subscription subscription) {
         unsubscribeOnUnbindViewSubscriptions.add(subscription);
     }

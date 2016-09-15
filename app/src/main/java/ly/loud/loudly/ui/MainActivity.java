@@ -395,7 +395,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void showFeedGlobalError(@StringRes int errorMessage) {
+    public void showFeedGlobalError(@NonNull String errorMessage) {
         final FragmentManager manager = getSupportFragmentManager();
         final LoadingFragment loadingFragment = ((LoadingFragment) manager.findFragmentById(R.id.app_bar_feed_loading_fragment));
         loadingFragment.showError(errorMessage);
@@ -407,8 +407,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void showFeedError(@StringRes int errorMessage) {
-        Snackbar.make(globalRootView, errorMessage, Snackbar.LENGTH_SHORT);
+    public void showFeedError(@NonNull String errorMessage) {
+        Snackbar.make(floatingActionButton, errorMessage, Snackbar.LENGTH_SHORT);
     }
 
     @Override
