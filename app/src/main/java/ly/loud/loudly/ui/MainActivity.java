@@ -36,7 +36,7 @@ import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
-import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.ui.LoadingFragment.LoadingFragmentCallback;
 import ly.loud.loudly.ui.feed.FeedFragment;
 import ly.loud.loudly.ui.feed.FeedFragment.FeedFragmentCallback;
@@ -65,8 +65,7 @@ public class MainActivity extends AppCompatActivity
         NewPostFragmentInteractions,
         SideBarFragmentCallbacks,
         FeedFragmentCallback,
-        LoadingFragmentCallback
-{
+        LoadingFragmentCallback {
 
     private static final String FEED_FRAGMENT = "feed_fragment";
 
@@ -129,7 +128,7 @@ public class MainActivity extends AppCompatActivity
             switch (newState) {
                 case STATE_EXPANDED:
                     showNewPostFragment();
-                     break;
+                    break;
                 default:
                     break;
             }
@@ -362,18 +361,27 @@ public class MainActivity extends AppCompatActivity
         background.setOpacity(0);
     }
 
+    @NonNull
+    private FeedFragment findFeedFragment() {
+        return (FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT);
+    }
+
     @Override
     public void onNoFiltersClicked() {
+        findFeedFragment().clearFilter();
         closeDrawer();
     }
 
     @Override
     public void onSettingsClicked() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
         closeDrawer();
     }
 
     @Override
-    public void onNetworkClicked(@Networks.Network int networkId) {
+    public void onNetworkClicked(@Network int networkId) {
+        findFeedFragment().filterPostsByNetwork(networkId);
         closeDrawer();
     }
 

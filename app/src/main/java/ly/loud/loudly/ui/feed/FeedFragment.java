@@ -26,6 +26,7 @@ import butterknife.Unbinder;
 import dagger.Module;
 import dagger.Provides;
 import dagger.Subcomponent;
+import icepick.Icepick;
 import ly.loud.loudly.R;
 import ly.loud.loudly.application.Loudly;
 import ly.loud.loudly.application.models.CoreModel;
@@ -81,8 +82,8 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
 
     @Override
     @NonNull
-    public String getTitle() {
-        return getString(R.string.loudly);
+    public String getDefaultTitle() {
+        return getString(R.string.feed);
     }
 
 
@@ -109,6 +110,8 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
         super.onViewCreated(view, savedInstanceState);
         ((FeedFragmentCallback) getActivity()).showFeedLoading();
         unbinder = ButterKnife.bind(this, view);
+        presenter.onBindView(this);
+        Icepick.restoreInstanceState(presenter, savedInstanceState);
         refreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getContext(), R.color.accent),
                 ContextCompat.getColor(getContext(), R.color.primary)
@@ -130,11 +133,30 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
         super.onDestroyView();
     }
 
+    @Override
+    public void onSaveInstanceState(@Nullable Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Icepick.saveInstanceState(presenter, outState);
+    }
+
+    public void filterPostsByNetwork(@Network int network) {
+        presenter.filterPostsByNetwork(network);
+    }
+
+    public void clearFilter() {
+        presenter.clearFilter();
+    }
+
     public void refreshPosts() {
         if (refreshLayout.isRefreshing()) {
             refreshLayout.setRefreshing(false);
         }
         presenter.refreshPosts();
+    }
+
+    @Override
+    public void shouldChangeTitle(@StringRes int titleResource) {
+        setTitle(getString(titleResource));
     }
 
     @Override

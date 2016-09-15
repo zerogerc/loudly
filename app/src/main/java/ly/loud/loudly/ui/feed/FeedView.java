@@ -1,6 +1,7 @@
 package ly.loud.loudly.ui.feed;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
 
 import ly.loud.loudly.base.plain.PlainPost;
@@ -10,6 +11,7 @@ import solid.collections.SolidList;
 
 @UiThread
 public interface FeedView {
+    void shouldChangeTitle(@StringRes int titleResource);
 
     /**
      * Callback of get cached posts. Invokes only once when posts from all networks loaded from cache.

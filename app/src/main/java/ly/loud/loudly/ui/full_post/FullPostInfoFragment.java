@@ -123,7 +123,7 @@ public class FullPostInfoFragment extends TitledFragment
 
     @Override
     @NonNull
-    public String getTitle() {
+    public String getDefaultTitle() {
         return String.format(
                 getString(R.string.full_post_info_title),
                 getString(Utils.getNetworkTitleResourceByPost(post))
