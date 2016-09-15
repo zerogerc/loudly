@@ -41,4 +41,11 @@ public class InstagramClientTestImpl implements InstagramClient {
                                                           @NonNull @Query("access_token") String accessToken) {
         return null;
     }
+
+    @NonNull
+    @Override
+    public Call<Data<InstagramPost>> getPost(@NonNull @Path("id") String id,
+                                             @NonNull @Query("access_token") String accessToken) {
+        return null;
+    }
 }

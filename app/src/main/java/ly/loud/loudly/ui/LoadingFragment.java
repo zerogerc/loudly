@@ -111,9 +111,9 @@ public final class LoadingFragment extends Fragment {
      * Show error on the screen.
      * @param errorMessage - human readable error
      */
-    public void showError(@StringRes int errorMessage) {
+    public void showError(@NonNull String errorMessage) {
         loadingState = STATE_ERROR;
-        this.errorMessage = getString(errorMessage);
+        this.errorMessage = errorMessage;
         updateView();
     }
 

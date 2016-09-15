@@ -33,6 +33,9 @@ public class InstagramPost {
     @Nullable
     public Images images;
 
+    @Nullable
+    public String link;
+
     @NonNull
     public SinglePost toPost() {
         ArrayList<SingleAttachment> attachments;

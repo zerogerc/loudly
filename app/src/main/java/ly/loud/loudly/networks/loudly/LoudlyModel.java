@@ -139,4 +139,10 @@ public class LoudlyModel implements NetworkContract {
     public String getPersonPageUrl(@NonNull Person person) {
         return "";
     }
+
+    @NonNull
+    @Override
+    public Single<String> getCommentUrl(@NonNull Comment comment, @NonNull SinglePost post) {
+        return Single.just("");
+    }
 }

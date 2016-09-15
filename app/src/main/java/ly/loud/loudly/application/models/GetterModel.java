@@ -14,10 +14,14 @@ import ly.loud.loudly.base.entities.Person;
 import ly.loud.loudly.base.exceptions.FatalNetworkException;
 import ly.loud.loudly.base.interfaces.MultipleNetworkElement;
 import ly.loud.loudly.base.interfaces.SingleNetworkElement;
+import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.Comment;
+import ly.loud.loudly.base.single.SinglePost;
 import ly.loud.loudly.networks.NetworkContract;
 import ly.loud.loudly.networks.Networks.Network;
 import rx.Observable;
+import rx.Single;
 import rx.subjects.PublishSubject;
 import solid.collections.SolidList;
 
@@ -128,6 +132,37 @@ public class GetterModel {
                                                            @RequestType int requestType) {
         return Observable.from(element.getNetworkInstances())
                 .flatMap(instance -> getPersonsByType(instance, requestType));
+    }
+
+    @CheckResult
+    @NonNull
+    public Single<String> getCommentUrl(@NonNull Comment comment, @NonNull PlainPost post) {
+        NetworkContract networkContract = coreModel.getModelByNetwork(comment.getNetwork());
+
+        if (networkContract != null) {
+            SinglePost singleNetworkInstance;
+            if (post instanceof SinglePost) {
+                singleNetworkInstance = (SinglePost) post;
+            } else {
+                singleNetworkInstance =
+                        ((LoudlyPost) post).getSingleNetworkInstance(comment.getNetwork());
+            }
+            if (singleNetworkInstance != null) {
+                return networkContract
+                        .getCommentUrl(comment, singleNetworkInstance);
+            }
+        }
+        return Single.just("");
+    }
+
+    @NonNull
+    public String getPersonPageUrl(@NonNull Person person) {
+        NetworkContract personNetwork = coreModel
+                .getModelByNetwork(person.getNetwork());
+        if (personNetwork != null) {
+            return personNetwork.getPersonPageUrl(person);
+        }
+        return "";
     }
 
     public class CommentsFromNetwork {

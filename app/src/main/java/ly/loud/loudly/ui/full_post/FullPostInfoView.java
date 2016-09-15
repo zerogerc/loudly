@@ -11,4 +11,6 @@ public interface FullPostInfoView {
     void onNewCommentsFromNetwork(@NonNull SolidList<Comment> comments, @Network int network);
 
     void onError(@StringRes int errorRes);
+
+    void onGotWebPageUrl(@NonNull String url);
 }

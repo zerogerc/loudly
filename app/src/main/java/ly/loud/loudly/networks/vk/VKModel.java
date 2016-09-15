@@ -535,5 +535,17 @@ public class VKModel implements NetworkContract {
     public String getPersonPageUrl(@NonNull Person person) {
         return "https://www.vk.com/id" + person.getId();
     }
+
+    @NonNull
+    @Override
+    public Single<String> getCommentUrl(@NonNull Comment comment, @NonNull SinglePost post) {
+        VKKeyKeeper vkKeyKeeper = keysModel.getVKKeyKeeper();
+        if (vkKeyKeeper == null) {
+            return Single.just("");
+        }
+        return Single.just("https://www.vk.com/" +
+                "wall" + vkKeyKeeper.getUserId() + "_" + post.getLink() +
+                "?reply=" + comment.getLink());
+    }
 }
 

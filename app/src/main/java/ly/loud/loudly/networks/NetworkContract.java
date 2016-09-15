@@ -166,4 +166,15 @@ public interface NetworkContract {
      */
     @NonNull
     String getPersonPageUrl(@NonNull Person person);
+
+    /**
+     * Get url of comment in this network
+     *
+     * @param comment Comment to find network
+     * @param post Post, to which this comment belongs
+     * @return URL of page
+     */
+    @CheckResult
+    @NonNull
+    Single<String> getCommentUrl(@NonNull Comment comment, @NonNull SinglePost post);
 }

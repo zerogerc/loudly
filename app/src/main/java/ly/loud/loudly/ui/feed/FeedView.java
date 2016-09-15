@@ -5,6 +5,8 @@ import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
 
 import ly.loud.loudly.base.plain.PlainPost;
+import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import solid.collections.SolidList;
 
 @UiThread
@@ -51,9 +53,14 @@ public interface FeedView {
     void onAllPostsLoaded();
 
     /**
-     * Indicate any error while loading posts from network.
+     * Indicates any error while loading posts from network.
      */
     void onNetworkProblems();
+
+    /**
+     * Indicates that token expired during operation.
+     */
+    void onTokenExpiredException(@Network int expiredNetwork);
 
     /**
      * Indicates that user have no connected networks.

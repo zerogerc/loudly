@@ -2,6 +2,7 @@ package ly.loud.loudly.ui.feed;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import icepick.State;
 import ly.loud.loudly.R;
@@ -11,6 +12,7 @@ import ly.loud.loudly.application.models.GetterModel;
 import ly.loud.loudly.application.models.LoadMoreStrategyModel;
 import ly.loud.loudly.application.models.PostDeleterModel;
 import ly.loud.loudly.application.models.PostLoadModel;
+import ly.loud.loudly.base.exceptions.TokenExpiredException;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.base.single.SinglePost;
@@ -117,6 +119,25 @@ public class FeedPresenter extends BasePresenter<FeedView> {
         }
     }
 
+    @Override
+    public void onBindView(@NonNull FeedView view) {
+        super.onBindView(view);
+        executeIfViewBound(v -> v.onTokenExpiredException(Networks.OK));
+
+        unsubscribeOnUnbindView(
+                postLoadModel.observeLoadErrors()
+                        .subscribeOn(io())
+                        .observeOn(mainThread())
+                        .subscribe(error -> {
+                            if (error instanceof TokenExpiredException) {
+                                executeIfViewBound(v -> v.onTokenExpiredException(((TokenExpiredException) error).network));
+                            } else {
+                                executeIfViewBound(FeedView::onNetworkProblems);
+                            }
+                        })
+        );
+    }
+
     public void loadCachedPosts() {
         executeIfViewBound(view -> view.onCachedPostsReceived(
                 filterPosts(postLoadModel.getCachedPosts()))
@@ -144,11 +165,12 @@ public class FeedPresenter extends BasePresenter<FeedView> {
                     executeIfViewBound(FeedView::onInitialLoadFinished);
                     subscribeOnUpdates();
                 })
-                .doOnError(error -> executeIfViewBound(FeedView::onNetworkProblems))
                 .subscribe(
-                        result -> {
-                        },
-                        error -> isInitialLoadInProgress = false
+                        result -> {},
+                        error -> {
+                            Log.wtf("FEED_PRESENTER", "Error to UI while loading posts");
+                            isInitialLoadInProgress = false;
+                        }
                 );
     }
 

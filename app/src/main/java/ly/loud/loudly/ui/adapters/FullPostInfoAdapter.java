@@ -68,6 +68,13 @@ public class FullPostInfoAdapter extends RecyclerView.Adapter<BindingViewHolder>
                 fullPostInfoClickListener.onPhotoClick(((Comment) items.get(position)).getPerson());
             }
         }
+
+        @Override
+        public void onCommentClick(int position) {
+            if (fullPostInfoClickListener != null && (items.get(position) instanceof Comment)) {
+                fullPostInfoClickListener.onCommentClick((Comment) items.get(position));
+            }
+        }
     };
 
     public FullPostInfoAdapter(@NonNull PlainPost post) {
@@ -150,5 +157,7 @@ public class FullPostInfoAdapter extends RecyclerView.Adapter<BindingViewHolder>
         void onCommentLikesClick(@NonNull Comment comment);
 
         void onPhotoClick(@NonNull Person person);
+
+        void onCommentClick(@NonNull Comment comment);
     }
 }

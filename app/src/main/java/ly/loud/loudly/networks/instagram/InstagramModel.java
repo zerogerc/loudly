@@ -292,4 +292,23 @@ public class InstagramModel implements NetworkContract {
     public String getPersonPageUrl(@NonNull Person person) {
         return "https://www.instagram.com/" + person.getId();
     }
+
+    @NonNull
+    @Override
+    public Single<String> getCommentUrl(@NonNull Comment comment, @NonNull SinglePost post) {
+        return Single.fromCallable(() -> {
+            InstagramKeyKeeper keyKeeper = keysModel.getInstagramKeyKeeper();
+            if (keyKeeper == null) {
+                return "";
+            }
+            Call<Data<InstagramPost>> getPost =
+                    client.getPost(post.getLink(), keyKeeper.getAccessToken());
+            Response<Data<InstagramPost>> execute = getPost.execute();
+            Data<InstagramPost> body = execute.body();
+            if (body.data != null) {
+                return body.data.link;
+            }
+            return "";
+        }).onErrorReturn(error -> "");
+    }
 }

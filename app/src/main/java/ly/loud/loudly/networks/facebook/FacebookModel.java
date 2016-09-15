@@ -496,4 +496,11 @@ public class FacebookModel implements NetworkContract {
     public String getPersonPageUrl(@NonNull Person person) {
         return "https://www.facebook.com/" + person.getId();
     }
+
+    @NonNull
+    @Override
+    public Single<String> getCommentUrl(@NonNull Comment comment, @NonNull SinglePost post) {
+        return Single.just("https://www.facebook.com/" +
+                post.getLink() + "?comment_id=" + comment.getLink());
+    }
 }
