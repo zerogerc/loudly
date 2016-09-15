@@ -134,7 +134,7 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@Nullable Bundle outState) {
         super.onSaveInstanceState(outState);
         Icepick.saveInstanceState(presenter, outState);
     }
