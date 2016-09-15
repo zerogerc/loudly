@@ -36,6 +36,7 @@ import ly.loud.loudly.application.models.PostLoadModel;
 import ly.loud.loudly.base.multiple.LoudlyPost;
 import ly.loud.loudly.base.plain.PlainPost;
 import ly.loud.loudly.networks.Networks;
+import ly.loud.loudly.networks.Networks.Network;
 import ly.loud.loudly.ui.TitledFragment;
 import ly.loud.loudly.ui.adapters.FeedAdapter;
 import ly.loud.loudly.ui.full_post.FullPostInfoActivity;
@@ -204,7 +205,7 @@ public class FeedFragment extends TitledFragment implements FeedView, FeedAdapte
     }
 
     @Override
-    public void onTokenExpiredException(@Networks.Network int expiredNetwork) {
+    public void onTokenExpiredException(@Network int expiredNetwork) {
         final String error = String.format(
                 getString(R.string.token_expired_error),
                 getString(Networks.nameResourceOfNetwork(expiredNetwork))
