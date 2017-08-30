@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/filter_by">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item android:id="@+id/nav_no_filter" android:icon="@drawable/ic_no_network_white"
+                    android:title="@string/no_filters" />
+                <item android:id="@+id/nav_loudly" android:icon="@drawable/ic_loudly_white"
+                    android:title="@string/network_loudly"/>
+                <item android:id="@+id/nav_facebook" android:icon="@drawable/ic_facebook_white"
+                    android:title="@string/network_facebook"/>
+                <item android:id="@+id/nav_instagram" android:icon="@drawable/ic_instagram_white"
+                    android:title="@string/network_instagram"/>
+                <item android:id="@+id/nav_vk" android:icon="@drawable/ic_vk_white"
+                    android:title="@string/network_vk"/>
+            </group>
+
+        </menu>
+    </item>
+</menu>

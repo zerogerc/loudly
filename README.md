@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/ZeRoGerc/loudly.svg?branch=dev)](https://travis-ci.org/ZeRoGerc/loudly)
 # Loudly
 Android application for simultaneous posting updates to many social networks at once.
 

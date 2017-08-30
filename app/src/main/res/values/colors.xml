@@ -1,12 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF9800</color>
-    <color name="background_color">#E0E0E0</color>
-    <color name="light_grey_color">#E0E0E0</color>
-    <color name="grey_color">#9E9E9E</color>
-    <color name="black_color">#000</color>
-    <color name="grey_blue">#7986CB</color>
-    <color name="white_color">#FFF</color>
+    <color name="primary">#673AB7</color>
+    <color name="primary_dark">#512DA8</color>
+    <color name="primary_light">#D1C4E9</color>
+    <color name="accent">#FF9800</color>
+    <color name="accent_light">#FFE0B2</color>
+
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
+
+    <color name="icons">#FFFFFF</color>
+    <color name="divider">#BDBDBD</color>
+    <color name="background">#FFFFFF</color>
+
+    <color name="black_color">#000000</color>
+    <color name="white_color">#FFFFFF</color>
+
+    <color name="nav_bar_background">#263238</color>
+
+    <!-- Material design colors -->
+    <color name="grey_color_900">#212121</color>
+    <color name="grey_color_500">#9E9E9E</color>
+    <color name="grey_color_300">#E0E0E0</color>
+
+    <color name="sidebar_icon_color">#737373</color>
+    <color name="sidebar_text_color">#212121</color>
+
+    <color name="facebook_color">#3b5998</color>
+    <color name="vk_color">#45668e</color>
+    <color name="instagram_color">#e1306c</color>
+
 </resources>

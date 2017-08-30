@@ -1,8 +1,9 @@
 apply plugin: 'com.android.application'
+apply plugin: 'android-apt'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "ly.loud.loudly"
@@ -10,26 +11,96 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        generatedDensities = []
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
+    aaptOptions {
+        additionalParameters "--no-version-vectors"
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
+
+
+configurations.all {
+    resolutionStrategy {
+        force 'com.android.support:support-annotations:24.1.1'
+    }
+}
+
+apply plugin: 'me.tatarka.retrolambda'
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+
+    retrolambdaConfig "net.orfjackal.retrolambda:retrolambda:2.3.0"
+
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.1.0'
-    compile 'com.android.support:cardview-v7:23.1.0'
-    compile 'com.android.support:recyclerview-v7:23.1.0'
-    compile 'com.android.support:design:23.1.0'
-    compile 'com.android.support:support-v4:23.1.0'
+    testCompile 'com.squareup.assertj:assertj-android:1.1.0'
+    testCompile 'org.robolectric:robolectric:3.1.2'
+
+    androidTestCompile 'junit:junit:4.12'
+    androidTestCompile('com.android.support.test:runner:0.3') {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+
+
+    def versionsSolid = '2.0.3'
+    def versionsSupportLibs = '23.4.0';
+
+    compile 'com.android.support:appcompat-v7:' + versionsSupportLibs
+    compile 'com.android.support:cardview-v7:' + versionsSupportLibs
+    compile 'com.android.support:recyclerview-v7:' + versionsSupportLibs
+    compile 'com.android.support:design:' + versionsSupportLibs
+    compile 'com.android.support:support-v4:' + versionsSupportLibs
+    compile 'com.android.support:customtabs:' + versionsSupportLibs
+    compile 'com.android.support:preference-v7:' + versionsSupportLibs
+    compile 'com.android.support:preference-v14:' + versionsSupportLibs
+
     compile 'com.github.bumptech.glide:glide:3.5.2'
+    compile 'com.jakewharton:butterknife:8.2.1'
+    apt 'com.jakewharton:butterknife-compiler:8.2.1'
+
+    compile 'io.reactivex:rxandroid:1.2.1'
+    compile 'io.reactivex:rxjava:1.1.8'
+
+    compile 'javax.annotation:jsr250-api:1.0'
+    compile 'com.google.dagger:dagger:2.0.1'
+    apt 'com.google.dagger:dagger-compiler:2.0'
+
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.google.code.gson:gson:2.6.2'
+    compile 'com.squareup.retrofit2:converter-gson:2.0.2'
+
+    compile 'com.pushtorefresh.storio:sqlite:1.9.1'
+    compile 'com.pushtorefresh.storio:sqlite-annotations:1.9.1'
+    apt 'com.pushtorefresh.storio:sqlite-annotations-processor:1.9.1'
+
+    compile "info.android15.solid:streams:$versionsSolid"
+    compile "info.android15.solid:collections:$versionsSolid"
+
+    compile "com.github.miguelbcr:RxPaparazzo:0.2.0"
+    compile "io.reactivex:rxjava:1.1.5"
+
+    compile 'com.hannesdorfmann.fragmentargs:annotation:3.0.2'
+    apt 'com.hannesdorfmann.fragmentargs:processor:3.0.2'
+
+    compile "frankiesardo:icepick:3.2.0"
+    provided "frankiesardo:icepick-processor:3.2.0"
+}
+
+retrolambda {
+    jvmArgs '-noverify'
 }

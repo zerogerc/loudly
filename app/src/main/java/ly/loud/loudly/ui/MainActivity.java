@@ -1,136 +1,219 @@
 package ly.loud.loudly.ui;
 
-import android.app.FragmentManager;
 import android.content.Intent;
-import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
+import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.List;
 
+import javax.inject.Inject;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import ly.loud.loudly.R;
-import ly.loud.loudly.base.Networks;
-import ly.loud.loudly.base.Tasks;
-import ly.loud.loudly.base.Wrap;
-import ly.loud.loudly.base.says.Post;
-import ly.loud.loudly.ui.adapter.SpacesItemDecoration;
-import ly.loud.loudly.util.AttachableReceiver;
-import ly.loud.loudly.util.Broadcasts;
-import ly.loud.loudly.util.UIAction;
-import ly.loud.loudly.util.Utils;
+import ly.loud.loudly.application.Loudly;
+import ly.loud.loudly.application.models.PostLoadModel;
+import ly.loud.loudly.base.multiple.LoudlyPost;
+import ly.loud.loudly.base.single.SinglePost;
+import ly.loud.loudly.networks.NetworkContract;
+import ly.loud.loudly.networks.Networks.Network;
+import ly.loud.loudly.ui.LoadingFragment.LoadingFragmentCallback;
+import ly.loud.loudly.ui.feed.FeedFragment;
+import ly.loud.loudly.ui.feed.FeedFragment.FeedFragmentCallback;
+import ly.loud.loudly.ui.new_post.NetworksChooseLayout;
+import ly.loud.loudly.ui.new_post.NewPostFragment.NewPostFragmentInteractions;
+import ly.loud.loudly.ui.settings.SettingsActivity;
+import ly.loud.loudly.ui.sidebar.SideBarFragment.SideBarFragmentCallbacks;
+import ly.loud.loudly.ui.views.ScrimCoordinatorLayout;
 
+import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
+import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
+import static android.support.design.widget.BottomSheetBehavior.STATE_SETTLING;
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static ly.loud.loudly.networks.Networks.nameResourceOfNetwork;
+import static ly.loud.loudly.ui.new_post.NewPostFragment.NetworksProvider;
+
+/**
+ * Main activity of Loudly application. It responds for user interaction with behavior of
+ * BottomSheet Fragment (for post creation), menu and {@link NavigationView}.
+ */
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements
+        FragmentInvoker,
+        NetworksProvider,
+        NewPostFragmentInteractions,
+        SideBarFragmentCallbacks,
+        FeedFragmentCallback,
+        LoadingFragmentCallback {
 
-    private final String TAG = "MAIN";
-    static LinkedList<Post> posts = new LinkedList<>();
-    static boolean keysLoaded = false;
-    static boolean[] loadedNetworks = new boolean[Networks.NETWORK_COUNT];
-    static int aliveCopy = 0;
+    private static final String FEED_FRAGMENT = "feed_fragment";
 
-    RecyclerView recyclerView;
-    public MainActivityPostsAdapter mainActivityPostsAdapter;
-    public FloatingActionButton floatingActionButton;
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.app_bar_feed_root)
+    @NonNull
+    View globalRootView;
 
-    static final int LOAD_POSTS_RECEIVER = 0;
-    static final int POST_UPLOAD_RECEIVER = 1;
-    static final int POST_DELETE_RECEIVER = 2;
-    static final int RECEIVER_COUNT = 4;
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.app_bar_feed_background)
+    @NonNull
+    ScrimCoordinatorLayout background;
 
-    static AttachableReceiver[] receivers = null;
-    static Tasks.LoadPostsTask loadPosts = null;
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.app_bar_feed_new_post_layout)
+    @NonNull
+    View newPostFragmentView;
 
-    private static MainActivity self;
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.app_bar_feed_networks_choose_scroll)
+    @NonNull
+    View bottomSheetView;
 
-    public static void executeOnUI(final UIAction<MainActivity> action) {
-        if (self != null) {
-            self.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    action.execute(self);
-                }
-            });
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.toolbar)
+    @NonNull
+    Toolbar toolbar;
+
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.fab)
+    @NonNull
+    FloatingActionButton floatingActionButton;
+
+    @SuppressWarnings("NullableProblems") // Butterknife
+    @BindView(R.id.drawer_layout)
+    @NonNull
+    DrawerLayout drawerLayout;
+
+    @SuppressWarnings("NullableProblems")
+    @BindView(R.id.network_choose_layout)
+    @NonNull
+    NetworksChooseLayout networksChooseLayout;
+
+    @SuppressWarnings("NullableProblems")
+    @Inject
+    @NonNull
+    PostLoadModel postLoadModel;
+
+    @SuppressWarnings("NullableProblems") // onCreate
+    @NonNull
+    private BottomSheetBehavior bottomSheetBehavior;
+
+    @Nullable
+    private Snackbar currentSnackBar;
+
+    @NonNull
+    private final BottomSheetBehavior.BottomSheetCallback bottomSheetCallback = new BottomSheetBehavior.BottomSheetCallback() {
+        @Override
+        public void onStateChanged(@NonNull View bottomSheet, int newState) {
+            switch (newState) {
+                case STATE_EXPANDED:
+                    showNewPostFragment();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        @Override
+        public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+            setSlideState(bottomSheet, slideOffset);
+        }
+    };
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Loudly.getApplication(this).getAppComponent().inject(this);
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_feed);
+        ButterKnife.bind(this);
+
+        setSupportActionBar(toolbar);
+
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this,
+                drawerLayout,
+                toolbar,
+                R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close
+        );
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = ((NavigationView) findViewById(R.id.nav_view));
+
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.app_bar_feed_fragment_container, new FeedFragment(), FEED_FRAGMENT)
+                    .commit();
+        }
+
+        initFragmentsInteraction();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        showFeed();
+
+        final FeedFragment feedFragment =
+                (FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT);
+
+        if (feedFragment != null) {
+            feedFragment.refreshPosts();
         }
     }
 
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-//
-//        if (id == R.id.main_call_settings) {
-//            callSettingsActivity();
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
-    @Override
-    public void finish() {
-        super.finish();
-        Utils.hidePhoneKeyboard(this);
-    }
-
-    private void init() {
-        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+    /**
+     * Perform initialization iteractions between fragments.
+     */
+    private void initFragmentsInteraction() {
+        /**
+         * It seems like workaround but as soon as I have the proper solution I change this.
+         */
+        globalRootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
-            public void onBackStackChanged() {
-                int count = getFragmentManager().getBackStackEntryCount();
-                if (count > 0) {
-                    floatingActionButton.setVisibility(View.INVISIBLE);
+            public void onGlobalLayout() {
+                if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                    globalRootView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                } else {
+                    globalRootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 }
-                if (count == 0) {
-                    floatingActionButton.setVisibility(View.VISIBLE);
+                bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetView);
+                bottomSheetBehavior.setBottomSheetCallback(bottomSheetCallback);
+                if (bottomSheetBehavior.getState() == STATE_EXPANDED) {
+                    setSlideState(bottomSheetView, 1);
                 }
             }
         });
 
-        SplashFragment.showSplash(this);
-
-        setRecyclerView();
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                callPostCreate(view);
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+                floatingActionButton.show();
+            } else {
+                floatingActionButton.hide();
             }
         });
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        init();
     }
 
     @Override
@@ -138,367 +221,240 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
-            int count = getFragmentManager().getBackStackEntryCount();
-
-            if (count == 0) {
-                super.onBackPressed();
-                getFragmentManager().popBackStack();
-                return;
-            }
-
-            if (count == 1) {
-                getFragmentManager().popBackStack();
-            }
+        } else if (!tryHidePostCreateLayoutBasedOnBottomSheet()) {
+            super.onBackPressed();
         }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+    public boolean onCreateOptionsMenu(@NonNull Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            callSettingsActivity();
-            return true;
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
+    /**
+     * Starts fragment that replaced all content currently visible on the screen.
+     * Also add this fragment to back stack.
+     */
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
+    public void startFragment(@NonNull Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.app_bar_feed_fragment_container, fragment, fragment.getTag())
+                .addToBackStack(null)
+                .commit();
+    }
 
-        if (id == R.id.nav_camara) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+    @Override
+    public void showNetworksChooseLayout() {
+        bottomSheetBehavior.setState(STATE_EXPANDED);
+    }
 
-        } else if (id == R.id.nav_slideshow) {
+    @Override
+    public List<NetworkContract> getChosenNetworks() {
+        return networksChooseLayout.getChosenNetworks();
+    }
 
-        } else if (id == R.id.nav_manage) {
+    @Override
+    public void onPostUploadProgress(@NonNull LoudlyPost loudlyPost) {
+        final List<SinglePost> instances = loudlyPost.getNetworkInstances();
+        if (!instances.isEmpty()) {
+            final int network = instances.get(instances.size() - 1).getNetwork();
+            @StringRes final int resource = nameResourceOfNetwork(network);
+            if (currentSnackBar != null && currentSnackBar.isShown()) {
+                currentSnackBar.dismiss();
+            }
+            currentSnackBar = Snackbar.make(
+                    floatingActionButton,
+                    String.format(getString(R.string.message_post_upload_one_network), getString(resource)),
+                    Snackbar.LENGTH_SHORT
+            );
+            currentSnackBar.show();
+        }
+    }
 
-        } else if (id == R.id.nav_share) {
+    @Override
+    public void onPostUploaded() {
+        Snackbar.make(floatingActionButton, getString(R.string.message_post_upload_all_networks), Snackbar.LENGTH_SHORT).show();
+        FeedFragment fragment = ((FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT));
+        if (fragment != null) {
+            fragment.refreshPosts();
+        }
+    }
 
-        } else if (id == R.id.nav_send) {
+    @Override
+    public void onPostButtonClicked() {
+        bottomSheetBehavior.setState(STATE_COLLAPSED);
+        hideNewPostFragment();
+    }
 
+    @OnClick(R.id.fab)
+    public void onNewPostClicked() {
+        bottomSheetBehavior.setState(STATE_EXPANDED);
+        showNewPostFragment();
+    }
+
+    /**
+     * Run before back button super method to check if we need to hide post layout from the screen
+     * or just change state of bottom sheet.
+     */
+    private boolean tryHidePostCreateLayoutBasedOnBottomSheet() {
+        if (newPostFragmentView.getVisibility() != VISIBLE) {
+            return false;
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.fab);
-        drawer.closeDrawer(GravityCompat.START);
+        if (bottomSheetBehavior.getState() == STATE_SETTLING && newPostFragmentView.getVisibility() == VISIBLE) {
+            hideNewPostFragment();
+            return true;
+        }
+
+        if (bottomSheetBehavior.getState() == STATE_COLLAPSED) {
+            hideNewPostFragment();
+        } else {
+            bottomSheetBehavior.setState(STATE_COLLAPSED);
+        }
         return true;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        self = this;
+    /**
+     * Set PostLayout to the right state based on position of BottomSheet.
+     */
+    private void setSlideState(@NonNull View bottomSheet, float slideOffset) {
+        int allHeight = ((View) bottomSheet.getParent()).getHeight();
+        int visibleHeight = ((int) (bottomSheet.getHeight() * slideOffset));
 
-        if (receivers == null) {
-            receivers = new AttachableReceiver[RECEIVER_COUNT];
-        } else {
-            for (AttachableReceiver receiver : receivers) {
-                if (receiver != null) {
-                    receiver.attach(this);
-                }
-            }
-        }
-        if (keysLoaded && loadPosts == null) {
-            loadPosts();
-        }
+        CoordinatorLayout.LayoutParams params = ((CoordinatorLayout.LayoutParams) newPostFragmentView.getLayoutParams());
+        params.height = allHeight - visibleHeight;
+        newPostFragmentView.setLayoutParams(params);
+    }
+
+    /**
+     * Show the fragment with new post on the screen
+     */
+    private void showNewPostFragment() {
+        /**
+         * In future we could add animations here.
+         */
+        newPostFragmentView.setVisibility(VISIBLE);
+        background.setOpacity(1);
+    }
+
+    /**
+     * Hides the fragment with new post from the screen
+     */
+    private void hideNewPostFragment() {
+        /**
+         * In future we could add animations here.
+         */
+        newPostFragmentView.setVisibility(GONE);
+        background.setOpacity(0);
+    }
+
+    @NonNull
+    private FeedFragment findFeedFragment() {
+        return (FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT);
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        aliveCopy++;
+    public void onNoFiltersClicked() {
+        findFeedFragment().clearFilter();
+        closeDrawer();
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        Utils.hidePhoneKeyboard(this);
-        aliveCopy--;
-    }
-
-    static void loadPosts() {
-        ArrayList<Wrap> loadFrom = new ArrayList<>();
-        for (Wrap w : Loudly.getContext().getWraps()) {
-            if (!loadedNetworks[w.networkID()]) {
-                loadFrom.add(w);
-            }
-        }
-        // Loading posts
-        if (loadFrom.size() > 0) {
-            receivers[LOAD_POSTS_RECEIVER] = new LoadPostsReceiver(self);
-            loadPosts = new Tasks.LoadPostsTask(Loudly.getContext().getTimeInterval(),
-                    loadFrom.toArray(new Wrap[loadFrom.size()]));
-            loadPosts.execute();
-        } else {
-            Loudly.getContext().startGetInfoService();
-        }
-    }
-
-    private void setRecyclerView() {
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mainActivityPostsAdapter = new MainActivityPostsAdapter(posts, this);
-        recyclerView.setHasFixedSize(true); /// HERE
-        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.setAdapter(mainActivityPostsAdapter);
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        } else {
-            recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-            int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.recycler_landscape_margin);
-            recyclerView.addItemDecoration(new SpacesItemDecoration(spacingInPixels));
-        }
-        recyclerView.setItemAnimator(itemAnimator);
-    }
-
-    public void callSettingsActivity() {
+    public void onSettingsClicked() {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
-    }
-
-    public void callPostCreate(View v) {
-        if (receivers[POST_UPLOAD_RECEIVER] == null) {
-            receivers[POST_UPLOAD_RECEIVER] = new PostUploaderReceiver(this);
-        }
-        PostCreateFragment.showPostCreate(this);
+        closeDrawer();
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        self = null;
-        for (int i = 0; i < RECEIVER_COUNT; i++) {
-            if (receivers[i] != null) {
-                receivers[i].detach();
-            }
-        }
+    public void onNetworkClicked(@Network int networkId) {
+        findFeedFragment().filterPostsByNetwork(networkId);
+        closeDrawer();
     }
 
-
-    static class PostUploaderReceiver extends AttachableReceiver<MainActivity> {
-        public PostUploaderReceiver(MainActivity context) {
-            super(context, Broadcasts.POST_UPLOAD);
-        }
-
-        @Override
-        public void onMessageReceive(MainActivity context, Intent message) {
-            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            long postID, imageID;
-            int progress;
-            String msg;
-            switch (status) {
-                case Broadcasts.STARTED:
-                    // Saved to DB. Make place for the post
-                    msg = "Uploading post...";
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            msg, Snackbar.LENGTH_INDEFINITE)
-                            .show();
-                    break;
-                case Broadcasts.PROGRESS:
-                    // Uploaded to network
-                    int networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
-                    msg = "Post uploaded to " + Networks.nameOfNetwork(networkID) + "...";
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            msg, Snackbar.LENGTH_SHORT)
-                            .show();
-                    break;
-                case Broadcasts.IMAGE:
-                    // Image is loading
-                    progress = message.getIntExtra(Broadcasts.PROGRESS_FIELD, 0);
-//                    toast = Toast.makeText(context, "image " + progress, Toast.LENGTH_SHORT);
-//                    toast.show();
-                    Log.i("IMAGE_UPLOAD", progress + "");
-                    break;
-                case Broadcasts.IMAGE_FINISHED:
-                    // Image loaded
-                    imageID = message.getLongExtra(Broadcasts.IMAGE_FIELD, 0);
-                    postID = message.getLongExtra(Broadcasts.ID_FIELD, 0);
-                    networkID = message.getIntExtra(Broadcasts.NETWORK_FIELD, 0);
-                    break;
-                case Broadcasts.FINISHED:
-                    // LoudlyPost uploaded
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            "Successfully uploaded",
-                            Snackbar.LENGTH_LONG)
-                            .show();
-
-                    Loudly.getContext().startGetInfoService();
-                    receivers[POST_UPLOAD_RECEIVER].stop();
-                    receivers[POST_UPLOAD_RECEIVER] = null;
-                    context.floatingActionButton.setVisibility(View.VISIBLE);
-                    break;
-                case Broadcasts.ERROR:
-                    // Got an error
-                    int errorKind = message.getIntExtra(Broadcasts.ERROR_KIND, -1);
-                    int network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    String error = "Can't upload post to " + Networks.nameOfNetwork(network) + ": ";
-                    switch (errorKind) {
-                        case Broadcasts.NETWORK_ERROR:
-                            error += "no internet connection";
-                            break;
-                        case Broadcasts.INVALID_TOKEN:
-                            error += "lost connection to network";
-                            break;
-                        default:
-                            // Database fail
-                            error = "Can't upload post due to internal error";
-                            Snackbar.make(context.findViewById(R.id.fab),
-                                    error, Snackbar.LENGTH_SHORT)
-                                    .show();
-                            context.floatingActionButton.setVisibility(View.VISIBLE);
-                            Log.e("UPLOAD_POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
-                            stop();
-                            receivers[POST_UPLOAD_RECEIVER] = null;
-                            return;
-                    }
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            error, Snackbar.LENGTH_SHORT)
-                            .show();
-                    break;
-            }
-        }
+    private void closeDrawer() {
+        drawerLayout.closeDrawer(GravityCompat.START);
     }
 
-    static class LoadPostsReceiver extends AttachableReceiver<MainActivity> {
-        public LoadPostsReceiver(MainActivity context) {
-            super(context, Broadcasts.POST_LOAD);
-        }
+    @Override
+    public void showFeedLoading() {
+        final FragmentManager manager = getSupportFragmentManager();
+        final LoadingFragment loadingFragment = ((LoadingFragment) manager.findFragmentById(R.id.app_bar_feed_loading_fragment));
 
-        @Override
-        public void onMessageReceive(MainActivity context, Intent message) {
-            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, -1);
+        loadingFragment.showLoading();
 
-            int network;
-            switch (status) {
-                case Broadcasts.STARTED:
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            "Loading Loudly posts...",
-                            Snackbar.LENGTH_INDEFINITE)
-                            .show();
-                    break;
-                case Broadcasts.LOADED:
-                    if (posts.size() == 0) {
-                        Snackbar.make(context.findViewById(R.id.fab),
-                                "You haven't upload any post yet",
-                                Snackbar.LENGTH_SHORT)
-                                .show();
-                        stop();
-                        receivers[LOAD_POSTS_RECEIVER] = null;
-                        loadPosts = null;
-                    } else {
-                        Snackbar.make(context.findViewById(R.id.fab),
-                                "Loudly posts loaded",
-                                Snackbar.LENGTH_INDEFINITE)
-                                .show();
-                    }
-                    break;
-                case Broadcasts.PROGRESS:
-                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            "Loading posts from " + Networks.nameOfNetwork(network) + "...",
-                            Snackbar.LENGTH_INDEFINITE)
-                            .show();
-                    loadedNetworks[network] = true;
-                    break;
-                case Broadcasts.FINISHED:
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            "Loaded", Snackbar.LENGTH_SHORT)
-                            .show();
-                    stop();
-                    receivers[LOAD_POSTS_RECEIVER] = null;
-                    loadPosts = null; // Posts loaded
-
-                    Loudly.getContext().startGetInfoService(); // Let's get info about posts
-                    break;
-                case Broadcasts.ERROR:
-                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    String error = "Can't load posts from " + Networks.nameOfNetwork(network) + ": ";
-                    switch (message.getIntExtra(Broadcasts.ERROR_KIND, -1)) {
-                        case Broadcasts.NETWORK_ERROR:
-                            error += "no internet connection";
-                            break;
-                        case Broadcasts.INVALID_TOKEN:
-                            error += "lost connection to it";
-                            break;
-                        default:
-                            error = "Unexpected error";
-                            break;
-                    }
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            error, Snackbar.LENGTH_SHORT)
-                            .show();
-                    break;
-            }
-        }
+        manager.beginTransaction()
+                .hide(manager.findFragmentByTag(FEED_FRAGMENT))
+                .show(loadingFragment)
+                .commit();
     }
 
-    static class PostDeleteReceiver extends AttachableReceiver<MainActivity> {
-        public PostDeleteReceiver(MainActivity context) {
-            super(context, Broadcasts.POST_DELETE);
+    @Override
+    public void showFeedGlobalError(@NonNull String errorMessage) {
+        final FragmentManager manager = getSupportFragmentManager();
+        final LoadingFragment loadingFragment = ((LoadingFragment) manager.findFragmentById(R.id.app_bar_feed_loading_fragment));
+        loadingFragment.showError(errorMessage);
+
+        manager.beginTransaction()
+                .hide(manager.findFragmentByTag(FEED_FRAGMENT))
+                .show(loadingFragment)
+                .commit();
+    }
+
+    @Override
+    public void showFeedError(@NonNull String errorMessage) {
+        Snackbar.make(floatingActionButton, errorMessage, Snackbar.LENGTH_SHORT);
+    }
+
+    @Override
+    public void hideFeed() {
+        final FragmentManager manager = getSupportFragmentManager();
+
+        manager.beginTransaction()
+                .hide(manager.findFragmentByTag(FEED_FRAGMENT))
+                .show(manager.findFragmentById(R.id.app_bar_feed_loading_fragment))
+                .commit();
+    }
+
+    @Override
+    public void showFeed() {
+        final FragmentManager manager = getSupportFragmentManager();
+
+        manager.beginTransaction()
+                .hide(manager.findFragmentById(R.id.app_bar_feed_loading_fragment))
+                .show(manager.findFragmentByTag(FEED_FRAGMENT))
+                .commit();
+    }
+
+    @Override
+    public void onLoadingRefresh() {
+        final LoadingFragment loadingFragment =
+                (LoadingFragment) getSupportFragmentManager().findFragmentById(R.id.app_bar_feed_loading_fragment);
+
+        final FeedFragment feedFragment =
+                (FeedFragment) getSupportFragmentManager().findFragmentByTag(FEED_FRAGMENT);
+
+        showFeed();
+
+        if (feedFragment != null) {
+            feedFragment.refreshPosts();
         }
 
-        @Override
-        public void onMessageReceive(MainActivity context, Intent message) {
-            int status = message.getIntExtra(Broadcasts.STATUS_FIELD, 0);
-            int network;
-            switch (status) {
-                case Broadcasts.PROGRESS:
-                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            "Deleting from " + Networks.nameOfNetwork(network) + "...", Snackbar.LENGTH_INDEFINITE)
-                            .show();
-                    break;
-                case Broadcasts.FINISHED:
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            "Post deleted", Snackbar.LENGTH_SHORT)
-                            .show();
-                    context.floatingActionButton.setVisibility(View.VISIBLE);
-                    Loudly.getContext().startGetInfoService();
-                    break;
-                case Broadcasts.ERROR:
-                    network = message.getIntExtra(Broadcasts.NETWORK_FIELD, -1);
-                    String error = "Can't delete post from " + Networks.nameOfNetwork(network) + ": ";
-                    switch (message.getIntExtra(Broadcasts.ERROR_KIND, -1)) {
-                        case Broadcasts.NETWORK_ERROR:
-                            error += "no internet connection";
-                            break;
-                        case Broadcasts.INVALID_TOKEN:
-                            error += "lost connection to network";
-                            break;
-                        default:
-                            //Totally unexpected
-                            error = "Can't delete post due to internal error :(";
-                            Snackbar.make(context.findViewById(R.id.fab),
-                                    error, Snackbar.LENGTH_SHORT)
-                                    .show();
-                            context.floatingActionButton.setVisibility(View.VISIBLE);
-                            Log.e("DELETE_POST", message.getStringExtra(Broadcasts.ERROR_FIELD));
-                            stop();
-                            receivers[POST_DELETE_RECEIVER] = null;
-                            return;
-                    }
-                    Snackbar.make(context.findViewById(R.id.fab),
-                            error, Snackbar.LENGTH_SHORT)
-                            .show();
-                    break;
-            }
+        if (loadingFragment != null) {
+            loadingFragment.hideProgress();
         }
     }
 }
